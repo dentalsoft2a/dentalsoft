@@ -1,0 +1,868 @@
+import { useEffect, useState } from 'react';
+import { Plus, Edit, Trash2, Search, FileDown, User } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+import type { Database } from '../../lib/database.types';
+import { generateDeliveryNotePDF } from '../../utils/pdfGenerator';
+import { deductStockForDeliveryNote, restoreStockForDeliveryNote } from '../../utils/stockManager';
+import CatalogItemSelector from './CatalogItemSelector';
+import ResourceVariantSelector from './ResourceVariantSelector';
+import DatePicker from '../common/DatePicker';
+import CustomSelect from '../common/CustomSelect';
+
+type DeliveryNote = Database['public']['Tables']['delivery_notes']['Row'] & {
+  dentists?: { name: string };
+};
+
+export default function DeliveryNotesPage() {
+  const { user, profile } = useAuth();
+  const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editingNote, setEditingNote] = useState<string | null>(null);
+  const [hasValidSubscription, setHasValidSubscription] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    loadDeliveryNotes();
+    checkSubscription();
+  }, [user]);
+
+  const checkSubscription = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('role, subscription_status, trial_ends_at, subscription_ends_at')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      setIsSuperAdmin(data?.role === 'super_admin');
+
+      if (data?.role === 'super_admin') {
+        setHasValidSubscription(true);
+        return;
+      }
+
+      const now = new Date();
+      let validSubscription = false;
+
+      if (data?.subscription_status === 'trial' && data.trial_ends_at) {
+        const trialEnd = new Date(data.trial_ends_at);
+        validSubscription = now <= trialEnd;
+      } else if (data?.subscription_status === 'active' && data.subscription_ends_at) {
+        const subEnd = new Date(data.subscription_ends_at);
+        validSubscription = now <= subEnd;
+      } else if (data?.subscription_status === 'active') {
+        validSubscription = true;
+      }
+
+      setHasValidSubscription(validSubscription);
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+    }
+  };
+
+  const loadDeliveryNotes = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('delivery_notes')
+        .select('*, dentists(name)')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      setDeliveryNotes(data || []);
+    } catch (error) {
+      console.error('Error loading delivery notes:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredNotes = deliveryNotes.filter((note) => {
+    const matchesSearch =
+      note.delivery_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      note.dentists?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
+  });
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce bon de livraison ? Le stock sera automatiquement restauré.')) return;
+
+    try {
+      if (user) {
+        const stockResult = await restoreStockForDeliveryNote(id, user.id);
+        if (!stockResult.success) {
+          console.warn('Stock restoration warning:', stockResult.error);
+        }
+      }
+
+      const { error } = await supabase.from('delivery_notes').delete().eq('id', id);
+      if (error) throw error;
+      await loadDeliveryNotes();
+    } catch (error) {
+      console.error('Error deleting delivery note:', error);
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const handleDownloadPDF = async (note: DeliveryNote) => {
+    try {
+      const { data: dentistData, error: dentistError } = await supabase
+        .from('dentists')
+        .select('*')
+        .eq('id', note.dentist_id)
+        .single();
+
+      if (dentistError) throw dentistError;
+
+      const patientName = (note as any).patient_name || dentistData.name;
+
+      const items = Array.isArray(note.items) ? note.items : [];
+
+      await generateDeliveryNotePDF({
+        delivery_number: note.delivery_number,
+        date: note.date,
+        prescription_date: (note as any).prescription_date,
+        items: items as any,
+        laboratory_name: profile?.laboratory_name || '',
+        laboratory_address: profile?.laboratory_address || '',
+        laboratory_phone: profile?.laboratory_phone || '',
+        laboratory_email: profile?.laboratory_email || '',
+        laboratory_logo_url: profile?.laboratory_logo_url || '',
+        dentist_name: dentistData.name,
+        dentist_address: dentistData.address || '',
+        patient_name: patientName,
+        compliance_text: note.compliance_text || '',
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Erreur lors de la génération du PDF');
+    }
+  };
+
+  return (
+    <div>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Bons de livraison</h1>
+          <p className="text-slate-600 mt-2">Gérez vos bons de livraison et certificats de conformité</p>
+        </div>
+        <button
+          onClick={() => {
+            setEditingNote(null);
+            setShowModal(true);
+          }}
+          disabled={!hasValidSubscription && !isSuperAdmin}
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-primary-700 hover:to-cyan-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+        >
+          <Plus className="w-5 h-5" />
+          Nouveau bon de livraison
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-lg border border-slate-200/50 hover:shadow-xl transition-all duration-300 overflow-hidden">
+        <div className="p-4 border-b border-slate-200">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Rechercher un bon de livraison..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+            />
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center text-slate-600">Chargement...</div>
+        ) : filteredNotes.length === 0 ? (
+          <div className="p-8 text-center text-slate-600">
+            {searchTerm ? 'Aucun bon de livraison trouvé' : 'Aucun bon de livraison enregistré'}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Numéro
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Dentiste
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {filteredNotes.map((note) => (
+                  <tr key={note.id} className="hover:bg-slate-50 transition">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-slate-900">{note.delivery_number}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                      {note.dentists?.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                      {new Date(note.date).toLocaleDateString('fr-FR')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button
+                          onClick={() => handleDownloadPDF(note)}
+                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+                          title="Télécharger PDF"
+                        >
+                          <FileDown className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingNote(note.id);
+                            setShowModal(true);
+                          }}
+                          className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
+                          title="Modifier"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(note.id)}
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {showModal && (
+        <DeliveryNoteModal
+          noteId={editingNote}
+          onClose={() => {
+            setShowModal(false);
+            setEditingNote(null);
+          }}
+          onSave={() => {
+            setShowModal(false);
+            setEditingNote(null);
+            loadDeliveryNotes();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+interface DeliveryNoteModalProps {
+  noteId: string | null;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) {
+  const { user } = useAuth();
+  const [dentists, setDentists] = useState<Database['public']['Tables']['dentists']['Row'][]>([]);
+  const [formData, setFormData] = useState({
+    dentist_id: '',
+    patient_name: '',
+    delivery_number: '',
+    date: new Date().toISOString().split('T')[0],
+    prescription_date: new Date().toISOString().split('T')[0],
+    compliance_text: 'Je soussigné certifie que les prothèses dentaires ci-dessus ont été réalisées conformément aux normes en vigueur et aux spécifications du praticien.',
+  });
+  const [items, setItems] = useState<Array<{
+    description: string;
+    quantity: number;
+    unit_price: number;
+    unit: string;
+    shade: string;
+    tooth_number: string;
+    catalog_item_id?: string;
+    resource_variants?: Record<string, string>;
+  }>>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    loadDentists();
+    if (noteId) {
+      loadDeliveryNote();
+    } else {
+      generateDeliveryNumber();
+    }
+  }, [noteId]);
+
+  const loadDentists = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('dentists')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('name');
+
+      if (error) throw error;
+      setDentists(data || []);
+    } catch (error) {
+      console.error('Error loading dentists:', error);
+    }
+  };
+
+  const generateDeliveryNumber = async () => {
+    if (!user) return;
+
+    try {
+      const year = new Date().getFullYear();
+      const prefix = `BL-${year}-`;
+
+      const { data, error } = await supabase
+        .from('delivery_notes')
+        .select('delivery_number')
+        .eq('user_id', user.id)
+        .like('delivery_number', `${prefix}%`)
+        .order('delivery_number', { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      let nextNumber = 1;
+      if (data && data.length > 0) {
+        const lastNumber = data[0].delivery_number.split('-').pop();
+        nextNumber = parseInt(lastNumber || '0', 10) + 1;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        delivery_number: `${prefix}${String(nextNumber).padStart(4, '0')}`,
+      }));
+    } catch (error) {
+      console.error('Error generating delivery number:', error);
+    }
+  };
+
+  const loadDeliveryNote = async () => {
+    if (!noteId) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('delivery_notes')
+        .select('*')
+        .eq('id', noteId)
+        .single();
+
+      if (error) throw error;
+
+      setFormData({
+        dentist_id: data.dentist_id,
+        patient_name: (data as any).patient_name || '',
+        delivery_number: data.delivery_number,
+        date: data.date,
+        prescription_date: data.prescription_date || '',
+        compliance_text: data.compliance_text || '',
+      });
+
+      const itemsData = Array.isArray(data.items) ? data.items : [];
+      setItems(
+        itemsData.length > 0
+          ? itemsData
+          : [{ description: '', quantity: 1, unit_price: 0, unit: '', shade: '', tooth_number: '', catalog_item_id: undefined, resource_variants: {} }]
+      );
+    } catch (error) {
+      console.error('Error loading delivery note:', error);
+    }
+  };
+
+  const addItem = () => {
+    setItems([...items, { description: '', quantity: 1, unit_price: 0, unit: '', shade: '', tooth_number: '', catalog_item_id: undefined, resource_variants: {} }]);
+  };
+
+  const removeItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  const updateItem = (index: number, field: string, value: string | number) => {
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setItems(newItems);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !formData.dentist_id) return;
+
+    setLoading(true);
+    try {
+      if (noteId) {
+        const { error } = await supabase
+          .from('delivery_notes')
+          .update({
+            dentist_id: formData.dentist_id,
+            patient_name: formData.patient_name || null,
+            delivery_number: formData.delivery_number,
+            date: formData.date,
+            prescription_date: formData.prescription_date || null,
+            items: items as any,
+            compliance_text: formData.compliance_text,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', noteId);
+
+        if (error) throw error;
+      } else {
+        const { data: newNote, error } = await supabase.from('delivery_notes').insert({
+          user_id: user.id,
+          dentist_id: formData.dentist_id,
+          patient_name: formData.patient_name || null,
+          delivery_number: formData.delivery_number,
+          date: formData.date,
+          prescription_date: formData.prescription_date || null,
+          items: items as any,
+          compliance_text: formData.compliance_text,
+        }).select().single();
+
+        if (error) throw error;
+
+        const stockItems = items
+          .filter((item: any) => item.catalog_item_id)
+          .map((item: any) => ({
+            catalogItemId: item.catalog_item_id,
+            quantity: item.quantity,
+            resourceVariants: item.resource_variants || {}
+          }));
+
+        console.log('🚀 Stock items to process:', stockItems);
+
+        if (stockItems.length > 0) {
+          console.log('📦 Calling deductStockForDeliveryNote with:', newNote.id, stockItems, user.id);
+          const stockResult = await deductStockForDeliveryNote(
+            newNote.id,
+            stockItems,
+            user.id
+          );
+          console.log('📦 Stock deduction result:', stockResult);
+
+          if (!stockResult.success) {
+            await supabase.from('delivery_notes').delete().eq('id', newNote.id);
+            alert(stockResult.error || 'Erreur lors de la gestion du stock');
+            setLoading(false);
+            return;
+          }
+        }
+      }
+
+      onSave();
+    } catch (error) {
+      console.error('Error saving delivery note:', error);
+      alert('Erreur lors de la sauvegarde');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-2rem)] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
+        <div className="relative p-8 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 z-10 rounded-t-3xl backdrop-blur-xl flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-t-3xl"></div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">
+            {noteId ? 'Modifier le bon de livraison' : 'Nouveau bon de livraison'}
+          </h2>
+          <p className="text-slate-500 text-sm mt-2 relative">Remplissez les informations du bon de livraison</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-8 space-y-8 overflow-y-auto flex-1">
+          <div className="space-y-8">
+            <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+                Informations générales
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CustomSelect
+                  value={formData.dentist_id}
+                  onChange={(value) => setFormData({ ...formData, dentist_id: value })}
+                  options={dentists.map(d => ({ value: d.id, label: d.name }))}
+                  label="Dentiste"
+                  placeholder="Sélectionner un dentiste"
+                  required
+                  icon={<User className="w-5 h-5" />}
+                  color="primary"
+                />
+
+                <div className="group">
+                  <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors group-focus-within:text-primary-600 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-cyan-500 group-focus-within:scale-150 transition-transform"></span>
+                    Patient
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.patient_name}
+                    onChange={(e) => setFormData({ ...formData, patient_name: e.target.value })}
+                    placeholder="Nom du patient"
+                    className="w-full px-5 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 placeholder:text-slate-400 bg-white shadow-sm hover:shadow-md"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-gradient-to-br from-cyan-50/50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-gradient-to-b from-cyan-500 to-primary-500 rounded-full"></div>
+                Dates et numérotation
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="group">
+                  <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors group-focus-within:text-primary-600 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-primary-500 group-focus-within:scale-150 transition-transform"></span>
+                    Numéro <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.delivery_number}
+                    onChange={(e) => setFormData({ ...formData, delivery_number: e.target.value })}
+                    className="w-full px-5 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white shadow-sm hover:shadow-md"
+                  />
+                </div>
+
+                <DatePicker
+                  value={formData.prescription_date}
+                  onChange={(value) => setFormData({ ...formData, prescription_date: value })}
+                  label="Date de prescription"
+                  color="cyan"
+                />
+
+                <div className="md:col-span-2">
+                  <DatePicker
+                    value={formData.date}
+                    onChange={(value) => setFormData({ ...formData, date: value })}
+                    label="Date de livraison"
+                    required
+                    color="primary"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-primary-50/30 to-cyan-50/30 p-6 rounded-2xl border border-primary-200/50 shadow-sm">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-1.5 h-8 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-800">
+                    Articles <span className="text-red-500">*</span>
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">Liste des prothèses et dispositifs</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={addItem}
+                className="text-sm px-5 py-2.5 bg-gradient-to-r from-primary-500 to-cyan-500 text-white hover:from-primary-600 hover:to-cyan-600 font-bold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-md flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Ajouter un élément
+              </button>
+            </div>
+
+            <CatalogItemSelector
+              onSelect={(item) => {
+                const newItem = {
+                  catalog_item_id: item.catalog_item_id,
+                  description: item.description,
+                  quantity: 1,
+                  unit_price: item.unit_price,
+                  unit: item.unit,
+                  shade: '',
+                  tooth_number: '',
+                  resource_variants: {},
+                };
+                setItems([...items, newItem]);
+              }}
+            />
+
+            <div className="space-y-4 mt-4">
+              {items.map((item, index) => (
+                <div key={index} className="relative border border-slate-200/80 rounded-2xl p-6 space-y-5 bg-white hover:border-primary-200 transition-all duration-300 hover:shadow-lg shadow group overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary-100/20 to-cyan-100/20 rounded-bl-[100px] -z-0"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                        {index + 1}
+                      </div>
+                      <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Article</span>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                      <div className="md:col-span-2 group/item">
+                        <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary-500 group-focus-within/item:scale-150 transition-transform"></span>
+                          Description de l'article <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ex: Couronne céramique"
+                          required
+                          value={item.description}
+                          onChange={(e) => updateItem(index, 'description', e.target.value)}
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                        />
+                      </div>
+                      <div className="group/item">
+                        <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
+                          Quantité <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="1"
+                          required
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                        />
+                      </div>
+                      <div className="group/item">
+                        <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary-500 group-focus-within/item:scale-150 transition-transform"></span>
+                          Prix unitaire HT (€)
+                        </label>
+                        <input
+                          type="number"
+                          placeholder="0.00"
+                          min="0"
+                          step="0.01"
+                          value={item.unit_price || ''}
+                          onChange={(e) => updateItem(index, 'unit_price', e.target.value === '' ? 0 : parseFloat(e.target.value))}
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                        />
+                      </div>
+                      <div className="group/item">
+                        <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
+                          Unité
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Ex: unité, set"
+                          value={item.unit}
+                          onChange={(e) => updateItem(index, 'unit', e.target.value)}
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                        />
+                      </div>
+                      <div className="group/item">
+                        <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-primary-500 group-focus-within/item:scale-150 transition-transform"></span>
+                          Teinte
+                        </label>
+                        <select
+                          value={item.shade}
+                          onChange={(e) => updateItem(index, 'shade', e.target.value)}
+                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                        >
+                        <option value="">Sélectionner une teinte</option>
+                        <optgroup label="Teintes A (Rougeâtre-brunâtre)">
+                          <option value="A1">A1</option>
+                          <option value="A2">A2</option>
+                          <option value="A3">A3</option>
+                          <option value="A3.5">A3.5</option>
+                          <option value="A4">A4</option>
+                        </optgroup>
+                        <optgroup label="Teintes B (Jaunâtre-rougeâtre)">
+                          <option value="B1">B1</option>
+                          <option value="B2">B2</option>
+                          <option value="B3">B3</option>
+                          <option value="B4">B4</option>
+                        </optgroup>
+                        <optgroup label="Teintes C (Grisâtre)">
+                          <option value="C1">C1</option>
+                          <option value="C2">C2</option>
+                          <option value="C3">C3</option>
+                          <option value="C4">C4</option>
+                        </optgroup>
+                        <optgroup label="Teintes D (Brun-grisâtre)">
+                          <option value="D2">D2</option>
+                          <option value="D3">D3</option>
+                          <option value="D4">D4</option>
+                        </optgroup>
+                        <optgroup label="Teintes Blanchiment">
+                          <option value="BL1">BL1 (Blanchiment léger)</option>
+                          <option value="BL2">BL2 (Blanchiment moyen)</option>
+                          <option value="BL3">BL3 (Blanchiment intense)</option>
+                          <option value="BL4">BL4 (Blanchiment très intense)</option>
+                        </optgroup>
+                        <optgroup label="3D Master - Niveau 1 (Clair)">
+                          <option value="1M1">1M1</option>
+                          <option value="1M2">1M2</option>
+                          <option value="2L1.5">2L1.5</option>
+                          <option value="2L2.5">2L2.5</option>
+                          <option value="2M1">2M1</option>
+                          <option value="2M2">2M2</option>
+                          <option value="2M3">2M3</option>
+                          <option value="2R1.5">2R1.5</option>
+                          <option value="2R2.5">2R2.5</option>
+                        </optgroup>
+                        <optgroup label="3D Master - Niveau 2 (Moyen)">
+                          <option value="3L1.5">3L1.5</option>
+                          <option value="3L2.5">3L2.5</option>
+                          <option value="3M1">3M1</option>
+                          <option value="3M2">3M2</option>
+                          <option value="3M3">3M3</option>
+                          <option value="3R1.5">3R1.5</option>
+                          <option value="3R2.5">3R2.5</option>
+                        </optgroup>
+                        <optgroup label="3D Master - Niveau 3 (Moyen-Foncé)">
+                          <option value="4L1.5">4L1.5</option>
+                          <option value="4L2.5">4L2.5</option>
+                          <option value="4M1">4M1</option>
+                          <option value="4M2">4M2</option>
+                          <option value="4M3">4M3</option>
+                          <option value="4R1.5">4R1.5</option>
+                          <option value="4R2.5">4R2.5</option>
+                        </optgroup>
+                        <optgroup label="3D Master - Niveau 4 (Foncé)">
+                          <option value="5M1">5M1</option>
+                          <option value="5M2">5M2</option>
+                          <option value="5M3">5M3</option>
+                        </optgroup>
+                      </select>
+                    </div>
+                    <div className="group/item">
+                      <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
+                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
+                        Numéro de dent
+                      </label>
+                      <select
+                        value={item.tooth_number}
+                        onChange={(e) => updateItem(index, 'tooth_number', e.target.value)}
+                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                      >
+                        <option value="">Sélectionner un numéro</option>
+                        <optgroup label="Maxillaire droit (adulte)">
+                          <option value="11">11 (Incisive centrale supérieure droite)</option>
+                          <option value="12">12 (Incisive latérale supérieure droite)</option>
+                          <option value="13">13 (Canine supérieure droite)</option>
+                          <option value="14">14 (Première prémolaire supérieure droite)</option>
+                          <option value="15">15 (Deuxième prémolaire supérieure droite)</option>
+                          <option value="16">16 (Première molaire supérieure droite)</option>
+                          <option value="17">17 (Deuxième molaire supérieure droite)</option>
+                          <option value="18">18 (Troisième molaire supérieure droite)</option>
+                        </optgroup>
+                        <optgroup label="Maxillaire gauche (adulte)">
+                          <option value="21">21 (Incisive centrale supérieure gauche)</option>
+                          <option value="22">22 (Incisive latérale supérieure gauche)</option>
+                          <option value="23">23 (Canine supérieure gauche)</option>
+                          <option value="24">24 (Première prémolaire supérieure gauche)</option>
+                          <option value="25">25 (Deuxième prémolaire supérieure gauche)</option>
+                          <option value="26">26 (Première molaire supérieure gauche)</option>
+                          <option value="27">27 (Deuxième molaire supérieure gauche)</option>
+                          <option value="28">28 (Troisième molaire supérieure gauche)</option>
+                        </optgroup>
+                        <optgroup label="Mandibulaire gauche (adulte)">
+                          <option value="31">31 (Incisive centrale inférieure gauche)</option>
+                          <option value="32">32 (Incisive latérale inférieure gauche)</option>
+                          <option value="33">33 (Canine inférieure gauche)</option>
+                          <option value="34">34 (Première prémolaire inférieure gauche)</option>
+                          <option value="35">35 (Deuxième prémolaire inférieure gauche)</option>
+                          <option value="36">36 (Première molaire inférieure gauche)</option>
+                          <option value="37">37 (Deuxième molaire inférieure gauche)</option>
+                          <option value="38">38 (Troisième molaire inférieure gauche)</option>
+                        </optgroup>
+                        <optgroup label="Mandibulaire droit (adulte)">
+                          <option value="41">41 (Incisive centrale inférieure droite)</option>
+                          <option value="42">42 (Incisive latérale inférieure droite)</option>
+                          <option value="43">43 (Canine inférieure droite)</option>
+                          <option value="44">44 (Première prémolaire inférieure droite)</option>
+                          <option value="45">45 (Deuxième prémolaire inférieure droite)</option>
+                          <option value="46">46 (Première molaire inférieure droite)</option>
+                          <option value="47">47 (Deuxième molaire inférieure droite)</option>
+                          <option value="48">48 (Troisième molaire inférieure droite)</option>
+                        </optgroup>
+                      </select>
+                    </div>
+                  </div>
+
+                  {item.catalog_item_id && (
+                    <div className="mt-4">
+                      <ResourceVariantSelector
+                        catalogItemId={item.catalog_item_id}
+                        selectedVariants={item.resource_variants}
+                        onSelect={(variants) => {
+                          console.log('🎨 Variants selected:', variants);
+                          const newItems = [...items];
+                          newItems[index] = {
+                            ...newItems[index],
+                            resource_variants: variants
+                          };
+                          console.log('📝 Updated item:', newItems[index]);
+                          setItems(newItems);
+                        }}
+                      />
+                    </div>
+                  )}
+
+                  {items.length > 1 && (
+                    <div className="flex justify-end pt-4 mt-4 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => removeItem(index)}
+                        className="flex items-center gap-2 px-5 py-2.5 text-sm text-white bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-xl transition-all duration-300 hover:scale-105 font-semibold shadow-md hover:shadow-lg"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        Supprimer l'article
+                      </button>
+                    </div>
+                  )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </form>
+
+        <div className="relative p-8 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-b-3xl"></div>
+          <div className="flex gap-4 relative">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-8 py-4 border-2 border-slate-300 text-slate-700 rounded-2xl hover:bg-white hover:border-slate-400 transition-all duration-300 font-bold hover:scale-[1.02] shadow-sm hover:shadow-md text-lg"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="flex-1 px-8 py-4 bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 text-white shadow-xl hover:shadow-2xl rounded-2xl hover:from-primary-700 hover:via-cyan-700 hover:to-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold hover:scale-[1.02] text-lg bg-[length:200%_100%] hover:bg-[position:100%_0]"
+            >
+              {loading ? 'Enregistrement...' : 'Enregistrer'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

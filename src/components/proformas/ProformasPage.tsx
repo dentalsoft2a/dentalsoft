@@ -1,0 +1,880 @@
+import { useEffect, useState } from 'react';
+import { Plus, Eye, Edit, Trash2, Search, FileDown, Receipt } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
+import type { Database } from '../../lib/database.types';
+import { generateProformaPDF } from '../../utils/pdfGenerator';
+import DentistSelector from './DentistSelector';
+
+type Proforma = Database['public']['Tables']['proformas']['Row'] & {
+  dentists?: { name: string };
+};
+
+export default function ProformasPage() {
+  const { user, profile } = useAuth();
+  const [proformas, setProformas] = useState<Proforma[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [showModal, setShowModal] = useState(false);
+  const [editingProforma, setEditingProforma] = useState<string | null>(null);
+  const [hasValidSubscription, setHasValidSubscription] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+
+  useEffect(() => {
+    loadProformas();
+    checkSubscription();
+  }, [user]);
+
+  const checkSubscription = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('role, subscription_status, trial_ends_at, subscription_ends_at')
+        .eq('id', user.id)
+        .single();
+
+      if (error) throw error;
+
+      setIsSuperAdmin(data?.role === 'super_admin');
+
+      if (data?.role === 'super_admin') {
+        setHasValidSubscription(true);
+        return;
+      }
+
+      const now = new Date();
+      let validSubscription = false;
+
+      if (data?.subscription_status === 'trial' && data.trial_ends_at) {
+        const trialEnd = new Date(data.trial_ends_at);
+        validSubscription = now <= trialEnd;
+      } else if (data?.subscription_status === 'active' && data.subscription_ends_at) {
+        const subEnd = new Date(data.subscription_ends_at);
+        validSubscription = now <= subEnd;
+      } else if (data?.subscription_status === 'active') {
+        validSubscription = true;
+      }
+
+      setHasValidSubscription(validSubscription);
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+    }
+  };
+
+  const loadProformas = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('proformas')
+        .select('*, dentists(name)')
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      setProformas(data || []);
+    } catch (error) {
+      console.error('Error loading proformas:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredProformas = proformas.filter((proforma) => {
+    const matchesSearch =
+      proforma.proforma_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      proforma.dentists?.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || proforma.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce proforma ?')) return;
+
+    try {
+      const { error } = await supabase.from('proformas').delete().eq('id', id);
+      if (error) throw error;
+      await loadProformas();
+    } catch (error) {
+      console.error('Error deleting proforma:', error);
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const handleConvertToInvoice = async (proforma: Proforma) => {
+    if (!confirm('Êtes-vous sûr de vouloir convertir ce proforma en facture ?')) return;
+
+    try {
+      const proformaDate = new Date(proforma.date);
+      const month = proformaDate.getMonth() + 1;
+      const year = proformaDate.getFullYear();
+
+      const { count } = await supabase
+        .from('invoices')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user!.id);
+
+      const nextNumber = (count || 0) + 1;
+      const invoiceNumber = `INV-${year}-${String(nextNumber).padStart(4, '0')}`;
+
+      const { data: invoiceData, error: invoiceError } = await supabase
+        .from('invoices')
+        .insert({
+          user_id: user!.id,
+          dentist_id: proforma.dentist_id,
+          invoice_number: invoiceNumber,
+          date: new Date().toISOString().split('T')[0],
+          month: month,
+          year: year,
+          status: 'draft',
+          notes: proforma.notes,
+          subtotal: proforma.subtotal,
+          tax_rate: proforma.tax_rate,
+          tax_amount: proforma.tax_amount,
+          total: proforma.total,
+        })
+        .select()
+        .single();
+
+      if (invoiceError) throw invoiceError;
+
+      const { error: linkError } = await supabase
+        .from('invoice_proformas')
+        .insert({
+          invoice_id: invoiceData.id,
+          proforma_id: proforma.id,
+        });
+
+      if (linkError) throw linkError;
+
+      const { error: updateError } = await supabase
+        .from('proformas')
+        .update({ status: 'invoiced' })
+        .eq('id', proforma.id);
+
+      if (updateError) throw updateError;
+
+      alert(`Facture ${invoiceNumber} créée avec succès!`);
+      await loadProformas();
+    } catch (error) {
+      console.error('Error converting to invoice:', error);
+      alert('Erreur lors de la conversion en facture');
+    }
+  };
+
+  const handleGeneratePDF = async (proforma: Proforma) => {
+    try {
+      const { data: dentistData, error: dentistError } = await supabase
+        .from('dentists')
+        .select('*')
+        .eq('id', proforma.dentist_id)
+        .single();
+
+      if (dentistError) throw dentistError;
+
+      const { data: proformaItems, error: itemsError } = await supabase
+        .from('proforma_items')
+        .select('*')
+        .eq('proforma_id', proforma.id);
+
+      if (itemsError) throw itemsError;
+
+      const deliveryNoteIds = [...new Set(
+        proformaItems
+          .map(item => item.delivery_note_id)
+          .filter(id => id != null)
+      )];
+
+      if (deliveryNoteIds.length === 0) {
+        alert('Aucun bon de livraison associé à ce proforma');
+        return;
+      }
+
+      const { data: deliveryNotesData, error: notesError } = await supabase
+        .from('delivery_notes')
+        .select('*')
+        .in('id', deliveryNoteIds)
+        .order('date', { ascending: true });
+
+      if (notesError) throw notesError;
+
+      const deliveryNotes = deliveryNotesData.map(note => ({
+        delivery_number: note.delivery_number,
+        date: note.date,
+        prescription_date: note.prescription_date,
+        patient_name: note.patient_name || '',
+        items: Array.isArray(note.items) ? note.items : []
+      }));
+
+      await generateProformaPDF({
+        proforma_number: proforma.proforma_number,
+        date: proforma.date,
+        laboratory_name: profile?.laboratory_name || '',
+        laboratory_address: profile?.laboratory_address || '',
+        laboratory_phone: profile?.laboratory_phone || '',
+        laboratory_email: profile?.laboratory_email || '',
+        laboratory_logo_url: profile?.laboratory_logo_url || '',
+        laboratory_iban: profile?.laboratory_iban || '',
+        laboratory_bic: profile?.laboratory_bic || '',
+        dentist_name: dentistData.name,
+        dentist_address: dentistData.address || '',
+        delivery_notes: deliveryNotes,
+        tax_rate: Number(proforma.tax_rate)
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Erreur lors de la génération du PDF');
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const styles = {
+      pending: 'bg-orange-100 text-orange-700',
+      validated: 'bg-green-100 text-green-700',
+      invoiced: 'bg-blue-100 text-primary-700',
+    };
+    const labels = {
+      pending: 'En attente',
+      validated: 'Validé',
+      invoiced: 'Facturé',
+    };
+    return (
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status as keyof typeof styles]}`}>
+        {labels[status as keyof typeof labels]}
+      </span>
+    );
+  };
+
+  return (
+    <div>
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Proformas</h1>
+          <p className="text-slate-600 mt-2">Gérez vos devis et proformas</p>
+        </div>
+        <button
+          onClick={() => {
+            setEditingProforma(null);
+            setShowModal(true);
+          }}
+          disabled={!hasValidSubscription && !isSuperAdmin}
+          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:scale-102 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+        >
+          <Plus className="w-5 h-5" />
+          Nouveau proforma
+        </button>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-lg border border-slate-200/50 hover:shadow-xl transition-all duration-300 overflow-hidden">
+        <div className="p-4 border-b border-slate-200">
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Rechercher un proforma..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+              />
+            </div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+            >
+              <option value="all">Tous les statuts</option>
+              <option value="pending">En attente</option>
+              <option value="validated">Validé</option>
+              <option value="invoiced">Facturé</option>
+            </select>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="p-8 text-center text-slate-600">Chargement...</div>
+        ) : filteredProformas.length === 0 ? (
+          <div className="p-8 text-center text-slate-600">
+            {searchTerm || statusFilter !== 'all' ? 'Aucun proforma trouvé' : 'Aucun proforma enregistré'}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b border-slate-200">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Numéro
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Dentiste
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Date
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Statut
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Total TTC
+                  </th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-200">
+                {filteredProformas.map((proforma) => (
+                  <tr key={proforma.id} className="hover:bg-slate-50 transition">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="font-medium text-slate-900">{proforma.proforma_number}</div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                      {proforma.dentists?.name}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                      {new Date(proforma.date).toLocaleDateString('fr-FR')}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(proforma.status)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-slate-900">
+                      {Number(proforma.total).toFixed(2)} €
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        {proforma.status !== 'invoiced' && (
+                          <button
+                            onClick={() => handleConvertToInvoice(proforma)}
+                            className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all duration-200"
+                            title="Facturer"
+                          >
+                            <Receipt className="w-4 h-4" />
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleGeneratePDF(proforma)}
+                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+                          title="Générer PDF"
+                        >
+                          <FileDown className="w-4 h-4" />
+                        </button>
+                        {proforma.status !== 'invoiced' && (
+                          <>
+                            <button
+                              onClick={() => {
+                                setEditingProforma(proforma.id);
+                                setShowModal(true);
+                              }}
+                              className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
+                              title="Modifier"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(proforma.id)}
+                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                              title="Supprimer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {showModal && (
+        <ProformaModal
+          proformaId={editingProforma}
+          onClose={() => {
+            setShowModal(false);
+            setEditingProforma(null);
+          }}
+          onSave={() => {
+            setShowModal(false);
+            setEditingProforma(null);
+            loadProformas();
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+interface ProformaModalProps {
+  proformaId: string | null;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
+  const { user } = useAuth();
+  const [formData, setFormData] = useState({
+    dentist_id: '',
+    proforma_number: '',
+    date: new Date().toISOString().split('T')[0],
+    status: 'pending' as 'pending' | 'validated' | 'invoiced',
+    notes: '',
+    tax_rate: 0,
+  });
+  const [items, setItems] = useState<Array<{
+    id?: string;
+    description: string;
+    quantity: number;
+    unit_price: number;
+    delivery_note_id?: string;
+  }>>([]);
+  const [loading, setLoading] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [deliveryNotes, setDeliveryNotes] = useState<any[]>([]);
+  const [loadingDeliveryNotes, setLoadingDeliveryNotes] = useState(false);
+
+  useEffect(() => {
+    if (proformaId) {
+      loadProforma();
+    } else {
+      generateProformaNumber();
+    }
+  }, [proformaId]);
+
+  useEffect(() => {
+    if (formData.dentist_id || selectedMonth) {
+      loadDeliveryNotes();
+    }
+  }, [formData.dentist_id, selectedMonth]);
+
+  const generateProformaNumber = async () => {
+    if (!user) return;
+
+    try {
+      const { count } = await supabase
+        .from('proformas')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      const nextNumber = (count || 0) + 1;
+      const year = new Date().getFullYear();
+      setFormData((prev) => ({
+        ...prev,
+        proforma_number: `PRO-${year}-${String(nextNumber).padStart(4, '0')}`,
+      }));
+    } catch (error) {
+      console.error('Error generating proforma number:', error);
+    }
+  };
+
+  const loadProforma = async () => {
+    if (!proformaId) return;
+
+    try {
+      const { data: proformaData, error: proformaError } = await supabase
+        .from('proformas')
+        .select('*')
+        .eq('id', proformaId)
+        .single();
+
+      if (proformaError) throw proformaError;
+
+      setFormData({
+        dentist_id: proformaData.dentist_id,
+        proforma_number: proformaData.proforma_number,
+        date: proformaData.date,
+        status: proformaData.status,
+        notes: proformaData.notes || '',
+        tax_rate: Number(proformaData.tax_rate),
+      });
+
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('proforma_items')
+        .select('*')
+        .eq('proforma_id', proformaId);
+
+      if (itemsError) throw itemsError;
+
+      setItems(
+        itemsData.map((item) => ({
+          id: item.id,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: Number(item.unit_price),
+          delivery_note_id: item.delivery_note_id || undefined,
+        }))
+      );
+    } catch (error) {
+      console.error('Error loading proforma:', error);
+    }
+  };
+
+  const loadDeliveryNotes = async () => {
+    if (!user) return;
+
+    setLoadingDeliveryNotes(true);
+    try {
+      let query = supabase
+        .from('delivery_notes')
+        .select('*, dentists(name)')
+        .eq('user_id', user.id);
+
+      if (formData.dentist_id) {
+        query = query.eq('dentist_id', formData.dentist_id);
+      }
+
+      if (selectedMonth) {
+        const startDate = `${selectedMonth}-01`;
+        const endDate = new Date(selectedMonth + '-01');
+        endDate.setMonth(endDate.getMonth() + 1);
+        const endDateStr = endDate.toISOString().split('T')[0];
+
+        query = query.gte('date', startDate).lt('date', endDateStr);
+      }
+
+      const { data, error } = await query.order('date', { ascending: false });
+
+      if (error) throw error;
+      setDeliveryNotes(data || []);
+    } catch (error) {
+      console.error('Error loading delivery notes:', error);
+    } finally {
+      setLoadingDeliveryNotes(false);
+    }
+  };
+
+  const importDeliveryNote = (note: any) => {
+    const noteItems = Array.isArray(note.items) ? note.items : [];
+    const newItems = noteItems.map((item: any) => ({
+      description: item.description || '',
+      quantity: item.quantity || 1,
+      unit_price: item.unit_price || 0,
+      delivery_note_id: note.id,
+    }));
+
+    if (newItems.length > 0) {
+      setItems(prevItems => [...prevItems, ...newItems]);
+    }
+  };
+
+  const importAllDeliveryNotes = () => {
+    const allItems: Array<{
+      description: string;
+      quantity: number;
+      unit_price: number;
+      delivery_note_id: string;
+    }> = [];
+
+    deliveryNotes.forEach((note) => {
+      const noteItems = Array.isArray(note.items) ? note.items : [];
+      noteItems.forEach((item: any) => {
+        allItems.push({
+          description: item.description || '',
+          quantity: item.quantity || 1,
+          unit_price: item.unit_price || 0,
+          delivery_note_id: note.id,
+        });
+      });
+    });
+
+    if (allItems.length > 0) {
+      setItems(prevItems => [...prevItems, ...allItems]);
+    }
+  };
+
+  const calculateTotals = () => {
+    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0);
+    const tax_amount = subtotal * (formData.tax_rate / 100);
+    const total = subtotal + tax_amount;
+    return { subtotal, tax_amount, total };
+  };
+
+  const addItem = () => {
+    setItems([...items, { description: '', quantity: 1, unit_price: 0 }]);
+  };
+
+  const removeItem = (index: number) => {
+    setItems(items.filter((_, i) => i !== index));
+  };
+
+  const updateItem = (index: number, field: string, value: string | number) => {
+    const newItems = [...items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setItems(newItems);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    if (!formData.dentist_id) {
+      alert('Veuillez sélectionner un dentiste');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { subtotal, tax_amount, total } = calculateTotals();
+
+      if (proformaId) {
+        const { error: proformaError } = await supabase
+          .from('proformas')
+          .update({
+            dentist_id: formData.dentist_id,
+            proforma_number: formData.proforma_number,
+            date: formData.date,
+            status: formData.status,
+            notes: formData.notes,
+            tax_rate: formData.tax_rate,
+            subtotal,
+            tax_amount,
+            total,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', proformaId);
+
+        if (proformaError) throw proformaError;
+
+        await supabase.from('proforma_items').delete().eq('proforma_id', proformaId);
+
+        const { error: itemsError } = await supabase.from('proforma_items').insert(
+          items.map((item) => ({
+            proforma_id: proformaId,
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total: item.quantity * item.unit_price,
+            delivery_note_id: item.delivery_note_id || null,
+          }))
+        );
+
+        if (itemsError) throw itemsError;
+      } else {
+        const { data: proformaData, error: proformaError } = await supabase
+          .from('proformas')
+          .insert({
+            user_id: user.id,
+            dentist_id: formData.dentist_id,
+            proforma_number: formData.proforma_number,
+            date: formData.date,
+            status: formData.status,
+            notes: formData.notes,
+            tax_rate: formData.tax_rate,
+            subtotal,
+            tax_amount,
+            total,
+          })
+          .select()
+          .single();
+
+        if (proformaError) throw proformaError;
+
+        const { error: itemsError } = await supabase.from('proforma_items').insert(
+          items.map((item) => ({
+            proforma_id: proformaData.id,
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total: item.quantity * item.unit_price,
+            delivery_note_id: item.delivery_note_id || null,
+          }))
+        );
+
+        if (itemsError) throw itemsError;
+      }
+
+      onSave();
+    } catch (error) {
+      console.error('Error saving proforma:', error);
+      alert('Erreur lors de la sauvegarde');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const { subtotal, tax_amount, total } = calculateTotals();
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-2rem)] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
+        <div className="relative p-8 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 z-10 rounded-t-3xl backdrop-blur-xl flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-t-3xl"></div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">
+            {proformaId ? 'Modifier le proforma' : 'Nouveau proforma'}
+          </h2>
+          <p className="text-slate-500 text-sm mt-2 relative">Gérez vos devis et proformas</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-8 space-y-8 overflow-y-auto flex-1">
+          <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+              <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+              Informations générales
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <DentistSelector
+                selectedDentistId={formData.dentist_id}
+                onSelectDentist={(dentistId) => setFormData({ ...formData, dentist_id: dentistId })}
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+                Numéro <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.proforma_number}
+                onChange={(e) => setFormData({ ...formData, proforma_number: e.target.value })}
+                className="w-full px-4 py-3.5 border border-cyan-200 rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-cyan-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary-500"></span>
+                Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                required
+                value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                className="w-full px-4 py-3.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-primary-300"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+                Statut
+              </label>
+              <select
+                value={formData.status}
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value as 'pending' | 'validated' | 'invoiced' })
+                }
+                className="w-full px-4 py-3.5 border border-cyan-200 rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-cyan-300"
+              >
+                <option value="pending">En attente</option>
+                <option value="validated">Validé</option>
+                <option value="invoiced">Facturé</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary-500"></span>
+                Mois
+              </label>
+              <input
+                type="month"
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-full px-4 py-3.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-primary-300"
+              />
+            </div>
+            </div>
+          </div>
+
+          {deliveryNotes.length > 0 && (
+            <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
+                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                  <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+                  Bons de livraison ({deliveryNotes.length})
+                </h3>
+                <button
+                  type="button"
+                  onClick={importAllDeliveryNotes}
+                  className="px-4 py-2 text-sm bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105"
+                >
+                  Tout importer
+                </button>
+              </div>
+              <div className="max-h-64 overflow-y-auto border border-slate-200 rounded-2xl shadow-sm">
+                {loadingDeliveryNotes ? (
+                  <div className="p-4 text-center text-slate-600">Chargement...</div>
+                ) : (
+                  <div className="divide-y divide-slate-200">
+                    {deliveryNotes.map((note) => (
+                      <div
+                        key={note.id}
+                        className="p-4 hover:bg-gradient-to-r hover:from-primary-50/50 hover:to-cyan-50/50 flex justify-between items-center transition-all duration-200 group"
+                      >
+                        <div>
+                          <div className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors">{note.delivery_number}</div>
+                          <div className="text-sm text-slate-600 mt-1">
+                            {note.dentists?.name} - {new Date(note.date).toLocaleDateString('fr-FR')}
+                            {note.patient_name && ` - ${note.patient_name}`}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => importDeliveryNote(note)}
+                          className="px-4 py-2 text-sm bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105"
+                        >
+                          Importer
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
+            <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+              <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+              Récapitulatif
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600 font-semibold">Sous-total HT</span>
+                <span className="font-bold text-slate-900">{subtotal.toFixed(2)} €</span>
+              </div>
+              <div className="flex justify-between text-sm">
+                <span className="text-slate-600 font-semibold">TVA ({formData.tax_rate}%)</span>
+                <span className="font-bold text-slate-900">{tax_amount.toFixed(2)} €</span>
+              </div>
+              <div className="flex justify-between text-xl font-bold pt-3 border-t-2 border-slate-200">
+                <span className="bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">Total TTC</span>
+                <span className="bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">{total.toFixed(2)} €</span>
+              </div>
+            </div>
+          </div>
+
+        </form>
+
+        <div className="relative p-8 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-b-3xl"></div>
+          <div className="flex gap-4 relative">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-8 py-4 border-2 border-slate-300 text-slate-700 rounded-2xl hover:bg-white hover:border-slate-400 transition-all duration-300 font-bold hover:scale-[1.02] shadow-sm hover:shadow-md text-lg"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="flex-1 px-8 py-4 bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 text-white shadow-xl hover:shadow-2xl rounded-2xl hover:from-primary-700 hover:via-cyan-700 hover:to-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold hover:scale-[1.02] text-lg bg-[length:200%_100%] hover:bg-[position:100%_0]"
+            >
+              {loading ? 'Enregistrement...' : 'Enregistrer'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
