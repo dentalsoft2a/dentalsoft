@@ -33,6 +33,11 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    networks:
+      - gb-dental-network
+    depends_on:
+      postgres:
+        condition: service_healthy
     environment:
       STUDIO_PG_META_URL: http://meta:8080
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -49,6 +54,8 @@ services:
     ports:
       - "8000:8000"
       - "8443:8443"
+    networks:
+      - gb-dental-network
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
@@ -57,13 +64,15 @@ services:
       KONG_NGINX_PROXY_PROXY_BUFFER_SIZE: 160k
       KONG_NGINX_PROXY_PROXY_BUFFERS: 64 160k
     volumes:
-      - ./kong.yml:/var/lib/kong/kong.yml
+      - ./kong.yml:/var/lib/kong/kong.yml:ro
 
   # Supabase Auth
   auth:
     image: supabase/gotrue:v2.132.3
     container_name: gb-dental-auth
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -83,12 +92,12 @@ services:
       GOTRUE_JWT_SECRET: ${JWT_SECRET}
       GOTRUE_EXTERNAL_EMAIL_ENABLED: "true"
       GOTRUE_MAILER_AUTOCONFIRM: "true"
-      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL}
-      GOTRUE_SMTP_HOST: ${SMTP_HOST}
-      GOTRUE_SMTP_PORT: ${SMTP_PORT}
-      GOTRUE_SMTP_USER: ${SMTP_USER}
-      GOTRUE_SMTP_PASS: ${SMTP_PASS}
-      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+      GOTRUE_SMTP_ADMIN_EMAIL: ${SMTP_ADMIN_EMAIL:-admin@example.com}
+      GOTRUE_SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      GOTRUE_SMTP_PORT: ${SMTP_PORT:-587}
+      GOTRUE_SMTP_USER: ${SMTP_USER:-}
+      GOTRUE_SMTP_PASS: ${SMTP_PASS:-}
+      GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-GB Dental}
       GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
       GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
@@ -99,6 +108,8 @@ services:
     image: postgrest/postgrest:v11.2.2
     container_name: gb-dental-rest
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -114,6 +125,8 @@ services:
     image: supabase/realtime:v2.25.35
     container_name: gb-dental-realtime
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -139,6 +152,8 @@ services:
     image: supabase/storage-api:v0.40.4
     container_name: gb-dental-storage
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -164,17 +179,19 @@ services:
     image: supabase/edge-runtime:v1.22.4
     container_name: gb-dental-functions
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     environment:
       JWT_SECRET: ${JWT_SECRET}
       SUPABASE_URL: http://kong:8000
       SUPABASE_ANON_KEY: ${SUPABASE_ANON_KEY}
       SUPABASE_SERVICE_ROLE_KEY: ${SUPABASE_SERVICE_KEY}
       SUPABASE_DB_URL: postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/postgres
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASS: ${SMTP_PASS}
-      SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
+      SMTP_HOST: ${SMTP_HOST:-smtp.gmail.com}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      SMTP_SENDER_NAME: ${SMTP_SENDER_NAME:-GB Dental}
     volumes:
       - ./supabase/functions:/home/deno/functions:ro
 
@@ -183,6 +200,8 @@ services:
     image: supabase/postgres-meta:v0.68.0
     container_name: gb-dental-meta
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     depends_on:
       postgres:
         condition: service_healthy
