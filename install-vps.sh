@@ -247,6 +247,7 @@ services:
       -c wal_level=logical
       -c max_replication_slots=5
       -c max_wal_senders=5
+      -c listen_addresses='*'
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
