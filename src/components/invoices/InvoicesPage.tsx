@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
 import { generateInvoicePDF } from '../../utils/pdfGenerator';
+import DentistSelector from '../proformas/DentistSelector';
 
 type Invoice = Database['public']['Tables']['invoices']['Row'] & {
   dentists?: { name: string };
@@ -379,7 +380,6 @@ interface GenerateInvoiceModalProps {
 
 function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
   const { user } = useAuth();
-  const [dentists, setDentists] = useState<Database['public']['Tables']['dentists']['Row'][]>([]);
   const [selectedDentist, setSelectedDentist] = useState('');
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -387,31 +387,10 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    loadDentists();
-  }, []);
-
-  useEffect(() => {
     if (selectedDentist) {
       loadValidatedProformas();
     }
   }, [selectedDentist, selectedMonth, selectedYear]);
-
-  const loadDentists = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('dentists')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('name');
-
-      if (error) throw error;
-      setDentists(data || []);
-    } catch (error) {
-      console.error('Error loading dentists:', error);
-    }
-  };
 
   const loadValidatedProformas = async () => {
     if (!user || !selectedDentist) return;
@@ -547,22 +526,11 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-3">
-              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary-500"></span>
-                Dentiste <span className="text-red-500">*</span>
-              </label>
-              <select
-                value={selectedDentist}
-                onChange={(e) => setSelectedDentist(e.target.value)}
-                className="w-full px-4 py-3.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-primary-300"
-              >
-                <option value="">Sélectionner un dentiste</option>
-                {dentists.map((dentist) => (
-                  <option key={dentist.id} value={dentist.id}>
-                    {dentist.name}
-                  </option>
-                ))}
-              </select>
+              <DentistSelector
+                selectedDentistId={selectedDentist}
+                onSelectDentist={setSelectedDentist}
+                required={true}
+              />
             </div>
 
             <div>
