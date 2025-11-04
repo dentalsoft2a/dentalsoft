@@ -443,7 +443,40 @@ networks:
     name: gb-dental-network
 EOFCOMPOSE
 
-# 10. Création du fichier kong.yml
+# 10. Copie du script de diagnostic
+echo ""
+echo "🔧 Création du script de diagnostic..."
+cat > ${INSTALL_DIR}/diagnose-jwt.sh << 'EOFDIAG'
+#!/bin/bash
+set -e
+INSTALL_DIR="/opt/gb-dental"
+cd $INSTALL_DIR
+
+echo "=========================================="
+echo "  🔍 Diagnostic JWT Supabase"
+echo "=========================================="
+echo ""
+
+JWT_SECRET=$(grep "^JWT_SECRET=" .env | cut -d'=' -f2)
+ANON_KEY=$(grep "^SUPABASE_ANON_KEY=" .env | cut -d'=' -f2)
+
+echo "1️⃣  JWT_SECRET dans .env: ${#JWT_SECRET} caractères"
+echo "2️⃣  ANON_KEY: ${#ANON_KEY} caractères"
+echo ""
+
+echo "3️⃣  Vérification des conteneurs:"
+docker compose exec -T auth env | grep "GOTRUE_JWT_SECRET=" || echo "   ❌ auth non accessible"
+docker compose exec -T rest env | grep "PGRST_JWT_SECRET=" || echo "   ❌ rest non accessible"
+echo ""
+
+echo "4️⃣  Test API:"
+API_DOMAIN=$(grep "^SUPABASE_PUBLIC_URL=" .env | cut -d'=' -f2 | sed 's|https://||')
+curl -s "https://${API_DOMAIN}/rest/v1/" -H "apikey: ${ANON_KEY}" | head -n 3
+EOFDIAG
+
+chmod +x ${INSTALL_DIR}/diagnose-jwt.sh
+
+# 11. Création du fichier kong.yml
 echo ""
 echo "🦍 Création du kong.yml..."
 cat > ${INSTALL_DIR}/kong.yml << 'EOFKONG'
@@ -660,8 +693,8 @@ docker compose up -d
 
 # 15. Attente du démarrage
 echo ""
-echo "⏳ Attente du démarrage des services (45 secondes)..."
-sleep 45
+echo "⏳ Attente du démarrage des services (90 secondes)..."
+sleep 90
 
 # 16. Vérification de l'état
 echo ""
@@ -671,8 +704,22 @@ docker compose ps
 # 17. Test de l'API
 echo ""
 echo "🧪 Test de l'API..."
-sleep 5
-curl -s https://${API_DOMAIN}/rest/v1/ -H "apikey: ${SUPABASE_ANON_KEY}" | head -n 5
+echo "   Attente que les services soient prêts..."
+for i in {1..10}; do
+    sleep 3
+    RESPONSE=$(curl -s -w "\n%{http_code}" https://${API_DOMAIN}/rest/v1/ -H "apikey: ${SUPABASE_ANON_KEY}" 2>/dev/null || echo "000")
+    HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+    if [ "$HTTP_CODE" = "200" ]; then
+        echo "   ✅ API répond correctement (HTTP $HTTP_CODE)"
+        echo "$RESPONSE" | head -n -1 | head -n 5
+        break
+    else
+        echo "   ⏳ Tentative $i/10 - HTTP $HTTP_CODE (attente...)"
+    fi
+    if [ $i -eq 10 ]; then
+        echo "   ⚠️  L'API ne répond pas encore. Vérifiez les logs: docker compose logs auth rest"
+    fi
+done
 
 # 18. Création du fichier de configuration pour l'application
 echo ""
@@ -708,9 +755,14 @@ echo "  Fichier: ${INSTALL_DIR}/app.env"
 echo ""
 echo "📝 Commandes utiles:"
 echo "  - Voir les logs:        cd ${INSTALL_DIR} && docker compose logs -f"
+echo "  - Logs d'auth:          cd ${INSTALL_DIR} && docker compose logs auth"
+echo "  - Logs de REST:         cd ${INSTALL_DIR} && docker compose logs rest"
 echo "  - Redémarrer:           cd ${INSTALL_DIR} && docker compose restart"
 echo "  - Arrêter:              cd ${INSTALL_DIR} && docker compose down"
 echo "  - Démarrer:             cd ${INSTALL_DIR} && docker compose up -d"
+echo ""
+echo "🔍 Diagnostic JWT (si problème d'authentification):"
+echo "  cd ${INSTALL_DIR} && ./diagnose-jwt.sh"
 echo ""
 echo "⚠️  Sauvegardez ces informations dans un endroit sûr!"
 echo ""
