@@ -289,19 +289,19 @@ export default function CalendarPage() {
                               {date.getDate()}
                             </span>
                             {hasDeliveries && (
-                              <div className="flex gap-0.5 flex-wrap justify-center">
+                              <div className="flex gap-1 flex-wrap justify-center">
                                 {statusCounts.pending > 0 && (
-                                  <div className={`w-2 h-2 rounded-full ${
+                                  <div className={`w-3 h-3 rounded-full ${
                                     isSelected(date) ? 'bg-amber-200' : 'bg-amber-500'
                                   }`} />
                                 )}
                                 {statusCounts.in_progress > 0 && (
-                                  <div className={`w-2 h-2 rounded-full ${
+                                  <div className={`w-3 h-3 rounded-full ${
                                     isSelected(date) ? 'bg-blue-200' : 'bg-blue-500'
                                   } animate-pulse`} />
                                 )}
                                 {statusCounts.completed > 0 && (
-                                  <div className={`w-2 h-2 rounded-full ${
+                                  <div className={`w-3 h-3 rounded-full ${
                                     isSelected(date) ? 'bg-emerald-200' : 'bg-emerald-500'
                                   }`} />
                                 )}
