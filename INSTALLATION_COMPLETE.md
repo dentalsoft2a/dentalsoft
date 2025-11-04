@@ -211,31 +211,68 @@ VITE_SUPABASE_URL=https://api.dentalcloud.fr
 VITE_SUPABASE_ANON_KEY=eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc2MDgzMTIyMCwiZXhwIjo0OTE2NTA0ODIwLCJyb2xlIjoiYW5vbiJ9.VOTRE_SIGNATURE
 ```
 
-**⚠️ IMPORTANT : Générer les bonnes clés JWT**
+**⚠️ IMPORTANT : Générer les bonnes clés JWT automatiquement**
 
-Les clés JWT doivent correspondre à votre JWT_SECRET. Utilisez cet outil en ligne ou créez un script :
+Les clés JWT dans le .env doivent être signées avec votre JWT_SECRET. **Utilisez le script automatique inclus** :
 
-- Allez sur https://jwt.io
-- Payload pour ANON_KEY :
-  ```json
-  {
-    "iss": "supabase",
-    "iat": 1760831220,
-    "exp": 4916504820,
-    "role": "anon"
-  }
-  ```
-- Payload pour SERVICE_KEY :
-  ```json
-  {
-    "iss": "supabase",
-    "iat": 1760831220,
-    "exp": 4916504820,
-    "role": "service_role"
-  }
-  ```
-- Dans "Verify Signature", collez votre JWT_SECRET
-- Copiez les tokens générés dans votre .env
+```bash
+# Le script est inclus dans le repository
+cd /opt/gb-dental
+chmod +x generate-jwt-keys.sh
+
+# Exécuter le script
+./generate-jwt-keys.sh
+```
+
+**Le script va :**
+1. Lire votre JWT_SECRET depuis le .env
+2. Générer automatiquement SUPABASE_ANON_KEY
+3. Générer automatiquement SUPABASE_SERVICE_KEY
+4. Afficher les valeurs à copier dans votre .env
+
+**Ensuite, copiez les 3 lignes affichées dans votre .env :**
+```bash
+nano .env
+# Remplacez les lignes SUPABASE_ANON_KEY, SUPABASE_SERVICE_KEY et VITE_SUPABASE_ANON_KEY
+# Ctrl+X puis Y pour sauvegarder
+```
+
+**Si jwt-cli ne s'installe pas, utilisez cette méthode manuelle :**
+
+1. Allez sur **https://jwt.io**
+2. Dans la section **HEADER**, laissez :
+   ```json
+   {
+     "alg": "HS256",
+     "typ": "JWT"
+   }
+   ```
+3. Dans la section **PAYLOAD**, collez (pour ANON_KEY) :
+   ```json
+   {
+     "iss": "supabase",
+     "role": "anon",
+     "iat": 1760831220,
+     "exp": 4916504820
+   }
+   ```
+4. Dans la section **VERIFY SIGNATURE** (en bas), collez votre JWT_SECRET
+5. Copiez le token généré (en bleu en haut à gauche) → c'est votre SUPABASE_ANON_KEY
+
+6. Répétez pour SERVICE_KEY avec ce payload :
+   ```json
+   {
+     "iss": "supabase",
+     "role": "service_role",
+     "iat": 1760831220,
+     "exp": 4916504820
+   }
+   ```
+
+**Pourquoi c'est nécessaire ?**
+- Les JWT tokens doivent être signés avec votre JWT_SECRET pour que Supabase les valide
+- Les tokens par défaut ne fonctionneront PAS avec votre secret personnalisé
+- Sans tokens valides, l'authentification échouera
 
 ### Étape 3.3 : Vérifier les répertoires
 
