@@ -745,10 +745,10 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-white" />
+                  <Calendar className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-slate-900">Travaux Urgents</h2>
+                  <h2 className="text-lg font-bold text-slate-900">Livraisons Urgentes</h2>
                   <p className="text-sm text-slate-600">Livraisons dans les 48h</p>
                 </div>
               </div>
