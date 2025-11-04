@@ -92,13 +92,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            laboratory_name: laboratoryName,
-          }
-        }
       });
 
       if (error) throw error;
@@ -111,14 +104,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           laboratory_name: laboratoryName,
         });
 
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-        }
+        if (profileError) throw profileError;
       }
 
       return { error: null };
     } catch (error) {
-      console.error('Signup error:', error);
       return { error: error as Error };
     }
   };
