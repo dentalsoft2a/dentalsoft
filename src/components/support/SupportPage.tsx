@@ -350,7 +350,7 @@ export function SupportPage() {
                         }`}
                       >
                         {msg.is_admin && (
-                          <p className="text-xs font-medium text-primary-600 mb-2">Support DentalSoft</p>
+                          <p className="text-xs font-medium text-primary-600 mb-2">Support DentalCloud</p>
                         )}
                         <p className="text-sm mb-2">{msg.message}</p>
                         <p className={`text-xs ${msg.is_admin ? 'text-slate-500' : 'text-white/80'}`}>

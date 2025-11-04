@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import DentalSoftLogo from '../common/DentalSoftLogo';
+import DentalCloudLogo from '../common/DentalCloudLogo';
 
 interface RegisterPageProps {
   onToggleLogin: () => void;
@@ -35,9 +35,9 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
         <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-200/50 p-8">
           <div className="flex flex-col items-center mb-8">
             <div className="mb-4">
-              <DentalSoftLogo size={56} showText={false} />
+              <DentalCloudLogo size={56} showText={false} />
             </div>
-            <h1 className="text-2xl font-bold text-slate-900">DentalSoft</h1>
+            <h1 className="text-2xl font-bold text-slate-900">DentalCloud</h1>
             <p className="text-slate-600 mt-2">Créer votre compte</p>
           </div>
 

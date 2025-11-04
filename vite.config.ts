@@ -10,8 +10,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['image.png'],
       manifest: {
-        name: 'DentalSoft - Gestion de Laboratoire',
-        short_name: 'DentalSoft',
+        name: 'DentalCloud - Gestion de Laboratoire',
+        short_name: 'DentalCloud',
         description: 'Application de gestion pour laboratoire dentaire',
         theme_color: '#0ea5e9',
         background_color: '#ffffff',

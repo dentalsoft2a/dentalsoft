@@ -19,7 +19,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
-import DentalSoftLogo from '../common/DentalSoftLogo';
+import DentalCloudLogo from '../common/DentalCloudLogo';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -68,7 +68,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
             >
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
-            <h1 className="font-semibold bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">DentalSoft</h1>
+            <h1 className="font-semibold bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">DentalCloud</h1>
           </div>
         </div>
       </div>
@@ -80,7 +80,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
       `}>
         <div className="flex flex-col h-full">
           <div className="p-6 border-b border-slate-200/50">
-            <DentalSoftLogo size={36} showText={true} />
+            <DentalCloudLogo size={36} showText={true} />
             {profile && (
               <p className="text-sm text-slate-600 mt-3 pl-1">{profile.laboratory_name}</p>
             )}

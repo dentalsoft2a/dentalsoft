@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import DentalSoftLogo from '../common/DentalSoftLogo';
+import DentalCloudLogo from '../common/DentalCloudLogo';
 
 interface LoginPageProps {
   onToggleRegister: () => void;
@@ -32,9 +32,9 @@ export default function LoginPage({ onToggleRegister }: LoginPageProps) {
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-slate-200/50">
           <div className="flex flex-col items-center mb-8">
             <div className="mb-4">
-              <DentalSoftLogo size={56} showText={false} />
+              <DentalCloudLogo size={56} showText={false} />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">DentalSoft</h1>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">DentalCloud</h1>
             <p className="text-slate-600 mt-2">Gestion professionnelle pour laboratoires dentaires</p>
           </div>
 

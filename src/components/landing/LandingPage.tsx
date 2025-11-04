@@ -1,7 +1,7 @@
 import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import DentalSoftLogo from '../common/DentalSoftLogo';
+import DentalCloudLogo from '../common/DentalCloudLogo';
 
 export function LandingPage() {
   const { signIn, signUp } = useAuth();
@@ -102,7 +102,7 @@ export function LandingPage() {
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <DentalSoftLogo size={32} showText={true} />
+            <DentalCloudLogo size={32} showText={true} />
             <button
               onClick={toggleAuthMode}
               className="px-6 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-medium hover:shadow-lg transition-all duration-300"
@@ -118,7 +118,7 @@ export function LandingPage() {
           <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
             <div className="text-center mb-8">
               <div className="flex justify-center mb-4">
-                <DentalSoftLogo size={56} showText={false} />
+                <DentalCloudLogo size={56} showText={false} />
               </div>
               <h2 className="text-2xl font-bold text-slate-900">
                 {isRegisterMode ? 'Créer un compte' : 'Connexion'}
@@ -263,7 +263,7 @@ export function LandingPage() {
               </h1>
 
               <p className="text-xl text-slate-600 mb-8 leading-relaxed">
-                De la création des bons de livraison à la facturation finale, DentalSoft centralise toute votre gestion administrative dans une seule application moderne et intuitive.
+                De la création des bons de livraison à la facturation finale, DentalCloud centralise toute votre gestion administrative dans une seule application moderne et intuitive.
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -599,7 +599,7 @@ export function LandingPage() {
                 <div className="flex-1">
                   <h3 className="text-2xl font-bold text-slate-900 mb-3">Communauté d'entraide</h3>
                   <p className="text-slate-700 mb-4 leading-relaxed">
-                    Le centre d'aide DentalSoft n'est pas qu'un simple support technique ! C'est aussi une <span className="font-semibold text-blue-700">communauté collaborative</span> où tous les utilisateurs peuvent partager leurs expériences, astuces et solutions.
+                    Le centre d'aide DentalCloud n'est pas qu'un simple support technique ! C'est aussi une <span className="font-semibold text-blue-700">communauté collaborative</span> où tous les utilisateurs peuvent partager leurs expériences, astuces et solutions.
                   </p>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="bg-white rounded-xl p-4 shadow-sm">
@@ -667,7 +667,7 @@ export function LandingPage() {
                   Envoyez-nous un email détaillé et recevez une réponse dans les 24h
                 </p>
                 <div className="text-blue-600 font-medium text-sm">
-                  support@dentalsoft.fr
+                  support@dentalcloud.fr
                 </div>
               </div>
 
@@ -677,7 +677,7 @@ export function LandingPage() {
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Base de connaissances</h3>
                 <p className="text-slate-600 mb-4">
-                  Consultez nos guides et tutoriels pour devenir expert de DentalSoft
+                  Consultez nos guides et tutoriels pour devenir expert de DentalCloud
                 </p>
                 <div className="text-violet-600 font-medium text-sm">
                   +50 articles disponibles
@@ -705,7 +705,7 @@ export function LandingPage() {
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
             <div className="text-center mb-12">
               <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-gradient-to-r from-slate-900 to-primary-900 bg-clip-text text-transparent">
-                Pourquoi choisir DentalSoft ?
+                Pourquoi choisir DentalCloud ?
               </h2>
             </div>
 
@@ -823,7 +823,7 @@ export function LandingPage() {
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-cyan-500 flex items-center justify-center">
                       <Package className="w-6 h-6 text-white" />
                     </div>
-                    <span className="text-xl font-bold">DentalSoft</span>
+                    <span className="text-xl font-bold">DentalCloud</span>
                   </div>
                   <p className="text-slate-400">
                     La solution de gestion complète pour votre laboratoire dentaire.
@@ -851,7 +851,7 @@ export function LandingPage() {
               </div>
 
               <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400">
-                <p>&copy; 2024 DentalSoft. Tous droits réservés.</p>
+                <p>&copy; 2024 DentalCloud. Tous droits réservés.</p>
               </div>
             </div>
           </footer>

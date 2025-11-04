@@ -261,7 +261,7 @@ export function SubscriptionPage() {
                 <div>
                   <h4 className="font-medium text-red-900 mb-1">Abonnement expiré</h4>
                   <p className="text-sm text-red-700">
-                    Votre abonnement a expiré. Utilisez un code d'accès ou contactez le support pour continuer à utiliser DentalSoft.
+                    Votre abonnement a expiré. Utilisez un code d'accès ou contactez le support pour continuer à utiliser DentalCloud.
                   </p>
                 </div>
               </div>
@@ -312,7 +312,7 @@ export function SubscriptionPage() {
                 <div>
                   <h4 className="font-medium text-emerald-900 mb-1">Abonnement actif</h4>
                   <p className="text-sm text-emerald-700">
-                    Vous avez accès à toutes les fonctionnalités de DentalSoft. Pour toute question, contactez notre support.
+                    Vous avez accès à toutes les fonctionnalités de DentalCloud. Pour toute question, contactez notre support.
                   </p>
                 </div>
               </div>
