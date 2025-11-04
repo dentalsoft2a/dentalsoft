@@ -37,6 +37,8 @@ services:
     restart: unless-stopped
     ports:
       - "3000:3000"
+    networks:
+      - gb-dental-network
     environment:
       STUDIO_PG_META_URL: http://meta:8080
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -53,6 +55,8 @@ services:
     ports:
       - "8000:8000"
       - "8443:8443"
+    networks:
+      - gb-dental-network
     environment:
       KONG_DATABASE: "off"
       KONG_DECLARATIVE_CONFIG: /var/lib/kong/kong.yml
@@ -68,6 +72,8 @@ services:
     image: supabase/gotrue:v2.132.3
     container_name: gb-dental-auth
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -103,6 +109,8 @@ services:
     image: postgrest/postgrest:v11.2.2
     container_name: gb-dental-rest
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -118,6 +126,8 @@ services:
     image: supabase/realtime:v2.25.35
     container_name: gb-dental-realtime
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -143,6 +153,8 @@ services:
     image: supabase/storage-api:v0.40.4
     container_name: gb-dental-storage
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     depends_on:
       postgres:
         condition: service_healthy
@@ -168,6 +180,8 @@ services:
     image: supabase/edge-runtime:v1.22.4
     container_name: gb-dental-functions
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     environment:
       JWT_SECRET: ${JWT_SECRET}
       SUPABASE_URL: http://kong:8000
@@ -187,6 +201,8 @@ services:
     image: supabase/postgres-meta:v0.68.0
     container_name: gb-dental-meta
     restart: unless-stopped
+    networks:
+      - gb-dental-network
     depends_on:
       postgres:
         condition: service_healthy
