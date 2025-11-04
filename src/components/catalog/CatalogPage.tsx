@@ -633,7 +633,7 @@ export default function CatalogPage() {
                   min="0"
                   step="0.01"
                   value={formData.default_price}
-                  onChange={(e) => setFormData({ ...formData, default_price: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setFormData({ ...formData, default_price: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                 />
               </div>
