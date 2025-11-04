@@ -14,6 +14,9 @@ interface DeliveryItem {
   unit?: string;
   shade?: string;
   tooth_number?: string;
+  catalog_item?: {
+    name: string;
+  };
 }
 
 interface DeliveryWithDentist extends DeliveryNote {
@@ -56,7 +59,29 @@ export default function CalendarPage() {
         .order('date');
 
       if (error) throw error;
-      setDeliveries(data as DeliveryWithDentist[] || []);
+
+      // Load catalog items for each delivery note
+      const deliveriesWithItems = await Promise.all(
+        (data || []).map(async (delivery) => {
+          const { data: itemsData } = await supabase
+            .from('proforma_items')
+            .select(`
+              quantity,
+              catalog_item:catalog_items(name)
+            `)
+            .eq('delivery_note_id', delivery.id);
+
+          return {
+            ...delivery,
+            items: itemsData?.map(item => ({
+              ...item,
+              description: item.catalog_item?.name || '',
+            })) || delivery.items || []
+          };
+        })
+      );
+
+      setDeliveries(deliveriesWithItems as DeliveryWithDentist[] || []);
     } catch (error) {
       console.error('Error loading deliveries:', error);
     } finally {
