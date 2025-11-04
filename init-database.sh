@@ -10,7 +10,7 @@ echo "=================================================="
 echo ""
 
 # Vérifier que Docker Compose est en cours d'exécution
-if ! docker compose ps | grep -q "gb-dental-postgres.*running"; then
+if ! docker compose ps 2>/dev/null | grep -q "gb-dental-postgres.*Up"; then
     echo "❌ Erreur : Le conteneur PostgreSQL n'est pas en cours d'exécution"
     echo "   Démarrez-le avec : docker compose up -d postgres"
     exit 1
