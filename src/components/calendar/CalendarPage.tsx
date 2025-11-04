@@ -60,23 +60,33 @@ export default function CalendarPage() {
 
       if (error) throw error;
 
-      // Load catalog items for each delivery note
+      // Enrich items with catalog data
       const deliveriesWithItems = await Promise.all(
         (data || []).map(async (delivery) => {
-          const { data: itemsData } = await supabase
-            .from('proforma_items')
-            .select(`
-              quantity,
-              catalog_item:catalog_items(name)
-            `)
-            .eq('delivery_note_id', delivery.id);
+          const items = Array.isArray(delivery.items) ? delivery.items : [];
+
+          // Load catalog items for items that have catalog_item_id
+          const enrichedItems = await Promise.all(
+            items.map(async (item: any) => {
+              if (item.catalog_item_id) {
+                const { data: catalogItem } = await supabase
+                  .from('catalog_items')
+                  .select('name')
+                  .eq('id', item.catalog_item_id)
+                  .maybeSingle();
+
+                return {
+                  ...item,
+                  catalog_item: catalogItem
+                };
+              }
+              return item;
+            })
+          );
 
           return {
             ...delivery,
-            items: itemsData?.map(item => ({
-              ...item,
-              description: item.catalog_item?.name || '',
-            })) || delivery.items || []
+            items: enrichedItems
           };
         })
       );
