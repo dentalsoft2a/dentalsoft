@@ -378,9 +378,15 @@ export default function CalendarPage() {
                         )}
 
                         {itemCount > 0 && (
-                          <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-1.5">
-                            <Package className="w-3.5 h-3.5 text-slate-400" />
-                            <span>{itemCount} {itemCount === 1 ? 'article' : 'articles'}</span>
+                          <div className="text-xs text-slate-600 mb-1.5 space-y-0.5">
+                            {items.map((item: any, index: number) => (
+                              <div key={index} className="flex items-center gap-1.5">
+                                <Package className="w-3.5 h-3.5 text-slate-400" />
+                                <span className="truncate">
+                                  {item.catalog_item?.name || 'Article'} x {item.quantity}
+                                </span>
+                              </div>
+                            ))}
                           </div>
                         )}
 
