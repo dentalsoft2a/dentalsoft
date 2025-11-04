@@ -57,7 +57,8 @@ apt install -y \
     nginx \
     certbot \
     python3-certbot-nginx \
-    openssl
+    openssl \
+    apache2-utils
 
 # 3. Installation de Docker
 echo ""
@@ -102,30 +103,26 @@ cd ${INSTALL_DIR}
 echo ""
 echo "🔐 Génération des secrets..."
 POSTGRES_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-32)
-JWT_SECRET=$(openssl rand -base64 64 | tr -d "=+/" | cut -c1-64)
-ANON_KEY_PAYLOAD='{"role":"anon","iss":"supabase","iat":1641769200,"exp":1957345200}'
-SERVICE_KEY_PAYLOAD='{"role":"service_role","iss":"supabase","iat":1641769200,"exp":1957345200}'
+JWT_SECRET=$(openssl rand -base64 64 | tr -d "\n=+/")
 
 # Fonction pour générer JWT
 generate_jwt() {
     local payload=$1
     local secret=$2
 
-    # Header
     header='{"alg":"HS256","typ":"JWT"}'
     header_b64=$(echo -n "$header" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-
-    # Payload
     payload_b64=$(echo -n "$payload" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
-
-    # Signature
     signature=$(echo -n "${header_b64}.${payload_b64}" | openssl dgst -binary -sha256 -hmac "$secret" | openssl base64 -e -A | tr '+/' '-_' | tr -d '=')
 
     echo "${header_b64}.${payload_b64}.${signature}"
 }
 
-SUPABASE_ANON_KEY=$(generate_jwt "$ANON_KEY_PAYLOAD" "$JWT_SECRET")
-SUPABASE_SERVICE_KEY=$(generate_jwt "$SERVICE_KEY_PAYLOAD" "$JWT_SECRET")
+ANON_PAYLOAD='{"role":"anon","iss":"supabase","iat":1641769200,"exp":1957345200}'
+SERVICE_PAYLOAD='{"role":"service_role","iss":"supabase","iat":1641769200,"exp":1957345200}'
+
+SUPABASE_ANON_KEY=$(generate_jwt "$ANON_PAYLOAD" "$JWT_SECRET")
+SUPABASE_SERVICE_KEY=$(generate_jwt "$SERVICE_PAYLOAD" "$JWT_SECRET")
 
 # 8. Création du fichier .env
 echo ""
@@ -140,13 +137,14 @@ JWT_SECRET=${JWT_SECRET}
 # Supabase Keys
 SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
+SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_KEY}
 
 # URLs
 SUPABASE_PUBLIC_URL=https://${API_DOMAIN}
 SITE_URL=https://${FULL_DOMAIN}
 GOTRUE_URI_ALLOW_LIST=https://${FULL_DOMAIN}/*,https://${API_DOMAIN}/*,https://${STUDIO_DOMAIN}/*
 
-# SMTP (à configurer plus tard)
+# SMTP
 SMTP_ADMIN_EMAIL=noreply@${DOMAIN}
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -159,14 +157,27 @@ chmod 600 ${INSTALL_DIR}/.env
 
 # 9. Création du script d'initialisation de la base de données
 echo ""
-echo "💾 Création du script d'initialisation de la base de données..."
-cat > ${INSTALL_DIR}/init-database.sh << EOFINIT
+echo "💾 Création du script d'initialisation..."
+cat > ${INSTALL_DIR}/init-db.sh << 'EOFINIT'
 #!/bin/bash
 set -e
 
+echo "Initialisation de la base de données Supabase..."
+
 psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
+    -- Création des extensions
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+    CREATE EXTENSION IF NOT EXISTS "pgjwt";
+
+    -- Création des schémas
+    CREATE SCHEMA IF NOT EXISTS auth;
+    CREATE SCHEMA IF NOT EXISTS storage;
+    CREATE SCHEMA IF NOT EXISTS _realtime;
+    CREATE SCHEMA IF NOT EXISTS realtime;
+
     -- Création des rôles
-    DO \\\$\\\$
+    DO \$\$
     BEGIN
         IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anon') THEN
             CREATE ROLE anon NOLOGIN NOINHERIT;
@@ -193,37 +204,83 @@ psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
         END IF;
 
         IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'supabase_admin') THEN
-            CREATE ROLE supabase_admin LOGIN PASSWORD '${POSTGRES_PASSWORD}';
+            CREATE ROLE supabase_admin LOGIN PASSWORD '${POSTGRES_PASSWORD}' SUPERUSER;
         END IF;
     END
-    \\\$\\\$;
+    \$\$;
 
-    -- Grants
+    -- Attribution des rôles
     GRANT anon, authenticated, service_role TO authenticator;
-    GRANT ALL PRIVILEGES ON DATABASE postgres TO supabase_auth_admin;
-    GRANT ALL PRIVILEGES ON DATABASE postgres TO supabase_storage_admin;
-    GRANT ALL PRIVILEGES ON DATABASE postgres TO supabase_admin;
+    GRANT ALL ON DATABASE postgres TO supabase_admin;
+    GRANT ALL ON DATABASE postgres TO supabase_auth_admin;
+    GRANT ALL ON DATABASE postgres TO supabase_storage_admin;
 
-    -- Création des schémas
-    CREATE SCHEMA IF NOT EXISTS auth;
-    CREATE SCHEMA IF NOT EXISTS storage;
-    CREATE SCHEMA IF NOT EXISTS _realtime;
-
-    -- Grants sur les schémas
-    GRANT USAGE ON SCHEMA auth TO supabase_auth_admin, authenticated, anon;
-    GRANT ALL ON SCHEMA auth TO supabase_auth_admin;
-    GRANT USAGE ON SCHEMA storage TO supabase_storage_admin, authenticated, anon;
-    GRANT ALL ON SCHEMA storage TO supabase_storage_admin;
+    -- Permissions sur les schémas
     GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
     GRANT ALL ON SCHEMA public TO supabase_admin;
+    GRANT ALL ON ALL TABLES IN SCHEMA public TO supabase_admin;
+    GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO supabase_admin;
 
-    -- Extensions
-    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+    GRANT USAGE ON SCHEMA auth TO supabase_auth_admin, authenticated, anon;
+    GRANT ALL ON SCHEMA auth TO supabase_auth_admin;
+    GRANT ALL ON ALL TABLES IN SCHEMA auth TO supabase_auth_admin;
+    GRANT ALL ON ALL SEQUENCES IN SCHEMA auth TO supabase_auth_admin;
+
+    GRANT USAGE ON SCHEMA storage TO supabase_storage_admin, authenticated, anon;
+    GRANT ALL ON SCHEMA storage TO supabase_storage_admin;
+
+    GRANT USAGE ON SCHEMA _realtime TO supabase_admin;
+    GRANT ALL ON SCHEMA _realtime TO supabase_admin;
+
+    GRANT USAGE ON SCHEMA realtime TO supabase_admin;
+    GRANT ALL ON SCHEMA realtime TO supabase_admin;
+
+    -- Initialisation du schéma storage
+    CREATE TABLE IF NOT EXISTS storage.buckets (
+        id text PRIMARY KEY,
+        name text NOT NULL,
+        owner uuid,
+        created_at timestamptz DEFAULT now(),
+        updated_at timestamptz DEFAULT now(),
+        public boolean DEFAULT false
+    );
+
+    CREATE TABLE IF NOT EXISTS storage.objects (
+        id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+        bucket_id text REFERENCES storage.buckets(id),
+        name text NOT NULL,
+        owner uuid,
+        created_at timestamptz DEFAULT now(),
+        updated_at timestamptz DEFAULT now(),
+        last_accessed_at timestamptz DEFAULT now(),
+        metadata jsonb
+    );
+
+    ALTER TABLE storage.buckets ENABLE ROW LEVEL SECURITY;
+    ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+
+    -- Permissions par défaut pour storage
+    GRANT ALL ON storage.buckets TO supabase_storage_admin, authenticated;
+    GRANT ALL ON storage.objects TO supabase_storage_admin, authenticated;
+
+    -- Initialisation du schéma realtime
+    CREATE TABLE IF NOT EXISTS _realtime.schema_migrations (
+        version bigint PRIMARY KEY,
+        inserted_at timestamp DEFAULT now()
+    );
+
+    INSERT INTO _realtime.schema_migrations (version) VALUES (20211116024918) ON CONFLICT DO NOTHING;
+
+    GRANT ALL ON _realtime.schema_migrations TO supabase_admin;
+
+    -- Confirmation
+    SELECT 'Base de données initialisée avec succès!' as message;
 EOSQL
+
+echo "✅ Base de données initialisée"
 EOFINIT
 
-chmod +x ${INSTALL_DIR}/init-database.sh
+chmod +x ${INSTALL_DIR}/init-db.sh
 
 # 10. Création du docker-compose.yml
 echo ""
@@ -241,18 +298,18 @@ services:
       POSTGRES_DB: postgres
     volumes:
       - db-data:/var/lib/postgresql/data
-      - ./init-database.sh:/docker-entrypoint-initdb.d/init-database.sh:ro
+      - ./init-db.sh:/docker-entrypoint-initdb.d/01-init.sh:ro
     command: >
       postgres
       -c wal_level=logical
-      -c max_replication_slots=5
-      -c max_wal_senders=5
+      -c max_replication_slots=10
+      -c max_wal_senders=10
       -c listen_addresses='*'
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   rest:
     image: postgrest/postgrest:v11.2.2
@@ -267,8 +324,6 @@ services:
       PGRST_DB_ANON_ROLE: anon
       PGRST_JWT_SECRET: ${JWT_SECRET}
       PGRST_DB_USE_LEGACY_GUCS: "false"
-      PGRST_APP_SETTINGS_JWT_SECRET: ${JWT_SECRET}
-      PGRST_APP_SETTINGS_JWT_EXP: 3600
     ports:
       - "127.0.0.1:3000:3000"
 
@@ -301,10 +356,6 @@ services:
       GOTRUE_SMTP_USER: ${SMTP_USER}
       GOTRUE_SMTP_PASS: ${SMTP_PASS}
       GOTRUE_SMTP_SENDER_NAME: ${SMTP_SENDER_NAME}
-      GOTRUE_MAILER_URLPATHS_INVITE: /auth/v1/verify
-      GOTRUE_MAILER_URLPATHS_CONFIRMATION: /auth/v1/verify
-      GOTRUE_MAILER_URLPATHS_RECOVERY: /auth/v1/verify
-      GOTRUE_MAILER_URLPATHS_EMAIL_CHANGE: /auth/v1/verify
     ports:
       - "127.0.0.1:9999:9999"
 
@@ -331,7 +382,7 @@ services:
       ENABLE_TAILSCALE: "false"
       DNS_NODES: "''"
     command: >
-      bash -c "./prod/rel/realtime/bin/realtime eval 'Realtime.Release.migrate' && ./prod/rel/realtime/bin/realtime start"
+      sh -c "/app/bin/migrate && /app/bin/realtime eval 'Realtime.Release.seeds(Realtime.Repo)' && /app/bin/server"
     ports:
       - "127.0.0.1:4000:4000"
 
@@ -356,26 +407,10 @@ services:
       TENANT_ID: stub
       REGION: stub
       GLOBAL_S3_BUCKET: stub
-      ENABLE_IMAGE_TRANSFORMATION: "true"
-      IMGPROXY_URL: http://imgproxy:5001
     volumes:
       - storage-data:/var/lib/storage
     ports:
       - "127.0.0.1:5000:5000"
-
-  imgproxy:
-    image: darthsim/imgproxy:v3.8.0
-    container_name: gb-dental-imgproxy
-    restart: unless-stopped
-    environment:
-      IMGPROXY_BIND: ":5001"
-      IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
-      IMGPROXY_USE_ETAG: "true"
-      IMGPROXY_ENABLE_WEBP_DETECTION: "true"
-    volumes:
-      - storage-data:/var/lib/storage
-    ports:
-      - "127.0.0.1:5001:5001"
 
   kong:
     image: kong:2.8.1
@@ -443,43 +478,10 @@ networks:
     name: gb-dental-network
 EOFCOMPOSE
 
-# 10. Copie du script de diagnostic
-echo ""
-echo "🔧 Création du script de diagnostic..."
-cat > ${INSTALL_DIR}/diagnose-jwt.sh << 'EOFDIAG'
-#!/bin/bash
-set -e
-INSTALL_DIR="/opt/gb-dental"
-cd $INSTALL_DIR
-
-echo "=========================================="
-echo "  🔍 Diagnostic JWT Supabase"
-echo "=========================================="
-echo ""
-
-JWT_SECRET=$(grep "^JWT_SECRET=" .env | cut -d'=' -f2)
-ANON_KEY=$(grep "^SUPABASE_ANON_KEY=" .env | cut -d'=' -f2)
-
-echo "1️⃣  JWT_SECRET dans .env: ${#JWT_SECRET} caractères"
-echo "2️⃣  ANON_KEY: ${#ANON_KEY} caractères"
-echo ""
-
-echo "3️⃣  Vérification des conteneurs:"
-docker compose exec -T auth env | grep "GOTRUE_JWT_SECRET=" || echo "   ❌ auth non accessible"
-docker compose exec -T rest env | grep "PGRST_JWT_SECRET=" || echo "   ❌ rest non accessible"
-echo ""
-
-echo "4️⃣  Test API:"
-API_DOMAIN=$(grep "^SUPABASE_PUBLIC_URL=" .env | cut -d'=' -f2 | sed 's|https://||')
-curl -s "https://${API_DOMAIN}/rest/v1/" -H "apikey: ${ANON_KEY}" | head -n 3
-EOFDIAG
-
-chmod +x ${INSTALL_DIR}/diagnose-jwt.sh
-
 # 11. Création du fichier kong.yml
 echo ""
 echo "🦍 Création du kong.yml..."
-cat > ${INSTALL_DIR}/kong.yml << 'EOFKONG'
+cat > ${INSTALL_DIR}/kong.yml << EOFKONG
 _format_version: "1.1"
 
 services:
@@ -514,7 +516,6 @@ services:
       - name: cors
 
   - name: auth-v1
-    _comment: "GoTrue: /auth/v1/* -> http://auth:9999/*"
     url: http://auth:9999/
     routes:
       - name: auth-v1-all
@@ -525,7 +526,6 @@ services:
       - name: cors
 
   - name: rest-v1
-    _comment: "PostgREST: /rest/v1/* -> http://rest:3000/*"
     url: http://rest:3000/
     routes:
       - name: rest-v1-all
@@ -539,7 +539,6 @@ services:
           hide_credentials: false
 
   - name: realtime-v1
-    _comment: "Realtime: /realtime/v1/* -> ws://realtime:4000/socket/*"
     url: http://realtime:4000/socket/
     routes:
       - name: realtime-v1-all
@@ -553,7 +552,6 @@ services:
           hide_credentials: false
 
   - name: storage-v1
-    _comment: "Storage: /storage/v1/* -> http://storage:5000/*"
     url: http://storage:5000/
     routes:
       - name: storage-v1-all
@@ -564,7 +562,6 @@ services:
       - name: cors
 
   - name: meta
-    _comment: "PG-Meta: /pg/* -> http://meta:8080/*"
     url: http://meta:8080/
     routes:
       - name: meta-all
@@ -610,14 +607,13 @@ plugins:
       max_age: 3600
 EOFKONG
 
-# 11. Génération du mot de passe pour Studio
+# 12. Génération du mot de passe pour Studio
 echo ""
 echo "🔐 Génération du mot de passe pour Studio..."
 STUDIO_PASSWORD=$(openssl rand -base64 16)
-apt install -y apache2-utils
 htpasswd -bc /etc/nginx/.htpasswd admin "${STUDIO_PASSWORD}"
 
-# 12. Configuration de Nginx
+# 13. Configuration de Nginx
 echo ""
 echo "🌐 Configuration de Nginx..."
 
@@ -627,6 +623,8 @@ server {
     listen 80;
     server_name ${API_DOMAIN};
 
+    client_max_body_size 50M;
+
     location / {
         proxy_pass http://127.0.0.1:8000;
         proxy_set_header Host \$host;
@@ -634,12 +632,10 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
 
-        # WebSocket support
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
 
-        # Timeouts
         proxy_connect_timeout 600s;
         proxy_send_timeout 600s;
         proxy_read_timeout 600s;
@@ -647,14 +643,13 @@ server {
 }
 EOFNGINX
 
-# Studio (avec authentification)
+# Studio
 cat > /etc/nginx/sites-available/${STUDIO_DOMAIN} << EOFNGINX
 server {
     listen 80;
     server_name ${STUDIO_DOMAIN};
 
     location / {
-        # Authentification HTTP Basic
         auth_basic "Supabase Studio - Accès Restreint";
         auth_basic_user_file /etc/nginx/.htpasswd;
 
@@ -664,7 +659,6 @@ server {
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto \$scheme;
 
-        # WebSocket support
         proxy_http_version 1.1;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -672,56 +666,49 @@ server {
 }
 EOFNGINX
 
-# Activation des sites
+# Activation
 ln -sf /etc/nginx/sites-available/${API_DOMAIN} /etc/nginx/sites-enabled/
 ln -sf /etc/nginx/sites-available/${STUDIO_DOMAIN} /etc/nginx/sites-enabled/
 
-# Test et reload Nginx
-nginx -t
-systemctl reload nginx
+nginx -t && systemctl reload nginx
 
-# 13. Obtention des certificats SSL
+# 14. Obtention des certificats SSL
 echo ""
 echo "🔒 Obtention des certificats SSL..."
 certbot --nginx -d ${API_DOMAIN} -d ${STUDIO_DOMAIN} --non-interactive --agree-tos -m ${SSL_EMAIL}
 
-# 14. Démarrage des services Docker
+# 15. Démarrage des services
 echo ""
 echo "🚀 Démarrage des services Docker..."
 cd ${INSTALL_DIR}
 docker compose up -d
 
-# 15. Attente du démarrage
+# 16. Attente
 echo ""
-echo "⏳ Attente du démarrage des services (90 secondes)..."
-sleep 90
+echo "⏳ Attente du démarrage complet (120 secondes)..."
+sleep 120
 
-# 16. Vérification de l'état
+# 17. Vérification
 echo ""
 echo "✅ Vérification de l'état des services..."
 docker compose ps
 
-# 17. Test de l'API
+# 18. Test API
 echo ""
 echo "🧪 Test de l'API..."
-echo "   Attente que les services soient prêts..."
 for i in {1..10}; do
-    sleep 3
+    sleep 5
     RESPONSE=$(curl -s -w "\n%{http_code}" https://${API_DOMAIN}/rest/v1/ -H "apikey: ${SUPABASE_ANON_KEY}" 2>/dev/null || echo "000")
     HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
     if [ "$HTTP_CODE" = "200" ]; then
-        echo "   ✅ API répond correctement (HTTP $HTTP_CODE)"
-        echo "$RESPONSE" | head -n -1 | head -n 5
+        echo "   ✅ API répond correctement"
         break
     else
-        echo "   ⏳ Tentative $i/10 - HTTP $HTTP_CODE (attente...)"
-    fi
-    if [ $i -eq 10 ]; then
-        echo "   ⚠️  L'API ne répond pas encore. Vérifiez les logs: docker compose logs auth rest"
+        echo "   ⏳ Tentative $i/10..."
     fi
 done
 
-# 18. Création du fichier de configuration pour l'application
+# 19. Fichier de config app
 echo ""
 echo "📝 Création du fichier .env pour l'application..."
 cat > ${INSTALL_DIR}/app.env << EOF
@@ -729,48 +716,28 @@ VITE_SUPABASE_URL=https://${API_DOMAIN}
 VITE_SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
 EOF
 
-# 19. Résumé
+# 20. Résumé
 echo ""
 echo "=========================================="
 echo "  ✅ Installation terminée!"
 echo "=========================================="
 echo ""
-echo "📋 Informations importantes:"
+echo "📋 Informations:"
 echo ""
-echo "API URL:           https://${API_DOMAIN}"
-echo "Studio URL:        https://${STUDIO_DOMAIN}"
-echo "Répertoire:        ${INSTALL_DIR}"
-echo ""
-echo "Credentials:"
-echo "  - POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}"
-echo "  - JWT_SECRET: ${JWT_SECRET}"
-echo "  - ANON_KEY: ${SUPABASE_ANON_KEY}"
+echo "API:              https://${API_DOMAIN}"
+echo "Studio:           https://${STUDIO_DOMAIN}"
+echo "Répertoire:       ${INSTALL_DIR}"
 echo ""
 echo "Studio Access:"
-echo "  - Username: admin"
-echo "  - Password: ${STUDIO_PASSWORD}"
+echo "  Username: admin"
+echo "  Password: ${STUDIO_PASSWORD}"
 echo ""
-echo "Configuration de l'app (.env):"
-echo "  Fichier: ${INSTALL_DIR}/app.env"
+echo "Credentials (à sauvegarder):"
+echo "  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}"
+echo "  JWT_SECRET: ${JWT_SECRET}"
 echo ""
 echo "📝 Commandes utiles:"
-echo "  - Voir les logs:        cd ${INSTALL_DIR} && docker compose logs -f"
-echo "  - Logs d'auth:          cd ${INSTALL_DIR} && docker compose logs auth"
-echo "  - Logs de REST:         cd ${INSTALL_DIR} && docker compose logs rest"
-echo "  - Redémarrer:           cd ${INSTALL_DIR} && docker compose restart"
-echo "  - Arrêter:              cd ${INSTALL_DIR} && docker compose down"
-echo "  - Démarrer:             cd ${INSTALL_DIR} && docker compose up -d"
-echo ""
-echo "🔍 Diagnostic JWT (si problème d'authentification):"
-echo "  cd ${INSTALL_DIR} && ./diagnose-jwt.sh"
-echo ""
-echo "⚠️  Sauvegardez ces informations dans un endroit sûr!"
-echo ""
-echo "🔐 Pour changer le mot de passe Studio:"
-echo "   htpasswd -b /etc/nginx/.htpasswd admin NOUVEAU_MOT_DE_PASSE"
-echo "   systemctl reload nginx"
-echo ""
-echo "📧 Configuration SMTP (optionnelle):"
-echo "   Éditez ${INSTALL_DIR}/.env et configurez les variables SMTP_*"
-echo "   Puis redémarrez: cd ${INSTALL_DIR} && docker compose restart auth"
+echo "  Logs:      cd ${INSTALL_DIR} && docker compose logs -f"
+echo "  Redémarrer: cd ${INSTALL_DIR} && docker compose restart"
+echo "  Arrêter:   cd ${INSTALL_DIR} && docker compose down"
 echo ""
