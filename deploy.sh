@@ -29,33 +29,102 @@ apt update && apt upgrade -y
 
 # Install required packages
 echo -e "${YELLOW}Installation des packages requis...${NC}"
-apt install -y nginx nodejs npm certbot python3-certbot-nginx git curl ufw
+apt install -y nginx nodejs npm certbot python3-certbot-nginx git curl ufw postgresql postgresql-contrib
 
 # Configure firewall
 echo -e "${YELLOW}Configuration du pare-feu...${NC}"
 ufw allow 'Nginx Full'
 ufw allow OpenSSH
+ufw allow 5432/tcp
 ufw --force enable
+
+# Configure PostgreSQL
+echo -e "${YELLOW}Configuration de PostgreSQL...${NC}"
+systemctl start postgresql
+systemctl enable postgresql
+
+# Generate random password for database
+DB_PASSWORD=$(openssl rand -base64 32 | tr -d "=+/" | cut -c1-25)
+DB_NAME="${APP_NAME}_db"
+DB_USER="${APP_NAME}_user"
+
+# Create database and user
+sudo -u postgres psql << EOF
+CREATE DATABASE ${DB_NAME};
+CREATE USER ${DB_USER} WITH ENCRYPTED PASSWORD '${DB_PASSWORD}';
+GRANT ALL PRIVILEGES ON DATABASE ${DB_NAME} TO ${DB_USER};
+\c ${DB_NAME}
+GRANT ALL ON SCHEMA public TO ${DB_USER};
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO ${DB_USER};
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON SEQUENCES TO ${DB_USER};
+EOF
+
+# Configure PostgreSQL to accept connections
+echo -e "${YELLOW}Configuration de l'accès PostgreSQL...${NC}"
+PG_VERSION=$(ls /etc/postgresql/)
+PG_CONF="/etc/postgresql/${PG_VERSION}/main/postgresql.conf"
+PG_HBA="/etc/postgresql/${PG_VERSION}/main/pg_hba.conf"
+
+# Backup original configs
+cp ${PG_HBA} ${PG_HBA}.backup
+cp ${PG_CONF} ${PG_CONF}.backup
+
+# Allow local connections
+echo "host    ${DB_NAME}    ${DB_USER}    127.0.0.1/32    scram-sha-256" >> ${PG_HBA}
+echo "host    ${DB_NAME}    ${DB_USER}    ::1/128         scram-sha-256" >> ${PG_HBA}
+
+# Restart PostgreSQL
+systemctl restart postgresql
+
+echo -e "${GREEN}Base de données PostgreSQL configurée avec succès${NC}"
 
 # Create app directory
 echo -e "${YELLOW}Création du répertoire de l'application...${NC}"
 mkdir -p ${APP_DIR}
 
-# Check if .env file exists in current directory
-if [ ! -f .env ]; then
-    echo -e "${RED}Erreur: Le fichier .env n'existe pas dans le répertoire courant${NC}"
-    echo "Veuillez créer un fichier .env avec vos variables d'environnement Supabase"
-    exit 1
-fi
+# Create .env file with database credentials
+echo -e "${YELLOW}Création du fichier .env...${NC}"
+cat > .env.local << EOF
+# Database Configuration
+DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=${DB_NAME}
+DB_USER=${DB_USER}
+DB_PASSWORD=${DB_PASSWORD}
+EOF
 
 # Copy application files
 echo -e "${YELLOW}Copie des fichiers de l'application...${NC}"
 cp -r ./* ${APP_DIR}/
+cp .env.local ${APP_DIR}/.env
 cd ${APP_DIR}
 
 # Install dependencies
 echo -e "${YELLOW}Installation des dépendances...${NC}"
 npm install
+
+# Install psql node module for migrations
+echo -e "${YELLOW}Installation du client PostgreSQL pour Node.js...${NC}"
+npm install pg
+
+# Run database migrations
+echo -e "${YELLOW}Exécution des migrations de base de données...${NC}"
+if [ -d "supabase/migrations" ]; then
+    for migration in supabase/migrations/*.sql; do
+        if [ -f "$migration" ]; then
+            echo "Exécution de $(basename $migration)..."
+            PGPASSWORD=${DB_PASSWORD} psql -h localhost -U ${DB_USER} -d ${DB_NAME} -f "$migration"
+            if [ $? -ne 0 ]; then
+                echo -e "${RED}Erreur lors de l'exécution de la migration: $(basename $migration)${NC}"
+                exit 1
+            fi
+        fi
+    done
+    echo -e "${GREEN}Migrations exécutées avec succès${NC}"
+else
+    echo -e "${YELLOW}Aucun dossier de migrations trouvé${NC}"
+fi
 
 # Build application
 echo -e "${YELLOW}Build de l'application...${NC}"
@@ -171,7 +240,29 @@ Domain: ${DOMAIN}
 Server IP: ${VPS_IP}
 App Directory: ${APP_DIR}
 Nginx Config: ${NGINX_CONF}
+
+Database Information:
+- Database Name: ${DB_NAME}
+- Database User: ${DB_USER}
+- Database Password: ${DB_PASSWORD}
+- Connection String: postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}
+- Host: localhost
+- Port: 5432
 EOF
+
+# Save database credentials securely
+echo -e "${YELLOW}Sauvegarde sécurisée des identifiants de base de données...${NC}"
+cat > ${APP_DIR}/.db-credentials << EOF
+DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=${DB_NAME}
+DB_USER=${DB_USER}
+DB_PASSWORD=${DB_PASSWORD}
+EOF
+
+chmod 600 ${APP_DIR}/.db-credentials
+chown www-data:www-data ${APP_DIR}/.db-credentials
 
 echo -e "${GREEN}==================================${NC}"
 echo -e "${GREEN}Déploiement terminé avec succès!${NC}"
@@ -185,6 +276,16 @@ echo "1. Fichiers de l'application: ${APP_DIR}"
 echo "2. Configuration Nginx: ${NGINX_CONF}"
 echo "3. Logs Nginx: /var/log/nginx/"
 echo "4. Renouvellement SSL: automatique via certbot"
+echo "5. Base de données PostgreSQL: ${DB_NAME}"
+echo "6. Identifiants DB: ${APP_DIR}/.db-credentials"
+echo ""
+echo -e "${YELLOW}Informations de base de données:${NC}"
+echo "- Database: ${DB_NAME}"
+echo "- User: ${DB_USER}"
+echo "- Password: ${DB_PASSWORD}"
+echo "- Host: localhost"
+echo "- Port: 5432"
+echo "- Connection: postgresql://${DB_USER}:${DB_PASSWORD}@localhost:5432/${DB_NAME}"
 echo ""
 echo -e "${YELLOW}Pour mettre à jour l'application:${NC}"
 echo "1. Modifier les fichiers dans ${APP_DIR}"
@@ -197,3 +298,6 @@ echo "- Redémarrer Nginx: systemctl restart nginx"
 echo "- Voir les logs Nginx: tail -f /var/log/nginx/error.log"
 echo "- Tester la config Nginx: nginx -t"
 echo "- Renouveler SSL manuellement: certbot renew"
+echo "- Se connecter à la DB: PGPASSWORD=${DB_PASSWORD} psql -h localhost -U ${DB_USER} -d ${DB_NAME}"
+echo "- Backup DB: pg_dump -h localhost -U ${DB_USER} ${DB_NAME} > backup.sql"
+echo "- Restore DB: PGPASSWORD=${DB_PASSWORD} psql -h localhost -U ${DB_USER} -d ${DB_NAME} < backup.sql"
