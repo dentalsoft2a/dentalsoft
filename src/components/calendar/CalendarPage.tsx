@@ -220,8 +220,8 @@ export default function CalendarPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-        <div className="lg:col-span-3">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
             <div className="bg-gradient-to-r from-primary-600 to-cyan-600 px-4 py-3">
               <div className="flex items-center justify-between">
@@ -318,7 +318,7 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-2">
+        <div className="lg:col-span-1">
           <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden sticky top-6">
             <div className="bg-gradient-to-r from-slate-700 to-slate-800 px-4 py-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
