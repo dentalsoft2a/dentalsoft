@@ -347,7 +347,7 @@ services:
       - "127.0.0.1:8080:8080"
 
   studio:
-    image: supabase/studio:20240729-ce3a27f
+    image: supabase/studio:latest
     container_name: gb-dental-studio
     restart: unless-stopped
     depends_on:
