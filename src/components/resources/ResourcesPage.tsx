@@ -174,11 +174,18 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
     if (!user) return;
 
     try {
+      const dataToSave = {
+        ...formData,
+        cost_per_unit: formData.cost_per_unit === '' ? 0 : Number(formData.cost_per_unit),
+        stock_quantity: formData.stock_quantity === '' ? 0 : Number(formData.stock_quantity),
+        low_stock_threshold: formData.low_stock_threshold === '' ? 5 : Number(formData.low_stock_threshold),
+      };
+
       if (editingResource) {
         const { error } = await supabase
           .from('resources')
           .update({
-            ...formData,
+            ...dataToSave,
             updated_at: new Date().toISOString(),
           })
           .eq('id', editingResource.id);
@@ -186,7 +193,7 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
         if (error) throw error;
       } else {
         const { error } = await supabase.from('resources').insert({
-          ...formData,
+          ...dataToSave,
           user_id: user.id,
         });
 
@@ -917,9 +924,10 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                     required
                     min="0"
                     step="0.01"
-                    value={formData.cost_per_unit}
-                    onChange={(e) => setFormData({ ...formData, cost_per_unit: parseFloat(e.target.value) || 0 })}
+                    value={formData.cost_per_unit || ''}
+                    onChange={(e) => setFormData({ ...formData, cost_per_unit: e.target.value === '' ? '' as any : parseFloat(e.target.value) })}
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    placeholder="0"
                   />
                 </div>
               </div>
@@ -934,9 +942,10 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                       type="number"
                       required
                       min="0"
-                      value={formData.stock_quantity}
-                      onChange={(e) => setFormData({ ...formData, stock_quantity: parseInt(e.target.value) || 0 })}
+                      value={formData.stock_quantity || ''}
+                      onChange={(e) => setFormData({ ...formData, stock_quantity: e.target.value === '' ? '' as any : parseInt(e.target.value) })}
                       className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                      placeholder="0"
                     />
                   </div>
 
@@ -948,9 +957,10 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                       type="number"
                       required
                       min="0"
-                      value={formData.low_stock_threshold}
-                      onChange={(e) => setFormData({ ...formData, low_stock_threshold: parseInt(e.target.value) || 5 })}
+                      value={formData.low_stock_threshold || ''}
+                      onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value === '' ? '' as any : parseInt(e.target.value) })}
                       className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                      placeholder="5"
                     />
                   </div>
                 </div>
