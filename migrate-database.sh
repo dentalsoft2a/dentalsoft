@@ -21,7 +21,7 @@ DB_PASSWORD=$(grep DATABASE_URL $APP_DIR/.env.production | cut -d: -f3 | cut -d@
 # Application de chaque fichier de migration dans l'ordre
 for migration in $APP_DIR/supabase/migrations/*.sql; do
     echo -e "${YELLOW}Application de: $(basename $migration)${NC}"
-    sudo -u postgres PGPASSWORD="$DB_PASSWORD" psql -U dentalcloud_user -d dentalcloud -f "$migration"
+    PGPASSWORD="$DB_PASSWORD" psql -h localhost -U dentalcloud_user -d dentalcloud -f "$migration"
 done
 
 echo -e "${GREEN}Migrations appliquées avec succès!${NC}"
