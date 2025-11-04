@@ -800,54 +800,52 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       )}
 
       {recentDeliveries.length > 0 && (
-        <div className="mb-8 bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 hover:shadow-xl transition-all duration-300 animate-slide-in">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg">
-              <Clock className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold text-slate-900">Travaux en cours</h2>
-              <p className="text-sm text-slate-600">Commandes actuellement en production</p>
+        <div className="mb-8 bg-white rounded-2xl shadow-lg border border-blue-200 overflow-hidden animate-slide-in">
+          <div className="bg-gradient-to-r from-blue-50 to-cyan-50 px-6 py-4 border-b border-blue-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-500 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-bold text-slate-900">Travaux en cours</h2>
+                  <p className="text-sm text-slate-600">Commandes actuellement en production</p>
+                </div>
+              </div>
+              <span className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm font-bold">
+                {recentDeliveries.length}
+              </span>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {recentDeliveries.map((delivery) => (
-              <div
-                key={delivery.id}
-                className="bg-slate-50 rounded-xl p-4 border border-slate-200 hover:border-blue-300 hover:shadow-md transition-all duration-200"
-              >
-                <div className="flex items-start justify-between gap-3 mb-3">
-                  <div className="flex items-center gap-2 flex-1">
-                    <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold">
-                      {delivery.dentist.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-bold text-slate-900 text-sm truncate">{delivery.dentist.name}</h4>
-                      <p className="text-xs text-slate-500">N° {delivery.delivery_number}</p>
-                    </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+              {recentDeliveries.map((delivery) => (
+                <div
+                  key={delivery.id}
+                  className="p-3 bg-white rounded-lg border border-slate-200 hover:border-blue-400 transition-colors"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-medium text-slate-900 text-sm truncate flex-1 mr-2">
+                      {delivery.dentist.name}
+                    </h4>
+                    <span className="px-2 py-0.5 rounded text-xs font-semibold flex-shrink-0 bg-blue-500 text-white">
+                      En cours
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                    <p className="text-xs text-slate-500">N° {delivery.delivery_number}</p>
+                    {delivery.patient_name && (
+                      <p className="text-xs text-slate-600 truncate">{delivery.patient_name}</p>
+                    )}
+                    <p className="text-xs text-slate-500">
+                      {new Date(delivery.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                    </p>
                   </div>
                 </div>
-
-                {delivery.patient_name && (
-                  <div className="flex items-center gap-2 text-xs text-slate-600 mb-3">
-                    <User className="w-4 h-4 text-slate-400" />
-                    <span className="truncate">{delivery.patient_name}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between pt-3 border-t border-slate-200">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(delivery.date).toLocaleDateString('fr-FR')}
-                  </div>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-100 text-blue-700">
-                    <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
-                    En cours
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )}
