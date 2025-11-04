@@ -177,13 +177,17 @@ export default function CalendarPage() {
       </div>
 
       {urgentDeliveries.length > 0 && (
-        <div className="mb-6 bg-white border border-red-300 rounded-xl p-4 shadow-sm">
-          <div className="flex items-center gap-2 mb-3">
-            <AlertTriangle className="w-5 h-5 text-red-500" />
-            <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wide">Urgents (48h)</h3>
-            <span className="ml-auto text-xs font-medium text-slate-500">{urgentDeliveries.length}</span>
+        <div className="mb-6 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-400 rounded-2xl p-6 shadow-lg">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center shadow-lg">
+              <AlertTriangle className="w-7 h-7 text-white" />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">Livraisons urgentes (48h)</h3>
+              <p className="text-sm text-slate-600">{urgentDeliveries.length} livraison{urgentDeliveries.length > 1 ? 's' : ''} à traiter rapidement</p>
+            </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-3">
             {urgentDeliveries.map((delivery) => {
               const daysUntil = getDaysUntilDelivery(delivery.date);
 
@@ -191,23 +195,23 @@ export default function CalendarPage() {
                 <button
                   key={delivery.id}
                   onClick={() => setSelectedDelivery(delivery)}
-                  className="inline-flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg hover:bg-slate-100 hover:border-slate-300 transition-all duration-200 text-left"
+                  className="inline-flex items-center gap-3 px-4 py-3 bg-white border-2 border-slate-300 rounded-xl hover:bg-slate-50 hover:border-slate-400 hover:shadow-md transition-all duration-200 text-left"
                 >
-                  <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-cyan-500 rounded flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                  <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-md">
                     {delivery.dentist.name.charAt(0).toUpperCase()}
                   </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 truncate max-w-[150px]">{delivery.dentist.name}</p>
-                    <p className="text-xs text-slate-500">N° {delivery.delivery_number}</p>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-base font-bold text-slate-900 truncate max-w-[180px]">{delivery.dentist.name}</p>
+                    <p className="text-sm text-slate-600 font-medium">N° {delivery.delivery_number}</p>
                   </div>
-                  <div className={`px-2 py-0.5 rounded text-xs font-bold flex-shrink-0 ${
+                  <div className={`px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0 shadow-md ${
                     daysUntil === 0
-                      ? 'bg-red-500 text-white'
+                      ? 'bg-red-500 text-white animate-pulse'
                       : daysUntil === 1
                       ? 'bg-orange-500 text-white'
                       : 'bg-amber-500 text-white'
                   }`}>
-                    {daysUntil === 0 ? "Auj." : daysUntil === 1 ? 'Demain' : `${daysUntil}j`}
+                    {daysUntil === 0 ? "Aujourd'hui" : daysUntil === 1 ? 'Demain' : `Dans ${daysUntil}j`}
                   </div>
                 </button>
               );
@@ -216,8 +220,8 @@ export default function CalendarPage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-3">
           <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden">
             <div className="bg-gradient-to-r from-primary-600 to-cyan-600 px-4 py-3">
               <div className="flex items-center justify-between">
@@ -239,12 +243,12 @@ export default function CalendarPage() {
               </div>
             </div>
 
-            <div className="p-4">
-              <div className="grid grid-cols-7 gap-1 mb-2">
+            <div className="p-3">
+              <div className="grid grid-cols-7 gap-1 mb-1.5">
                 {dayNames.map((day) => (
                   <div
                     key={day}
-                    className="text-center text-xs font-bold text-slate-600 uppercase tracking-wider py-1"
+                    className="text-center text-[10px] font-bold text-slate-600 uppercase tracking-wider py-0.5"
                   >
                     {day}
                   </div>
@@ -256,7 +260,7 @@ export default function CalendarPage() {
                   <div className="animate-pulse text-sm">Chargement...</div>
                 </div>
               ) : (
-                <div className="grid grid-cols-7 gap-1.5">
+                <div className="grid grid-cols-7 gap-1">
                   {getDaysInMonth().map((date, index) => {
                     const dayDeliveries = getDeliveriesForDate(date);
                     const hasDeliveries = dayDeliveries.length > 0;
@@ -268,7 +272,7 @@ export default function CalendarPage() {
                         onClick={() => date && setSelectedDate(date)}
                         disabled={!date}
                         className={`
-                          aspect-square p-1.5 rounded-lg transition-all duration-200 relative flex flex-col items-center justify-center min-h-[60px]
+                          aspect-square p-1 rounded-lg transition-all duration-200 relative flex flex-col items-center justify-center min-h-[50px]
                           ${!date ? 'invisible' : ''}
                           ${isToday(date) ? 'ring-2 ring-primary-500' : ''}
                           ${isSelected(date) ? 'bg-primary-600 text-white shadow-md' : ''}
@@ -279,25 +283,25 @@ export default function CalendarPage() {
                         {date && (
                           <>
                             <span className={`
-                              text-sm font-bold mb-1
+                              text-xs font-bold mb-0.5
                               ${isSelected(date) ? 'text-white' : 'text-slate-900'}
                             `}>
                               {date.getDate()}
                             </span>
                             {hasDeliveries && (
-                              <div className="flex gap-1 flex-wrap justify-center">
+                              <div className="flex gap-0.5 flex-wrap justify-center">
                                 {statusCounts.pending > 0 && (
-                                  <div className={`w-1.5 h-1.5 rounded-full ${
+                                  <div className={`w-2 h-2 rounded-full ${
                                     isSelected(date) ? 'bg-amber-200' : 'bg-amber-500'
                                   }`} />
                                 )}
                                 {statusCounts.in_progress > 0 && (
-                                  <div className={`w-1.5 h-1.5 rounded-full ${
+                                  <div className={`w-2 h-2 rounded-full ${
                                     isSelected(date) ? 'bg-blue-200' : 'bg-blue-500'
                                   } animate-pulse`} />
                                 )}
                                 {statusCounts.completed > 0 && (
-                                  <div className={`w-1.5 h-1.5 rounded-full ${
+                                  <div className={`w-2 h-2 rounded-full ${
                                     isSelected(date) ? 'bg-emerald-200' : 'bg-emerald-500'
                                   }`} />
                                 )}
@@ -314,7 +318,7 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-2">
           <div className="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden sticky top-6">
             <div className="bg-gradient-to-r from-slate-700 to-slate-800 px-4 py-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
