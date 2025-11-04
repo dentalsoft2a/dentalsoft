@@ -227,11 +227,16 @@ export default function CatalogPage() {
     if (!user) return;
 
     try {
+      const dataToSave = {
+        ...formData,
+        default_price: formData.default_price === '' ? 0 : Number(formData.default_price),
+      };
+
       if (editingItem) {
         const { error } = await supabase
           .from('catalog_items')
           .update({
-            ...formData,
+            ...dataToSave,
             updated_at: new Date().toISOString(),
           })
           .eq('id', editingItem.id);
@@ -239,7 +244,7 @@ export default function CatalogPage() {
         if (error) throw error;
       } else {
         const { error } = await supabase.from('catalog_items').insert({
-          ...formData,
+          ...dataToSave,
           user_id: user.id,
         });
 
@@ -632,9 +637,10 @@ export default function CatalogPage() {
                   required
                   min="0"
                   step="0.01"
-                  value={formData.default_price}
-                  onChange={(e) => setFormData({ ...formData, default_price: e.target.value === '' ? 0 : parseFloat(e.target.value) })}
+                  value={formData.default_price || ''}
+                  onChange={(e) => setFormData({ ...formData, default_price: e.target.value === '' ? '' as any : parseFloat(e.target.value) })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  placeholder="0"
                 />
               </div>
 
