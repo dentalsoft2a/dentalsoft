@@ -157,7 +157,75 @@ EOF
 
 chmod 600 ${INSTALL_DIR}/.env
 
-# 9. Création du docker-compose.yml
+# 9. Création du script d'initialisation de la base de données
+echo ""
+echo "💾 Création du script d'initialisation de la base de données..."
+cat > ${INSTALL_DIR}/init-database.sh << EOFINIT
+#!/bin/bash
+set -e
+
+psql -v ON_ERROR_STOP=1 --username "postgres" --dbname "postgres" <<-EOSQL
+    -- Création des rôles
+    DO \\\$\\\$
+    BEGIN
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anon') THEN
+            CREATE ROLE anon NOLOGIN NOINHERIT;
+        END IF;
+
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated') THEN
+            CREATE ROLE authenticated NOLOGIN NOINHERIT;
+        END IF;
+
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'service_role') THEN
+            CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
+        END IF;
+
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticator') THEN
+            CREATE ROLE authenticator LOGIN PASSWORD '${POSTGRES_PASSWORD}' NOINHERIT;
+        END IF;
+
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'supabase_auth_admin') THEN
+            CREATE ROLE supabase_auth_admin LOGIN PASSWORD '${POSTGRES_PASSWORD}';
+        END IF;
+
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'supabase_storage_admin') THEN
+            CREATE ROLE supabase_storage_admin LOGIN PASSWORD '${POSTGRES_PASSWORD}';
+        END IF;
+
+        IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'supabase_admin') THEN
+            CREATE ROLE supabase_admin LOGIN PASSWORD '${POSTGRES_PASSWORD}';
+        END IF;
+    END
+    \\\$\\\$;
+
+    -- Grants
+    GRANT anon, authenticated, service_role TO authenticator;
+    GRANT ALL PRIVILEGES ON DATABASE postgres TO supabase_auth_admin;
+    GRANT ALL PRIVILEGES ON DATABASE postgres TO supabase_storage_admin;
+    GRANT ALL PRIVILEGES ON DATABASE postgres TO supabase_admin;
+
+    -- Création des schémas
+    CREATE SCHEMA IF NOT EXISTS auth;
+    CREATE SCHEMA IF NOT EXISTS storage;
+    CREATE SCHEMA IF NOT EXISTS _realtime;
+
+    -- Grants sur les schémas
+    GRANT USAGE ON SCHEMA auth TO supabase_auth_admin, authenticated, anon;
+    GRANT ALL ON SCHEMA auth TO supabase_auth_admin;
+    GRANT USAGE ON SCHEMA storage TO supabase_storage_admin, authenticated, anon;
+    GRANT ALL ON SCHEMA storage TO supabase_storage_admin;
+    GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+    GRANT ALL ON SCHEMA public TO supabase_admin;
+
+    -- Extensions
+    CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+    CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+EOSQL
+EOFINIT
+
+chmod +x ${INSTALL_DIR}/init-database.sh
+
+# 10. Création du docker-compose.yml
 echo ""
 echo "🐳 Création du docker-compose.yml..."
 cat > ${INSTALL_DIR}/docker-compose.yml << 'EOFCOMPOSE'
@@ -173,6 +241,7 @@ services:
       POSTGRES_DB: postgres
     volumes:
       - db-data:/var/lib/postgresql/data
+      - ./init-database.sh:/docker-entrypoint-initdb.d/init-database.sh:ro
     command: >
       postgres
       -c wal_level=logical
@@ -579,85 +648,21 @@ docker compose up -d
 
 # 14. Attente du démarrage
 echo ""
-echo "⏳ Attente du démarrage des services (30 secondes)..."
-sleep 30
+echo "⏳ Attente du démarrage des services (45 secondes)..."
+sleep 45
 
-# 15. Initialisation de la base de données
-echo ""
-echo "💾 Initialisation de la base de données..."
-cat > /tmp/init-db.sql << 'EOFSQL'
--- Création des rôles
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'anon') THEN
-        CREATE ROLE anon NOLOGIN NOINHERIT;
-    END IF;
-
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticated') THEN
-        CREATE ROLE authenticated NOLOGIN NOINHERIT;
-    END IF;
-
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'service_role') THEN
-        CREATE ROLE service_role NOLOGIN NOINHERIT BYPASSRLS;
-    END IF;
-
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'authenticator') THEN
-        CREATE ROLE authenticator LOGIN PASSWORD '${POSTGRES_PASSWORD}' NOINHERIT;
-    END IF;
-
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'supabase_auth_admin') THEN
-        CREATE ROLE supabase_auth_admin LOGIN PASSWORD '${POSTGRES_PASSWORD}';
-    END IF;
-
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'supabase_storage_admin') THEN
-        CREATE ROLE supabase_storage_admin LOGIN PASSWORD '${POSTGRES_PASSWORD}';
-    END IF;
-
-    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'supabase_admin') THEN
-        CREATE ROLE supabase_admin LOGIN PASSWORD '${POSTGRES_PASSWORD}';
-    END IF;
-END
-$$;
-
--- Grants
-GRANT anon, authenticated, service_role TO authenticator;
-GRANT ALL PRIVILEGES ON DATABASE postgres TO supabase_auth_admin;
-GRANT ALL PRIVILEGES ON DATABASE postgres TO supabase_storage_admin;
-GRANT ALL PRIVILEGES ON DATABASE postgres TO supabase_admin;
-GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO supabase_admin;
-GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO supabase_admin;
-
--- Création des schémas
-CREATE SCHEMA IF NOT EXISTS auth;
-CREATE SCHEMA IF NOT EXISTS storage;
-CREATE SCHEMA IF NOT EXISTS _realtime;
-
--- Grants sur les schémas
-GRANT USAGE ON SCHEMA auth TO supabase_auth_admin, authenticated, anon;
-GRANT USAGE ON SCHEMA storage TO supabase_storage_admin, authenticated, anon;
-GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
-GRANT ALL ON SCHEMA public TO supabase_admin;
-
--- Extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-EOFSQL
-
-docker exec -i gb-dental-db psql -U postgres -d postgres < /tmp/init-db.sql
-rm /tmp/init-db.sql
-
-# 16. Vérification de l'état
+# 15. Vérification de l'état
 echo ""
 echo "✅ Vérification de l'état des services..."
 docker compose ps
 
-# 17. Test de l'API
+# 16. Test de l'API
 echo ""
 echo "🧪 Test de l'API..."
 sleep 5
 curl -s https://${API_DOMAIN}/rest/v1/ -H "apikey: ${SUPABASE_ANON_KEY}" | head -n 5
 
-# 18. Création du fichier de configuration pour l'application
+# 17. Création du fichier de configuration pour l'application
 echo ""
 echo "📝 Création du fichier .env pour l'application..."
 cat > ${INSTALL_DIR}/app.env << EOF
