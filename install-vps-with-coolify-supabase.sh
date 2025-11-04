@@ -44,7 +44,14 @@ echo ""
 echo "📦 Mise à jour du système..."
 apt update && apt upgrade -y
 
-# 2. Installation des dépendances
+# 2. Suppression des anciennes versions de Node.js (si présentes)
+echo ""
+echo "🧹 Nettoyage des anciennes versions de Node.js..."
+apt remove --purge -y nodejs libnode-dev npm 2>/dev/null || true
+apt autoremove -y
+apt clean
+
+# 3. Installation des dépendances de base
 echo ""
 echo "📦 Installation des dépendances..."
 apt install -y \
@@ -57,17 +64,20 @@ apt install -y \
     ufw \
     nginx \
     certbot \
-    python3-certbot-nginx \
-    nodejs \
-    npm
+    python3-certbot-nginx
 
-# 3. Installation de Node.js 20 (LTS)
+# 4. Installation de Node.js 20 (LTS)
 echo ""
 echo "📦 Installation de Node.js 20..."
 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 apt install -y nodejs
 
-# 4. Configuration du firewall
+echo ""
+echo "✅ Node.js installé:"
+node --version
+npm --version
+
+# 5. Configuration du firewall
 echo ""
 echo "🔒 Configuration du firewall..."
 ufw --force enable
@@ -76,18 +86,18 @@ ufw allow 80/tcp
 ufw allow 443/tcp
 ufw reload
 
-# 5. Création du répertoire d'installation
+# 6. Création du répertoire d'installation
 echo ""
 echo "📁 Création du répertoire d'installation..."
 mkdir -p ${INSTALL_DIR}
 cd ${INSTALL_DIR}
 
-# 6. Clone du projet (si vous avez un repo Git) ou copie des fichiers
+# 7. Clone du projet (si vous avez un repo Git) ou copie des fichiers
 echo ""
 echo "📥 Préparation des fichiers de l'application..."
 echo "   Note: Vous devrez copier les fichiers de votre application dans ${INSTALL_DIR}"
 
-# 7. Création du fichier .env
+# 8. Création du fichier .env
 echo ""
 echo "📝 Création du fichier .env..."
 cat > ${INSTALL_DIR}/.env << EOF
@@ -106,11 +116,11 @@ EOF
 
 chmod 600 ${INSTALL_DIR}/.env
 
-# 8. Installation des dépendances npm (sera fait quand les fichiers seront copiés)
+# 9. Installation des dépendances npm (sera fait quand les fichiers seront copiés)
 echo ""
 echo "📦 Les dépendances npm seront installées après la copie des fichiers"
 
-# 9. Configuration de Nginx
+# 10. Configuration de Nginx
 echo ""
 echo "🌐 Configuration de Nginx..."
 cat > /etc/nginx/sites-available/gb-dental << EOF
@@ -152,13 +162,13 @@ rm -f /etc/nginx/sites-enabled/default
 # Test de la configuration
 nginx -t
 
-# 10. Certificat SSL avec Let's Encrypt
+# 11. Certificat SSL avec Let's Encrypt
 echo ""
 echo "🔒 Configuration SSL avec Let's Encrypt..."
 systemctl reload nginx
 certbot --nginx -d ${APP_DOMAIN} --non-interactive --agree-tos --email admin@${APP_DOMAIN} --redirect
 
-# 11. Création du service systemd pour auto-reload (optionnel)
+# 12. Création du service systemd pour auto-reload (optionnel)
 echo ""
 echo "🔄 Configuration du service de mise à jour automatique..."
 cat > /etc/systemd/system/gb-dental-deploy.service << EOF
@@ -177,7 +187,7 @@ Environment="NODE_ENV=production"
 WantedBy=multi-user.target
 EOF
 
-# 12. Script de déploiement
+# 13. Script de déploiement
 echo ""
 echo "📜 Création du script de déploiement..."
 cat > ${INSTALL_DIR}/deploy.sh << 'EOFDEPLOY'
@@ -202,7 +212,7 @@ EOFDEPLOY
 
 chmod +x ${INSTALL_DIR}/deploy.sh
 
-# 13. Affichage des instructions finales
+# 14. Affichage des instructions finales
 echo ""
 echo "=========================================="
 echo "✅ Installation terminée!"
