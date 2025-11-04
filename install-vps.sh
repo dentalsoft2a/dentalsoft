@@ -577,7 +577,14 @@ plugins:
       max_age: 3600
 EOFKONG
 
-# 11. Configuration de Nginx
+# 11. Génération du mot de passe pour Studio
+echo ""
+echo "🔐 Génération du mot de passe pour Studio..."
+STUDIO_PASSWORD=$(openssl rand -base64 16)
+apt install -y apache2-utils
+htpasswd -bc /etc/nginx/.htpasswd admin "${STUDIO_PASSWORD}"
+
+# 12. Configuration de Nginx
 echo ""
 echo "🌐 Configuration de Nginx..."
 
@@ -607,13 +614,17 @@ server {
 }
 EOFNGINX
 
-# Studio
+# Studio (avec authentification)
 cat > /etc/nginx/sites-available/${STUDIO_DOMAIN} << EOFNGINX
 server {
     listen 80;
     server_name ${STUDIO_DOMAIN};
 
     location / {
+        # Authentification HTTP Basic
+        auth_basic "Supabase Studio - Accès Restreint";
+        auth_basic_user_file /etc/nginx/.htpasswd;
+
         proxy_pass http://127.0.0.1:3001;
         proxy_set_header Host \$host;
         proxy_set_header X-Real-IP \$remote_addr;
@@ -636,34 +647,34 @@ ln -sf /etc/nginx/sites-available/${STUDIO_DOMAIN} /etc/nginx/sites-enabled/
 nginx -t
 systemctl reload nginx
 
-# 12. Obtention des certificats SSL
+# 13. Obtention des certificats SSL
 echo ""
 echo "🔒 Obtention des certificats SSL..."
 certbot --nginx -d ${API_DOMAIN} -d ${STUDIO_DOMAIN} --non-interactive --agree-tos -m ${SSL_EMAIL}
 
-# 13. Démarrage des services Docker
+# 14. Démarrage des services Docker
 echo ""
 echo "🚀 Démarrage des services Docker..."
 cd ${INSTALL_DIR}
 docker compose up -d
 
-# 14. Attente du démarrage
+# 15. Attente du démarrage
 echo ""
 echo "⏳ Attente du démarrage des services (45 secondes)..."
 sleep 45
 
-# 15. Vérification de l'état
+# 16. Vérification de l'état
 echo ""
 echo "✅ Vérification de l'état des services..."
 docker compose ps
 
-# 16. Test de l'API
+# 17. Test de l'API
 echo ""
 echo "🧪 Test de l'API..."
 sleep 5
 curl -s https://${API_DOMAIN}/rest/v1/ -H "apikey: ${SUPABASE_ANON_KEY}" | head -n 5
 
-# 17. Création du fichier de configuration pour l'application
+# 18. Création du fichier de configuration pour l'application
 echo ""
 echo "📝 Création du fichier .env pour l'application..."
 cat > ${INSTALL_DIR}/app.env << EOF
@@ -687,6 +698,10 @@ echo "Credentials:"
 echo "  - POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}"
 echo "  - JWT_SECRET: ${JWT_SECRET}"
 echo "  - ANON_KEY: ${SUPABASE_ANON_KEY}"
+echo ""
+echo "Studio Access:"
+echo "  - Username: admin"
+echo "  - Password: ${STUDIO_PASSWORD}"
 echo ""
 echo "Configuration de l'app (.env):"
 echo "  Fichier: ${INSTALL_DIR}/app.env"
