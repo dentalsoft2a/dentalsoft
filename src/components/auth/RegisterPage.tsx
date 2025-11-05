@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import DentalCloudLogo from '../common/DentalCloudLogo';
+import { Package, Camera } from 'lucide-react';
 
 interface RegisterPageProps {
   onToggleLogin: () => void;
@@ -12,6 +13,7 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [laboratoryName, setLaboratoryName] = useState('');
+  const [isDentistMode, setIsDentistMode] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
@@ -21,7 +23,7 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
     setError('');
     setLoading(true);
 
-    const { error } = await signUp(email, password, firstName, lastName, laboratoryName);
+    const { error } = await signUp(email, password, firstName, lastName, laboratoryName, isDentistMode);
 
     if (error) {
       setError(error.message);
@@ -39,6 +41,37 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
             </div>
             <h1 className="text-2xl font-bold text-slate-900">DentalCloud</h1>
             <p className="text-slate-600 mt-2">Créer votre compte</p>
+
+            <div className="flex items-center justify-center gap-2 mt-6 bg-slate-100 rounded-lg p-1 w-full">
+              <button
+                type="button"
+                onClick={() => setIsDentistMode(false)}
+                className={`flex-1 px-4 py-2 rounded-md font-medium transition-all ${
+                  !isDentistMode
+                    ? 'bg-white text-primary-600 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Package className="w-4 h-4" />
+                  Laboratoire
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsDentistMode(true)}
+                className={`flex-1 px-4 py-2 rounded-md font-medium transition-all ${
+                  isDentistMode
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <div className="flex items-center justify-center gap-2">
+                  <Camera className="w-4 h-4" />
+                  Dentiste
+                </div>
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -72,19 +105,38 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="laboratoryName" className="block text-sm font-medium text-slate-700 mb-2">
-                Nom du laboratoire
-              </label>
-              <input
-                id="laboratoryName"
-                type="text"
-                value={laboratoryName}
-                onChange={(e) => setLaboratoryName(e.target.value)}
-                required
-                className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
-              />
-            </div>
+            {!isDentistMode && (
+              <div>
+                <label htmlFor="laboratoryName" className="block text-sm font-medium text-slate-700 mb-2">
+                  Nom du laboratoire
+                </label>
+                <input
+                  id="laboratoryName"
+                  type="text"
+                  value={laboratoryName}
+                  onChange={(e) => setLaboratoryName(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
+                />
+              </div>
+            )}
+
+            {isDentistMode && (
+              <div>
+                <label htmlFor="laboratoryName" className="block text-sm font-medium text-slate-700 mb-2">
+                  Nom du cabinet
+                </label>
+                <input
+                  id="laboratoryName"
+                  type="text"
+                  value={laboratoryName}
+                  onChange={(e) => setLaboratoryName(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition"
+                  placeholder="Cabinet dentaire..."
+                />
+              </div>
+            )}
 
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
