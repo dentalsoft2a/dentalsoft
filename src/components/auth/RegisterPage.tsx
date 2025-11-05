@@ -5,10 +5,9 @@ import { Package, Camera } from 'lucide-react';
 
 interface RegisterPageProps {
   onToggleLogin: () => void;
-  onViewLanding?: () => void;
 }
 
-export default function RegisterPage({ onToggleLogin, onViewLanding }: RegisterPageProps) {
+export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -186,7 +185,7 @@ export default function RegisterPage({ onToggleLogin, onViewLanding }: RegisterP
             </button>
           </form>
 
-          <div className="mt-6 text-center space-y-3">
+          <div className="mt-6 text-center">
             <p className="text-slate-600 text-sm">
               Déjà un compte ?{' '}
               <button
@@ -196,16 +195,6 @@ export default function RegisterPage({ onToggleLogin, onViewLanding }: RegisterP
                 Se connecter
               </button>
             </p>
-            {onViewLanding && (
-              <p className="text-slate-600 text-sm">
-                <button
-                  onClick={onViewLanding}
-                  className="text-cyan-600 font-medium hover:text-cyan-700 transition-colors duration-200 hover:underline"
-                >
-                  En savoir plus sur DentalCloud
-                </button>
-              </p>
-            )}
           </div>
         </div>
       </div>

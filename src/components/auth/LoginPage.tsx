@@ -4,10 +4,9 @@ import DentalCloudLogo from '../common/DentalCloudLogo';
 
 interface LoginPageProps {
   onToggleRegister: () => void;
-  onViewLanding?: () => void;
 }
 
-export default function LoginPage({ onToggleRegister, onViewLanding }: LoginPageProps) {
+export default function LoginPage({ onToggleRegister }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
