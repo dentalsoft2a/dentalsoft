@@ -107,12 +107,21 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <DentalCloudLogo size={32} showText={true} />
-            <button
-              onClick={toggleAuthMode}
-              className="px-6 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-medium hover:shadow-lg transition-all duration-300"
-            >
-              {isAuthMode ? 'Retour' : 'Connexion'}
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => onNavigate?.('dentist-register')}
+                className="px-4 py-2 rounded-lg border-2 border-blue-500 text-blue-600 font-medium hover:bg-blue-50 transition-all duration-300 flex items-center gap-2"
+              >
+                <Camera className="w-4 h-4" />
+                Compte Dentiste
+              </button>
+              <button
+                onClick={toggleAuthMode}
+                className="px-6 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-medium hover:shadow-lg transition-all duration-300"
+              >
+                {isAuthMode ? 'Retour' : 'Connexion'}
+              </button>
+            </div>
           </div>
         </div>
       </nav>
@@ -312,19 +321,6 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
                 </div>
               </div>
 
-              <div className="mt-12 pt-8 border-t border-slate-200">
-                <p className="text-center text-slate-600 mb-4">Vous êtes dentiste ?</p>
-                <button
-                  onClick={() => onNavigate?.('dentist-register')}
-                  className="mx-auto flex items-center gap-2 px-6 py-3 bg-white border-2 border-blue-500 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-300"
-                >
-                  <Camera className="w-5 h-5" />
-                  Créer un compte dentiste gratuit
-                </button>
-                <p className="text-center text-sm text-slate-500 mt-2">
-                  Envoyez des photos aux laboratoires partenaires
-                </p>
-              </div>
             </div>
           </section>
 
