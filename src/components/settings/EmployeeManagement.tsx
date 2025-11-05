@@ -325,27 +325,32 @@ export default function EmployeeManagement() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Users className="w-6 h-6 text-blue-600" />
-            <h2 className="text-2xl font-bold text-slate-800">Employés</h2>
+            <div className="p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl">
+              <Users className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Employés</h2>
+              <p className="text-slate-600">Gérez les comptes employés de votre laboratoire</p>
+            </div>
           </div>
           <button
             onClick={() => openEmployeeModal()}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition"
           >
             <Plus className="w-5 h-5" />
             Ajouter un employé
           </button>
         </div>
 
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Nom</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Email</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Rôle</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Statut</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-slate-500 uppercase">Actions</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Nom</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Rôle</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Statut</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
@@ -357,17 +362,21 @@ export default function EmployeeManagement() {
                 </tr>
               ) : (
                 employees.map(employee => (
-                  <tr key={employee.id}>
-                    <td className="px-6 py-4 text-sm text-slate-900">{employee.full_name}</td>
+                  <tr key={employee.id} className="hover:bg-slate-50 transition">
+                    <td className="px-6 py-4 text-sm font-medium text-slate-900">{employee.full_name}</td>
                     <td className="px-6 py-4 text-sm text-slate-600">{employee.email}</td>
-                    <td className="px-6 py-4 text-sm text-slate-600">{employee.role_name}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                        {employee.role_name}
+                      </span>
+                    </td>
                     <td className="px-6 py-4">
                       <button
                         onClick={() => toggleEmployeeStatus(employee)}
-                        className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${
                           employee.is_active
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-red-100 text-red-700'
+                            ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200'
+                            : 'bg-red-100 text-red-700 border-red-200 hover:bg-red-200'
                         }`}
                       >
                         {employee.is_active ? 'Actif' : 'Inactif'}
@@ -377,13 +386,15 @@ export default function EmployeeManagement() {
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => openEmployeeModal(employee)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          title="Modifier"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => deleteEmployee(employee.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded transition"
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          title="Supprimer"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -400,45 +411,54 @@ export default function EmployeeManagement() {
       <div>
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
-            <Shield className="w-6 h-6 text-purple-600" />
-            <h2 className="text-2xl font-bold text-slate-800">Rôles et Permissions</h2>
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+              <Shield className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold text-slate-900">Rôles et Permissions</h2>
+              <p className="text-slate-600">Définissez les accès pour chaque rôle</p>
+            </div>
           </div>
           <button
             onClick={() => openRoleModal()}
-            className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition"
           >
             <Plus className="w-5 h-5" />
             Ajouter un rôle
           </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {roles.length === 0 ? (
-            <div className="col-span-full bg-white rounded-lg shadow p-8 text-center text-slate-500">
-              Aucun rôle défini. Cliquez sur "Ajouter un rôle" pour commencer.
+            <div className="col-span-full bg-white rounded-2xl shadow-lg border border-slate-200 p-12 text-center">
+              <Shield className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucun rôle défini</h3>
+              <p className="text-slate-600">Cliquez sur "Ajouter un rôle" pour commencer</p>
             </div>
           ) : (
             roles.map(role => (
-              <div key={role.id} className="bg-white rounded-lg shadow p-6">
+              <div key={role.id} className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-800">{role.role_name}</h3>
+                  <h3 className="text-lg font-bold text-slate-900">{role.role_name}</h3>
                   <div className="flex items-center gap-2">
                     <button
                       onClick={() => openRoleModal(role)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                      title="Modifier"
                     >
                       <Edit className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => deleteRole(role.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded transition"
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                      title="Supprimer"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-sm text-slate-600 font-medium">Accès aux menus:</p>
+                  <p className="text-sm text-slate-600 font-semibold">Accès aux menus:</p>
                   <div className="flex flex-wrap gap-2">
                     {Object.entries(role.menu_access || {}).map(([key, value]) => {
                       if (!value) return null;
@@ -446,7 +466,7 @@ export default function EmployeeManagement() {
                       return (
                         <span
                           key={key}
-                          className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded"
+                          className="px-2 py-1 bg-purple-100 text-purple-700 text-xs font-medium rounded-full border border-purple-200"
                         >
                           {menu?.label || key}
                         </span>
@@ -461,55 +481,55 @@ export default function EmployeeManagement() {
       </div>
 
       {showEmployeeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowEmployeeModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">
+              <h3 className="text-xl font-bold text-slate-900">
                 {editingEmployee ? 'Modifier l\'employé' : 'Nouvel employé'}
               </h3>
               <button
                 onClick={() => setShowEmployeeModal(false)}
-                className="p-2 hover:bg-slate-100 rounded transition"
+                className="p-2 hover:bg-slate-100 rounded-lg transition"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-slate-600" />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Nom complet
                 </label>
                 <input
                   type="text"
                   value={employeeForm.full_name}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, full_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="Jean Dupont"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Email
                 </label>
                 <input
                   type="email"
                   value={employeeForm.email}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, email: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="jean@example.com"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Rôle
                 </label>
                 <select
                   value={employeeForm.role_name}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, role_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">Sélectionner un rôle</option>
                   {roles.map(role => (
@@ -526,14 +546,14 @@ export default function EmployeeManagement() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Mot de passe {editingEmployee && <span className="text-slate-500">(laisser vide pour ne pas modifier)</span>}
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
+                  Mot de passe {editingEmployee && <span className="text-slate-500 font-normal">(laisser vide pour ne pas modifier)</span>}
                 </label>
                 <input
                   type="password"
                   value={employeeForm.password}
                   onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder={editingEmployee ? "Nouveau mot de passe" : "Minimum 6 caractères"}
                   minLength={6}
                 />
@@ -548,13 +568,13 @@ export default function EmployeeManagement() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowEmployeeModal(false)}
-                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition"
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition"
               >
                 Annuler
               </button>
               <button
                 onClick={saveEmployee}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition"
               >
                 <Save className="w-4 h-4" />
                 Enregistrer
@@ -565,48 +585,48 @@ export default function EmployeeManagement() {
       )}
 
       {showRoleModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4" onClick={() => setShowRoleModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-slate-800">
+              <h3 className="text-xl font-bold text-slate-900">
                 {editingRole ? 'Modifier le rôle' : 'Nouveau rôle'}
               </h3>
               <button
                 onClick={() => setShowRoleModal(false)}
-                className="p-2 hover:bg-slate-100 rounded transition"
+                className="p-2 hover:bg-slate-100 rounded-lg transition"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5 text-slate-600" />
               </button>
             </div>
 
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-semibold text-slate-700 mb-2">
                   Nom du rôle
                 </label>
                 <input
                   type="text"
                   value={roleForm.role_name}
                   onChange={(e) => setRoleForm({ ...roleForm, role_name: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                   placeholder="Technicien, Assistant, Manager..."
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-3">
+                <label className="block text-sm font-semibold text-slate-700 mb-3">
                   Accès aux menus
                 </label>
                 <div className="space-y-2">
                   {AVAILABLE_MENUS.map(menu => (
-                    <label key={menu.key} className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer">
+                    <label key={menu.key} className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg hover:bg-purple-50 cursor-pointer transition">
                       <input
                         type="checkbox"
                         checked={roleForm.menu_access[menu.key] || false}
                         onChange={() => toggleMenuAccess(menu.key)}
                         className="w-4 h-4 text-purple-600 border-slate-300 rounded focus:ring-purple-500"
                       />
-                      <span className="text-sm text-slate-700">{menu.label}</span>
+                      <span className="text-sm text-slate-700 font-medium">{menu.label}</span>
                     </label>
                   ))}
                 </div>
@@ -616,13 +636,13 @@ export default function EmployeeManagement() {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowRoleModal(false)}
-                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition"
+                className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition"
               >
                 Annuler
               </button>
               <button
                 onClick={saveRole}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition"
               >
                 <Save className="w-4 h-4" />
                 Enregistrer
