@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, FileDown, User } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, FileDown, User, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
@@ -92,6 +92,28 @@ export default function DeliveryNotesPage() {
       note.dentists?.name.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesSearch;
   });
+
+  const handleToggleStatus = async (note: DeliveryNote) => {
+    const newStatus = note.status === 'completed' ? 'in_progress' : 'completed';
+    const confirmMessage = newStatus === 'completed'
+      ? 'Marquer ce bon de livraison comme terminé ?'
+      : 'Réactiver ce bon de livraison ?';
+
+    if (!confirm(confirmMessage)) return;
+
+    try {
+      const { error } = await supabase
+        .from('delivery_notes')
+        .update({ status: newStatus })
+        .eq('id', note.id);
+
+      if (error) throw error;
+      await loadDeliveryNotes();
+    } catch (error) {
+      console.error('Error updating status:', error);
+      alert('Erreur lors de la mise à jour du statut');
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce bon de livraison ? Le stock sera automatiquement restauré.')) return;
@@ -203,6 +225,9 @@ export default function DeliveryNotesPage() {
                   <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                     Date
                   </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                    Statut
+                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
                     Actions
                   </th>
@@ -220,11 +245,31 @@ export default function DeliveryNotesPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-slate-600">
                       {new Date(note.date).toLocaleDateString('fr-FR')}
                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                        note.status === 'completed'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-orange-100 text-orange-800'
+                      }`}>
+                        {note.status === 'completed' ? 'Terminé' : 'En cours'}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
+                          onClick={() => handleToggleStatus(note)}
+                          className={`p-2 rounded-lg transition-all duration-200 ${
+                            note.status === 'completed'
+                              ? 'text-orange-600 hover:bg-orange-50'
+                              : 'text-green-600 hover:bg-green-50'
+                          }`}
+                          title={note.status === 'completed' ? 'Réactiver' : 'Marquer comme terminé'}
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                        </button>
+                        <button
                           onClick={() => handleDownloadPDF(note)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
                           title="Télécharger PDF"
                         >
                           <FileDown className="w-4 h-4" />
