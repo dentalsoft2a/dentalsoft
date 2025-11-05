@@ -42,6 +42,7 @@ export default function PhotoSubmissionsPage() {
   const [uploading, setUploading] = useState(false);
   const [dentistSearchTerm, setDentistSearchTerm] = useState('');
   const [showDentistDropdown, setShowDentistDropdown] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState(false);
 
   useEffect(() => {
     loadSubmissions();
@@ -464,13 +465,20 @@ export default function PhotoSubmissionsPage() {
             </div>
 
             <div className="p-6 bg-gradient-to-br from-slate-50 to-purple-50 overflow-y-auto max-h-[calc(90vh-80px)]">
-              <div className="mb-6 relative group">
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
-                <img
-                  src={selectedPhoto.photo_url}
-                  alt={`Photo - ${selectedPhoto.patient_name}`}
-                  className="w-full rounded-2xl shadow-2xl relative z-10 border-4 border-white"
-                />
+              <div className="mb-6 flex justify-center">
+                <div className="relative group w-1/2 cursor-pointer" onClick={() => setFullscreenImage(true)}>
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
+                  <img
+                    src={selectedPhoto.photo_url}
+                    alt={`Photo - ${selectedPhoto.patient_name}`}
+                    className="w-full rounded-2xl shadow-2xl relative z-10 border-4 border-white hover:scale-105 transition-transform duration-300"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-20">
+                    <div className="bg-black/50 backdrop-blur-sm rounded-full p-4">
+                      <Eye className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
@@ -615,6 +623,26 @@ export default function PhotoSubmissionsPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {fullscreenImage && selectedPhoto && (
+        <div
+          className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-[60]"
+          onClick={() => setFullscreenImage(false)}
+        >
+          <button
+            onClick={() => setFullscreenImage(false)}
+            className="absolute top-4 right-4 p-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-full transition-all duration-300 z-10"
+          >
+            <XCircle className="w-8 h-8 text-white" />
+          </button>
+          <img
+            src={selectedPhoto.photo_url}
+            alt={`Photo - ${selectedPhoto.patient_name}`}
+            className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
 
