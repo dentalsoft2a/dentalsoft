@@ -34,10 +34,17 @@ export function SubscriptionSettings() {
       .eq('is_active', true)
       .single();
 
+    console.log('🔄 Loading plan from DB:', data);
+
     if (error) {
       console.error('Error loading plan:', error);
     } else if (data) {
-      setPlan(data);
+      const processedPlan = {
+        ...data,
+        price_monthly: typeof data.price_monthly === 'string' ? parseFloat(data.price_monthly) : data.price_monthly
+      };
+      console.log('📥 Setting plan state to:', processedPlan);
+      setPlan(processedPlan);
     }
     setLoading(false);
   };
@@ -47,7 +54,9 @@ export function SubscriptionSettings() {
 
     setSaving(true);
 
-    const { error } = await supabase
+    console.log('💾 Saving plan with price_monthly:', plan.price_monthly, 'Type:', typeof plan.price_monthly);
+
+    const { data, error } = await supabase
       .from('subscription_plans')
       .update({
         name: plan.name,
@@ -57,11 +66,17 @@ export function SubscriptionSettings() {
         features: plan.features,
         updated_at: new Date().toISOString()
       })
-      .eq('id', plan.id);
+      .eq('id', plan.id)
+      .select();
+
+    console.log('✅ Update response:', { data, error });
 
     if (error) {
+      console.error('❌ Error saving:', error);
       alert('Erreur lors de la sauvegarde: ' + error.message);
     } else {
+      console.log('📊 Data after update:', data);
+
       await supabase.from('admin_audit_log').insert({
         admin_id: (await supabase.auth.getUser()).data.user?.id,
         action: 'update_subscription_plan',
@@ -69,6 +84,8 @@ export function SubscriptionSettings() {
       });
 
       alert('Plan d\'abonnement mis à jour avec succès!');
+
+      await loadPlan();
     }
 
     setSaving(false);
