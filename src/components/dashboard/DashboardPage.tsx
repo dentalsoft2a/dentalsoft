@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User, Calendar, CheckCircle, Download, BarChart3, Filter, X, AlertTriangle, Archive, Save } from 'lucide-react';
+import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User, Calendar, CheckCircle, Download, BarChart3, Filter, X, AlertTriangle, Archive, Save, DollarSign } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
 
 type DeliveryNote = Database['public']['Tables']['delivery_notes']['Row'];
 type Dentist = Database['public']['Tables']['dentists']['Row'];
+type Invoice = Database['public']['Tables']['invoices']['Row'] & {
+  dentists?: { name: string };
+};
 
 interface DeliveryWithDentist extends DeliveryNote {
   dentist: Dentist;
@@ -65,6 +68,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
   const [itemStats, setItemStats] = useState<ItemStats[]>([]);
   const [recentDeliveries, setRecentDeliveries] = useState<DeliveryWithDentist[]>([]);
   const [urgentDeliveries, setUrgentDeliveries] = useState<DeliveryWithDentist[]>([]);
+  const [unpaidInvoices, setUnpaidInvoices] = useState<Invoice[]>([]);
   const [lowStockItems, setLowStockItems] = useState<any[]>([]);
   const [lowStockResources, setLowStockResources] = useState<any[]>([]);
   const [lowStockVariants, setLowStockVariants] = useState<any[]>([]);
@@ -88,6 +92,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     loadDeliveries();
     loadDentists();
     loadLowStockItems();
+    loadUnpaidInvoices();
   }, [user]);
 
   const loadDentists = async () => {
@@ -328,6 +333,24 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       setRecentDeliveries(inProgress);
     } catch (error) {
       console.error('Error loading deliveries:', error);
+    }
+  };
+
+  const loadUnpaidInvoices = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('invoices')
+        .select('*, dentists(name)')
+        .eq('user_id', user.id)
+        .in('status', ['draft', 'partial'])
+        .order('date', { ascending: false });
+
+      if (error) throw error;
+      setUnpaidInvoices(data || []);
+    } catch (error) {
+      console.error('Error loading unpaid invoices:', error);
     }
   };
 
@@ -844,6 +867,71 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                   <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-100 text-blue-700">
                     <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
                     En cours
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {unpaidInvoices.length > 0 && (
+        <div className="mb-8 bg-white rounded-2xl shadow-lg border border-red-200/50 p-6 hover:shadow-xl transition-all duration-300 animate-slide-in">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2.5 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg">
+              <DollarSign className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-slate-900">Factures impayées</h2>
+              <p className="text-sm text-slate-600">Factures non payées et partiellement payées</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {unpaidInvoices.map((invoice) => (
+              <div
+                key={invoice.id}
+                className="bg-slate-50 rounded-xl p-4 border border-slate-200 hover:border-red-300 hover:shadow-md transition-all duration-200"
+              >
+                <div className="flex items-start justify-between gap-3 mb-3">
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold">
+                      {invoice.dentists?.name?.charAt(0).toUpperCase() || '?'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-bold text-slate-900 text-sm truncate">{invoice.dentists?.name || 'Dentiste inconnu'}</h4>
+                      <p className="text-xs text-slate-500">N° {invoice.invoice_number}</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-slate-600">Période</span>
+                    <span className="font-medium text-slate-900">
+                      {new Date(invoice.year, invoice.month - 1).toLocaleDateString('fr-FR', {
+                        month: 'short',
+                        year: 'numeric',
+                      })}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-slate-600">Montant</span>
+                    <span className="text-base font-bold text-red-600">{Number(invoice.total).toFixed(2)} €</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                    <Calendar className="w-4 h-4" />
+                    {new Date(invoice.date).toLocaleDateString('fr-FR')}
+                  </div>
+                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${
+                    invoice.status === 'draft'
+                      ? 'bg-red-100 text-red-700'
+                      : 'bg-orange-100 text-orange-700'
+                  }`}>
+                    {invoice.status === 'draft' ? 'Non payée' : 'Partiellement payée'}
                   </span>
                 </div>
               </div>
