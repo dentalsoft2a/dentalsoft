@@ -217,7 +217,7 @@ function AppContent() {
 
   if (currentPage === 'admin') {
     if (isSuperAdmin) {
-      return <SuperAdminPanel />;
+      return <SuperAdminPanel onNavigate={setCurrentPage} />;
     } else {
       setCurrentPage('dashboard');
       return null;

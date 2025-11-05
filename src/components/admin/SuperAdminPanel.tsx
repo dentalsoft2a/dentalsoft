@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Users, Settings, MessageSquare, DollarSign, Activity, Shield, Search, Filter, Key, Mail } from 'lucide-react';
+import { Users, Settings, MessageSquare, DollarSign, Activity, Shield, Search, Filter, Key, Mail, ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { UsersManagement } from './UsersManagement';
 import { SubscriptionSettings } from './SubscriptionSettings';
@@ -10,7 +11,11 @@ import { SmtpSettings } from './SmtpSettings';
 
 type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit';
 
-export function SuperAdminPanel() {
+interface SuperAdminPanelProps {
+  onNavigate?: (page: string) => void;
+}
+
+export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
   const [activeTab, setActiveTab] = useState<TabType>('users');
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -54,14 +59,25 @@ export function SuperAdminPanel() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
       <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white py-6 shadow-lg">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-xl flex items-center justify-center">
-              <Shield className="w-7 h-7" />
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-xl flex items-center justify-center">
+                <Shield className="w-7 h-7" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold">Panneau Super Admin</h1>
+                <p className="text-slate-300 text-sm">Gestion complète de la plateforme</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold">Panneau Super Admin</h1>
-              <p className="text-slate-300 text-sm">Gestion complète de la plateforme</p>
-            </div>
+            {onNavigate && (
+              <button
+                onClick={() => onNavigate('dashboard')}
+                className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 border border-white/20 rounded-lg transition-colors font-medium"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Retour au Dashboard
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
