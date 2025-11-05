@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LandingPage } from './components/landing/LandingPage';
-import UnifiedLoginPage from './components/auth/UnifiedLoginPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardPage from './components/dashboard/DashboardPage';
 import CalendarPage from './components/calendar/CalendarPage';
@@ -25,7 +24,6 @@ import { usePermissions } from './hooks/usePermissions';
 function AppContent() {
   const { user, loading, isEmployee } = useAuth();
   const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
-  const [isPWA, setIsPWA] = useState(false);
   const [currentPage, setCurrentPage] = useState('landing');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isDentist, setIsDentist] = useState(false);
@@ -34,16 +32,6 @@ function AppContent() {
   const [lowStockCount, setLowStockCount] = useState(0);
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
   const [initialPageSet, setInitialPageSet] = useState(false);
-
-  useEffect(() => {
-    const checkPWA = () => {
-      const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-      const isIOSStandalone = (window.navigator as any).standalone === true;
-      setIsPWA(isStandalone || isIOSStandalone);
-    };
-
-    checkPWA();
-  }, []);
 
   useEffect(() => {
     if (user) {
@@ -223,11 +211,6 @@ function AppContent() {
     if (currentPage === 'dentist-register') {
       return <DentistRegisterPage onNavigate={setCurrentPage} />;
     }
-
-    if (isPWA) {
-      return <UnifiedLoginPage onNavigate={setCurrentPage} />;
-    }
-
     return <LandingPage onNavigate={setCurrentPage} />;
   }
 

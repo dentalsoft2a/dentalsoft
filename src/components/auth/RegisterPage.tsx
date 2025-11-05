@@ -4,10 +4,9 @@ import DentalCloudLogo from '../common/DentalCloudLogo';
 
 interface RegisterPageProps {
   onToggleLogin: () => void;
-  onNavigate?: (page: string) => void;
 }
 
-export default function RegisterPage({ onToggleLogin, onNavigate }: RegisterPageProps) {
+export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -134,32 +133,16 @@ export default function RegisterPage({ onToggleLogin, onNavigate }: RegisterPage
             </button>
           </form>
 
-          <div className="mt-6 space-y-3">
-            <div className="text-center">
-              <p className="text-slate-600 text-sm">
-                Déjà un compte ?{' '}
-                <button
-                  onClick={onToggleLogin}
-                  className="text-primary-600 font-medium hover:text-primary-700 transition"
-                >
-                  Se connecter
-                </button>
-              </p>
-            </div>
-
-            {onNavigate && (
-              <div className="text-center pt-3 border-t border-slate-200">
-                <p className="text-slate-600 text-sm">
-                  Vous êtes dentiste ?{' '}
-                  <button
-                    onClick={() => onNavigate('dentist-register')}
-                    className="text-cyan-600 font-medium hover:text-cyan-700 transition-colors duration-200 hover:underline"
-                  >
-                    Accès dentiste
-                  </button>
-                </p>
-              </div>
-            )}
+          <div className="mt-6 text-center">
+            <p className="text-slate-600 text-sm">
+              Déjà un compte ?{' '}
+              <button
+                onClick={onToggleLogin}
+                className="text-primary-600 font-medium hover:text-primary-700 transition"
+              >
+                Se connecter
+              </button>
+            </p>
           </div>
         </div>
       </div>

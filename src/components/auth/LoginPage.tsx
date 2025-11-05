@@ -4,10 +4,9 @@ import DentalCloudLogo from '../common/DentalCloudLogo';
 
 interface LoginPageProps {
   onToggleRegister: () => void;
-  onNavigate?: (page: string) => void;
 }
 
-export default function LoginPage({ onToggleRegister, onNavigate }: LoginPageProps) {
+export default function LoginPage({ onToggleRegister }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -85,32 +84,16 @@ export default function LoginPage({ onToggleRegister, onNavigate }: LoginPagePro
             </button>
           </form>
 
-          <div className="mt-6 space-y-3">
-            <div className="text-center">
-              <p className="text-slate-600 text-sm">
-                Pas encore de compte ?{' '}
-                <button
-                  onClick={onToggleRegister}
-                  className="text-primary-600 font-medium hover:text-primary-700 transition-colors duration-200 hover:underline"
-                >
-                  Créer un compte
-                </button>
-              </p>
-            </div>
-
-            {onNavigate && (
-              <div className="text-center pt-3 border-t border-slate-200">
-                <p className="text-slate-600 text-sm">
-                  Vous êtes dentiste ?{' '}
-                  <button
-                    onClick={() => onNavigate('dentist-register')}
-                    className="text-cyan-600 font-medium hover:text-cyan-700 transition-colors duration-200 hover:underline"
-                  >
-                    Accès dentiste
-                  </button>
-                </p>
-              </div>
-            )}
+          <div className="mt-6 text-center">
+            <p className="text-slate-600 text-sm">
+              Pas encore de compte ?{' '}
+              <button
+                onClick={onToggleRegister}
+                className="text-primary-600 font-medium hover:text-primary-700 transition-colors duration-200 hover:underline"
+              >
+                Créer un compte
+              </button>
+            </p>
           </div>
         </div>
       </div>
