@@ -152,9 +152,12 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                   <Icon className="w-[18px] h-[18px] flex-shrink-0" />
                   <span className="text-[14px]">{item.name}</span>
                   {(showBadge || showResourceBadge) && (
-                    <span className="ml-auto px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full animate-pulse">
-                      {badgeCount}
-                    </span>
+                    <div className="ml-auto flex items-center gap-1">
+                      <AlertTriangle className="w-3 h-3 text-orange-500" />
+                      <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full animate-pulse">
+                        {badgeCount}
+                      </span>
+                    </div>
                   )}
                 </button>
               );
