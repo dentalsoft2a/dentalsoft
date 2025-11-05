@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info } from 'lucide-react';
+import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -73,6 +73,28 @@ export default function PhotoSubmissionsPage() {
     } catch (error) {
       console.error('Error updating status:', error);
       alert('Erreur lors de la mise à jour du statut');
+    }
+  };
+
+  const deleteSubmission = async (id: string) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer cette photo ?')) {
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('photo_submissions')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      setSelectedPhoto(null);
+      loadSubmissions();
+      alert('Photo supprimée avec succès');
+    } catch (error) {
+      console.error('Error deleting submission:', error);
+      alert('Erreur lors de la suppression de la photo');
     }
   };
 
@@ -380,14 +402,23 @@ export default function PhotoSubmissionsPage() {
                 </div>
               </div>
 
-              <a
-                href={selectedPhoto.photo_url}
-                download
-                className="flex items-center justify-center gap-2 w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition"
-              >
-                <Download className="w-5 h-5" />
-                Télécharger la photo
-              </a>
+              <div className="flex gap-3">
+                <a
+                  href={selectedPhoto.photo_url}
+                  download
+                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition"
+                >
+                  <Download className="w-5 h-5" />
+                  Télécharger
+                </a>
+                <button
+                  onClick={() => deleteSubmission(selectedPhoto.id)}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition"
+                >
+                  <Trash2 className="w-5 h-5" />
+                  Supprimer
+                </button>
+              </div>
             </div>
           </div>
         </div>
