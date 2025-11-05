@@ -93,6 +93,41 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
     loadUsers();
   };
 
+  const deleteUser = async (userId: string, userEmail: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer l'utilisateur ${userEmail} ?\n\nCette action est irréversible et supprimera :\n- Le compte utilisateur\n- Toutes les données associées\n- Les proformas et factures\n- Tous les autres enregistrements`)) {
+      return;
+    }
+
+    try {
+      const currentUser = (await supabase.auth.getUser()).data.user;
+
+      if (currentUser?.id === userId) {
+        alert('Vous ne pouvez pas supprimer votre propre compte');
+        return;
+      }
+
+      await supabase.from('admin_audit_log').insert({
+        admin_id: currentUser?.id,
+        action: 'delete_user',
+        target_user_id: userId,
+        details: { email: userEmail }
+      });
+
+      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+
+      if (authError) {
+        alert('Erreur lors de la suppression: ' + authError.message);
+        return;
+      }
+
+      alert('Utilisateur supprimé avec succès');
+      loadUsers();
+      onStatsUpdate();
+    } catch (error: any) {
+      alert('Erreur lors de la suppression: ' + error.message);
+    }
+  };
+
   const filteredUsers = users.filter(user =>
     user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -214,6 +249,13 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
                           <Ban className="w-4 h-4" />
                         </button>
                       )}
+                      <button
+                        onClick={() => deleteUser(user.id, user.email)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Supprimer l'utilisateur"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>
