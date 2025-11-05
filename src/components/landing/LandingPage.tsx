@@ -1,7 +1,8 @@
 import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus, Camera } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import DentalCloudLogo from '../common/DentalCloudLogo';
+import { supabase } from '../../lib/supabase';
 
 interface LandingPageProps {
   onNavigate?: (page: string) => void;
@@ -19,6 +20,23 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
   const [laboratoryName, setLaboratoryName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [price, setPrice] = useState<number>(49.99);
+
+  useEffect(() => {
+    loadPrice();
+  }, []);
+
+  const loadPrice = async () => {
+    const { data } = await supabase
+      .from('subscription_plans')
+      .select('price_monthly')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (data && data.price_monthly) {
+      setPrice(typeof data.price_monthly === 'string' ? parseFloat(data.price_monthly) : data.price_monthly);
+    }
+  };
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -325,7 +343,7 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-primary-600" />
                       <div className="text-slate-600">
-                        <span className="text-3xl font-bold text-primary-600">49,99€</span>
+                        <span className="text-3xl font-bold text-primary-600">{price.toFixed(2)}€</span>
                         <span className="text-lg">/mois</span>
                       </div>
                     </div>
@@ -804,7 +822,7 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
               <div className="bg-white rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
                 <div className="bg-gradient-to-br from-slate-50 to-white p-8 text-center border-b border-slate-200">
                   <div className="inline-flex items-baseline gap-2 mb-2">
-                    <span className="text-6xl font-bold text-slate-900">49,99€</span>
+                    <span className="text-6xl font-bold text-slate-900">{price.toFixed(2)}€</span>
                     <span className="text-xl text-slate-600">/mois</span>
                   </div>
                   <p className="text-slate-600 mt-2">Sans engagement</p>
