@@ -2,49 +2,132 @@ import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import { Building2, User } from 'lucide-react';
+import { supabase } from '../../lib/supabase';
 
 interface UnifiedLoginPageProps {
   onNavigate: (page: string) => void;
 }
 
 type UserType = 'laboratory' | 'dentist';
-type Mode = 'login' | 'register';
 
 export default function UnifiedLoginPage({ onNavigate }: UnifiedLoginPageProps) {
   const [userType, setUserType] = useState<UserType>('laboratory');
-  const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [laboratoryName, setLaboratoryName] = useState('');
+  const [laboratoryId, setLaboratoryId] = useState('');
+  const [laboratories, setLaboratories] = useState<Array<{ id: string; laboratory_name: string }>>([]);
+  const [showLabSelection, setShowLabSelection] = useState(false);
+  const [isRegisterMode, setIsRegisterMode] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signIn, signUp } = useAuth();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const loadLaboratories = async () => {
+    const { data } = await supabase
+      .from('profiles')
+      .select('id, laboratory_name')
+      .eq('user_type', 'laboratory')
+      .order('laboratory_name');
+
+    if (data) {
+      setLaboratories(data);
+    }
+  };
+
+  const handleDentistSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    if (userType === 'dentist') {
-      onNavigate('dentist-register');
+    if (!showLabSelection) {
+      await loadLaboratories();
+      setShowLabSelection(true);
+      setLoading(false);
       return;
     }
 
-    if (mode === 'login') {
-      const { error } = await signIn(email, password);
-      if (error) {
-        setError(error.message);
+    if (!laboratoryId) {
+      setError('Veuillez sélectionner un laboratoire');
+      setLoading(false);
+      return;
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          first_name: firstName,
+          last_name: lastName,
+          user_type: 'dentist',
+        },
+      },
+    });
+
+    if (authError) {
+      setError(authError.message);
+      setLoading(false);
+      return;
+    }
+
+    if (authData.user) {
+      const { error: profileError } = await supabase.from('profiles').insert({
+        id: authData.user.id,
+        email: authData.user.email!,
+        first_name: firstName,
+        last_name: lastName,
+        user_type: 'dentist',
+      });
+
+      if (profileError) {
+        setError(profileError.message);
         setLoading(false);
+        return;
       }
-    } else {
+
+      const { error: favError } = await supabase.from('dentist_favorite_laboratories').insert({
+        dentist_id: authData.user.id,
+        laboratory_id: laboratoryId,
+      });
+
+      if (favError) {
+        setError(favError.message);
+        setLoading(false);
+        return;
+      }
+    }
+  };
+
+  const handleLaboratorySubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    if (isRegisterMode) {
       const { error } = await signUp(email, password, firstName, lastName, laboratoryName);
       if (error) {
         setError(error.message);
         setLoading(false);
       }
+    } else {
+      const { error } = await signIn(email, password);
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+      }
     }
+  };
+
+  const resetDentistForm = () => {
+    setShowLabSelection(false);
+    setLaboratoryId('');
+    setEmail('');
+    setPassword('');
+    setFirstName('');
+    setLastName('');
   };
 
   return (
@@ -56,17 +139,21 @@ export default function UnifiedLoginPage({ onNavigate }: UnifiedLoginPageProps) 
               <DentalCloudLogo size={64} showText={false} />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 mb-2">
-              {mode === 'login' ? 'Connexion' : 'Créer un compte'}
+              Connexion
             </h1>
             <p className="text-slate-600 text-sm">
-              {mode === 'login' ? 'Accédez à votre espace' : 'Créez votre compte laboratoire'}
+              Accédez à votre espace
             </p>
           </div>
 
           <div className="flex gap-2 mb-6 bg-slate-100 p-1 rounded-xl">
             <button
               type="button"
-              onClick={() => setUserType('laboratory')}
+              onClick={() => {
+                setUserType('laboratory');
+                setError('');
+                resetDentistForm();
+              }}
               className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
                 userType === 'laboratory'
                   ? 'bg-white text-primary-600 shadow-md'
@@ -78,7 +165,11 @@ export default function UnifiedLoginPage({ onNavigate }: UnifiedLoginPageProps) 
             </button>
             <button
               type="button"
-              onClick={() => setUserType('dentist')}
+              onClick={() => {
+                setUserType('dentist');
+                setError('');
+                setIsRegisterMode(false);
+              }}
               className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
                 userType === 'dentist'
                   ? 'bg-white text-cyan-600 shadow-md'
@@ -90,21 +181,9 @@ export default function UnifiedLoginPage({ onNavigate }: UnifiedLoginPageProps) 
             </button>
           </div>
 
-          {userType === 'dentist' ? (
-            <div className="text-center py-8">
-              <p className="text-slate-600 mb-4">
-                Vous êtes dentiste et souhaitez soumettre des photos à votre laboratoire ?
-              </p>
-              <button
-                onClick={() => onNavigate('dentist-register')}
-                className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white py-3 rounded-xl font-medium hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl"
-              >
-                Accéder à l'espace dentiste
-              </button>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {mode === 'register' && (
+          {userType === 'laboratory' ? (
+            <form onSubmit={handleLaboratorySubmit} className="space-y-4">
+              {isRegisterMode && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
@@ -179,11 +258,11 @@ export default function UnifiedLoginPage({ onNavigate }: UnifiedLoginPageProps) 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  minLength={mode === 'register' ? 6 : undefined}
+                  minLength={isRegisterMode ? 6 : undefined}
                   className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all"
                   placeholder="••••••••"
                 />
-                {mode === 'register' && (
+                {isRegisterMode && (
                   <p className="text-xs text-slate-500 mt-1">Minimum 6 caractères</p>
                 )}
               </div>
@@ -200,39 +279,164 @@ export default function UnifiedLoginPage({ onNavigate }: UnifiedLoginPageProps) 
                 className="w-full bg-gradient-to-r from-primary-500 to-cyan-500 text-white py-3.5 rounded-xl font-medium hover:from-primary-600 hover:to-cyan-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
               >
                 {loading
-                  ? (mode === 'login' ? 'Connexion...' : 'Création...')
-                  : (mode === 'login' ? 'Se connecter' : 'Créer mon compte')
+                  ? (isRegisterMode ? 'Création...' : 'Connexion...')
+                  : (isRegisterMode ? 'Créer mon compte' : 'Se connecter')
                 }
               </button>
-            </form>
-          )}
 
-          {userType === 'laboratory' && (
-            <div className="mt-6 text-center">
-              <p className="text-slate-600 text-sm">
-                {mode === 'login' ? (
-                  <>
-                    Pas encore de compte ?{' '}
-                    <button
-                      onClick={() => setMode('register')}
-                      className="text-primary-600 font-medium hover:text-primary-700 transition-colors hover:underline"
-                    >
-                      Créer un compte
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    Déjà un compte ?{' '}
-                    <button
-                      onClick={() => setMode('login')}
-                      className="text-primary-600 font-medium hover:text-primary-700 transition-colors hover:underline"
-                    >
-                      Se connecter
-                    </button>
-                  </>
+              <div className="text-center">
+                <p className="text-slate-600 text-sm">
+                  {isRegisterMode ? (
+                    <>
+                      Déjà un compte ?{' '}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRegisterMode(false);
+                          setError('');
+                        }}
+                        className="text-primary-600 font-medium hover:text-primary-700 transition-colors hover:underline"
+                      >
+                        Se connecter
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      Pas encore de compte ?{' '}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsRegisterMode(true);
+                          setError('');
+                        }}
+                        className="text-primary-600 font-medium hover:text-primary-700 transition-colors hover:underline"
+                      >
+                        Créer un compte
+                      </button>
+                    </>
+                  )}
+                </p>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleDentistSubmit} className="space-y-4">
+              {!showLabSelection ? (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="dentistFirstName" className="block text-sm font-medium text-slate-700 mb-2">
+                        Prénom
+                      </label>
+                      <input
+                        id="dentistFirstName"
+                        type="text"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                        placeholder="Jean"
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="dentistLastName" className="block text-sm font-medium text-slate-700 mb-2">
+                        Nom
+                      </label>
+                      <input
+                        id="dentistLastName"
+                        type="text"
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        required
+                        className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                        placeholder="Dupont"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label htmlFor="dentistEmail" className="block text-sm font-medium text-slate-700 mb-2">
+                      Email
+                    </label>
+                    <input
+                      id="dentistEmail"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                      placeholder="votre@email.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="dentistPassword" className="block text-sm font-medium text-slate-700 mb-2">
+                      Mot de passe
+                    </label>
+                    <input
+                      id="dentistPassword"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                      placeholder="••••••••"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Minimum 6 caractères</p>
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label htmlFor="laboratory" className="block text-sm font-medium text-slate-700 mb-2">
+                    Sélectionnez votre laboratoire
+                  </label>
+                  <select
+                    id="laboratory"
+                    value={laboratoryId}
+                    onChange={(e) => setLaboratoryId(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border-2 border-slate-200 focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 outline-none transition-all"
+                  >
+                    <option value="">Choisir un laboratoire</option>
+                    {laboratories.map((lab) => (
+                      <option key={lab.id} value={lab.id}>
+                        {lab.laboratory_name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {error && (
+                <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-xl text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                {showLabSelection && (
+                  <button
+                    type="button"
+                    onClick={resetDentistForm}
+                    className="flex-1 bg-slate-100 text-slate-700 py-3.5 rounded-xl font-medium hover:bg-slate-200 transition-all duration-200"
+                  >
+                    Retour
+                  </button>
                 )}
-              </p>
-            </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`${showLabSelection ? 'flex-1' : 'w-full'} bg-gradient-to-r from-cyan-500 to-blue-500 text-white py-3.5 rounded-xl font-medium hover:from-cyan-600 hover:to-blue-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transform hover:scale-[1.02]`}
+                >
+                  {loading
+                    ? 'Création...'
+                    : showLabSelection
+                    ? 'Créer mon compte'
+                    : 'Continuer'
+                  }
+                </button>
+              </div>
+            </form>
           )}
         </div>
       </div>
