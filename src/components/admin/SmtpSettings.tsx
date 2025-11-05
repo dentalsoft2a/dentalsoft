@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Mail, Save, TestTube, Eye, EyeOff, CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
+import { Mail, Save, TestTube, Eye, EyeOff, CheckCircle, XCircle, AlertTriangle, Info, Phone } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -12,6 +12,7 @@ interface SmtpConfig {
   smtp_password: string;
   from_email: string;
   from_name: string;
+  contact_phone: string;
   is_active: boolean;
   test_email_sent: boolean;
   last_tested_at: string | null;
@@ -32,6 +33,7 @@ export function SmtpSettings() {
     smtp_password: '',
     from_email: '',
     from_name: 'GB Dental',
+    contact_phone: '',
     is_active: true,
     test_email_sent: false,
     last_tested_at: null,
@@ -61,6 +63,7 @@ export function SmtpSettings() {
           smtp_password: data.smtp_password,
           from_email: data.from_email,
           from_name: data.from_name,
+          contact_phone: data.contact_phone || '',
           is_active: data.is_active,
           test_email_sent: data.test_email_sent,
           last_tested_at: data.last_tested_at,
@@ -320,6 +323,25 @@ export function SmtpSettings() {
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
               placeholder="GB Dental"
             />
+          </div>
+
+          <div className="md:col-span-2">
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              Numéro de téléphone de contact
+            </label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <input
+                type="tel"
+                value={config.contact_phone}
+                onChange={(e) => setConfig({ ...config, contact_phone: e.target.value })}
+                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                placeholder="+33 1 23 45 67 89"
+              />
+            </div>
+            <p className="text-xs text-slate-500 mt-1">
+              Ce numéro sera affiché sur la page d'accueil et dans le support
+            </p>
           </div>
         </div>
 

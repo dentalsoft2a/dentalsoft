@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { MessageSquare, Plus, Send, Clock, CheckCircle } from 'lucide-react';
+import { MessageSquare, Plus, Send, Clock, CheckCircle, Phone } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -32,12 +32,26 @@ export function SupportPage() {
   });
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [contactPhone, setContactPhone] = useState<string>('');
 
   useEffect(() => {
     if (user) {
       loadTickets();
     }
+    loadContactPhone();
   }, [user]);
+
+  const loadContactPhone = async () => {
+    const { data } = await supabase
+      .from('smtp_settings')
+      .select('contact_phone')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (data && data.contact_phone) {
+      setContactPhone(data.contact_phone);
+    }
+  };
 
   useEffect(() => {
     if (selectedTicket) {
@@ -195,8 +209,24 @@ export function SupportPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Support</h1>
-          <p className="text-slate-600">Contactez notre équipe pour toute question ou assistance</p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900 mb-2">Support</h1>
+              <p className="text-slate-600">Contactez notre équipe pour toute question ou assistance</p>
+            </div>
+            {contactPhone && (
+              <a
+                href={`tel:${contactPhone.replace(/\s/g, '')}`}
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:shadow-lg transition-all group"
+              >
+                <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <div className="text-left">
+                  <div className="text-xs opacity-90">Appelez-nous</div>
+                  <div className="font-semibold">{contactPhone}</div>
+                </div>
+              </a>
+            )}
+          </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-6 h-[600px]">

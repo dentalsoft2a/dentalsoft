@@ -21,9 +21,11 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [price, setPrice] = useState<number>(59.99);
+  const [contactPhone, setContactPhone] = useState<string>('');
 
   useEffect(() => {
     loadPrice();
+    loadContactPhone();
   }, []);
 
   const loadPrice = async () => {
@@ -35,6 +37,18 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
 
     if (data && data.price_monthly) {
       setPrice(typeof data.price_monthly === 'string' ? parseFloat(data.price_monthly) : data.price_monthly);
+    }
+  };
+
+  const loadContactPhone = async () => {
+    const { data } = await supabase
+      .from('smtp_settings')
+      .select('contact_phone')
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (data && data.contact_phone) {
+      setContactPhone(data.contact_phone);
     }
   };
 
@@ -721,6 +735,25 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
             </div>
 
             <div className="grid md:grid-cols-3 gap-6 mb-8">
+              {contactPhone && (
+                <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 hover:shadow-xl transition-all group">
+                  <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+                    <Phone className="w-7 h-7 text-white" />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2">Téléphone</h3>
+                  <p className="text-slate-600 mb-4">
+                    Appelez-nous directement pour une assistance rapide
+                  </p>
+                  <a
+                    href={`tel:${contactPhone.replace(/\s/g, '')}`}
+                    className="inline-flex items-center gap-2 text-green-600 font-medium text-sm hover:text-green-700 transition-colors"
+                  >
+                    <Phone className="w-4 h-4" />
+                    {contactPhone}
+                  </a>
+                </div>
+              )}
+
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 hover:shadow-xl transition-all group">
                 <div className="w-14 h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                   <MessageCircle className="w-7 h-7 text-white" />
