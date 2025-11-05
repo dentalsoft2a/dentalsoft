@@ -259,13 +259,13 @@ export default function InvoicesPage() {
 
   const getStatusBadge = (status: string) => {
     const styles = {
-      draft: 'bg-slate-100 text-slate-700',
+      draft: 'bg-red-100 text-red-700',
       sent: 'bg-blue-100 text-primary-700',
       paid: 'bg-green-100 text-green-700',
       partial: 'bg-orange-100 text-orange-700',
     };
     const labels = {
-      draft: 'Brouillon',
+      draft: 'Non payée',
       sent: 'Envoyée',
       paid: 'Payée',
       partial: 'Partiellement payée',
