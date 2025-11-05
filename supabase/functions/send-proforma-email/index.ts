@@ -46,8 +46,11 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    console.log("SMTP config loaded successfully");
-    console.log("Parsing request body...");
+    console.log("SMTP config loaded:", {
+      host: smtpConfig.smtp_host,
+      port: smtpConfig.smtp_port,
+      secure: smtpConfig.smtp_secure
+    });
     
     // Parse request body with better error handling
     let requestData;
@@ -92,16 +95,45 @@ Deno.serve(async (req: Request) => {
 
     console.log("Creating nodemailer transporter...");
     
-    // Create nodemailer transporter
-    const transporter = nodemailer.createTransport({
+    // Create nodemailer transporter with proper configuration
+    // Port 587 uses STARTTLS (secure: false, requireTLS: true)
+    // Port 465 uses SSL/TLS (secure: true)
+    const transportConfig: any = {
       host: smtpConfig.smtp_host,
       port: smtpConfig.smtp_port,
-      secure: smtpConfig.smtp_secure,
       auth: {
         user: smtpConfig.smtp_user,
         pass: smtpConfig.smtp_password,
       },
+    };
+
+    // Configure security based on port
+    if (smtpConfig.smtp_port === 465) {
+      // Port 465 requires secure: true
+      transportConfig.secure = true;
+    } else if (smtpConfig.smtp_port === 587) {
+      // Port 587 requires secure: false with requireTLS
+      transportConfig.secure = false;
+      transportConfig.requireTLS = true;
+    } else {
+      // For other ports, use the configured value
+      transportConfig.secure = smtpConfig.smtp_secure;
+    }
+
+    // Add TLS options to ignore certificate errors in development
+    transportConfig.tls = {
+      rejectUnauthorized: true,
+      minVersion: 'TLSv1.2'
+    };
+
+    console.log("Transport config:", {
+      host: transportConfig.host,
+      port: transportConfig.port,
+      secure: transportConfig.secure,
+      requireTLS: transportConfig.requireTLS
     });
+
+    const transporter = nodemailer.createTransport(transportConfig);
 
     console.log("Converting base64 to buffer...");
     
@@ -182,7 +214,7 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Erreur lors de l'envoi de l'email: " + (emailError instanceof Error ? emailError.message : "Unknown error")
+          error: "Erreur lors de l'envoi de l'email: " + (emailError instanceof Error ? emailError.message : "Unknown error") + ". V\u00e9rifiez votre configuration SMTP (port 587 = STARTTLS, port 465 = SSL/TLS)."
         }),
         {
           status: 500,
