@@ -84,7 +84,7 @@ export default function LoginPage({ onToggleRegister }: LoginPageProps) {
             </button>
           </form>
 
-          <div className="mt-6 text-center space-y-3">
+          <div className="mt-6 text-center">
             <p className="text-slate-600 text-sm">
               Pas encore de compte ?{' '}
               <button
@@ -94,16 +94,6 @@ export default function LoginPage({ onToggleRegister }: LoginPageProps) {
                 Créer un compte
               </button>
             </p>
-            {onViewLanding && (
-              <p className="text-slate-600 text-sm">
-                <button
-                  onClick={onViewLanding}
-                  className="text-cyan-600 font-medium hover:text-cyan-700 transition-colors duration-200 hover:underline"
-                >
-                  En savoir plus sur DentalCloud
-                </button>
-              </p>
-            )}
           </div>
         </div>
       </div>
