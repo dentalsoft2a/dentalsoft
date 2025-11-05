@@ -87,7 +87,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
   const [quickFillQuantity, setQuickFillQuantity] = useState<number>(0);
   const [showPaymentModal, setShowPaymentModal] = useState<Invoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<string>('');
-  const [paymentMethod, setPaymentMethod] = useState<string>('virement');
+  const [paymentMethod, setPaymentMethod] = useState<string>('bank_transfer');
   const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [paymentReference, setPaymentReference] = useState<string>('');
   const [paymentNotes, setPaymentNotes] = useState<string>('');
@@ -594,7 +594,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
   const openPaymentModal = async (invoice: Invoice) => {
     setShowPaymentModal(invoice);
     setPaymentAmount('');
-    setPaymentMethod('virement');
+    setPaymentMethod('bank_transfer');
     setPaymentDate(new Date().toISOString().split('T')[0]);
     setPaymentReference('');
     setPaymentNotes('');
@@ -695,6 +695,16 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
   const getRemainingAmount = () => {
     if (!showPaymentModal) return 0;
     return Number(showPaymentModal.total) - getTotalPaid();
+  };
+
+  const getPaymentMethodLabel = (method: string) => {
+    const labels: { [key: string]: string } = {
+      'bank_transfer': 'Virement',
+      'check': 'Chèque',
+      'cash': 'Espèces',
+      'credit_card': 'Carte bancaire',
+    };
+    return labels[method] || method;
   };
 
   return (
@@ -1501,11 +1511,10 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                       onChange={(e) => setPaymentMethod(e.target.value)}
                       className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
                     >
-                      <option value="virement">Virement</option>
-                      <option value="cheque">Chèque</option>
-                      <option value="especes">Espèces</option>
-                      <option value="carte">Carte bancaire</option>
-                      <option value="prelevement">Prélèvement</option>
+                      <option value="bank_transfer">Virement</option>
+                      <option value="check">Chèque</option>
+                      <option value="cash">Espèces</option>
+                      <option value="credit_card">Carte bancaire</option>
                     </select>
                   </div>
 
@@ -1561,7 +1570,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                                 {Number(payment.amount).toFixed(2)} €
                               </span>
                               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
-                                {payment.payment_method}
+                                {getPaymentMethodLabel(payment.payment_method)}
                               </span>
                               <span className="text-sm text-slate-500">
                                 {new Date(payment.payment_date).toLocaleDateString('fr-FR')}
