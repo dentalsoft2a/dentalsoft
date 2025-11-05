@@ -222,18 +222,36 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Nom du laboratoire
-                    </label>
-                    <input
-                      type="text"
-                      value={laboratoryName}
-                      onChange={(e) => setLaboratoryName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
-                      required
-                    />
-                  </div>
+                  {!isDentistMode && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Nom du laboratoire
+                      </label>
+                      <input
+                        type="text"
+                        value={laboratoryName}
+                        onChange={(e) => setLaboratoryName(e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
+                        required
+                      />
+                    </div>
+                  )}
+
+                  {isDentistMode && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        Nom du cabinet
+                      </label>
+                      <input
+                        type="text"
+                        value={laboratoryName}
+                        onChange={(e) => setLaboratoryName(e.target.value)}
+                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
+                        placeholder="Cabinet dentaire..."
+                        required
+                      />
+                    </div>
+                  )}
                 </>
               )}
 
