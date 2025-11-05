@@ -59,34 +59,56 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
 
   return (
     <div className="min-h-screen">
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-slate-200 z-40 px-4 py-3 shadow-sm">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 px-4 py-4 shadow-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2 rounded-lg hover:bg-primary-50 transition-all duration-200 hover:scale-105"
+              className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-primary-50 hover:to-cyan-50 transition-all duration-200 active:scale-95"
+              aria-label="Toggle menu"
             >
-              {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {sidebarOpen ? <X className="w-6 h-6 text-slate-700" /> : <Menu className="w-6 h-6 text-slate-700" />}
             </button>
-            <h1 className="font-semibold bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">DentalCloud</h1>
+            <div className="flex items-center gap-2">
+              <DentalCloudLogo size={28} showText={false} />
+              <h1 className="font-bold text-lg bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">DentalCloud</h1>
+            </div>
           </div>
+          {profile && (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-primary-50 to-cyan-50 rounded-full border border-primary-100">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-xs font-medium text-slate-700 truncate max-w-[100px]">{profile.first_name}</span>
+            </div>
+          )}
         </div>
       </div>
 
       <aside className={`
-        fixed top-0 left-0 bottom-0 w-64 bg-white/90 backdrop-blur-xl border-r border-slate-200/50 z-50 shadow-xl
-        transition-all duration-300 lg:translate-x-0
+        fixed top-0 left-0 bottom-0 w-[85vw] max-w-[320px] bg-white/95 backdrop-blur-xl border-r border-slate-200/50 z-50 shadow-2xl
+        transition-all duration-300 ease-out lg:w-64 lg:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-slate-200/50">
-            <DentalCloudLogo size={36} showText={true} />
+          <div className="p-5 border-b border-slate-200/50">
+            <div className="flex items-center justify-between mb-4">
+              <DentalCloudLogo size={36} showText={true} />
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors active:scale-95"
+                aria-label="Close menu"
+              >
+                <X className="w-5 h-5 text-slate-500" />
+              </button>
+            </div>
             {profile && (
-              <p className="text-sm text-slate-600 mt-3 pl-1">{profile.laboratory_name}</p>
+              <div className="px-3 py-2 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg border border-slate-200">
+                <p className="text-xs font-semibold text-slate-900 truncate">{profile.laboratory_name}</p>
+                <p className="text-xs text-slate-500 mt-0.5 truncate">{profile.email}</p>
+              </div>
             )}
           </div>
 
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
+          <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto overscroll-contain">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.page;
@@ -103,17 +125,17 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                   }}
                   disabled={isDisabled}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative
+                    w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 relative touch-manipulation
                     ${isDisabled
                       ? 'opacity-50 cursor-not-allowed text-slate-400'
                       : isActive
-                        ? 'bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-medium shadow-lg shadow-primary-500/30 scale-105'
-                        : 'text-slate-700 hover:bg-slate-50 hover:scale-102 hover:shadow-sm'
+                        ? 'bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-semibold shadow-lg shadow-primary-500/30'
+                        : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
                     }
                   `}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.name}</span>
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-[15px]">{item.name}</span>
                   {(showBadge || showResourceBadge) && (
                     <span className="ml-auto px-2 py-0.5 bg-orange-500 text-white text-xs font-bold rounded-full animate-pulse">
                       {badgeCount}
@@ -124,7 +146,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
             })}
           </nav>
 
-          <div className="p-4 border-t border-slate-200/50 space-y-1">
+          <div className="p-3 border-t border-slate-200/50 space-y-0.5">
             {bottomNavigation.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.page;
@@ -136,31 +158,27 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                     setSidebarOpen(false);
                   }}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200
+                    w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 touch-manipulation
                     ${isActive
-                      ? 'bg-gradient-to-r from-primary-500 to-cyan-500 text-white shadow-lg scale-105'
-                      : 'text-slate-700 hover:bg-slate-100 hover:scale-102'
+                      ? 'bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-semibold shadow-lg'
+                      : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200 active:scale-98'
                     }
                   `}
                 >
-                  <Icon className="w-5 h-5" />
-                  <span>{item.name}</span>
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <span className="text-sm">{item.name}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="p-4 border-t border-slate-200/50">
-            {profile && (
-              <div className="mb-4 px-4 py-3 bg-gradient-to-r from-primary-50 to-cyan-50 rounded-lg border border-primary-100">
-                <p className="text-sm font-medium text-slate-900">
-                  {profile.first_name} {profile.last_name}
-                </p>
-              </div>
-            )}
+          <div className="p-3 border-t border-slate-200/50">
             <button
-              onClick={() => signOut()}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-red-600 hover:bg-red-50 transition-all duration-200 hover:scale-102"
+              onClick={() => {
+                signOut();
+                setSidebarOpen(false);
+              }}
+              className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-all duration-200 active:scale-98 font-medium touch-manipulation"
             >
               <LogOut className="w-5 h-5" />
               <span>Déconnexion</span>
@@ -171,13 +189,14 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
 
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
+          aria-hidden="true"
         />
       )}
 
-      <main className="lg:pl-64 pt-16 lg:pt-0">
-        <div className="p-6 lg:p-8">
+      <main className="lg:pl-64 pt-[72px] lg:pt-0 min-h-screen">
+        <div className="p-4 sm:p-6 lg:p-8">
           {showSubscriptionWarning && (
             <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg shadow-md">
               <div className="flex items-start gap-3">
