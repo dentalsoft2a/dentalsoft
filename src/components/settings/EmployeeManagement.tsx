@@ -30,6 +30,7 @@ const AVAILABLE_MENUS = [
   { key: 'dentists', label: 'Dentistes' },
   { key: 'catalog', label: 'Catalogue' },
   { key: 'resources', label: 'Ressources' },
+  { key: 'help-center', label: 'Centre d\'aide' },
   { key: 'settings', label: 'Paramètres' }
 ];
 

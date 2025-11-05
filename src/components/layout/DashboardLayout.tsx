@@ -88,12 +88,16 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     ? allNavigation.filter(item => hasMenuAccess(item.menuKey))
     : allNavigation;
 
-  const bottomNavigation = [
-    { name: 'Centre d\'aide', icon: HelpCircle, page: 'help-center' },
+  const allBottomNavigation = [
+    { name: 'Centre d\'aide', icon: HelpCircle, page: 'help-center', menuKey: 'help-center' },
     { name: 'Mon abonnement', icon: CreditCard, page: 'subscription' },
     { name: 'Support', icon: MessageSquare, page: 'support' },
     ...(isSuperAdmin ? [{ name: 'Admin', icon: Shield, page: 'admin' }] : [])
   ];
+
+  const bottomNavigation = isEmployee
+    ? allBottomNavigation.filter(item => !item.menuKey || hasMenuAccess(item.menuKey))
+    : allBottomNavigation;
 
   return (
     <div className="min-h-screen">

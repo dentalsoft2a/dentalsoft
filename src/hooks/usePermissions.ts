@@ -75,6 +75,7 @@ export function usePermissions() {
       'dentists',
       'catalog',
       'resources',
+      'help-center',
       'settings'
     ];
 

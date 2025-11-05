@@ -65,6 +65,7 @@ function AppContent() {
         'dentists': 'dentists',
         'catalog': 'catalog',
         'resources': 'resources',
+        'help-center': 'help-center',
         'settings': 'settings'
       };
 
