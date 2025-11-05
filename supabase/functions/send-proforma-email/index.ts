@@ -8,14 +8,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-interface EmailRequest {
-  proformaId: string;
-  dentistEmail: string;
-  dentistName: string;
-  pdfBase64: string;
-  proformaNumber: string;
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response(null, {
@@ -25,10 +17,14 @@ Deno.serve(async (req: Request) => {
   }
 
   try {
+    console.log("Starting email send process...");
+    
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    console.log("Getting SMTP configuration...");
+    
     // Get SMTP configuration
     const { data: smtpConfig, error: smtpError } = await supabase
       .from("smtp_settings")
@@ -41,7 +37,7 @@ Deno.serve(async (req: Request) => {
       return new Response(
         JSON.stringify({ 
           success: false, 
-          error: "Configuration SMTP non trouvée. Veuillez configurer SMTP dans le panel admin." 
+          error: "Configuration SMTP non trouv\u00e9e. Veuillez configurer SMTP dans le panel admin." 
         }),
         {
           status: 500,
@@ -50,12 +46,22 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Parse request body
-    const { proformaId, dentistEmail, dentistName, pdfBase64, proformaNumber }: EmailRequest = await req.json();
-
-    if (!dentistEmail || !pdfBase64 || !proformaNumber) {
+    console.log("SMTP config loaded successfully");
+    console.log("Parsing request body...");
+    
+    // Parse request body with better error handling
+    let requestData;
+    try {
+      const text = await req.text();
+      console.log("Request body length:", text.length);
+      requestData = JSON.parse(text);
+    } catch (parseError) {
+      console.error("Error parsing request body:", parseError);
       return new Response(
-        JSON.stringify({ success: false, error: "Paramètres manquants" }),
+        JSON.stringify({ 
+          success: false, 
+          error: "Erreur lors de l'analyse de la requ\u00eate: " + (parseError instanceof Error ? parseError.message : "Unknown error")
+        }),
         {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -63,6 +69,29 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    const { proformaId, dentistEmail, dentistName, pdfBase64, proformaNumber } = requestData;
+
+    console.log("Request data:", {
+      proformaId,
+      dentistEmail,
+      dentistName,
+      proformaNumber,
+      pdfBase64Length: pdfBase64?.length || 0
+    });
+
+    if (!dentistEmail || !pdfBase64 || !proformaNumber) {
+      console.error("Missing parameters");
+      return new Response(
+        JSON.stringify({ success: false, error: "Param\u00e8tres manquants" }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    console.log("Creating nodemailer transporter...");
+    
     // Create nodemailer transporter
     const transporter = nodemailer.createTransport({
       host: smtpConfig.smtp_host,
@@ -74,42 +103,61 @@ Deno.serve(async (req: Request) => {
       },
     });
 
+    console.log("Converting base64 to buffer...");
+    
     // Convert base64 to buffer
-    const pdfBuffer = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
+    let pdfBuffer;
+    try {
+      pdfBuffer = Uint8Array.from(atob(pdfBase64), c => c.charCodeAt(0));
+      console.log("PDF buffer size:", pdfBuffer.length);
+    } catch (bufferError) {
+      console.error("Error converting base64:", bufferError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Erreur lors de la conversion du PDF: " + (bufferError instanceof Error ? bufferError.message : "Unknown error")
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
+    console.log("Preparing email...");
+    
     // Send email
     const mailOptions = {
-      from: `"${smtpConfig.from_name}" <${smtpConfig.from_email}>`,
+      from: `\"${smtpConfig.from_name}\" <${smtpConfig.from_email}>`,
       to: dentistEmail,
       subject: `Proforma ${proformaNumber} - GB Dental`,
       html: `
         <!DOCTYPE html>
         <html>
         <head>
-          <meta charset="utf-8">
+          <meta charset=\"utf-8\">
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
             .header { background: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }
             .footer { text-align: center; margin-top: 20px; color: #64748b; font-size: 14px; }
-            .button { display: inline-block; background: #0ea5e9; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
           </style>
         </head>
         <body>
-          <div class="container">
-            <div class="header">
+          <div class=\"container\">
+            <div class=\"header\">
               <h1>Proforma ${proformaNumber}</h1>
             </div>
-            <div class="content">
+            <div class=\"content\">
               <p>Bonjour ${dentistName || 'Docteur'},</p>
               <p>Veuillez trouver ci-joint votre proforma <strong>${proformaNumber}</strong>.</p>
-              <p>Le document PDF est joint à cet email.</p>
-              <p>Si vous avez des questions ou besoin de modifications, n'hésitez pas à nous contacter.</p>
+              <p>Le document PDF est joint \u00e0 cet email.</p>
+              <p>Si vous avez des questions ou besoin de modifications, n'h\u00e9sitez pas \u00e0 nous contacter.</p>
               <p>Cordialement,<br><strong>GB Dental</strong></p>
             </div>
-            <div class="footer">
-              <p>Cet email a été envoyé automatiquement, merci de ne pas y répondre.</p>
+            <div class=\"footer\">
+              <p>Cet email a \u00e9t\u00e9 envoy\u00e9 automatiquement, merci de ne pas y r\u00e9pondre.</p>
             </div>
           </div>
         </body>
@@ -124,28 +172,51 @@ Deno.serve(async (req: Request) => {
       ],
     };
 
-    await transporter.sendMail(mailOptions);
+    console.log("Sending email...");
+    
+    try {
+      await transporter.sendMail(mailOptions);
+      console.log("Email sent successfully");
+    } catch (emailError) {
+      console.error("Error sending email:", emailError);
+      return new Response(
+        JSON.stringify({ 
+          success: false, 
+          error: "Erreur lors de l'envoi de l'email: " + (emailError instanceof Error ? emailError.message : "Unknown error")
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
+    console.log("Logging to audit...");
+    
     // Log the email send in audit log
-    await supabase.from("audit_log").insert({
-      action: "email_sent",
-      entity_type: "proforma",
-      entity_id: proformaId,
-      details: {
-        recipient: dentistEmail,
-        proforma_number: proformaNumber,
-      },
-    });
+    if (proformaId) {
+      await supabase.from("audit_log").insert({
+        action: "email_sent",
+        entity_type: "proforma",
+        entity_id: proformaId,
+        details: {
+          recipient: dentistEmail,
+          proforma_number: proformaNumber,
+        },
+      });
+    }
 
+    console.log("Process completed successfully");
+    
     return new Response(
-      JSON.stringify({ success: true, message: "Email envoyé avec succès" }),
+      JSON.stringify({ success: true, message: "Email envoy\u00e9 avec succ\u00e8s" }),
       {
         status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.error("Unexpected error:", error);
     return new Response(
       JSON.stringify({ 
         success: false, 
