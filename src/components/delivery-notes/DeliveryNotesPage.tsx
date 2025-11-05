@@ -137,6 +137,7 @@ export default function DeliveryNotesPage() {
         laboratory_phone: profile?.laboratory_phone || '',
         laboratory_email: profile?.laboratory_email || '',
         laboratory_logo_url: profile?.laboratory_logo_url || '',
+        laboratory_rcs: profile?.laboratory_rcs || '',
         dentist_name: dentistData.name,
         dentist_address: dentistData.address || '',
         patient_name: patientName,

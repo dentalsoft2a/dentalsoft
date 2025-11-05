@@ -19,6 +19,7 @@ interface DeliveryNoteData {
   laboratory_phone: string;
   laboratory_email: string;
   laboratory_logo_url?: string;
+  laboratory_rcs?: string;
   dentist_name: string;
   dentist_address: string;
   patient_name: string;
