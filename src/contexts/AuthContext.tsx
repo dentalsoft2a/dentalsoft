@@ -73,6 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = async (userId: string) => {
     try {
+      console.log('Loading profile for userId:', userId);
+
       const [profileResult, userProfileResult, employeeResult] = await Promise.all([
         supabase
           .from('profiles')
@@ -92,20 +94,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .maybeSingle()
       ]);
 
-      if (profileResult.error) throw profileResult.error;
-      if (userProfileResult.error) throw userProfileResult.error;
+      console.log('Profile result:', profileResult.data);
+      console.log('UserProfile result:', userProfileResult.data);
+      console.log('Employee result:', employeeResult.data);
+
+      if (profileResult.error && profileResult.error.code !== 'PGRST116') throw profileResult.error;
+      if (userProfileResult.error && userProfileResult.error.code !== 'PGRST116') throw userProfileResult.error;
 
       setProfile(profileResult.data);
       setUserProfile(userProfileResult.data);
       setEmployeeInfo(employeeResult.data);
 
       if (employeeResult.data?.laboratory_profile_id) {
+        console.log('Loading laboratory profile for:', employeeResult.data.laboratory_profile_id);
         const { data: labUserProfile } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('id', employeeResult.data.laboratory_profile_id)
           .maybeSingle();
 
+        console.log('Laboratory user profile:', labUserProfile);
         setLaboratoryUserProfile(labUserProfile);
       }
     } catch (error) {
