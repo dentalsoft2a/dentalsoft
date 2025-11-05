@@ -211,6 +211,35 @@ export default function PhotoSubmissionsPage() {
     return acc;
   }, {} as Record<string, PhotoSubmission[]>);
 
+  const gradients = [
+    'from-blue-500 to-cyan-500',
+    'from-purple-500 to-pink-500',
+    'from-green-500 to-emerald-500',
+    'from-orange-500 to-amber-500',
+    'from-red-500 to-rose-500',
+    'from-indigo-500 to-purple-500',
+    'from-teal-500 to-green-500',
+    'from-pink-500 to-rose-500',
+  ];
+
+  const borderColors = [
+    'border-blue-200',
+    'border-purple-200',
+    'border-green-200',
+    'border-orange-200',
+    'border-red-200',
+    'border-indigo-200',
+    'border-teal-200',
+    'border-pink-200',
+  ];
+
+  const getGroupColor = (index: number) => {
+    return {
+      gradient: gradients[index % gradients.length],
+      border: borderColors[index % borderColors.length],
+    };
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'pending': return 'bg-yellow-100 text-yellow-700 border-yellow-200';
@@ -336,11 +365,13 @@ export default function PhotoSubmissionsPage() {
         </div>
       ) : (
         <div className="space-y-6">
-          {Object.entries(groupedSubmissions).map(([group, items]) => (
-            <div key={group} className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-              <div className="bg-gradient-to-r from-slate-50 to-slate-100 px-6 py-4 border-b border-slate-200">
-                <h2 className="text-lg font-bold text-slate-900">{group}</h2>
-                <p className="text-sm text-slate-600">{items.length} photo{items.length > 1 ? 's' : ''}</p>
+          {Object.entries(groupedSubmissions).map(([group, items], index) => {
+            const colors = getGroupColor(index);
+            return (
+            <div key={group} className={`bg-white rounded-2xl shadow-lg border-2 ${colors.border} overflow-hidden hover:shadow-xl transition-shadow`}>
+              <div className={`bg-gradient-to-r ${colors.gradient} px-6 py-4 border-b border-white/30`}>
+                <h2 className="text-lg font-bold text-white drop-shadow-sm">{group}</h2>
+                <p className="text-sm text-white/90">{items.length} photo{items.length > 1 ? 's' : ''}</p>
               </div>
 
               <div className="p-6">
@@ -409,7 +440,8 @@ export default function PhotoSubmissionsPage() {
                 </div>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
       )}
 
