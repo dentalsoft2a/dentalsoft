@@ -35,10 +35,17 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, currentPage, onNavigate, isSuperAdmin, lowStockCount = 0, lowStockResourcesCount = 0, hasValidSubscription = true }: DashboardLayoutProps) {
-  const { profile, userProfile, signOut, isEmployee, laboratoryId } = useAuth();
-  const { hasMenuAccess, isOwner } = usePermissions();
+  const { profile, userProfile, signOut, isEmployee, laboratoryId, employeeInfo } = useAuth();
+  const { hasMenuAccess, isOwner, rolePermissions, loading: permissionsLoading } = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [laboratoryProfile, setLaboratoryProfile] = useState<any>(null);
+
+  useEffect(() => {
+    console.log('DashboardLayout - isEmployee:', isEmployee);
+    console.log('DashboardLayout - employeeInfo:', employeeInfo);
+    console.log('DashboardLayout - rolePermissions:', rolePermissions);
+    console.log('DashboardLayout - permissionsLoading:', permissionsLoading);
+  }, [isEmployee, employeeInfo, rolePermissions, permissionsLoading]);
 
   const isSubscriptionInactive = userProfile?.subscription_status !== 'active' && userProfile?.subscription_status !== 'trialing';
   const showSubscriptionWarning = isSubscriptionInactive && !isSuperAdmin;

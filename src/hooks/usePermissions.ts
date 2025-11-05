@@ -26,6 +26,7 @@ export function usePermissions() {
     }
 
     try {
+      console.log('Loading permissions for employee:', employeeInfo);
       const { data: role, error: roleError } = await supabase
         .from('laboratory_role_permissions')
         .select('role_name, menu_access, permissions')
@@ -33,10 +34,17 @@ export function usePermissions() {
         .eq('role_name', employeeInfo.role_name)
         .maybeSingle();
 
-      if (roleError) throw roleError;
+      if (roleError) {
+        console.error('Error loading role permissions:', roleError);
+        throw roleError;
+      }
+
+      console.log('Loaded role permissions:', role);
 
       if (role) {
         setRolePermissions(role);
+      } else {
+        console.warn('No role permissions found for role:', employeeInfo.role_name);
       }
     } catch (error) {
       console.error('Error loading permissions:', error);
