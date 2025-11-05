@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Users, Settings, MessageSquare, DollarSign, Activity, Shield, Search, Filter, Key } from 'lucide-react';
+import { Users, Settings, MessageSquare, DollarSign, Activity, Shield, Search, Filter, Key, Mail } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { UsersManagement } from './UsersManagement';
 import { SubscriptionSettings } from './SubscriptionSettings';
 import { SupportTickets } from './SupportTickets';
 import { AdminAuditLog } from './AdminAuditLog';
 import { AccessCodesManagement } from './AccessCodesManagement';
+import { SmtpSettings } from './SmtpSettings';
 
-type TabType = 'users' | 'subscriptions' | 'codes' | 'support' | 'audit';
+type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit';
 
 export function SuperAdminPanel() {
   const [activeTab, setActiveTab] = useState<TabType>('users');
@@ -44,6 +45,7 @@ export function SuperAdminPanel() {
     { id: 'users' as TabType, label: 'Utilisateurs', icon: Users },
     { id: 'subscriptions' as TabType, label: 'Abonnements', icon: DollarSign },
     { id: 'codes' as TabType, label: 'Codes d\'accès', icon: Key },
+    { id: 'smtp' as TabType, label: 'Configuration Email', icon: Mail },
     { id: 'support' as TabType, label: 'Support', icon: MessageSquare },
     { id: 'audit' as TabType, label: 'Audit', icon: Activity }
   ];
@@ -136,6 +138,7 @@ export function SuperAdminPanel() {
             {activeTab === 'users' && <UsersManagement onStatsUpdate={loadStats} />}
             {activeTab === 'subscriptions' && <SubscriptionSettings />}
             {activeTab === 'codes' && <AccessCodesManagement />}
+            {activeTab === 'smtp' && <SmtpSettings />}
             {activeTab === 'support' && <SupportTickets />}
             {activeTab === 'audit' && <AdminAuditLog />}
           </div>
