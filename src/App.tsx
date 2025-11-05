@@ -55,6 +55,12 @@ function AppContent() {
 
   useEffect(() => {
     if (user && isEmployee && !permissionsLoading) {
+      if (currentPage === 'admin') {
+        const firstAllowedPage = getFirstAllowedPage();
+        setCurrentPage(firstAllowedPage);
+        return;
+      }
+
       const pageToMenuKey: Record<string, string> = {
         'dashboard': 'dashboard',
         'calendar': 'calendar',
@@ -212,8 +218,13 @@ function AppContent() {
     return <DentistPhotoPanel />;
   }
 
-  if (currentPage === 'admin' && isSuperAdmin) {
-    return <SuperAdminPanel />;
+  if (currentPage === 'admin') {
+    if (isSuperAdmin) {
+      return <SuperAdminPanel />;
+    } else {
+      setCurrentPage('dashboard');
+      return null;
+    }
   }
 
   // If subscription is expired or cancelled, redirect to subscription page
@@ -265,6 +276,11 @@ function AppContent() {
     <DashboardLayout
       currentPage={currentPage}
       onNavigate={(page) => {
+        // Block admin page for non-super admins
+        if (page === 'admin' && !isSuperAdmin) {
+          return;
+        }
+
         // Allow navigation to specific pages even with invalid subscription
         const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'settings', 'subscription', 'support', 'help-center'];
         if (!hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(page)) {
