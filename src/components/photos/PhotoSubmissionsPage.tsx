@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2 } from 'lucide-react';
+import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2, Plus, Upload } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -19,6 +19,12 @@ interface PhotoSubmission {
   };
 }
 
+interface DentistAccount {
+  id: string;
+  name: string;
+  email: string;
+}
+
 export default function PhotoSubmissionsPage() {
   const { laboratoryId } = useAuth();
   const [submissions, setSubmissions] = useState<PhotoSubmission[]>([]);
@@ -27,10 +33,32 @@ export default function PhotoSubmissionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [groupBy, setGroupBy] = useState<'dentist' | 'patient'>('dentist');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [dentists, setDentists] = useState<DentistAccount[]>([]);
+  const [selectedDentistId, setSelectedDentistId] = useState('');
+  const [patientName, setPatientName] = useState('');
+  const [notes, setNotes] = useState('');
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     loadSubmissions();
+    loadDentists();
   }, [laboratoryId]);
+
+  const loadDentists = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('dentist_accounts')
+        .select('id, name, email')
+        .order('name');
+
+      if (error) throw error;
+      setDentists(data || []);
+    } catch (error) {
+      console.error('Error loading dentists:', error);
+    }
+  };
 
   const loadSubmissions = async () => {
     if (!laboratoryId) return;
@@ -98,6 +126,58 @@ export default function PhotoSubmissionsPage() {
     }
   };
 
+  const handleAddSubmission = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!laboratoryId || !selectedDentistId || !patientName || !photoFile) {
+      alert('Veuillez remplir tous les champs obligatoires');
+      return;
+    }
+
+    setUploading(true);
+
+    try {
+      const fileExt = photoFile.name.split('.').pop();
+      const fileName = `${laboratoryId}/${Date.now()}.${fileExt}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('dentist-photos')
+        .upload(fileName, photoFile);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('dentist-photos')
+        .getPublicUrl(fileName);
+
+      const { error: insertError } = await supabase
+        .from('photo_submissions')
+        .insert({
+          dentist_id: selectedDentistId,
+          laboratory_id: laboratoryId,
+          patient_name: patientName,
+          photo_url: publicUrl,
+          notes: notes || null,
+          status: 'pending'
+        });
+
+      if (insertError) throw insertError;
+
+      alert('Photo ajoutée avec succès');
+      setShowAddModal(false);
+      setSelectedDentistId('');
+      setPatientName('');
+      setNotes('');
+      setPhotoFile(null);
+      loadSubmissions();
+    } catch (error) {
+      console.error('Error adding submission:', error);
+      alert('Erreur lors de l\'ajout de la photo');
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const filteredSubmissions = submissions.filter(sub => {
     const matchesSearch =
       sub.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -159,14 +239,23 @@ export default function PhotoSubmissionsPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
-            <Camera className="w-6 h-6 text-white" />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
+              <Camera className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Photos Reçues</h1>
+              <p className="text-slate-600">Photos envoyées par les dentistes</p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Photos Reçues</h1>
-            <p className="text-slate-600">Photos envoyées par les dentistes</p>
-          </div>
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition"
+          >
+            <Plus className="w-5 h-5" />
+            Ajouter une photo
+          </button>
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3 mb-6">
@@ -432,6 +521,120 @@ export default function PhotoSubmissionsPage() {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowAddModal(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-xl font-bold text-slate-900">Ajouter une photo</h2>
+              <button
+                onClick={() => setShowAddModal(false)}
+                className="p-2 hover:bg-slate-100 rounded-lg transition"
+              >
+                <XCircle className="w-5 h-5 text-slate-600" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddSubmission} className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Dentiste *
+                  </label>
+                  <select
+                    value={selectedDentistId}
+                    onChange={(e) => setSelectedDentistId(e.target.value)}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    required
+                  >
+                    <option value="">Sélectionner un dentiste</option>
+                    {dentists.map((dentist) => (
+                      <option key={dentist.id} value={dentist.id}>
+                        Dr. {dentist.name} - {dentist.email}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Nom du patient *
+                  </label>
+                  <input
+                    type="text"
+                    value={patientName}
+                    onChange={(e) => setPatientName(e.target.value)}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Ex: Jean Dupont"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Photo *
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setPhotoFile(e.target.files?.[0] || null)}
+                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      required
+                    />
+                    {photoFile && (
+                      <div className="mt-2 p-2 bg-green-50 border border-green-200 rounded-lg text-sm text-green-700">
+                        Fichier sélectionné: {photoFile.name}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Notes (optionnel)
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Ajoutez des notes ou commentaires..."
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition"
+                  disabled={uploading}
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={uploading}
+                >
+                  {uploading ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                      Envoi en cours...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="w-5 h-5" />
+                      Ajouter la photo
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
