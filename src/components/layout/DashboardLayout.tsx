@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useEffect } from 'react';
 import {
   LayoutDashboard,
   FileText,
@@ -37,6 +37,21 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
 
   const isSubscriptionInactive = userProfile?.subscription_status !== 'active' && userProfile?.subscription_status !== 'trialing';
   const showSubscriptionWarning = isSubscriptionInactive && !isSuperAdmin;
+
+  useEffect(() => {
+    if (sidebarOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [sidebarOpen]);
 
   const navigation = [
     { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dashboard', allowedForCancelled: true },
