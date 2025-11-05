@@ -164,31 +164,49 @@ export default function EmployeeManagement() {
           }
         }
       } else {
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: employeeForm.email,
-          password: employeeForm.password,
-          options: {
-            data: {
-              full_name: employeeForm.full_name
+        const { error: employeeError } = await supabase
+          .from('laboratory_employees')
+          .insert({
+            laboratory_profile_id: user.id,
+            user_profile_id: null,
+            email: employeeForm.email,
+            full_name: employeeForm.full_name,
+            role_name: employeeForm.role_name,
+            created_by: user.id
+          });
+
+        if (employeeError) throw employeeError;
+
+        const currentSession = await supabase.auth.getSession();
+
+        try {
+          const { data: authData, error: authError } = await supabase.auth.signUp({
+            email: employeeForm.email,
+            password: employeeForm.password,
+            options: {
+              data: {
+                full_name: employeeForm.full_name
+              }
+            }
+          });
+
+          if (!authError && authData.user) {
+            await supabase
+              .from('laboratory_employees')
+              .update({ user_profile_id: authData.user.id })
+              .eq('email', employeeForm.email)
+              .eq('laboratory_profile_id', user.id);
+
+            if (currentSession.data.session) {
+              await supabase.auth.setSession(currentSession.data.session);
             }
           }
-        });
+        } catch (signUpError) {
+          console.error('Error creating user account:', signUpError);
 
-        if (authError) throw authError;
-
-        if (authData.user) {
-          const { error: employeeError } = await supabase
-            .from('laboratory_employees')
-            .insert({
-              laboratory_profile_id: user.id,
-              user_profile_id: authData.user.id,
-              email: employeeForm.email,
-              full_name: employeeForm.full_name,
-              role_name: employeeForm.role_name,
-              created_by: user.id
-            });
-
-          if (employeeError) throw employeeError;
+          if (currentSession.data.session) {
+            await supabase.auth.setSession(currentSession.data.session);
+          }
         }
       }
 
