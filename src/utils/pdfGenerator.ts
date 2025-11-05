@@ -263,7 +263,7 @@ export async function generateDeliveryNotePDF(data: DeliveryNoteData) {
   doc.setFont('helvetica', 'normal');
 
   const footerLine1 = `${data.laboratory_name}`;
-  const footerLine2 = 'RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A';
+  const footerLine2 = data.laboratory_rcs || 'RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A';
 
   doc.text(footerLine1, 15, footerY);
   doc.text(footerLine2, 15, footerY + 4);
@@ -296,6 +296,7 @@ interface ProformaData {
   laboratory_logo_url?: string;
   laboratory_iban?: string;
   laboratory_bic?: string;
+  laboratory_rcs?: string;
   dentist_name: string;
   dentist_address: string;
   delivery_notes: ProformaDeliveryNote[];
@@ -312,6 +313,7 @@ interface InvoiceData {
   laboratory_logo_url?: string;
   laboratory_iban?: string;
   laboratory_bic?: string;
+  laboratory_rcs?: string;
   dentist_name: string;
   dentist_address: string;
   delivery_notes: ProformaDeliveryNote[];
@@ -611,7 +613,7 @@ export async function generateProformaPDF(data: ProformaData) {
   doc.setFont('helvetica', 'normal');
 
   const footerLine1 = `${data.laboratory_name}`;
-  const footerLine2 = 'RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A';
+  const footerLine2 = data.laboratory_rcs || 'RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A';
 
   doc.text(footerLine1, 15, footerY);
   doc.text(footerLine2, 15, footerY + 4);
@@ -912,7 +914,7 @@ export async function generateProformaPDFBase64(data: ProformaData): Promise<str
   doc.setFont('helvetica', 'normal');
 
   const footerLine1 = `${data.laboratory_name}`;
-  const footerLine2 = 'RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A';
+  const footerLine2 = data.laboratory_rcs || 'RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A';
 
   doc.text(footerLine1, 15, footerY);
   doc.text(footerLine2, 15, footerY + 4);
@@ -1194,7 +1196,7 @@ export async function generateInvoicePDF(data: InvoiceData, returnBase64 = false
   doc.setFont('helvetica', 'normal');
 
   const footerLine1 = `${data.laboratory_name}`;
-  const footerLine2 = 'RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A';
+  const footerLine2 = data.laboratory_rcs || 'RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A';
 
   doc.text(footerLine1, 15, footerY);
   doc.text(footerLine2, 15, footerY + 4);

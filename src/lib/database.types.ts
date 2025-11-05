@@ -19,6 +19,7 @@ export interface Database {
           laboratory_address: string | null
           laboratory_phone: string | null
           laboratory_email: string | null
+          laboratory_rcs: string | null
           created_at: string
           updated_at: string
         }
@@ -31,6 +32,7 @@ export interface Database {
           laboratory_address?: string | null
           laboratory_phone?: string | null
           laboratory_email?: string | null
+          laboratory_rcs?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -43,6 +45,7 @@ export interface Database {
           laboratory_address?: string | null
           laboratory_phone?: string | null
           laboratory_email?: string | null
+          laboratory_rcs?: string | null
           created_at?: string
           updated_at?: string
         }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image } from 'lucide-react';
+import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText } from 'lucide-react';
 
 export default function SettingsPage() {
   const { profile, updateProfile } = useAuth();
@@ -12,6 +12,7 @@ export default function SettingsPage() {
     laboratory_phone: profile?.laboratory_phone || '',
     laboratory_address: profile?.laboratory_address || '',
     laboratory_logo_url: profile?.laboratory_logo_url || '',
+    laboratory_rcs: profile?.laboratory_rcs || '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -27,6 +28,7 @@ export default function SettingsPage() {
         laboratory_phone: profile.laboratory_phone || '',
         laboratory_address: profile.laboratory_address || '',
         laboratory_logo_url: profile.laboratory_logo_url || '',
+        laboratory_rcs: profile.laboratory_rcs || '',
       });
       setLogoPreview(profile.laboratory_logo_url || '');
     }
@@ -252,6 +254,24 @@ export default function SettingsPage() {
                         className="w-full px-4 py-3.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-primary-300 resize-none"
                         placeholder="123 Rue Example&#10;75001 Paris, France"
                       />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+                        <FileText className="w-4 h-4 text-cyan-600" />
+                        RCS (Registre du Commerce et des Sociétés)
+                      </label>
+                      <input
+                        type="text"
+                        value={formData.laboratory_rcs}
+                        onChange={(e) => setFormData({ ...formData, laboratory_rcs: e.target.value })}
+                        className="w-full px-4 py-3.5 border border-cyan-200 rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-cyan-300"
+                        placeholder="RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A"
+                      />
+                      <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+                        Cette information sera affichée sur vos proformas PDF
+                      </p>
                     </div>
                   </div>
                 </div>

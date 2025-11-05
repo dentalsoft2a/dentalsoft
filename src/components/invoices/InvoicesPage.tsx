@@ -191,6 +191,7 @@ export default function InvoicesPage() {
         laboratory_logo_url: profile?.laboratory_logo_url || '',
         laboratory_iban: profile?.laboratory_iban || '',
         laboratory_bic: profile?.laboratory_bic || '',
+        laboratory_rcs: profile?.laboratory_rcs || '',
         dentist_name: dentistData.name,
         dentist_address: dentistData.address || '',
         delivery_notes: deliveryNotes,
