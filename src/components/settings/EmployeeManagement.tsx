@@ -46,7 +46,8 @@ export default function EmployeeManagement() {
   const [employeeForm, setEmployeeForm] = useState({
     email: '',
     full_name: '',
-    role_name: ''
+    role_name: '',
+    password: ''
   });
 
   const [roleForm, setRoleForm] = useState({
@@ -94,11 +95,12 @@ export default function EmployeeManagement() {
       setEmployeeForm({
         email: employee.email,
         full_name: employee.full_name,
-        role_name: employee.role_name
+        role_name: employee.role_name,
+        password: ''
       });
     } else {
       setEditingEmployee(null);
-      setEmployeeForm({ email: '', full_name: '', role_name: '' });
+      setEmployeeForm({ email: '', full_name: '', role_name: '', password: '' });
     }
     setShowEmployeeModal(true);
   };
@@ -126,30 +128,68 @@ export default function EmployeeManagement() {
       return;
     }
 
+    if (!editingEmployee && !employeeForm.password) {
+      alert('Veuillez définir un mot de passe pour le nouvel employé');
+      return;
+    }
+
+    if (employeeForm.password && employeeForm.password.length < 6) {
+      alert('Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
     try {
       if (editingEmployee) {
+        const updates: any = {
+          email: employeeForm.email,
+          full_name: employeeForm.full_name,
+          role_name: employeeForm.role_name
+        };
+
         const { error } = await supabase
           .from('laboratory_employees')
-          .update({
-            email: employeeForm.email,
-            full_name: employeeForm.full_name,
-            role_name: employeeForm.role_name
-          })
+          .update(updates)
           .eq('id', editingEmployee.id);
 
         if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('laboratory_employees')
-          .insert({
-            laboratory_profile_id: user.id,
-            email: employeeForm.email,
-            full_name: employeeForm.full_name,
-            role_name: employeeForm.role_name,
-            created_by: user.id
-          });
 
-        if (error) throw error;
+        if (employeeForm.password && editingEmployee.user_profile_id) {
+          const { error: pwError } = await supabase.auth.admin.updateUserById(
+            editingEmployee.user_profile_id,
+            { password: employeeForm.password }
+          );
+          if (pwError) {
+            console.error('Error updating password:', pwError);
+            alert('Employé mis à jour mais erreur lors de la mise à jour du mot de passe');
+          }
+        }
+      } else {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: employeeForm.email,
+          password: employeeForm.password,
+          options: {
+            data: {
+              full_name: employeeForm.full_name
+            }
+          }
+        });
+
+        if (authError) throw authError;
+
+        if (authData.user) {
+          const { error: employeeError } = await supabase
+            .from('laboratory_employees')
+            .insert({
+              laboratory_profile_id: user.id,
+              user_profile_id: authData.user.id,
+              email: employeeForm.email,
+              full_name: employeeForm.full_name,
+              role_name: employeeForm.role_name,
+              created_by: user.id
+            });
+
+          if (employeeError) throw employeeError;
+        }
       }
 
       setShowEmployeeModal(false);
@@ -464,6 +504,25 @@ export default function EmployeeManagement() {
                     Veuillez d'abord créer un rôle dans la section "Rôles et Permissions"
                   </p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Mot de passe {editingEmployee && <span className="text-slate-500">(laisser vide pour ne pas modifier)</span>}
+                </label>
+                <input
+                  type="password"
+                  value={employeeForm.password}
+                  onChange={(e) => setEmployeeForm({ ...employeeForm, password: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  placeholder={editingEmployee ? "Nouveau mot de passe" : "Minimum 6 caractères"}
+                  minLength={6}
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  {editingEmployee
+                    ? "Saisissez un nouveau mot de passe uniquement si vous souhaitez le modifier"
+                    : "L'employé utilisera cet email et ce mot de passe pour se connecter"}
+                </p>
               </div>
             </div>
 
