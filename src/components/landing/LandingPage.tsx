@@ -3,7 +3,11 @@ import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 
-export function LandingPage() {
+interface LandingPageProps {
+  onNavigate?: (page: string) => void;
+}
+
+export function LandingPage({ onNavigate }: LandingPageProps = {}) {
   const { signIn, signUp } = useAuth();
   const [isAuthMode, setIsAuthMode] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
@@ -306,6 +310,20 @@ export function LandingPage() {
                   <CheckCircle className="w-5 h-5 text-green-500" />
                   <span>Mises à jour gratuites</span>
                 </div>
+              </div>
+
+              <div className="mt-12 pt-8 border-t border-slate-200">
+                <p className="text-center text-slate-600 mb-4">Vous êtes dentiste ?</p>
+                <button
+                  onClick={() => onNavigate?.('dentist-register')}
+                  className="mx-auto flex items-center gap-2 px-6 py-3 bg-white border-2 border-blue-500 text-blue-600 rounded-xl font-semibold hover:bg-blue-50 transition-all duration-300"
+                >
+                  <Camera className="w-5 h-5" />
+                  Créer un compte dentiste gratuit
+                </button>
+                <p className="text-center text-sm text-slate-500 mt-2">
+                  Envoyez des photos aux laboratoires partenaires
+                </p>
               </div>
             </div>
           </section>

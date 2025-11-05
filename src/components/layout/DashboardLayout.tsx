@@ -16,7 +16,8 @@ import {
   Shield,
   Box,
   HelpCircle,
-  AlertTriangle
+  AlertTriangle,
+  Camera
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import DentalCloudLogo from '../common/DentalCloudLogo';
@@ -59,6 +60,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     { name: 'Proformas', icon: FileText, page: 'proformas', allowedForCancelled: true },
     { name: 'Factures', icon: Receipt, page: 'invoices', allowedForCancelled: true },
     { name: 'Bons de livraison', icon: Truck, page: 'delivery-notes', allowedForCancelled: true },
+    { name: 'Photos reçues', icon: Camera, page: 'photos', allowedForCancelled: false },
     { name: 'Dentistes', icon: Users, page: 'dentists', allowedForCancelled: false },
     { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false },
     { name: 'Ressources', icon: Box, page: 'resources', allowedForCancelled: false },

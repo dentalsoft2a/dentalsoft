@@ -86,7 +86,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string,
     firstName: string,
     lastName: string,
-    laboratoryName: string
+    laboratoryName: string,
+    isDentist: boolean = false
   ) => {
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -97,14 +98,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
 
       if (data.user) {
-        const { error: profileError } = await supabase.from('profiles').insert({
-          id: data.user.id,
-          first_name: firstName,
-          last_name: lastName,
-          laboratory_name: laboratoryName,
-        });
+        if (isDentist) {
+          const { error: dentistError } = await supabase.from('dentist_accounts').insert({
+            id: data.user.id,
+            email: email,
+            name: firstName,
+            phone: lastName,
+          });
 
-        if (profileError) throw profileError;
+          if (dentistError) throw dentistError;
+        } else {
+          const { error: profileError } = await supabase.from('profiles').insert({
+            id: data.user.id,
+            first_name: firstName,
+            last_name: lastName,
+            laboratory_name: laboratoryName,
+          });
+
+          if (profileError) throw profileError;
+        }
       }
 
       return { error: null };

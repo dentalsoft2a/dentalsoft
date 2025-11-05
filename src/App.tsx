@@ -15,12 +15,17 @@ import { SuperAdminPanel } from './components/admin/SuperAdminPanel';
 import { SupportPage } from './components/support/SupportPage';
 import { SubscriptionPage } from './components/subscription/SubscriptionPage';
 import HelpCenterPage from './components/help-center/HelpCenterPage';
+import DentistRegisterPage from './components/dentist/DentistRegisterPage';
+import DentistLoginPage from './components/dentist/DentistLoginPage';
+import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
+import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
 import { supabase } from './lib/supabase';
 
 function AppContent() {
   const { user, loading } = useAuth();
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState('landing');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isDentist, setIsDentist] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
@@ -36,6 +41,18 @@ function AppContent() {
   const checkSuperAdminAndSubscription = async () => {
     if (!user) return;
 
+    const { data: dentistData } = await supabase
+      .from('dentist_accounts')
+      .select('id')
+      .eq('id', user.id)
+      .single();
+
+    if (dentistData) {
+      setIsDentist(true);
+      setCurrentPage('dentist-panel');
+      return;
+    }
+
     const { data, error } = await supabase
       .from('user_profiles')
       .select('role, subscription_status, trial_ends_at, subscription_ends_at')
@@ -45,6 +62,7 @@ function AppContent() {
     if (data) {
       setIsSuperAdmin(data.role === 'super_admin');
       setSubscriptionStatus(data.subscription_status);
+      setCurrentPage('dashboard');
 
       // Check if subscription or trial has expired
       const now = new Date();
@@ -136,7 +154,17 @@ function AppContent() {
   }
 
   if (!user) {
-    return <LandingPage />;
+    if (currentPage === 'dentist-register') {
+      return <DentistRegisterPage onNavigate={setCurrentPage} />;
+    }
+    if (currentPage === 'dentist-login') {
+      return <DentistLoginPage onNavigate={setCurrentPage} />;
+    }
+    return <LandingPage onNavigate={setCurrentPage} />;
+  }
+
+  if (isDentist) {
+    return <DentistPhotoPanel />;
   }
 
   if (currentPage === 'admin' && isSuperAdmin) {
@@ -181,6 +209,8 @@ function AppContent() {
         return <SubscriptionPage />;
       case 'help-center':
         return <HelpCenterPage />;
+      case 'photos':
+        return <PhotoSubmissionsPage />;
       default:
         return <DashboardPage />;
     }
