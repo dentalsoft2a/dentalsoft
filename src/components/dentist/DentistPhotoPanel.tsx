@@ -37,7 +37,7 @@ export default function DentistPhotoPanel() {
   const loadLaboratories = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_profiles')
+        .from('profiles')
         .select('id, laboratory_name')
         .not('laboratory_name', 'is', null)
         .order('laboratory_name');
