@@ -3,15 +3,11 @@ import { Camera, X, Send, CheckCircle, LogOut, History } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import DentistPhotoHistory from './DentistPhotoHistory';
-
-interface Laboratory {
-  id: string;
-  laboratory_name: string;
-}
+import LaboratorySelector from './LaboratorySelector';
 
 export default function DentistPhotoPanel() {
   const { user, signOut } = useAuth();
-  const [laboratories, setLaboratories] = useState<Laboratory[]>([]);
+  const [dentistId, setDentistId] = useState<string | null>(null);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [selectedLab, setSelectedLab] = useState('');
@@ -24,7 +20,7 @@ export default function DentistPhotoPanel() {
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
-    loadLaboratories();
+    loadDentistId();
     startCamera();
   }, []);
 
@@ -36,26 +32,22 @@ export default function DentistPhotoPanel() {
     };
   }, [stream]);
 
-  const loadLaboratories = async () => {
+  const loadDentistId = async () => {
     try {
+      if (!user) return;
+
       const { data, error } = await supabase
-        .from('profiles')
-        .select('id, laboratory_name')
-        .not('laboratory_name', 'is', null)
-        .neq('laboratory_name', '')
-        .order('laboratory_name');
+        .from('dentist_accounts')
+        .select('id')
+        .eq('email', user.email)
+        .single();
 
-      if (error) {
-        console.error('Error loading laboratories:', error);
-        throw error;
+      if (error) throw error;
+      if (data) {
+        setDentistId(data.id);
       }
-
-      console.log('Laboratories loaded:', data);
-      const filteredLabs = (data || []).filter(lab => lab.laboratory_name && lab.laboratory_name.trim() !== '');
-      console.log('Filtered laboratories:', filteredLabs);
-      setLaboratories(filteredLabs);
     } catch (error) {
-      console.error('Error in loadLaboratories:', error);
+      console.error('Error loading dentist ID:', error);
     }
   };
 
@@ -245,24 +237,13 @@ export default function DentistPhotoPanel() {
                   )}
 
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Laboratoire *
-                      </label>
-                      <select
+                    {dentistId && (
+                      <LaboratorySelector
                         value={selectedLab}
-                        onChange={(e) => setSelectedLab(e.target.value)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
-                        required
-                      >
-                        <option value="">Sélectionner un laboratoire</option>
-                        {laboratories.map((lab) => (
-                          <option key={lab.id} value={lab.id}>
-                            {lab.laboratory_name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                        onChange={setSelectedLab}
+                        dentistId={dentistId}
+                      />
+                    )}
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
