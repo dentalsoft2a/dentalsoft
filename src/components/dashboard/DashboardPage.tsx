@@ -371,6 +371,22 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     return diffDays;
   };
 
+  const handleCompleteDelivery = async (deliveryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('delivery_notes')
+        .update({ status: 'completed' })
+        .eq('id', deliveryId);
+
+      if (error) throw error;
+      await loadDeliveries();
+      await loadStats();
+    } catch (error) {
+      console.error('Error completing delivery:', error);
+      alert('Erreur lors de la mise à jour du statut');
+    }
+  };
+
   const statCards = [
     {
       title: 'Bons de livraison',
@@ -900,7 +916,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                       </span>
                     </div>
 
-                    <div className="space-y-0.5">
+                    <div className="space-y-0.5 mb-2">
                       <p className="text-[10px] text-slate-500">N° {delivery.delivery_number}</p>
                       {delivery.patient_name && (
                         <p className="text-[10px] text-slate-600 truncate">{delivery.patient_name}</p>
@@ -909,6 +925,15 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                         {new Date(delivery.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                       </p>
                     </div>
+
+                    <button
+                      onClick={() => handleCompleteDelivery(delivery.id)}
+                      className="w-full py-1 px-2 bg-green-500 hover:bg-green-600 text-white rounded text-[10px] font-semibold transition-all duration-200 flex items-center justify-center gap-1"
+                      title="Marquer comme terminé"
+                    >
+                      <CheckCircle className="w-3 h-3" />
+                      Terminé
+                    </button>
                   </div>
                 );
               })}
