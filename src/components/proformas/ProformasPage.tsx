@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Plus, Eye, Edit, Trash2, Search, FileDown, Receipt } from 'lucide-react';
+import { Plus, Eye, Edit, Trash2, Search, FileDown, Receipt, Mail, Send } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
-import { generateProformaPDF } from '../../utils/pdfGenerator';
+import { generateProformaPDF, generateProformaPDFBase64 } from '../../utils/pdfGenerator';
 import DentistSelector from './DentistSelector';
 
 type Proforma = Database['public']['Tables']['proformas']['Row'] & {
@@ -165,7 +165,7 @@ export default function ProformasPage() {
     }
   };
 
-  const handleGeneratePDF = async (proforma: Proforma) => {
+  const handleGeneratePDF = async (proforma: Proforma, returnPdfData = false) => {
     try {
       const { data: dentistData, error: dentistError } = await supabase
         .from('dentists')
@@ -190,7 +190,7 @@ export default function ProformasPage() {
 
       if (deliveryNoteIds.length === 0) {
         alert('Aucun bon de livraison associé à ce proforma');
-        return;
+        return null;
       }
 
       const { data: deliveryNotesData, error: notesError } = await supabase
@@ -209,7 +209,7 @@ export default function ProformasPage() {
         items: Array.isArray(note.items) ? note.items : []
       }));
 
-      await generateProformaPDF({
+      const pdfData = {
         proforma_number: proforma.proforma_number,
         date: proforma.date,
         laboratory_name: profile?.laboratory_name || '',
@@ -223,10 +223,73 @@ export default function ProformasPage() {
         dentist_address: dentistData.address || '',
         delivery_notes: deliveryNotes,
         tax_rate: Number(proforma.tax_rate)
-      });
+      };
+
+      if (returnPdfData) {
+        return await generateProformaPDFBase64(pdfData);
+      } else {
+        await generateProformaPDF(pdfData);
+        return null;
+      }
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Erreur lors de la génération du PDF');
+      return null;
+    }
+  };
+
+  const handleSendEmail = async (proforma: Proforma) => {
+    try {
+      const { data: dentistData, error: dentistError } = await supabase
+        .from('dentists')
+        .select('*')
+        .eq('id', proforma.dentist_id)
+        .single();
+
+      if (dentistError) throw dentistError;
+
+      if (!dentistData.email) {
+        alert('Ce dentiste n\'a pas d\'adresse email configurée');
+        return;
+      }
+
+      if (!confirm(`Envoyer le proforma par email à ${dentistData.email} ?`)) return;
+
+      const pdfBase64 = await handleGeneratePDF(proforma, true);
+
+      if (!pdfBase64) {
+        alert('Erreur lors de la génération du PDF');
+        return;
+      }
+
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-proforma-email`;
+      const headers = {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      };
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          proformaId: proforma.id,
+          dentistEmail: dentistData.email,
+          dentistName: dentistData.name,
+          pdfBase64,
+          proformaNumber: proforma.proforma_number,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Erreur lors de l\'envoi de l\'email');
+      }
+
+      alert('Email envoyé avec succès!');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert(error instanceof Error ? error.message : 'Erreur lors de l\'envoi de l\'email');
     }
   };
 
@@ -353,11 +416,18 @@ export default function ProformasPage() {
                           </button>
                         )}
                         <button
-                          onClick={() => handleGeneratePDF(proforma)}
+                          onClick={() => handleGeneratePDF(proforma, false)}
                           className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
                           title="Générer PDF"
                         >
                           <FileDown className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleSendEmail(proforma)}
+                          className="p-2 text-violet-600 hover:bg-violet-50 rounded-lg transition-all duration-200"
+                          title="Envoyer par email"
+                        >
+                          <Send className="w-4 h-4" />
                         </button>
                         {proforma.status !== 'invoiced' && (
                           <>

@@ -619,6 +619,307 @@ export async function generateProformaPDF(data: ProformaData) {
   doc.save(`Proforma_${data.proforma_number}.pdf`);
 }
 
+export async function generateProformaPDFBase64(data: ProformaData): Promise<string> {
+  const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  let yPos = 20;
+
+  if (data.laboratory_logo_url) {
+    try {
+      const img = await loadImage(data.laboratory_logo_url);
+
+      const maxWidth = 50;
+      const maxHeight = 25;
+
+      const aspectRatio = img.width / img.height;
+      let logoWidth = maxWidth;
+      let logoHeight = maxWidth / aspectRatio;
+
+      if (logoHeight > maxHeight) {
+        logoHeight = maxHeight;
+        logoWidth = maxHeight * aspectRatio;
+      }
+
+      doc.addImage(data.laboratory_logo_url, 'PNG', 15, yPos, logoWidth, logoHeight);
+      yPos += logoHeight + 5;
+    } catch (error) {
+      console.error('Error adding logo to PDF:', error);
+    }
+  }
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.text(data.laboratory_name, 15, yPos);
+  yPos += 5;
+
+  if (data.laboratory_address) {
+    const addressLines = data.laboratory_address.split('\n');
+    addressLines.forEach(line => {
+      doc.text(line.trim(), 15, yPos);
+      yPos += 5;
+    });
+  }
+
+  if (data.laboratory_phone) {
+    doc.text(data.laboratory_phone, 15, yPos);
+    yPos += 5;
+  }
+
+  if (data.laboratory_email) {
+    doc.text(data.laboratory_email, 15, yPos);
+    yPos += 5;
+  }
+
+  const boxX = 120;
+  const boxY = 20;
+  const boxWidth = 75;
+  const boxHeight = 35;
+
+  doc.setFillColor(245, 245, 245);
+  doc.rect(boxX, boxY, boxWidth, boxHeight, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.rect(boxX, boxY, boxWidth, boxHeight, 'S');
+
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'bold');
+  doc.text(data.dentist_name, boxX + 5, boxY + 8);
+
+  doc.setFont('helvetica', 'normal');
+  if (data.dentist_address) {
+    const dentistAddressLines = data.dentist_address.split('\n');
+    let dentistYPos = boxY + 14;
+    dentistAddressLines.forEach(line => {
+      doc.text(line.trim(), boxX + 5, dentistYPos);
+      dentistYPos += 5;
+    });
+  }
+
+  yPos = Math.max(yPos, boxY + boxHeight) + 15;
+
+  if (data.laboratory_iban) {
+    doc.text(`IBAN : ${data.laboratory_iban}`, 15, yPos);
+    yPos += 5;
+  }
+  if (data.laboratory_bic) {
+    doc.text(`BIC : ${data.laboratory_bic}`, 15, yPos);
+    yPos += 5;
+  }
+  doc.setFont('helvetica', 'bold');
+  doc.text(`Date de facture : ${new Date(data.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`, 15, yPos);
+
+  yPos = Math.max(yPos, boxY + boxHeight) + 15;
+
+  doc.setFontSize(18);
+  doc.setFont('helvetica', 'bold');
+  const titleText = 'FACTURE PRO FORMA';
+  const titleWidth = doc.getTextWidth(titleText);
+  doc.text(titleText, (pageWidth - titleWidth) / 2, yPos);
+
+  yPos += 8;
+
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'normal');
+  const monthText = new Date(data.date).toLocaleDateString('fr-FR', {
+    month: 'long',
+    year: 'numeric'
+  });
+  const monthWidth = doc.getTextWidth(monthText);
+  doc.text(monthText, (pageWidth - monthWidth) / 2, yPos);
+
+  yPos += 15;
+
+  let grandTotal = 0;
+
+  yPos += 10;
+
+  const col1X = 15;
+  const col2X = 110;
+  const col3X = 135;
+  const col4X = 160;
+  const col5X = pageWidth - 15;
+
+  doc.setFontSize(7);
+  doc.setFont('helvetica', 'bold');
+  doc.text('Fourniture', col1X, yPos);
+  doc.text('Quantité', col2X, yPos);
+  doc.text('Prix HT', col3X, yPos);
+  doc.text('Remise', col4X, yPos);
+  doc.text('Total HT', col5X, yPos, { align: 'right' });
+
+  yPos += 2;
+  doc.setLineWidth(0.3);
+  doc.line(15, yPos, pageWidth - 15, yPos);
+  yPos += 5;
+
+  data.delivery_notes.forEach((note, noteIndex) => {
+    if (yPos > pageHeight - 60) {
+      doc.addPage();
+      yPos = 20;
+    }
+
+    doc.setFillColor(128, 128, 128);
+    const hasPresciption = !!note.prescription_date;
+    const headerHeight = hasPresciption ? 10 : 7;
+    doc.rect(15, yPos, pageWidth - 30, headerHeight, 'F');
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(255, 255, 255);
+
+    const deliveryDateText = `Bon ${note.delivery_number} - Livraison le ${new Date(note.date).toLocaleDateString('fr-FR', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    })}`;
+
+    doc.text(deliveryDateText, 17, yPos + 4);
+
+    const patientLabel = 'Patient';
+    const patientLabelWidth = doc.getTextWidth(patientLabel);
+    const patientNameWidth = doc.getTextWidth(note.patient_name);
+    const totalPatientWidth = patientLabelWidth + patientNameWidth + 2;
+
+    doc.text(patientLabel, pageWidth - 17 - totalPatientWidth, yPos + 4);
+    doc.text(note.patient_name, pageWidth - 17, yPos + 4, { align: 'right' });
+
+    if (note.prescription_date) {
+      const prescriptionText = `Prescription du ${new Date(note.prescription_date).toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+      })}`;
+      doc.text(prescriptionText, 17, yPos + 8);
+    }
+
+    doc.setTextColor(0, 0, 0);
+    yPos += headerHeight + 3;
+
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'normal');
+
+    let noteTotal = 0;
+
+    note.items.forEach((item) => {
+      if (yPos > pageHeight - 40) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      let itemDescription = item.description;
+      const detailsParts = [];
+      if (item.tooth_number) {
+        detailsParts.push(`Dents : ${item.tooth_number}`);
+      }
+      if (item.shade) {
+        detailsParts.push(`Teintes : ${item.shade}`);
+      }
+
+      const descLines = doc.splitTextToSize(itemDescription, 90);
+      const firstLine = descLines[0];
+
+      doc.text(firstLine, col1X, yPos);
+
+      const quantityText = item.quantity.toFixed(3).replace(/\.?0+$/, '');
+      doc.text(quantityText, col2X, yPos);
+
+      if (item.unit_price > 0) {
+        const itemTotal = item.quantity * item.unit_price;
+        noteTotal += itemTotal;
+
+        doc.text(`${item.unit_price.toFixed(2)} €`, col3X, yPos);
+        doc.text(`${itemTotal.toFixed(2)} €`, col5X, yPos, { align: 'right' });
+      }
+
+      yPos += 3;
+
+      if (detailsParts.length > 0) {
+        doc.text(detailsParts.join(' '), col1X, yPos);
+        yPos += 3;
+      }
+
+      for (let i = 1; i < descLines.length; i++) {
+        doc.text(descLines[i], col1X, yPos);
+        yPos += 3;
+      }
+
+      yPos += 1;
+    });
+
+    grandTotal += noteTotal;
+
+    yPos += 2;
+    doc.setFontSize(7);
+    doc.setFont('helvetica', 'italic');
+    doc.text(`Total HT du bon`, col3X + 15, yPos);
+    doc.text(`${noteTotal.toFixed(2)} €`, col5X, yPos, { align: 'right' });
+
+    yPos += 5;
+
+    if (noteIndex < data.delivery_notes.length - 1) {
+      doc.setLineWidth(0.2);
+      doc.setDrawColor(200, 200, 200);
+      doc.line(15, yPos, pageWidth - 15, yPos);
+      yPos += 5;
+    }
+  });
+
+  if (yPos > pageHeight - 80) {
+    doc.addPage();
+    yPos = 20;
+  }
+
+  yPos += 10;
+
+  const totalsLabelX = 120;
+  const totalsValueX = pageWidth - 15;
+
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+  doc.text('TOTAL HT PRESTATION', totalsLabelX, yPos);
+  doc.text(`${grandTotal.toFixed(2)} €`, totalsValueX, yPos, { align: 'right' });
+
+  yPos += 4;
+  doc.text('TOTAL HT FOURNITURE', totalsLabelX, yPos);
+  doc.text('0,00 €', totalsValueX, yPos, { align: 'right' });
+
+  yPos += 5;
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.3);
+  doc.line(totalsLabelX, yPos, totalsValueX, yPos);
+
+  yPos += 4;
+  doc.text('Total HT exonoré de taxes*', totalsLabelX, yPos);
+  doc.text(`${grandTotal.toFixed(2)} €`, totalsValueX, yPos, { align: 'right' });
+
+  yPos += 3;
+  doc.setFontSize(6);
+  doc.text('* Exonération de TVA : Article 261-4-1° du Code Général des Impôts', totalsLabelX, yPos);
+
+  yPos += 5;
+  doc.setLineWidth(0.5);
+  doc.line(totalsLabelX, yPos - 1, totalsValueX, yPos - 1);
+
+  yPos += 4;
+  doc.setFontSize(9);
+  doc.setFont('helvetica', 'bold');
+  doc.text('TOTAL TTC', totalsLabelX, yPos);
+  doc.text(`${grandTotal.toFixed(2)} €`, totalsValueX, yPos, { align: 'right' });
+
+  const footerY = pageHeight - 20;
+  doc.setFontSize(8);
+  doc.setFont('helvetica', 'normal');
+
+  const footerLine1 = `${data.laboratory_name}`;
+  const footerLine2 = 'RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A';
+
+  doc.text(footerLine1, 15, footerY);
+  doc.text(footerLine2, 15, footerY + 4);
+
+  return doc.output('datauristring').split(',')[1];
+}
+
 export async function generateInvoicePDF(data: InvoiceData) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
