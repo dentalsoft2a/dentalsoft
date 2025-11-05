@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, X, Send, CheckCircle, LogOut } from 'lucide-react';
+import { Camera, X, Send, CheckCircle, LogOut, History } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import DentistPhotoHistory from './DentistPhotoHistory';
 
 interface Laboratory {
   id: string;
@@ -20,6 +21,7 @@ export default function DentistPhotoPanel() {
   const [success, setSuccess] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
     loadLaboratories();
@@ -170,12 +172,20 @@ export default function DentistPhotoPanel() {
             <h1 className="text-xl font-bold">Envoi de Photo</h1>
             <p className="text-sm text-white/80">Prenez une photo pour le laboratoire</p>
           </div>
-          <button
-            onClick={handleLogout}
-            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition"
-          >
-            <LogOut className="w-6 h-6 text-white" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowHistory(true)}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition"
+            >
+              <History className="w-6 h-6 text-white" />
+            </button>
+            <button
+              onClick={handleLogout}
+              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition"
+            >
+              <LogOut className="w-6 h-6 text-white" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -294,6 +304,8 @@ export default function DentistPhotoPanel() {
           </div>
         </div>
       )}
+
+      {showHistory && <DentistPhotoHistory onClose={() => setShowHistory(false)} />}
     </div>
   );
 }
