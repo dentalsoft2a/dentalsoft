@@ -631,18 +631,28 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
         ? `Référence: ${paymentReference}${paymentNotes ? '\n' + paymentNotes : ''}`
         : paymentNotes || null;
 
-      const { error } = await supabase
-        .from('invoice_payments')
-        .insert({
-          invoice_id: showPaymentModal.id,
-          user_id: user.id,
-          amount,
-          payment_date: paymentDate,
-          payment_method: paymentMethod,
-          notes: noteText,
-        });
+      const paymentData = {
+        invoice_id: showPaymentModal.id,
+        user_id: user.id,
+        amount,
+        payment_date: paymentDate,
+        payment_method: paymentMethod,
+        notes: noteText,
+      };
 
-      if (error) throw error;
+      console.log('Inserting payment:', paymentData);
+
+      const { data, error } = await supabase
+        .from('invoice_payments')
+        .insert(paymentData)
+        .select();
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw error;
+      }
+
+      console.log('Payment inserted successfully:', data);
 
       await loadInvoicePayments(showPaymentModal.id);
       await loadUnpaidInvoices();
@@ -651,9 +661,9 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       setPaymentAmount('');
       setPaymentReference('');
       setPaymentNotes('');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding payment:', error);
-      alert('Erreur lors de l\'ajout du paiement');
+      alert(`Erreur lors de l'ajout du paiement: ${error.message || 'Erreur inconnue'}`);
     }
   };
 
