@@ -920,7 +920,7 @@ export async function generateProformaPDFBase64(data: ProformaData): Promise<str
   return doc.output('datauristring').split(',')[1];
 }
 
-export async function generateInvoicePDF(data: InvoiceData) {
+export async function generateInvoicePDF(data: InvoiceData, returnBase64 = false): Promise<string | undefined> {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -1198,6 +1198,10 @@ export async function generateInvoicePDF(data: InvoiceData) {
 
   doc.text(footerLine1, 15, footerY);
   doc.text(footerLine2, 15, footerY + 4);
+
+  if (returnBase64) {
+    return doc.output('datauristring').split(',')[1];
+  }
 
   doc.save(`Facture_${data.invoice_number}.pdf`);
 }

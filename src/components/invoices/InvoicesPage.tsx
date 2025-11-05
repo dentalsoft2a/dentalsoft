@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, FileDown, CreditCard } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, FileDown, CreditCard, Send } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
@@ -123,7 +123,7 @@ export default function InvoicesPage() {
     }
   };
 
-  const handleGeneratePDF = async (invoice: Invoice) => {
+  const handleGeneratePDF = async (invoice: Invoice, returnBase64 = false): Promise<string | undefined> => {
     try {
       const { data: dentistData, error: dentistError } = await supabase
         .from('dentists')
@@ -181,7 +181,7 @@ export default function InvoicesPage() {
         items: Array.isArray(note.items) ? note.items : []
       }));
 
-      await generateInvoicePDF({
+      return await generateInvoicePDF({
         invoice_number: invoice.invoice_number,
         date: invoice.date,
         laboratory_name: profile?.laboratory_name || '',
@@ -195,10 +195,65 @@ export default function InvoicesPage() {
         dentist_address: dentistData.address || '',
         delivery_notes: deliveryNotes,
         tax_rate: Number(invoice.tax_rate)
-      });
+      }, returnBase64);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Erreur lors de la génération du PDF');
+    }
+  };
+
+  const handleSendEmail = async (invoice: Invoice) => {
+    try {
+      const { data: dentistData, error: dentistError } = await supabase
+        .from('dentists')
+        .select('*')
+        .eq('id', invoice.dentist_id)
+        .single();
+
+      if (dentistError) throw dentistError;
+
+      if (!dentistData.email) {
+        alert('Ce dentiste n\'a pas d\'adresse email configurée');
+        return;
+      }
+
+      if (!confirm(`Envoyer la facture par email à ${dentistData.email} ?`)) return;
+
+      const pdfBase64 = await handleGeneratePDF(invoice, true);
+
+      if (!pdfBase64) {
+        alert('Erreur lors de la génération du PDF');
+        return;
+      }
+
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-invoice-email`;
+      const headers = {
+        'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        'Content-Type': 'application/json',
+      };
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          invoiceId: invoice.id,
+          dentistEmail: dentistData.email,
+          dentistName: dentistData.name,
+          pdfBase64,
+          invoiceNumber: invoice.invoice_number,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Erreur lors de l\'envoi de l\'email');
+      }
+
+      alert('Email envoyé avec succès!');
+    } catch (error) {
+      console.error('Error sending email:', error);
+      alert(error instanceof Error ? error.message : 'Erreur lors de l\'envoi de l\'email');
     }
   };
 
@@ -320,6 +375,13 @@ export default function InvoicesPage() {
                           title="Gérer les paiements"
                         >
                           <CreditCard className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleSendEmail(invoice)}
+                          className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all duration-200"
+                          title="Envoyer par email"
+                        >
+                          <Send className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleGeneratePDF(invoice)}
