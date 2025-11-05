@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2, Plus, Upload } from 'lucide-react';
+import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2, Plus, Upload, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -77,6 +77,7 @@ export default function PhotoSubmissionsPage() {
   const loadSubmissions = async () => {
     if (!laboratoryId) return;
 
+    setLoading(true);
     try {
       const { data, error } = await supabase
         .from('photo_submissions')
@@ -264,13 +265,24 @@ export default function PhotoSubmissionsPage() {
               <p className="text-slate-600">Photos envoyées par les dentistes</p>
             </div>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition"
-          >
-            <Plus className="w-5 h-5" />
-            Ajouter une photo
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={loadSubmissions}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Actualiser la liste"
+            >
+              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+              Actualiser
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition"
+            >
+              <Plus className="w-5 h-5" />
+              Ajouter une photo
+            </button>
+          </div>
         </div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3 mb-6">
