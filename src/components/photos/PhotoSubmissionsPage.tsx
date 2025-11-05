@@ -40,11 +40,25 @@ export default function PhotoSubmissionsPage() {
   const [notes, setNotes] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [dentistSearchTerm, setDentistSearchTerm] = useState('');
+  const [showDentistDropdown, setShowDentistDropdown] = useState(false);
 
   useEffect(() => {
     loadSubmissions();
     loadDentists();
   }, [laboratoryId]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.dentist-dropdown-container')) {
+        setShowDentistDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const loadDentists = async () => {
     try {
@@ -166,6 +180,7 @@ export default function PhotoSubmissionsPage() {
       alert('Photo ajoutée avec succès');
       setShowAddModal(false);
       setSelectedDentistId('');
+      setDentistSearchTerm('');
       setPatientName('');
       setNotes('');
       setPhotoFile(null);
@@ -540,23 +555,74 @@ export default function PhotoSubmissionsPage() {
 
             <form onSubmit={handleAddSubmission} className="p-6">
               <div className="space-y-6">
-                <div>
+                <div className="relative dentist-dropdown-container">
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Dentiste *
                   </label>
-                  <select
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={dentistSearchTerm}
+                      onChange={(e) => {
+                        setDentistSearchTerm(e.target.value);
+                        setShowDentistDropdown(true);
+                      }}
+                      onFocus={() => setShowDentistDropdown(true)}
+                      placeholder="Rechercher un dentiste..."
+                      className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    />
+                  </div>
+                  {showDentistDropdown && (
+                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                      {dentists
+                        .filter((dentist) => {
+                          const search = dentistSearchTerm.toLowerCase();
+                          return (
+                            dentist.name.toLowerCase().includes(search) ||
+                            dentist.email.toLowerCase().includes(search)
+                          );
+                        })
+                        .map((dentist) => (
+                          <button
+                            key={dentist.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedDentistId(dentist.id);
+                              setDentistSearchTerm(`Dr. ${dentist.name}`);
+                              setShowDentistDropdown(false);
+                            }}
+                            className={`w-full text-left px-4 py-2 hover:bg-slate-50 transition ${
+                              selectedDentistId === dentist.id ? 'bg-purple-50' : ''
+                            }`}
+                          >
+                            <div className="font-medium text-slate-900">Dr. {dentist.name}</div>
+                            <div className="text-sm text-slate-600">{dentist.email}</div>
+                          </button>
+                        ))}
+                      {dentists.filter((dentist) => {
+                        const search = dentistSearchTerm.toLowerCase();
+                        return (
+                          dentist.name.toLowerCase().includes(search) ||
+                          dentist.email.toLowerCase().includes(search)
+                        );
+                      }).length === 0 && (
+                        <div className="px-4 py-3 text-sm text-slate-500 text-center">
+                          Aucun dentiste trouvé
+                        </div>
+                      )}
+                    </div>
+                  )}
+                  {selectedDentistId && !showDentistDropdown && (
+                    <div className="mt-2 p-2 bg-purple-50 border border-purple-200 rounded-lg text-sm text-purple-700">
+                      Dentiste sélectionné: {dentistSearchTerm}
+                    </div>
+                  )}
+                  <input
+                    type="hidden"
                     value={selectedDentistId}
-                    onChange={(e) => setSelectedDentistId(e.target.value)}
-                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                     required
-                  >
-                    <option value="">Sélectionner un dentiste</option>
-                    {dentists.map((dentist) => (
-                      <option key={dentist.id} value={dentist.id}>
-                        Dr. {dentist.name} - {dentist.email}
-                      </option>
-                    ))}
-                  </select>
+                  />
                 </div>
 
                 <div>
