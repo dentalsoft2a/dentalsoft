@@ -85,6 +85,13 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
   });
   const [showQuickFill, setShowQuickFill] = useState<{ id: string; name: string; currentStock: number; type: 'catalog' | 'resource' | 'variant' } | null>(null);
   const [quickFillQuantity, setQuickFillQuantity] = useState<number>(0);
+  const [showPaymentModal, setShowPaymentModal] = useState<Invoice | null>(null);
+  const [paymentAmount, setPaymentAmount] = useState<string>('');
+  const [paymentMethod, setPaymentMethod] = useState<string>('virement');
+  const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [paymentReference, setPaymentReference] = useState<string>('');
+  const [paymentNotes, setPaymentNotes] = useState<string>('');
+  const [invoicePayments, setInvoicePayments] = useState<any[]>([]);
 
   useEffect(() => {
     loadStats();
@@ -584,42 +591,97 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     return date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
   };
 
-  const handleMarkAsPaid = async (invoiceId: string) => {
-    if (!confirm('Marquer cette facture comme payée ?')) return;
+  const openPaymentModal = async (invoice: Invoice) => {
+    setShowPaymentModal(invoice);
+    setPaymentAmount('');
+    setPaymentMethod('virement');
+    setPaymentDate(new Date().toISOString().split('T')[0]);
+    setPaymentReference('');
+    setPaymentNotes('');
 
+    await loadInvoicePayments(invoice.id);
+  };
+
+  const loadInvoicePayments = async (invoiceId: string) => {
     try {
-      const { error } = await supabase
-        .from('invoices')
-        .update({ status: 'paid' })
-        .eq('id', invoiceId);
+      const { data, error } = await supabase
+        .from('invoice_payments')
+        .select('*')
+        .eq('invoice_id', invoiceId)
+        .order('payment_date', { ascending: false });
 
       if (error) throw error;
-
-      await loadUnpaidInvoices();
-      await loadStats();
+      setInvoicePayments(data || []);
     } catch (error) {
-      console.error('Error marking invoice as paid:', error);
-      alert('Erreur lors de la mise à jour de la facture');
+      console.error('Error loading invoice payments:', error);
     }
   };
 
-  const handleMarkAsPartial = async (invoiceId: string) => {
-    if (!confirm('Marquer cette facture comme partiellement payée ?')) return;
+  const handleAddPayment = async () => {
+    if (!showPaymentModal || !user) return;
+
+    const amount = parseFloat(paymentAmount);
+    if (isNaN(amount) || amount <= 0) {
+      alert('Veuillez entrer un montant valide');
+      return;
+    }
 
     try {
       const { error } = await supabase
-        .from('invoices')
-        .update({ status: 'partial' })
-        .eq('id', invoiceId);
+        .from('invoice_payments')
+        .insert({
+          invoice_id: showPaymentModal.id,
+          user_id: user.id,
+          amount,
+          payment_date: paymentDate,
+          payment_method: paymentMethod,
+          reference: paymentReference || null,
+          notes: paymentNotes || null,
+        });
 
       if (error) throw error;
 
+      await loadInvoicePayments(showPaymentModal.id);
+      await loadUnpaidInvoices();
+      await loadStats();
+
+      setPaymentAmount('');
+      setPaymentReference('');
+      setPaymentNotes('');
+    } catch (error) {
+      console.error('Error adding payment:', error);
+      alert('Erreur lors de l\'ajout du paiement');
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: string) => {
+    if (!confirm('Supprimer ce paiement ?')) return;
+    if (!showPaymentModal) return;
+
+    try {
+      const { error } = await supabase
+        .from('invoice_payments')
+        .delete()
+        .eq('id', paymentId);
+
+      if (error) throw error;
+
+      await loadInvoicePayments(showPaymentModal.id);
       await loadUnpaidInvoices();
       await loadStats();
     } catch (error) {
-      console.error('Error marking invoice as partial:', error);
-      alert('Erreur lors de la mise à jour de la facture');
+      console.error('Error deleting payment:', error);
+      alert('Erreur lors de la suppression du paiement');
     }
+  };
+
+  const getTotalPaid = () => {
+    return invoicePayments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+  };
+
+  const getRemainingAmount = () => {
+    if (!showPaymentModal) return 0;
+    return Number(showPaymentModal.total) - getTotalPaid();
   };
 
   return (
@@ -974,24 +1036,13 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     </span>
                   </div>
 
-                  <div className="flex gap-2">
-                    {invoice.status === 'draft' && (
-                      <button
-                        onClick={() => handleMarkAsPartial(invoice.id)}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-xs font-medium"
-                      >
-                        <DollarSign className="w-3.5 h-3.5" />
-                        Partiel
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleMarkAsPaid(invoice.id)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-xs font-medium"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      Payée
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => openPaymentModal(invoice)}
+                    className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition text-xs font-medium"
+                  >
+                    <DollarSign className="w-3.5 h-3.5" />
+                    Gérer les paiements
+                  </button>
                 </div>
               </div>
             ))}
@@ -1352,6 +1403,179 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     </div>
                   </div>
                 </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showPaymentModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-slate-200 p-6 flex items-center justify-between z-10">
+              <div>
+                <h2 className="text-xl font-bold text-slate-900">Gestion des paiements</h2>
+                <p className="text-sm text-slate-600 mt-1">
+                  Facture N° {showPaymentModal.invoice_number} - {showPaymentModal.dentists?.name}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowPaymentModal(null)}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-all duration-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="grid grid-cols-3 gap-4">
+                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                  <p className="text-xs text-slate-600 mb-1">Montant total</p>
+                  <p className="text-2xl font-bold text-slate-900">{Number(showPaymentModal.total).toFixed(2)} €</p>
+                </div>
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
+                  <p className="text-xs text-green-700 mb-1">Total payé</p>
+                  <p className="text-2xl font-bold text-green-700">{getTotalPaid().toFixed(2)} €</p>
+                </div>
+                <div className={`rounded-lg p-4 border ${
+                  getRemainingAmount() > 0 ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'
+                }`}>
+                  <p className={`text-xs mb-1 ${
+                    getRemainingAmount() > 0 ? 'text-red-700' : 'text-green-700'
+                  }`}>Reste à payer</p>
+                  <p className={`text-2xl font-bold ${
+                    getRemainingAmount() > 0 ? 'text-red-700' : 'text-green-700'
+                  }`}>{getRemainingAmount().toFixed(2)} €</p>
+                </div>
+              </div>
+
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <h3 className="text-sm font-bold text-slate-900 mb-4">Ajouter un paiement</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Montant *
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                      placeholder="0.00"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Date *
+                    </label>
+                    <input
+                      type="date"
+                      value={paymentDate}
+                      onChange={(e) => setPaymentDate(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Méthode de paiement *
+                    </label>
+                    <select
+                      value={paymentMethod}
+                      onChange={(e) => setPaymentMethod(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    >
+                      <option value="virement">Virement</option>
+                      <option value="cheque">Chèque</option>
+                      <option value="especes">Espèces</option>
+                      <option value="carte">Carte bancaire</option>
+                      <option value="prelevement">Prélèvement</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Référence
+                    </label>
+                    <input
+                      type="text"
+                      value={paymentReference}
+                      onChange={(e) => setPaymentReference(e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                      placeholder="N° chèque, référence..."
+                    />
+                  </div>
+
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      Notes
+                    </label>
+                    <textarea
+                      value={paymentNotes}
+                      onChange={(e) => setPaymentNotes(e.target.value)}
+                      rows={2}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none resize-none"
+                      placeholder="Notes sur le paiement..."
+                    />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleAddPayment}
+                  className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-green-700 hover:to-emerald-700 transition font-medium"
+                >
+                  <Check className="w-4 h-4" />
+                  Ajouter le paiement
+                </button>
+              </div>
+
+              {invoicePayments.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-slate-900 mb-3">Historique des paiements</h3>
+                  <div className="space-y-2">
+                    {invoicePayments.map((payment) => (
+                      <div
+                        key={payment.id}
+                        className="bg-white rounded-lg p-4 border border-slate-200 hover:border-slate-300 transition"
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <span className="text-lg font-bold text-slate-900">
+                                {Number(payment.amount).toFixed(2)} €
+                              </span>
+                              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                                {payment.payment_method}
+                              </span>
+                              <span className="text-sm text-slate-500">
+                                {new Date(payment.payment_date).toLocaleDateString('fr-FR')}
+                              </span>
+                            </div>
+                            {payment.reference && (
+                              <p className="text-xs text-slate-600 mb-1">
+                                Référence: {payment.reference}
+                              </p>
+                            )}
+                            {payment.notes && (
+                              <p className="text-xs text-slate-600">
+                                {payment.notes}
+                              </p>
+                            )}
+                          </div>
+                          <button
+                            onClick={() => handleDeletePayment(payment.id)}
+                            className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               )}
             </div>
           </div>
