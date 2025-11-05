@@ -34,9 +34,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [employeeInfo, setEmployeeInfo] = useState<EmployeeInfo | null>(null);
+  const [laboratoryUserProfile, setLaboratoryUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const hasActiveSubscription = userProfile?.subscription_status === 'active' || userProfile?.subscription_status === 'trialing';
+  const effectiveUserProfile = employeeInfo ? laboratoryUserProfile : userProfile;
+  const hasActiveSubscription = effectiveUserProfile?.subscription_status === 'active' || effectiveUserProfile?.subscription_status === 'trialing';
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -91,6 +93,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(profileResult.data);
       setUserProfile(userProfileResult.data);
       setEmployeeInfo(employeeResult.data);
+
+      if (employeeResult.data?.laboratory_profile_id) {
+        const { data: labUserProfile } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('id', employeeResult.data.laboratory_profile_id)
+          .maybeSingle();
+
+        setLaboratoryUserProfile(labUserProfile);
+      }
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -163,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setUserProfile(null);
       setEmployeeInfo(null);
+      setLaboratoryUserProfile(null);
     } catch (error) {
       console.error('Error signing out:', error);
       // Force local cleanup even if server fails
@@ -170,6 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setUserProfile(null);
       setEmployeeInfo(null);
+      setLaboratoryUserProfile(null);
     }
   };
 
