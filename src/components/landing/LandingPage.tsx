@@ -1,25 +1,12 @@
 import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus, Camera, Phone } from 'lucide-react';
 import { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import { supabase } from '../../lib/supabase';
+import LoginPage from '../auth/LoginPage';
+import RegisterPage from '../auth/RegisterPage';
 
-interface LandingPageProps {
-  onNavigate?: (page: string) => void;
-}
-
-export function LandingPage({ onNavigate }: LandingPageProps = {}) {
-  const { signIn, signUp } = useAuth();
-  const [isAuthMode, setIsAuthMode] = useState(false);
-  const [isRegisterMode, setIsRegisterMode] = useState(false);
-  const [isDentistMode, setIsDentistMode] = useState(false);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [laboratoryName, setLaboratoryName] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+export function LandingPage() {
+  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'register'>('landing');
   const [price, setPrice] = useState<number>(59.99);
   const [contactPhone, setContactPhone] = useState<string>('');
 
@@ -64,42 +51,6 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
     }
   };
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
-
-    try {
-      if (isDentistMode && isRegisterMode) {
-        onNavigate?.('dentist-register');
-        return;
-      }
-
-      if (isRegisterMode) {
-        const { error } = await signUp(email, password, firstName, lastName, laboratoryName);
-        if (error) throw error;
-      } else {
-        const { error } = await signIn(email, password);
-        if (error) throw error;
-      }
-    } catch (err: any) {
-      setError(err.message || 'Une erreur est survenue');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleAuthMode = () => {
-    setIsAuthMode(!isAuthMode);
-    setIsRegisterMode(false);
-    setIsDentistMode(false);
-    setError('');
-  };
-
-  const toggleRegisterMode = () => {
-    setIsRegisterMode(!isRegisterMode);
-    setError('');
-  };
 
   const features = [
     {
@@ -152,6 +103,48 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
     },
   ];
 
+  if (currentView === 'login') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
+        <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <DentalCloudLogo size={32} showText={true} />
+              <button
+                onClick={() => setCurrentView('landing')}
+                className="px-3 sm:px-6 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
+              >
+                Retour
+              </button>
+            </div>
+          </div>
+        </nav>
+        <LoginPage onToggleRegister={() => setCurrentView('register')} />
+      </div>
+    );
+  }
+
+  if (currentView === 'register') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
+        <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center h-16">
+              <DentalCloudLogo size={32} showText={true} />
+              <button
+                onClick={() => setCurrentView('landing')}
+                className="px-3 sm:px-6 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
+              >
+                Retour
+              </button>
+            </div>
+          </div>
+        </nav>
+        <RegisterPage onToggleLogin={() => setCurrentView('login')} />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
@@ -159,185 +152,16 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
           <div className="flex justify-between items-center h-16">
             <DentalCloudLogo size={32} showText={true} />
             <button
-              onClick={toggleAuthMode}
+              onClick={() => setCurrentView('login')}
               className="px-3 sm:px-6 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-medium hover:shadow-lg transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
             >
-              {isAuthMode ? 'Retour' : 'Connexion'}
+              Connexion
             </button>
           </div>
         </div>
       </nav>
 
-      {isAuthMode ? (
-        <div className="max-w-md mx-auto px-4 py-16">
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
-            <div className="text-center mb-8">
-              <div className="flex justify-center mb-4">
-                <DentalCloudLogo size={56} showText={false} />
-              </div>
-              <h2 className="text-2xl font-bold text-slate-900">
-                {isRegisterMode ? 'Créer un compte' : 'Connexion'}
-              </h2>
-              <p className="text-slate-600 mt-2">
-                {isRegisterMode ? '30 jours d\'essai gratuit' : 'Accédez à votre espace'}
-              </p>
-
-              <div className="flex items-center justify-center gap-2 mt-6 bg-slate-100 rounded-lg p-1">
-                <button
-                  onClick={() => setIsDentistMode(false)}
-                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-all ${
-                    !isDentistMode
-                      ? 'bg-white text-primary-600 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <Package className="w-4 h-4" />
-                    Laboratoire
-                  </div>
-                </button>
-                <button
-                  onClick={() => setIsDentistMode(true)}
-                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-all ${
-                    isDentistMode
-                      ? 'bg-white text-blue-600 shadow-sm'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  <div className="flex items-center justify-center gap-2">
-                    <Camera className="w-4 h-4" />
-                    Dentiste
-                  </div>
-                </button>
-              </div>
-            </div>
-
-            <form onSubmit={handleAuth} className="space-y-4">
-              {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-                  {error}
-                </div>
-              )}
-
-              {isRegisterMode && (
-                <>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Prénom
-                      </label>
-                      <input
-                        type="text"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
-                        required
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Nom
-                      </label>
-                      <input
-                        type="text"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  {!isDentistMode && (
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Nom du laboratoire
-                      </label>
-                      <input
-                        type="text"
-                        value={laboratoryName}
-                        onChange={(e) => setLaboratoryName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
-                        required
-                      />
-                    </div>
-                  )}
-
-                  {isDentistMode && (
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Nom du cabinet
-                      </label>
-                      <input
-                        type="text"
-                        value={laboratoryName}
-                        onChange={(e) => setLaboratoryName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
-                        placeholder="Cabinet dentaire..."
-                        required
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
-                  placeholder="votre@email.com"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Mot de passe
-                </label>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none transition-all"
-                  placeholder="••••••••"
-                  minLength={6}
-                  required
-                />
-                {isRegisterMode && (
-                  <p className="text-xs text-slate-500 mt-1">Minimum 6 caractères</p>
-                )}
-              </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full px-6 py-3 rounded-lg bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (isRegisterMode ? 'Création...' : 'Connexion...') : (isRegisterMode ? 'Créer mon compte' : 'Se connecter')}
-              </button>
-
-              <div className="text-center pt-4 border-t border-slate-200">
-                <p className="text-slate-600 text-sm">
-                  {isRegisterMode ? 'Déjà un compte ?' : 'Pas encore de compte ?'}{' '}
-                  <button
-                    type="button"
-                    onClick={toggleRegisterMode}
-                    className="text-primary-600 font-medium hover:text-primary-700 transition-colors duration-200 hover:underline"
-                  >
-                    {isRegisterMode ? 'Se connecter' : 'Créer un compte'}
-                  </button>
-                </p>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : (
-        <>
+      <>
           <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-primary-200/30 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-200/30 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}} />
@@ -370,10 +194,7 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <button
-                  onClick={() => {
-                    setIsAuthMode(true);
-                    setIsRegisterMode(true);
-                  }}
+                  onClick={() => setCurrentView('register')}
                   className="px-8 py-4 rounded-xl bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-2 group relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-primary-500 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -920,10 +741,7 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
                   </div>
 
                   <button
-                    onClick={() => {
-                      setIsAuthMode(true);
-                      setIsRegisterMode(true);
-                    }}
+                    onClick={() => setCurrentView('register')}
                     className="w-full px-8 py-4 rounded-xl bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 group"
                   >
                     Commencer l'essai gratuit
@@ -977,8 +795,7 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
               </div>
             </div>
           </footer>
-        </>
-      )}
+      </>
     </div>
   );
 }

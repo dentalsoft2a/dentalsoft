@@ -24,7 +24,7 @@ import { usePermissions } from './hooks/usePermissions';
 function AppContent() {
   const { user, loading, isEmployee } = useAuth();
   const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
-  const [currentPage, setCurrentPage] = useState('landing');
+  const [currentPage, setCurrentPage] = useState('dashboard');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isDentist, setIsDentist] = useState(false);
   const [checkingUserType, setCheckingUserType] = useState(false);
@@ -208,10 +208,7 @@ function AppContent() {
   }
 
   if (!user) {
-    if (currentPage === 'dentist-register') {
-      return <DentistRegisterPage onNavigate={setCurrentPage} />;
-    }
-    return <LandingPage onNavigate={setCurrentPage} />;
+    return <LandingPage />;
   }
 
   if (isDentist) {
