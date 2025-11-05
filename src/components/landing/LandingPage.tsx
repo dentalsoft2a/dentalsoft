@@ -59,6 +59,11 @@ export function LandingPage() {
 
   const features = [
     {
+      icon: Camera,
+      title: 'Envoi de photos pour dentistes',
+      description: 'Application gratuite pour les dentistes ! Envoyez des photos directement au laboratoire de votre choix. Inscription simple et rapide.',
+    },
+    {
       icon: Package,
       title: 'Bons de livraison',
       description: 'Créez et gérez vos bons de livraison en quelques clics. Suivi complet de chaque livraison avec historique détaillé.',
@@ -82,11 +87,6 @@ export function LandingPage() {
       icon: TrendingUp,
       title: 'Tableau de bord analytique',
       description: 'Visualisez votre activité en temps réel : CA mensuel, articles les plus facturés, proformas en attente.',
-    },
-    {
-      icon: Package,
-      title: 'Catalogue de produits',
-      description: 'Gérez votre catalogue complet de prothèses avec codes, noms et prix. Mise à jour facile et rapide.',
     },
   ];
 
@@ -204,6 +204,24 @@ export function LandingPage() {
               <p className="text-xl text-slate-600 mb-8 leading-relaxed">
                 De la création des bons de livraison à la facturation finale, DentalCloud centralise toute votre gestion administrative dans une seule application moderne et intuitive.
               </p>
+
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-2xl p-6 mb-8 shadow-lg">
+                <div className="flex items-start gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0 shadow-lg">
+                    <Camera className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="text-2xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                      Pour les dentistes : Totalement gratuit !
+                      <span className="text-sm bg-emerald-500 text-white px-3 py-1 rounded-full font-medium">100% Gratuit</span>
+                    </h3>
+                    <p className="text-slate-700 text-lg leading-relaxed">
+                      Envoyez vos photos de travaux directement au laboratoire de votre choix.
+                      Créez simplement votre compte gratuit et commencez à communiquer avec vos laboratoires en quelques secondes.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
                 <button
