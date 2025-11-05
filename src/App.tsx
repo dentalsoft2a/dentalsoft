@@ -227,9 +227,9 @@ function AppContent() {
 
     if (isPWA) {
       if (currentPage === 'register') {
-        return <RegisterPage onToggleLogin={() => setCurrentPage('login')} />;
+        return <RegisterPage onToggleLogin={() => setCurrentPage('login')} onNavigate={setCurrentPage} />;
       }
-      return <LoginPage onToggleRegister={() => setCurrentPage('register')} />;
+      return <LoginPage onToggleRegister={() => setCurrentPage('register')} onNavigate={setCurrentPage} />;
     }
 
     return <LandingPage onNavigate={setCurrentPage} />;
