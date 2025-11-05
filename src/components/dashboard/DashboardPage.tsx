@@ -857,6 +857,66 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
         </div>
       )}
 
+      {urgentDeliveries.length > 0 && (
+        <div className="mb-6 bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden animate-slide-in">
+          <div className="bg-gradient-to-r from-red-50 to-orange-50 px-4 py-3 border-b border-red-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center">
+                  <AlertCircle className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-base font-bold text-slate-900">Travaux Urgents</h2>
+                  <p className="text-xs text-slate-600">Livraisons dans les 48h</p>
+                </div>
+              </div>
+              <span className="px-2.5 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">
+                {urgentDeliveries.length}
+              </span>
+            </div>
+          </div>
+
+          <div className="p-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-2">
+              {urgentDeliveries.map((delivery) => {
+                const daysUntil = getDaysUntilDelivery(delivery.date);
+                return (
+                  <div
+                    key={delivery.id}
+                    className="p-2 bg-slate-50 rounded-lg border border-slate-200 hover:border-red-400 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-1.5">
+                      <h4 className="font-medium text-slate-900 text-xs truncate flex-1 mr-1">
+                        {delivery.dentist.name}
+                      </h4>
+                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold flex-shrink-0 ${
+                        daysUntil === 0
+                          ? 'bg-red-500 text-white'
+                          : daysUntil === 1
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-amber-500 text-white'
+                      }`}>
+                        {daysUntil === 0 ? "Auj." : daysUntil === 1 ? 'Demain' : `${daysUntil}j`}
+                      </span>
+                    </div>
+
+                    <div className="space-y-0.5">
+                      <p className="text-[10px] text-slate-500">N° {delivery.delivery_number}</p>
+                      {delivery.patient_name && (
+                        <p className="text-[10px] text-slate-600 truncate">{delivery.patient_name}</p>
+                      )}
+                      <p className="text-[10px] text-slate-500">
+                        {new Date(delivery.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {statCards.map((card, index) => {
           const Icon = card.icon;
@@ -884,66 +944,6 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
           );
         })}
       </div>
-
-      {urgentDeliveries.length > 0 && (
-        <div className="mb-8 bg-white rounded-2xl shadow-lg border border-red-200 overflow-hidden animate-slide-in">
-          <div className="bg-gradient-to-r from-red-50 to-orange-50 px-6 py-4 border-b border-red-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-red-500 flex items-center justify-center">
-                  <AlertCircle className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-slate-900">Travaux Urgents</h2>
-                  <p className="text-sm text-slate-600">Livraisons dans les 48h</p>
-                </div>
-              </div>
-              <span className="px-3 py-1 bg-red-500 text-white rounded-lg text-sm font-bold">
-                {urgentDeliveries.length}
-              </span>
-            </div>
-          </div>
-
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
-              {urgentDeliveries.map((delivery) => {
-                const daysUntil = getDaysUntilDelivery(delivery.date);
-                return (
-                  <div
-                    key={delivery.id}
-                    className="p-3 bg-white rounded-lg border border-slate-200 hover:border-red-400 transition-colors"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-medium text-slate-900 text-sm truncate flex-1 mr-2">
-                        {delivery.dentist.name}
-                      </h4>
-                      <span className={`px-2 py-0.5 rounded text-xs font-semibold flex-shrink-0 ${
-                        daysUntil === 0
-                          ? 'bg-red-500 text-white'
-                          : daysUntil === 1
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-amber-500 text-white'
-                      }`}>
-                        {daysUntil === 0 ? "Auj." : daysUntil === 1 ? 'Demain' : `${daysUntil}j`}
-                      </span>
-                    </div>
-
-                    <div className="space-y-1">
-                      <p className="text-xs text-slate-500">N° {delivery.delivery_number}</p>
-                      {delivery.patient_name && (
-                        <p className="text-xs text-slate-600 truncate">{delivery.patient_name}</p>
-                      )}
-                      <p className="text-xs text-slate-500">
-                        {new Date(delivery.date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
-                      </p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      )}
 
       {recentDeliveries.length > 0 && (
         <div className="mb-8 bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 hover:shadow-xl transition-all duration-300 animate-slide-in">
