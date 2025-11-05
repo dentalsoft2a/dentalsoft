@@ -207,7 +207,9 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
                       >
                         <div className="flex items-center gap-3 flex-1">
                           <button
+                            type="button"
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
                               toggleFavorite(lab.id);
                             }}
