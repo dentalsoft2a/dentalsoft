@@ -6,7 +6,12 @@ import LoginPage from '../auth/LoginPage';
 import RegisterPage from '../auth/RegisterPage';
 
 export function LandingPage() {
-  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'register'>('login');
+  const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
+                (window.navigator as any).standalone === true;
+
+  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'register'>(
+    isPWA ? 'login' : 'landing'
+  );
   const [price, setPrice] = useState<number>(59.99);
   const [contactPhone, setContactPhone] = useState<string>('');
 
