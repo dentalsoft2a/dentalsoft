@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User, Calendar, CheckCircle, Download, BarChart3, Filter, X, AlertTriangle, Archive, Save, DollarSign } from 'lucide-react';
+import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User, Calendar, CheckCircle, Download, BarChart3, Filter, X, AlertTriangle, Archive, Save, DollarSign, Check } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
@@ -584,6 +584,44 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     return date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
   };
 
+  const handleMarkAsPaid = async (invoiceId: string) => {
+    if (!confirm('Marquer cette facture comme payée ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ status: 'paid' })
+        .eq('id', invoiceId);
+
+      if (error) throw error;
+
+      await loadUnpaidInvoices();
+      await loadStats();
+    } catch (error) {
+      console.error('Error marking invoice as paid:', error);
+      alert('Erreur lors de la mise à jour de la facture');
+    }
+  };
+
+  const handleMarkAsPartial = async (invoiceId: string) => {
+    if (!confirm('Marquer cette facture comme partiellement payée ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('invoices')
+        .update({ status: 'partial' })
+        .eq('id', invoiceId);
+
+      if (error) throw error;
+
+      await loadUnpaidInvoices();
+      await loadStats();
+    } catch (error) {
+      console.error('Error marking invoice as partial:', error);
+      alert('Erreur lors de la mise à jour de la facture');
+    }
+  };
+
   return (
     <div>
       <div className="mb-8 animate-fade-in flex items-center justify-between">
@@ -921,18 +959,39 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between pt-3 border-t border-slate-200">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
-                    <Calendar className="w-4 h-4" />
-                    {new Date(invoice.date).toLocaleDateString('fr-FR')}
+                <div className="space-y-2 pt-3 border-t border-slate-200">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(invoice.date).toLocaleDateString('fr-FR')}
+                    </div>
+                    <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${
+                      invoice.status === 'draft'
+                        ? 'bg-red-100 text-red-700'
+                        : 'bg-orange-100 text-orange-700'
+                    }`}>
+                      {invoice.status === 'draft' ? 'Non payée' : 'Partiellement payée'}
+                    </span>
                   </div>
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold ${
-                    invoice.status === 'draft'
-                      ? 'bg-red-100 text-red-700'
-                      : 'bg-orange-100 text-orange-700'
-                  }`}>
-                    {invoice.status === 'draft' ? 'Non payée' : 'Partiellement payée'}
-                  </span>
+
+                  <div className="flex gap-2">
+                    {invoice.status === 'draft' && (
+                      <button
+                        onClick={() => handleMarkAsPartial(invoice.id)}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition text-xs font-medium"
+                      >
+                        <DollarSign className="w-3.5 h-3.5" />
+                        Partiel
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleMarkAsPaid(invoice.id)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition text-xs font-medium"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      Payée
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
