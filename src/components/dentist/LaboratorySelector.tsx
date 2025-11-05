@@ -89,23 +89,30 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
 
   const toggleFavorite = async (labId: string) => {
     const isFavorite = favorites.has(labId);
+    console.log('Toggle favorite clicked', { labId, dentistId, isFavorite });
 
     try {
       if (isFavorite) {
+        console.log('Removing from favorites...');
         const { error } = await supabase
           .from('dentist_favorite_laboratories')
           .delete()
           .eq('dentist_id', dentistId)
           .eq('laboratory_profile_id', labId);
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error removing favorite:', error);
+          throw error;
+        }
 
+        console.log('Favorite removed successfully');
         setFavorites(prev => {
           const newFavorites = new Set(prev);
           newFavorites.delete(labId);
           return newFavorites;
         });
       } else {
+        console.log('Adding to favorites...');
         const { error } = await supabase
           .from('dentist_favorite_laboratories')
           .insert({
@@ -113,12 +120,17 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
             laboratory_profile_id: labId
           });
 
-        if (error) throw error;
+        if (error) {
+          console.error('Error adding favorite:', error);
+          throw error;
+        }
 
+        console.log('Favorite added successfully');
         setFavorites(prev => new Set(prev).add(labId));
       }
     } catch (error) {
       console.error('Error toggling favorite:', error);
+      alert('Erreur lors de la mise à jour des favoris: ' + (error as any).message);
     }
   };
 

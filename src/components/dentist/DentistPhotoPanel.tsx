@@ -40,11 +40,14 @@ export default function DentistPhotoPanel() {
         .from('dentist_accounts')
         .select('id')
         .eq('email', user.email)
-        .single();
+        .maybeSingle();
 
       if (error) throw error;
       if (data) {
+        console.log('Dentist ID loaded:', data.id);
         setDentistId(data.id);
+      } else {
+        console.log('No dentist account found for email:', user.email);
       }
     } catch (error) {
       console.error('Error loading dentist ID:', error);
