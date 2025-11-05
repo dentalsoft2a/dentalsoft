@@ -124,10 +124,20 @@ export default function UnifiedLoginPage({ onNavigate }: UnifiedLoginPageProps) 
   const resetDentistForm = () => {
     setShowLabSelection(false);
     setLaboratoryId('');
-    setEmail('');
-    setPassword('');
-    setFirstName('');
-    setLastName('');
+  };
+
+  const getTitle = () => {
+    if (userType === 'dentist') {
+      return 'Inscription Dentiste';
+    }
+    return isRegisterMode ? 'Créer un compte' : 'Connexion';
+  };
+
+  const getSubtitle = () => {
+    if (userType === 'dentist') {
+      return 'Créez votre compte dentiste';
+    }
+    return isRegisterMode ? 'Créez votre compte laboratoire' : 'Accédez à votre espace';
   };
 
   return (
@@ -139,10 +149,10 @@ export default function UnifiedLoginPage({ onNavigate }: UnifiedLoginPageProps) 
               <DentalCloudLogo size={64} showText={false} />
             </div>
             <h1 className="text-2xl font-bold text-slate-900 mb-2">
-              Connexion
+              {getTitle()}
             </h1>
             <p className="text-slate-600 text-sm">
-              Accédez à votre espace
+              {getSubtitle()}
             </p>
           </div>
 
@@ -152,7 +162,13 @@ export default function UnifiedLoginPage({ onNavigate }: UnifiedLoginPageProps) 
               onClick={() => {
                 setUserType('laboratory');
                 setError('');
-                resetDentistForm();
+                setEmail('');
+                setPassword('');
+                setFirstName('');
+                setLastName('');
+                setLaboratoryName('');
+                setShowLabSelection(false);
+                setLaboratoryId('');
               }}
               className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
                 userType === 'laboratory'
@@ -168,7 +184,13 @@ export default function UnifiedLoginPage({ onNavigate }: UnifiedLoginPageProps) 
               onClick={() => {
                 setUserType('dentist');
                 setError('');
-                setIsRegisterMode(false);
+                setEmail('');
+                setPassword('');
+                setFirstName('');
+                setLastName('');
+                setLaboratoryName('');
+                setShowLabSelection(false);
+                setLaboratoryId('');
               }}
               className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-lg font-medium transition-all duration-200 ${
                 userType === 'dentist'
