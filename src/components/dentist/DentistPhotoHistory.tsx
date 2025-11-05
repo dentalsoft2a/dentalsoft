@@ -32,6 +32,20 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
     if (!user) return;
 
     try {
+      console.log('Current user ID:', user.id);
+
+      const { data: dentistAccount, error: dentistError } = await supabase
+        .from('dentist_accounts')
+        .select('id')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (dentistError) {
+        console.error('Error fetching dentist account:', dentistError);
+      }
+
+      console.log('Dentist account:', dentistAccount);
+
       const { data, error } = await supabase
         .from('photo_submissions')
         .select(`
@@ -42,10 +56,13 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
           status,
           created_at,
           laboratory_response,
-          laboratory_id
+          laboratory_id,
+          dentist_id
         `)
         .eq('dentist_id', user.id)
         .order('created_at', { ascending: false });
+
+      console.log('Photo submissions query result:', { data, error });
 
       if (error) {
         console.error('Error fetching submissions:', error);
