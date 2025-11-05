@@ -166,24 +166,26 @@ export default function DentistPhotoPanel() {
   return (
     <div className="fixed inset-0 bg-black">
       {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent p-4">
+      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/80 to-transparent p-4">
         <div className="flex items-center justify-between">
           <div className="text-white">
             <h1 className="text-xl font-bold">Envoi de Photo</h1>
             <p className="text-sm text-white/80">Prenez une photo pour le laboratoire</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setShowHistory(true)}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition"
+              className="p-3 bg-white/30 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all shadow-lg"
+              title="Voir l'historique"
             >
-              <History className="w-6 h-6 text-white" />
+              <History className="w-6 h-6 text-white drop-shadow-lg" />
             </button>
             <button
               onClick={handleLogout}
-              className="p-2 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition"
+              className="p-3 bg-white/30 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all shadow-lg"
+              title="Se déconnecter"
             >
-              <LogOut className="w-6 h-6 text-white" />
+              <LogOut className="w-6 h-6 text-white drop-shadow-lg" />
             </button>
           </div>
         </div>

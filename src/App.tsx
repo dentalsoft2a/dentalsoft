@@ -26,6 +26,7 @@ function AppContent() {
   const [currentPage, setCurrentPage] = useState('landing');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isDentist, setIsDentist] = useState(false);
+  const [checkingUserType, setCheckingUserType] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
@@ -41,6 +42,8 @@ function AppContent() {
   const checkSuperAdminAndSubscription = async () => {
     if (!user) return;
 
+    setCheckingUserType(true);
+
     const { data: dentistData } = await supabase
       .from('dentist_accounts')
       .select('id')
@@ -50,6 +53,7 @@ function AppContent() {
     if (dentistData) {
       setIsDentist(true);
       setCurrentPage('dentist-panel');
+      setCheckingUserType(false);
       return;
     }
 
@@ -78,6 +82,8 @@ function AppContent() {
         }
       }
     }
+
+    setCheckingUserType(false);
   };
 
   const loadLowStockCount = async () => {
@@ -142,7 +148,7 @@ function AppContent() {
     }
   };
 
-  if (loading) {
+  if (loading || checkingUserType) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex items-center gap-3">
