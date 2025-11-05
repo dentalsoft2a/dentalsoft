@@ -36,6 +36,9 @@ function AppContent() {
       checkSuperAdminAndSubscription();
       loadLowStockCount();
       loadLowStockResourcesCount();
+    } else {
+      setIsDentist(false);
+      setIsSuperAdmin(false);
     }
   }, [user]);
 
@@ -48,7 +51,7 @@ function AppContent() {
       .from('dentist_accounts')
       .select('id')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (dentistData) {
       setIsDentist(true);
