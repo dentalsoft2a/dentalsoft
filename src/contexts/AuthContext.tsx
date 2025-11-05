@@ -37,8 +37,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [laboratoryUserProfile, setLaboratoryUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const effectiveUserProfile = employeeInfo ? laboratoryUserProfile : userProfile;
-  const hasActiveSubscription = effectiveUserProfile?.subscription_status === 'active' || effectiveUserProfile?.subscription_status === 'trialing';
+  useEffect(() => {
+    if (employeeInfo) {
+      console.log('Employee Info:', employeeInfo);
+      console.log('Laboratory User Profile:', laboratoryUserProfile);
+      console.log('User Profile:', userProfile);
+    }
+  }, [employeeInfo, laboratoryUserProfile, userProfile]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -207,6 +212,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isEmployee = !!employeeInfo && !profile?.laboratory_name;
   const laboratoryId = isEmployee ? employeeInfo.laboratory_profile_id : (profile?.id || null);
+  const effectiveUserProfile = isEmployee ? laboratoryUserProfile : userProfile;
+  const hasActiveSubscription = effectiveUserProfile?.subscription_status === 'active' || effectiveUserProfile?.subscription_status === 'trialing';
 
   const effectiveUser = user ? {
     ...user,
@@ -217,7 +224,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={{
       user: effectiveUser,
       profile,
-      userProfile,
+      userProfile: effectiveUserProfile,
       loading,
       hasActiveSubscription,
       isEmployee,
