@@ -108,7 +108,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
             )}
           </div>
 
-          <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto overscroll-contain">
+          <nav className="flex-1 p-3 space-y-0.5 overflow-hidden">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.page;
@@ -125,7 +125,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                   }}
                   disabled={isDisabled}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 relative touch-manipulation
+                    w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 relative touch-manipulation
                     ${isDisabled
                       ? 'opacity-50 cursor-not-allowed text-slate-400'
                       : isActive
@@ -134,10 +134,10 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                     }
                   `}
                 >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-[15px]">{item.name}</span>
+                  <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                  <span className="text-[14px]">{item.name}</span>
                   {(showBadge || showResourceBadge) && (
-                    <span className="ml-auto px-2 py-0.5 bg-orange-500 text-white text-xs font-bold rounded-full animate-pulse">
+                    <span className="ml-auto px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full animate-pulse">
                       {badgeCount}
                     </span>
                   )}
@@ -158,15 +158,15 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                     setSidebarOpen(false);
                   }}
                   className={`
-                    w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 touch-manipulation
+                    w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 touch-manipulation
                     ${isActive
                       ? 'bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-semibold shadow-lg'
                       : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200 active:scale-98'
                     }
                   `}
                 >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
-                  <span className="text-sm">{item.name}</span>
+                  <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                  <span className="text-[13px]">{item.name}</span>
                 </button>
               );
             })}
@@ -178,10 +178,10 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                 signOut();
                 setSidebarOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-all duration-200 active:scale-98 font-medium touch-manipulation"
+              className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-all duration-200 active:scale-98 font-medium touch-manipulation"
             >
-              <LogOut className="w-5 h-5" />
-              <span>Déconnexion</span>
+              <LogOut className="w-[18px] h-[18px]" />
+              <span className="text-[14px]">Déconnexion</span>
             </button>
           </div>
         </div>
