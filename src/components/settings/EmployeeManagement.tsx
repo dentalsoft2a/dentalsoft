@@ -22,14 +22,14 @@ interface RolePermission {
 
 const AVAILABLE_MENUS = [
   { key: 'dashboard', label: 'Tableau de bord' },
+  { key: 'calendar', label: 'Calendrier' },
   { key: 'proformas', label: 'Devis' },
   { key: 'delivery-notes', label: 'Bons de livraison' },
   { key: 'invoices', label: 'Factures' },
-  { key: 'patients', label: 'Patients' },
+  { key: 'photos', label: 'Photos reçues' },
   { key: 'dentists', label: 'Dentistes' },
   { key: 'catalog', label: 'Catalogue' },
   { key: 'resources', label: 'Ressources' },
-  { key: 'calendar', label: 'Calendrier' },
   { key: 'settings', label: 'Paramètres' }
 ];
 
