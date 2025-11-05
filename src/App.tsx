@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LandingPage } from './components/landing/LandingPage';
-import LoginPage from './components/auth/LoginPage';
-import RegisterPage from './components/auth/RegisterPage';
+import UnifiedLoginPage from './components/auth/UnifiedLoginPage';
 import DashboardLayout from './components/layout/DashboardLayout';
 import DashboardPage from './components/dashboard/DashboardPage';
 import CalendarPage from './components/calendar/CalendarPage';
@@ -226,10 +225,7 @@ function AppContent() {
     }
 
     if (isPWA) {
-      if (currentPage === 'register') {
-        return <RegisterPage onToggleLogin={() => setCurrentPage('login')} onNavigate={setCurrentPage} />;
-      }
-      return <LoginPage onToggleRegister={() => setCurrentPage('register')} onNavigate={setCurrentPage} />;
+      return <UnifiedLoginPage onNavigate={setCurrentPage} />;
     }
 
     return <LandingPage onNavigate={setCurrentPage} />;
