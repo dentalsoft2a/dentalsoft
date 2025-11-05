@@ -40,12 +40,20 @@ export default function DentistPhotoPanel() {
         .from('profiles')
         .select('id, laboratory_name')
         .not('laboratory_name', 'is', null)
+        .neq('laboratory_name', '')
         .order('laboratory_name');
 
-      if (error) throw error;
-      setLaboratories(data || []);
+      if (error) {
+        console.error('Error loading laboratories:', error);
+        throw error;
+      }
+
+      console.log('Laboratories loaded:', data);
+      const filteredLabs = (data || []).filter(lab => lab.laboratory_name && lab.laboratory_name.trim() !== '');
+      console.log('Filtered laboratories:', filteredLabs);
+      setLaboratories(filteredLabs);
     } catch (error) {
-      console.error('Error loading laboratories:', error);
+      console.error('Error in loadLaboratories:', error);
     }
   };
 
