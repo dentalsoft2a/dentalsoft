@@ -64,6 +64,29 @@ export function usePermissions() {
     return resourcePermissions[action] === true;
   };
 
+  const getFirstAllowedPage = (): string => {
+    const pages = [
+      'dashboard',
+      'calendar',
+      'proformas',
+      'invoices',
+      'delivery-notes',
+      'photos',
+      'dentists',
+      'catalog',
+      'resources',
+      'settings'
+    ];
+
+    for (const page of pages) {
+      if (hasMenuAccess(page)) {
+        return page;
+      }
+    }
+
+    return 'settings';
+  };
+
   return {
     loading,
     isOwner,
@@ -71,6 +94,7 @@ export function usePermissions() {
     employeeInfo,
     rolePermissions,
     hasMenuAccess,
-    hasPermission
+    hasPermission,
+    getFirstAllowedPage
   };
 }

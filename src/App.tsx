@@ -19,9 +19,11 @@ import DentistRegisterPage from './components/dentist/DentistRegisterPage';
 import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
 import { supabase } from './lib/supabase';
+import { usePermissions } from './hooks/usePermissions';
 
 function AppContent() {
-  const { user, loading } = useAuth();
+  const { user, loading, isEmployee } = useAuth();
+  const { getFirstAllowedPage, loading: permissionsLoading } = usePermissions();
   const [currentPage, setCurrentPage] = useState('landing');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isDentist, setIsDentist] = useState(false);
@@ -29,6 +31,7 @@ function AppContent() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
+  const [initialPageSet, setInitialPageSet] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -38,8 +41,17 @@ function AppContent() {
     } else {
       setIsDentist(false);
       setIsSuperAdmin(false);
+      setInitialPageSet(false);
     }
   }, [user]);
+
+  useEffect(() => {
+    if (user && isEmployee && !permissionsLoading && !checkingUserType && !initialPageSet) {
+      const firstPage = getFirstAllowedPage();
+      setCurrentPage(firstPage);
+      setInitialPageSet(true);
+    }
+  }, [user, isEmployee, permissionsLoading, checkingUserType, initialPageSet]);
 
   const checkSuperAdminAndSubscription = async () => {
     if (!user) return;
@@ -68,7 +80,11 @@ function AppContent() {
     if (data) {
       setIsSuperAdmin(data.role === 'super_admin');
       setSubscriptionStatus(data.subscription_status);
-      setCurrentPage('dashboard');
+
+      if (!isEmployee) {
+        setCurrentPage('dashboard');
+        setInitialPageSet(true);
+      }
 
       // Check if subscription or trial has expired
       const now = new Date();
