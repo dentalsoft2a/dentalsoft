@@ -26,12 +26,8 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
     setLoading(true);
 
     try {
-      if (isDentistMode) {
-        if (isRegisterMode) {
-          onNavigate?.('dentist-register');
-        } else {
-          onNavigate?.('dentist-login');
-        }
+      if (isDentistMode && isRegisterMode) {
+        onNavigate?.('dentist-register');
         return;
       }
 

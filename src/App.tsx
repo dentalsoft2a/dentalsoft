@@ -16,7 +16,6 @@ import { SupportPage } from './components/support/SupportPage';
 import { SubscriptionPage } from './components/subscription/SubscriptionPage';
 import HelpCenterPage from './components/help-center/HelpCenterPage';
 import DentistRegisterPage from './components/dentist/DentistRegisterPage';
-import DentistLoginPage from './components/dentist/DentistLoginPage';
 import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
 import { supabase } from './lib/supabase';
@@ -165,9 +164,6 @@ function AppContent() {
   if (!user) {
     if (currentPage === 'dentist-register') {
       return <DentistRegisterPage onNavigate={setCurrentPage} />;
-    }
-    if (currentPage === 'dentist-login') {
-      return <DentistLoginPage onNavigate={setCurrentPage} />;
     }
     return <LandingPage onNavigate={setCurrentPage} />;
   }
