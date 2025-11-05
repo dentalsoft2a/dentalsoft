@@ -11,6 +11,7 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
   const { signIn, signUp } = useAuth();
   const [isAuthMode, setIsAuthMode] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  const [isDentistMode, setIsDentistMode] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -25,6 +26,15 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
     setLoading(true);
 
     try {
+      if (isDentistMode) {
+        if (isRegisterMode) {
+          onNavigate?.('dentist-register');
+        } else {
+          onNavigate?.('dentist-login');
+        }
+        return;
+      }
+
       if (isRegisterMode) {
         const { error } = await signUp(email, password, firstName, lastName, laboratoryName);
         if (error) throw error;
@@ -42,6 +52,7 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
   const toggleAuthMode = () => {
     setIsAuthMode(!isAuthMode);
     setIsRegisterMode(false);
+    setIsDentistMode(false);
     setError('');
   };
 
@@ -107,22 +118,12 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <DentalCloudLogo size={32} showText={true} />
-            <div className="flex items-center gap-2 sm:gap-3">
-              <button
-                onClick={() => onNavigate?.('dentist-register')}
-                className="px-2 sm:px-4 py-2 rounded-lg border-2 border-blue-500 text-blue-600 font-medium hover:bg-blue-50 transition-all duration-300 flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap"
-              >
-                <Camera className="w-4 h-4 flex-shrink-0" />
-                <span className="hidden xs:inline">Compte Dentiste</span>
-                <span className="xs:hidden">Dentiste</span>
-              </button>
-              <button
-                onClick={toggleAuthMode}
-                className="px-3 sm:px-6 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-medium hover:shadow-lg transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
-              >
-                {isAuthMode ? 'Retour' : 'Connexion'}
-              </button>
-            </div>
+            <button
+              onClick={toggleAuthMode}
+              className="px-3 sm:px-6 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-medium hover:shadow-lg transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
+            >
+              {isAuthMode ? 'Retour' : 'Connexion'}
+            </button>
           </div>
         </div>
       </nav>
@@ -140,6 +141,35 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
               <p className="text-slate-600 mt-2">
                 {isRegisterMode ? '30 jours d\'essai gratuit' : 'Accédez à votre espace'}
               </p>
+
+              <div className="flex items-center justify-center gap-2 mt-6 bg-slate-100 rounded-lg p-1">
+                <button
+                  onClick={() => setIsDentistMode(false)}
+                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-all ${
+                    !isDentistMode
+                      ? 'bg-white text-primary-600 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <Package className="w-4 h-4" />
+                    Laboratoire
+                  </div>
+                </button>
+                <button
+                  onClick={() => setIsDentistMode(true)}
+                  className={`flex-1 px-4 py-2 rounded-md font-medium transition-all ${
+                    isDentistMode
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  <div className="flex items-center justify-center gap-2">
+                    <Camera className="w-4 h-4" />
+                    Dentiste
+                  </div>
+                </button>
+              </div>
             </div>
 
             <form onSubmit={handleAuth} className="space-y-4">
