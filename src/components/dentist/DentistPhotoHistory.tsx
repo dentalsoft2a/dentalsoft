@@ -42,16 +42,38 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
           status,
           created_at,
           laboratory_response,
-          laboratory:profiles!photo_submissions_laboratory_id_fkey(laboratory_name)
+          laboratory_id
         `)
         .eq('dentist_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching submissions:', error);
+        throw error;
+      }
+
+      if (!data || data.length === 0) {
+        setSubmissions([]);
+        setLoading(false);
+        return;
+      }
+
+      const laboratoryIds = [...new Set(data.map(item => item.laboratory_id))];
+
+      const { data: labData, error: labError } = await supabase
+        .from('profiles')
+        .select('id, laboratory_name')
+        .in('id', laboratoryIds);
+
+      if (labError) {
+        console.error('Error fetching laboratories:', labError);
+      }
+
+      const labMap = new Map(labData?.map(lab => [lab.id, lab.laboratory_name]) || []);
 
       const formatted = data.map((item: any) => ({
         ...item,
-        laboratory_name: item.laboratory?.laboratory_name || 'Laboratoire inconnu'
+        laboratory_name: labMap.get(item.laboratory_id) || 'Laboratoire inconnu'
       }));
 
       setSubmissions(formatted);
