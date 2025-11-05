@@ -23,7 +23,7 @@ import { usePermissions } from './hooks/usePermissions';
 
 function AppContent() {
   const { user, loading, isEmployee } = useAuth();
-  const { getFirstAllowedPage, loading: permissionsLoading } = usePermissions();
+  const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
   const [currentPage, setCurrentPage] = useState('landing');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isDentist, setIsDentist] = useState(false);
@@ -52,6 +52,29 @@ function AppContent() {
       setInitialPageSet(true);
     }
   }, [user, isEmployee, permissionsLoading, checkingUserType, initialPageSet]);
+
+  useEffect(() => {
+    if (user && isEmployee && !permissionsLoading) {
+      const pageToMenuKey: Record<string, string> = {
+        'dashboard': 'dashboard',
+        'calendar': 'calendar',
+        'proformas': 'proformas',
+        'invoices': 'invoices',
+        'delivery-notes': 'delivery-notes',
+        'photos': 'photos',
+        'dentists': 'dentists',
+        'catalog': 'catalog',
+        'resources': 'resources',
+        'settings': 'settings'
+      };
+
+      const menuKey = pageToMenuKey[currentPage];
+      if (menuKey && !hasMenuAccess(menuKey)) {
+        const firstAllowedPage = getFirstAllowedPage();
+        setCurrentPage(firstAllowedPage);
+      }
+    }
+  }, [currentPage, user, isEmployee, permissionsLoading]);
 
   const checkSuperAdminAndSubscription = async () => {
     if (!user) return;
@@ -166,7 +189,7 @@ function AppContent() {
     }
   };
 
-  if (loading || checkingUserType) {
+  if (loading || checkingUserType || (isEmployee && permissionsLoading)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex items-center gap-3">
