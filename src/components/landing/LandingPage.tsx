@@ -107,17 +107,18 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <DentalCloudLogo size={32} showText={true} />
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={() => onNavigate?.('dentist-register')}
-                className="px-4 py-2 rounded-lg border-2 border-blue-500 text-blue-600 font-medium hover:bg-blue-50 transition-all duration-300 flex items-center gap-2"
+                className="px-2 sm:px-4 py-2 rounded-lg border-2 border-blue-500 text-blue-600 font-medium hover:bg-blue-50 transition-all duration-300 flex items-center gap-1 sm:gap-2 text-sm sm:text-base whitespace-nowrap"
               >
-                <Camera className="w-4 h-4" />
-                Compte Dentiste
+                <Camera className="w-4 h-4 flex-shrink-0" />
+                <span className="hidden xs:inline">Compte Dentiste</span>
+                <span className="xs:hidden">Dentiste</span>
               </button>
               <button
                 onClick={toggleAuthMode}
-                className="px-6 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-medium hover:shadow-lg transition-all duration-300"
+                className="px-3 sm:px-6 py-2 rounded-lg bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-medium hover:shadow-lg transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
               >
                 {isAuthMode ? 'Retour' : 'Connexion'}
               </button>
