@@ -20,7 +20,7 @@ interface PhotoSubmission {
 }
 
 export default function PhotoSubmissionsPage() {
-  const { user } = useAuth();
+  const { laboratoryId } = useAuth();
   const [submissions, setSubmissions] = useState<PhotoSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoSubmission | null>(null);
@@ -30,10 +30,10 @@ export default function PhotoSubmissionsPage() {
 
   useEffect(() => {
     loadSubmissions();
-  }, [user]);
+  }, [laboratoryId]);
 
   const loadSubmissions = async () => {
-    if (!user) return;
+    if (!laboratoryId) return;
 
     try {
       const { data, error } = await supabase
@@ -46,7 +46,7 @@ export default function PhotoSubmissionsPage() {
             phone
           )
         `)
-        .eq('laboratory_id', user.id)
+        .eq('laboratory_id', laboratoryId)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

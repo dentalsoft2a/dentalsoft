@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
+import { supabase } from '../../lib/supabase';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 
 interface DashboardLayoutProps {
@@ -34,12 +35,26 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, currentPage, onNavigate, isSuperAdmin, lowStockCount = 0, lowStockResourcesCount = 0, hasValidSubscription = true }: DashboardLayoutProps) {
-  const { profile, userProfile, signOut } = useAuth();
-  const { hasMenuAccess, isOwner, isEmployee } = usePermissions();
+  const { profile, userProfile, signOut, isEmployee, laboratoryId } = useAuth();
+  const { hasMenuAccess, isOwner } = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [laboratoryProfile, setLaboratoryProfile] = useState<any>(null);
 
   const isSubscriptionInactive = userProfile?.subscription_status !== 'active' && userProfile?.subscription_status !== 'trialing';
   const showSubscriptionWarning = isSubscriptionInactive && !isSuperAdmin;
+
+  useEffect(() => {
+    if (isEmployee && laboratoryId) {
+      supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', laboratoryId)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data) setLaboratoryProfile(data);
+        });
+    }
+  }, [isEmployee, laboratoryId]);
 
   useEffect(() => {
     if (sidebarOpen) {
@@ -97,10 +112,12 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
               <h1 className="font-bold text-lg bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">DentalCloud</h1>
             </div>
           </div>
-          {profile && (
+          {(profile || laboratoryProfile) && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-primary-50 to-cyan-50 rounded-full border border-primary-100">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs font-medium text-slate-700 truncate max-w-[100px]">{profile.first_name}</span>
+              <span className="text-xs font-medium text-slate-700 truncate max-w-[100px]">
+                {isEmployee ? laboratoryProfile?.laboratory_name : profile?.first_name}
+              </span>
             </div>
           )}
         </div>
@@ -123,10 +140,14 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                 <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
-            {profile && (
+            {(profile || laboratoryProfile) && (
               <div className="px-3 py-2 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg border border-slate-200">
-                <p className="text-xs font-semibold text-slate-900 truncate">{profile.laboratory_name}</p>
-                <p className="text-xs text-slate-500 mt-0.5 truncate">{profile.email}</p>
+                <p className="text-xs font-semibold text-slate-900 truncate">
+                  {isEmployee ? laboratoryProfile?.laboratory_name : profile?.laboratory_name}
+                </p>
+                <p className="text-xs text-slate-500 mt-0.5 truncate">
+                  {isEmployee ? profile?.email || userProfile?.email : profile?.email}
+                </p>
               </div>
             )}
           </div>

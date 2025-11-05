@@ -6,12 +6,21 @@ import type { Database } from '../lib/database.types';
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
 
+interface EmployeeInfo {
+  laboratory_profile_id: string;
+  role_name: string;
+  is_active: boolean;
+}
+
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   userProfile: UserProfile | null;
   loading: boolean;
   hasActiveSubscription: boolean;
+  isEmployee: boolean;
+  employeeInfo: EmployeeInfo | null;
+  laboratoryId: string | null;
   signUp: (email: string, password: string, firstName: string, lastName: string, laboratoryName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -24,6 +33,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [employeeInfo, setEmployeeInfo] = useState<EmployeeInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
   const hasActiveSubscription = userProfile?.subscription_status === 'active' || userProfile?.subscription_status === 'trialing';
@@ -56,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = async (userId: string) => {
     try {
-      const [profileResult, userProfileResult] = await Promise.all([
+      const [profileResult, userProfileResult, employeeResult] = await Promise.all([
         supabase
           .from('profiles')
           .select('*')
@@ -66,6 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .from('user_profiles')
           .select('*')
           .eq('id', userId)
+          .maybeSingle(),
+        supabase
+          .from('laboratory_employees')
+          .select('laboratory_profile_id, role_name, is_active')
+          .eq('user_profile_id', userId)
+          .eq('is_active', true)
           .maybeSingle()
       ]);
 
@@ -74,6 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setProfile(profileResult.data);
       setUserProfile(userProfileResult.data);
+      setEmployeeInfo(employeeResult.data);
     } catch (error) {
       console.error('Error loading profile:', error);
     } finally {
@@ -145,12 +162,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       setProfile(null);
       setUserProfile(null);
+      setEmployeeInfo(null);
     } catch (error) {
       console.error('Error signing out:', error);
       // Force local cleanup even if server fails
       setUser(null);
       setProfile(null);
       setUserProfile(null);
+      setEmployeeInfo(null);
     }
   };
 
@@ -172,8 +191,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const isEmployee = !!employeeInfo && !profile?.laboratory_name;
+  const laboratoryId = isEmployee ? employeeInfo.laboratory_profile_id : (profile?.id || null);
+
+  const effectiveUser = user ? {
+    ...user,
+    id: laboratoryId || user.id
+  } : null;
+
   return (
-    <AuthContext.Provider value={{ user, profile, userProfile, loading, hasActiveSubscription, signUp, signIn, signOut, updateProfile }}>
+    <AuthContext.Provider value={{
+      user: effectiveUser,
+      profile,
+      userProfile,
+      loading,
+      hasActiveSubscription,
+      isEmployee,
+      employeeInfo,
+      laboratoryId,
+      signUp,
+      signIn,
+      signOut,
+      updateProfile
+    }}>
       {children}
     </AuthContext.Provider>
   );
