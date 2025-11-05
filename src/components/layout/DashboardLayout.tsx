@@ -20,6 +20,7 @@ import {
   Camera
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { usePermissions } from '../../hooks/usePermissions';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 
 interface DashboardLayoutProps {
@@ -34,6 +35,7 @@ interface DashboardLayoutProps {
 
 export default function DashboardLayout({ children, currentPage, onNavigate, isSuperAdmin, lowStockCount = 0, lowStockResourcesCount = 0, hasValidSubscription = true }: DashboardLayoutProps) {
   const { profile, userProfile, signOut } = useAuth();
+  const { hasMenuAccess, isOwner, isEmployee } = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const isSubscriptionInactive = userProfile?.subscription_status !== 'active' && userProfile?.subscription_status !== 'trialing';
@@ -54,18 +56,22 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     };
   }, [sidebarOpen]);
 
-  const navigation = [
-    { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dashboard', allowedForCancelled: true },
-    { name: 'Calendrier', icon: Calendar, page: 'calendar', allowedForCancelled: false },
-    { name: 'Proformas', icon: FileText, page: 'proformas', allowedForCancelled: true },
-    { name: 'Factures', icon: Receipt, page: 'invoices', allowedForCancelled: true },
-    { name: 'Bons de livraison', icon: Truck, page: 'delivery-notes', allowedForCancelled: true },
-    { name: 'Photos reçues', icon: Camera, page: 'photos', allowedForCancelled: false },
-    { name: 'Dentistes', icon: Users, page: 'dentists', allowedForCancelled: false },
-    { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false },
-    { name: 'Ressources', icon: Box, page: 'resources', allowedForCancelled: false },
-    { name: 'Paramètres', icon: Settings, page: 'settings', allowedForCancelled: true },
+  const allNavigation = [
+    { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dashboard', allowedForCancelled: true, menuKey: 'dashboard' },
+    { name: 'Calendrier', icon: Calendar, page: 'calendar', allowedForCancelled: false, menuKey: 'calendar' },
+    { name: 'Proformas', icon: FileText, page: 'proformas', allowedForCancelled: true, menuKey: 'proformas' },
+    { name: 'Factures', icon: Receipt, page: 'invoices', allowedForCancelled: true, menuKey: 'invoices' },
+    { name: 'Bons de livraison', icon: Truck, page: 'delivery-notes', allowedForCancelled: true, menuKey: 'delivery-notes' },
+    { name: 'Photos reçues', icon: Camera, page: 'photos', allowedForCancelled: false, menuKey: 'photos' },
+    { name: 'Dentistes', icon: Users, page: 'dentists', allowedForCancelled: false, menuKey: 'dentists' },
+    { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog' },
+    { name: 'Ressources', icon: Box, page: 'resources', allowedForCancelled: false, menuKey: 'resources' },
+    { name: 'Paramètres', icon: Settings, page: 'settings', allowedForCancelled: true, menuKey: 'settings' },
   ];
+
+  const navigation = isEmployee
+    ? allNavigation.filter(item => hasMenuAccess(item.menuKey))
+    : allNavigation;
 
   const bottomNavigation = [
     { name: 'Centre d\'aide', icon: HelpCircle, page: 'help-center' },

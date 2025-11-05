@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText } from 'lucide-react';
+import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users } from 'lucide-react';
+import EmployeeManagement from './EmployeeManagement';
 
 export default function SettingsPage() {
+  const [activeTab, setActiveTab] = useState<'profile' | 'employees'>('profile');
   const { profile, updateProfile } = useAuth();
   const [formData, setFormData] = useState({
     first_name: profile?.first_name || '',
@@ -81,13 +83,43 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50/30 p-6">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-4xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">Paramètres</h1>
           <p className="text-slate-600 mt-3 text-lg">Gérez les informations de votre laboratoire</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="mb-8">
+          <div className="flex gap-2 border-b border-slate-200">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all ${
+                activeTab === 'profile'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <User className="w-5 h-5" />
+              Profil
+            </button>
+            <button
+              onClick={() => setActiveTab('employees')}
+              className={`flex items-center gap-2 px-6 py-3 font-semibold transition-all ${
+                activeTab === 'employees'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-5 h-5" />
+              Employés
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'employees' ? (
+          <EmployeeManagement />
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             <div className="bg-white rounded-3xl shadow-xl border border-slate-200/50 hover:shadow-2xl transition-all duration-300 overflow-hidden">
               <div className="relative p-8 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 backdrop-blur-xl">
@@ -353,6 +385,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
