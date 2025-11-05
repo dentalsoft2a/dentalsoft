@@ -20,7 +20,7 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
   const [laboratoryName, setLaboratoryName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [price, setPrice] = useState<number>(49.99);
+  const [price, setPrice] = useState<number>(59.99);
 
   useEffect(() => {
     loadPrice();
