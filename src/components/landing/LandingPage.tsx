@@ -740,9 +740,11 @@ export function LandingPage() {
               <div className="grid md:grid-cols-3 gap-8">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-cyan-500 flex items-center justify-center">
-                      <Package className="w-6 h-6 text-white" />
-                    </div>
+                    <img
+                      src="/logo.png"
+                      alt="DentalCloud Logo"
+                      className="w-10 h-10 rounded-xl"
+                    />
                     <span className="text-xl font-bold">DentalCloud</span>
                   </div>
                   <p className="text-slate-400">

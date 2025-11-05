@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['image0 (3) (1) (1).png'],
+      includeAssets: ['logo.png'],
       manifest: {
         name: 'DentalCloud - Gestion de Laboratoire',
         short_name: 'DentalCloud',
@@ -19,7 +19,7 @@ export default defineConfig({
         orientation: 'portrait',
         icons: [
           {
-            src: 'image0 (3) (1) (1).png',
+            src: 'logo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable'

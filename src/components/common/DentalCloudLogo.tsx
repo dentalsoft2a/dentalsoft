@@ -8,11 +8,11 @@ export default function DentalCloudLogo({ size = 40, className = '', showText = 
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img
-        src="/image0 (2) (1).png"
+        src="/logo.png"
         alt="DentalCloud Logo"
         width={size}
         height={size}
-        className="rounded-lg"
+        className="rounded-xl"
       />
 
       {showText && (
