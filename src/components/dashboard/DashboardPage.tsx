@@ -1063,7 +1063,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     onClick={() => openPaymentModal(invoice)}
                     className="w-full flex items-center justify-center gap-1.5 px-3 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg hover:from-blue-600 hover:to-cyan-600 transition text-xs font-medium"
                   >
-                    <DollarSign className="w-3.5 h-3.5" />
+                    <span className="text-sm font-bold">€</span>
                     Gérer les paiements
                   </button>
                 </div>
