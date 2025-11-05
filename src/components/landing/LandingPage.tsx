@@ -41,14 +41,26 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
   };
 
   const loadContactPhone = async () => {
-    const { data } = await supabase
-      .from('smtp_settings')
-      .select('contact_phone')
-      .eq('is_active', true)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from('smtp_settings')
+        .select('contact_phone')
+        .eq('is_active', true)
+        .maybeSingle();
 
-    if (data && data.contact_phone) {
-      setContactPhone(data.contact_phone);
+      if (error) {
+        console.error('Error loading contact phone:', error);
+        return;
+      }
+
+      if (data?.contact_phone) {
+        setContactPhone(data.contact_phone);
+        console.log('Contact phone loaded:', data.contact_phone);
+      } else {
+        console.log('No contact phone found in database');
+      }
+    } catch (error) {
+      console.error('Error in loadContactPhone:', error);
     }
   };
 
