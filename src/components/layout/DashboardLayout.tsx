@@ -92,7 +92,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     { name: 'Centre d\'aide', icon: HelpCircle, page: 'help-center', menuKey: 'help-center' },
     { name: 'Mon abonnement', icon: CreditCard, page: 'subscription' },
     { name: 'Support', icon: MessageSquare, page: 'support' },
-    ...(isSuperAdmin ? [{ name: 'Admin', icon: Shield, page: 'admin' }] : [])
+    ...(isSuperAdmin && !isEmployee ? [{ name: 'Admin', icon: Shield, page: 'admin' }] : [])
   ];
 
   const bottomNavigation = isEmployee
