@@ -447,9 +447,9 @@ export default function PhotoSubmissionsPage() {
       )}
 
       {selectedPhoto && (
-        <div className="fixed inset-0 bg-gradient-to-br from-black/90 via-purple-900/30 to-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setSelectedPhoto(null)}>
+        <div className="fixed inset-0 bg-gradient-to-br from-black/90 via-blue-900/30 to-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setSelectedPhoto(null)}>
           <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 px-6 py-5 flex items-center justify-between shadow-lg">
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 px-6 py-5 flex items-center justify-between shadow-lg">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
                   <Camera className="w-5 h-5 text-white" />
@@ -464,10 +464,10 @@ export default function PhotoSubmissionsPage() {
               </button>
             </div>
 
-            <div className="p-6 bg-gradient-to-br from-slate-50 to-purple-50 overflow-y-auto max-h-[calc(90vh-80px)]">
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-cyan-50 overflow-y-auto max-h-[calc(90vh-80px)]">
               <div className="mb-6 flex justify-center">
                 <div className="relative group w-1/2 cursor-pointer" onClick={() => setFullscreenImage(true)}>
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-200 to-cyan-200 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
                   <img
                     src={selectedPhoto.photo_url}
                     alt={`Photo - ${selectedPhoto.patient_name}`}
@@ -509,16 +509,16 @@ export default function PhotoSubmissionsPage() {
                   </div>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-5 border-2 border-purple-200 shadow-lg hover:shadow-xl transition-shadow">
+                <div className="bg-gradient-to-br from-cyan-50 to-blue-50 rounded-2xl p-5 border-2 border-cyan-200 shadow-lg hover:shadow-xl transition-shadow">
                   <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
+                    <div className="w-8 h-8 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-lg flex items-center justify-center shadow-md">
                       <User className="w-4 h-4 text-white" />
                     </div>
                     <h3 className="text-sm font-bold text-slate-800">Dentiste</h3>
                   </div>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-lg p-3">
-                      <User className="w-4 h-4 text-purple-600" />
+                      <User className="w-4 h-4 text-cyan-600" />
                       <span className="font-semibold text-slate-900">Dr. {selectedPhoto.dentist_accounts?.name}</span>
                     </div>
                     <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3">
