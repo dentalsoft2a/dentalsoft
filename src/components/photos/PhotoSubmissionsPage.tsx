@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download } from 'lucide-react';
+import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -144,6 +144,14 @@ export default function PhotoSubmissionsPage() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Photos Reçues</h1>
             <p className="text-slate-600">Photos envoyées par les dentistes</p>
+          </div>
+        </div>
+
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3 mb-6">
+          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-blue-800">
+            <p className="font-medium mb-1">Conservation des photos</p>
+            <p>Les photos sont automatiquement supprimées après 1 mois pour optimiser le stockage. Pensez à télécharger ou sauvegarder les images importantes.</p>
           </div>
         </div>
 
