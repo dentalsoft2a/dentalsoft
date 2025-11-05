@@ -37,6 +37,23 @@ export function SubscriptionPage() {
     }
   }, [user]);
 
+  useEffect(() => {
+    const subscription = supabase
+      .channel('subscription_plans_changes')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'subscription_plans'
+      }, () => {
+        loadData();
+      })
+      .subscribe();
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user]);
+
   const loadData = async () => {
     if (!user) return;
 
