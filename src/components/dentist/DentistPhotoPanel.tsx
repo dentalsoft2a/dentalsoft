@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, X, Send, Image as ImageIcon, CheckCircle } from 'lucide-react';
+import { Camera, X, Send, CheckCircle, LogOut } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -9,7 +9,7 @@ interface Laboratory {
 }
 
 export default function DentistPhotoPanel() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [laboratories, setLaboratories] = useState<Laboratory[]>([]);
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -18,13 +18,12 @@ export default function DentistPhotoPanel() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
-  const [showCamera, setShowCamera] = useState(false);
 
   useEffect(() => {
     loadLaboratories();
+    startCamera();
   }, []);
 
   useEffect(() => {
@@ -53,11 +52,14 @@ export default function DentistPhotoPanel() {
   const startCamera = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+        video: {
+          facingMode: 'environment',
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        },
         audio: false
       });
       setStream(mediaStream);
-      setShowCamera(true);
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
       }
@@ -72,7 +74,6 @@ export default function DentistPhotoPanel() {
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
     }
-    setShowCamera(false);
   };
 
   const capturePhoto = () => {
@@ -83,23 +84,10 @@ export default function DentistPhotoPanel() {
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(videoRef.current, 0, 0);
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        const imageData = canvas.toDataURL('image/jpeg', 0.9);
         setCapturedImage(imageData);
-        stopCamera();
         setShowModal(true);
       }
-    }
-  };
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCapturedImage(reader.result as string);
-        setShowModal(true);
-      };
-      reader.readAsDataURL(file);
     }
   };
 
@@ -161,86 +149,53 @@ export default function DentistPhotoPanel() {
     setSuccess(false);
   };
 
+  const handleLogout = async () => {
+    await signOut();
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-cyan-50 p-4">
-      <div className="max-w-2xl mx-auto">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Envoi de Photo</h1>
-          <p className="text-slate-600">Prenez une photo et envoyez-la à un laboratoire</p>
+    <div className="fixed inset-0 bg-black">
+      {/* Header */}
+      <div className="absolute top-0 left-0 right-0 z-10 bg-gradient-to-b from-black/60 to-transparent p-4">
+        <div className="flex items-center justify-between">
+          <div className="text-white">
+            <h1 className="text-xl font-bold">Envoi de Photo</h1>
+            <p className="text-sm text-white/80">Prenez une photo pour le laboratoire</p>
+          </div>
+          <button
+            onClick={handleLogout}
+            className="p-2 bg-white/20 hover:bg-white/30 rounded-lg backdrop-blur-sm transition"
+          >
+            <LogOut className="w-6 h-6 text-white" />
+          </button>
         </div>
-
-        {!showCamera ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button
-              onClick={startCamera}
-              className="flex flex-col items-center justify-center gap-4 bg-white rounded-2xl shadow-xl border border-slate-200 p-12 hover:shadow-2xl transition-all"
-            >
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center">
-                <Camera className="w-10 h-10 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Prendre une photo</h2>
-                <p className="text-sm text-slate-600 mt-1">Utiliser l'appareil photo</p>
-              </div>
-            </button>
-
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-center justify-center gap-4 bg-white rounded-2xl shadow-xl border border-slate-200 p-12 hover:shadow-2xl transition-all"
-            >
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
-                <ImageIcon className="w-10 h-10 text-white" />
-              </div>
-              <div>
-                <h2 className="text-xl font-bold text-slate-900">Choisir une photo</h2>
-                <p className="text-sm text-slate-600 mt-1">Depuis la galerie</p>
-              </div>
-            </button>
-          </div>
-        ) : (
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
-            <div className="relative">
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                className="w-full"
-              />
-              <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/50 to-transparent">
-                <div className="flex items-center justify-center gap-4">
-                  <button
-                    onClick={stopCamera}
-                    className="px-6 py-3 bg-white/90 text-slate-900 rounded-lg font-medium hover:bg-white transition"
-                  >
-                    Annuler
-                  </button>
-                  <button
-                    onClick={capturePhoto}
-                    className="px-8 py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition flex items-center gap-2"
-                  >
-                    <Camera className="w-5 h-5" />
-                    Capturer
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFileSelect}
-          className="hidden"
-        />
       </div>
 
+      {/* Camera View */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+
+      {/* Capture Button */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/60 to-transparent p-8">
+        <div className="flex items-center justify-center">
+          <button
+            onClick={capturePhoto}
+            className="w-20 h-20 bg-white rounded-full flex items-center justify-center shadow-2xl hover:scale-110 transition-transform active:scale-95 border-4 border-white/30"
+          >
+            <Camera className="w-10 h-10 text-slate-900" />
+          </button>
+        </div>
+      </div>
+
+      {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
               <h2 className="text-xl font-bold text-slate-900">Envoyer la photo</h2>
               <button
                 onClick={closeModal}
@@ -277,7 +232,7 @@ export default function DentistPhotoPanel() {
                       <select
                         value={selectedLab}
                         onChange={(e) => setSelectedLab(e.target.value)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                         required
                       >
                         <option value="">Sélectionner un laboratoire</option>
@@ -291,13 +246,13 @@ export default function DentistPhotoPanel() {
 
                     <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
-                        Nom du patient *
+                        Nom et prénom du patient *
                       </label>
                       <input
                         type="text"
                         value={patientName}
                         onChange={(e) => setPatientName(e.target.value)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                         placeholder="Jean Dupont"
                         required
                       />
@@ -310,7 +265,7 @@ export default function DentistPhotoPanel() {
                       <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}
-                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
                         rows={3}
                         placeholder="Informations complémentaires..."
                       />
@@ -319,7 +274,7 @@ export default function DentistPhotoPanel() {
                     <button
                       type="submit"
                       disabled={loading}
-                      className="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
                     >
                       <Send className="w-5 h-5" />
                       {loading ? 'Envoi en cours...' : 'Envoyer au laboratoire'}
