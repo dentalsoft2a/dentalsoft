@@ -175,7 +175,14 @@ export function SubscriptionSettings() {
               type="number"
               step="0.01"
               value={plan.price_monthly}
-              onChange={(e) => setPlan({ ...plan, price_monthly: parseFloat(e.target.value) })}
+              onChange={(e) => {
+                const value = e.target.value;
+                const numValue = value === '' ? 0 : parseFloat(value);
+                if (!isNaN(numValue)) {
+                  console.log('📝 Updating price_monthly to:', numValue);
+                  setPlan({ ...plan, price_monthly: numValue });
+                }
+              }}
               className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
             />
           </div>
