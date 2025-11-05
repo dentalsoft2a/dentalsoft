@@ -627,6 +627,10 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     }
 
     try {
+      const noteText = paymentReference
+        ? `Référence: ${paymentReference}${paymentNotes ? '\n' + paymentNotes : ''}`
+        : paymentNotes || null;
+
       const { error } = await supabase
         .from('invoice_payments')
         .insert({
@@ -635,8 +639,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
           amount,
           payment_date: paymentDate,
           payment_method: paymentMethod,
-          reference: paymentReference || null,
-          notes: paymentNotes || null,
+          notes: noteText,
         });
 
       if (error) throw error;
@@ -1554,13 +1557,8 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                                 {new Date(payment.payment_date).toLocaleDateString('fr-FR')}
                               </span>
                             </div>
-                            {payment.reference && (
-                              <p className="text-xs text-slate-600 mb-1">
-                                Référence: {payment.reference}
-                              </p>
-                            )}
                             {payment.notes && (
-                              <p className="text-xs text-slate-600">
+                              <p className="text-xs text-slate-600 whitespace-pre-line">
                                 {payment.notes}
                               </p>
                             )}
