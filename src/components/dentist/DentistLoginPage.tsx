@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { Camera, ArrowLeft } from 'lucide-react';
 import DentalCloudLogo from '../common/DentalCloudLogo';
@@ -8,17 +8,12 @@ interface DentistLoginPageProps {
 }
 
 export default function DentistLoginPage({ onNavigate }: DentistLoginPageProps) {
-  const { signIn, user } = useAuth();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  useEffect(() => {
-    if (user) {
-      onNavigate('dentist-panel');
-    }
-  }, [user]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
