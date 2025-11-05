@@ -5,7 +5,7 @@ import EmployeeManagement from './EmployeeManagement';
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'employees'>('profile');
-  const { profile, updateProfile } = useAuth();
+  const { profile, updateProfile, userEmail } = useAuth();
   const [formData, setFormData] = useState({
     first_name: profile?.first_name || '',
     last_name: profile?.last_name || '',
@@ -356,7 +356,7 @@ export default function SettingsPage() {
                 </div>
                 <div className="bg-gradient-to-br from-slate-50 to-white p-4 rounded-xl border border-slate-200/50">
                   <p className="text-xs font-medium text-slate-500 mb-1">Email</p>
-                  <p className="text-sm font-bold text-slate-900 break-all">{profile?.email}</p>
+                  <p className="text-sm font-bold text-slate-900 break-all">{userEmail}</p>
                 </div>
               </div>
             </div>

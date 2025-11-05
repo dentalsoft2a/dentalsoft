@@ -21,6 +21,7 @@ interface AuthContextType {
   isEmployee: boolean;
   employeeInfo: EmployeeInfo | null;
   laboratoryId: string | null;
+  userEmail: string | null;
   signUp: (email: string, password: string, firstName: string, lastName: string, laboratoryName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -228,6 +229,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     id: laboratoryId || user.id
   } : null;
 
+  const userEmail = user?.email || null;
+
   return (
     <AuthContext.Provider value={{
       user: effectiveUser,
@@ -238,6 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isEmployee,
       employeeInfo,
       laboratoryId,
+      userEmail,
       signUp,
       signIn,
       signOut,
