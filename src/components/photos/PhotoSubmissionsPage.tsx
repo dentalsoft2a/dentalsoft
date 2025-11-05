@@ -446,38 +446,49 @@ export default function PhotoSubmissionsPage() {
       )}
 
       {selectedPhoto && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setSelectedPhoto(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900">Détails de la photo</h2>
+        <div className="fixed inset-0 bg-gradient-to-br from-black/90 via-purple-900/30 to-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50" onClick={() => setSelectedPhoto(null)}>
+          <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 px-6 py-5 flex items-center justify-between shadow-lg">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
+                  <Camera className="w-5 h-5 text-white" />
+                </div>
+                <h2 className="text-xl font-bold text-white drop-shadow-lg">Détails de la photo</h2>
+              </div>
               <button
                 onClick={() => setSelectedPhoto(null)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition"
+                className="p-2 hover:bg-white/20 rounded-xl transition-all duration-300 backdrop-blur-sm"
               >
-                <XCircle className="w-5 h-5 text-slate-600" />
+                <XCircle className="w-6 h-6 text-white" />
               </button>
             </div>
 
-            <div className="p-6">
-              <div className="mb-6">
+            <div className="p-6 bg-gradient-to-br from-slate-50 to-purple-50 overflow-y-auto max-h-[calc(90vh-80px)]">
+              <div className="mb-6 relative group">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-200 to-pink-200 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
                 <img
                   src={selectedPhoto.photo_url}
                   alt={`Photo - ${selectedPhoto.patient_name}`}
-                  className="w-full rounded-xl"
+                  className="w-full rounded-2xl shadow-2xl relative z-10 border-4 border-white"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Informations patient</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-900">{selectedPhoto.patient_name}</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-2xl p-5 border-2 border-blue-200 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center shadow-md">
+                      <User className="w-4 h-4 text-white" />
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Calendar className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-600">
+                    <h3 className="text-sm font-bold text-slate-800">Informations patient</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-lg p-3">
+                      <User className="w-4 h-4 text-blue-600" />
+                      <span className="font-semibold text-slate-900">{selectedPhoto.patient_name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-lg p-3">
+                      <Calendar className="w-4 h-4 text-blue-600" />
+                      <span className="text-sm text-slate-700">
                         {new Date(selectedPhoto.created_at).toLocaleDateString('fr-FR', {
                           day: 'numeric',
                           month: 'long',
@@ -490,74 +501,97 @@ export default function PhotoSubmissionsPage() {
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-semibold text-slate-700 mb-3">Dentiste</h3>
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-slate-400" />
-                      <span className="text-slate-900">Dr. {selectedPhoto.dentist_accounts?.name}</span>
+                <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-5 border-2 border-purple-200 shadow-lg hover:shadow-xl transition-shadow">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center shadow-md">
+                      <User className="w-4 h-4 text-white" />
                     </div>
-                    <div className="text-sm text-slate-600">
-                      {selectedPhoto.dentist_accounts?.email}
+                    <h3 className="text-sm font-bold text-slate-800">Dentiste</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 bg-white/60 backdrop-blur-sm rounded-lg p-3">
+                      <User className="w-4 h-4 text-purple-600" />
+                      <span className="font-semibold text-slate-900">Dr. {selectedPhoto.dentist_accounts?.name}</span>
                     </div>
-                    {selectedPhoto.dentist_accounts?.phone && (
-                      <div className="text-sm text-slate-600">
-                        {selectedPhoto.dentist_accounts.phone}
+                    <div className="bg-white/60 backdrop-blur-sm rounded-lg p-3">
+                      <div className="text-sm text-slate-700">
+                        {selectedPhoto.dentist_accounts?.email}
                       </div>
-                    )}
+                      {selectedPhoto.dentist_accounts?.phone && (
+                        <div className="text-sm text-slate-600 mt-1">
+                          {selectedPhoto.dentist_accounts.phone}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
 
               {selectedPhoto.notes && (
-                <div className="mb-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                  <h3 className="text-sm font-semibold text-slate-700 mb-2">Notes</h3>
-                  <p className="text-slate-700">{selectedPhoto.notes}</p>
+                <div className="mb-6 bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-5 border-2 border-amber-200 shadow-lg">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-amber-500 to-orange-500 rounded-lg flex items-center justify-center shadow-md">
+                      <Info className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-sm font-bold text-slate-800">Notes</h3>
+                  </div>
+                  <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4">
+                    <p className="text-slate-700">{selectedPhoto.notes}</p>
+                  </div>
                 </div>
               )}
 
-              <div className="mb-6">
-                <h3 className="text-sm font-semibold text-slate-700 mb-3">Statut</h3>
-                <div className="flex gap-2">
+              <div className="mb-6 bg-white rounded-2xl p-5 border-2 border-slate-200 shadow-lg">
+                <div className="flex items-center gap-2 mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-br from-slate-700 to-slate-900 rounded-lg flex items-center justify-center shadow-md">
+                    <CheckCircle className="w-4 h-4 text-white" />
+                  </div>
+                  <h3 className="text-sm font-bold text-slate-800">Modifier le statut</h3>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <button
                     onClick={() => updateStatus(selectedPhoto.id, 'pending')}
-                    className={`px-4 py-2 rounded-lg border font-medium transition ${
+                    className={`px-4 py-3 rounded-xl border-2 font-semibold transition-all duration-300 hover:scale-105 ${
                       selectedPhoto.status === 'pending'
-                        ? 'bg-yellow-500 text-white border-yellow-500'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        ? 'bg-gradient-to-br from-yellow-500 to-amber-500 text-white border-yellow-400 shadow-lg shadow-yellow-500/50'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-yellow-50 hover:border-yellow-300'
                     }`}
                   >
-                    En attente
+                    <AlertCircle className="w-4 h-4 mx-auto mb-1" />
+                    <div className="text-xs">En attente</div>
                   </button>
                   <button
                     onClick={() => updateStatus(selectedPhoto.id, 'viewed')}
-                    className={`px-4 py-2 rounded-lg border font-medium transition ${
+                    className={`px-4 py-3 rounded-xl border-2 font-semibold transition-all duration-300 hover:scale-105 ${
                       selectedPhoto.status === 'viewed'
-                        ? 'bg-blue-500 text-white border-blue-500'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        ? 'bg-gradient-to-br from-blue-500 to-cyan-500 text-white border-blue-400 shadow-lg shadow-blue-500/50'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-blue-50 hover:border-blue-300'
                     }`}
                   >
-                    Vue
+                    <Eye className="w-4 h-4 mx-auto mb-1" />
+                    <div className="text-xs">Vue</div>
                   </button>
                   <button
                     onClick={() => updateStatus(selectedPhoto.id, 'completed')}
-                    className={`px-4 py-2 rounded-lg border font-medium transition ${
+                    className={`px-4 py-3 rounded-xl border-2 font-semibold transition-all duration-300 hover:scale-105 ${
                       selectedPhoto.status === 'completed'
-                        ? 'bg-green-500 text-white border-green-500'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        ? 'bg-gradient-to-br from-green-500 to-emerald-500 text-white border-green-400 shadow-lg shadow-green-500/50'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-green-50 hover:border-green-300'
                     }`}
                   >
-                    Terminé
+                    <CheckCircle className="w-4 h-4 mx-auto mb-1" />
+                    <div className="text-xs">Terminé</div>
                   </button>
                   <button
                     onClick={() => updateStatus(selectedPhoto.id, 'rejected')}
-                    className={`px-4 py-2 rounded-lg border font-medium transition ${
+                    className={`px-4 py-3 rounded-xl border-2 font-semibold transition-all duration-300 hover:scale-105 ${
                       selectedPhoto.status === 'rejected'
-                        ? 'bg-red-500 text-white border-red-500'
-                        : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                        ? 'bg-gradient-to-br from-red-500 to-rose-500 text-white border-red-400 shadow-lg shadow-red-500/50'
+                        : 'bg-white text-slate-700 border-slate-300 hover:bg-red-50 hover:border-red-300'
                     }`}
                   >
-                    Rejeté
+                    <XCircle className="w-4 h-4 mx-auto mb-1" />
+                    <div className="text-xs">Rejeté</div>
                   </button>
                 </div>
               </div>
@@ -566,14 +600,14 @@ export default function PhotoSubmissionsPage() {
                 <a
                   href={selectedPhoto.photo_url}
                   download
-                  className="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition"
+                  className="flex-1 flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 text-white rounded-2xl font-bold hover:from-blue-700 hover:via-cyan-700 hover:to-blue-700 transition-all duration-300 shadow-lg shadow-blue-500/50 hover:shadow-xl hover:scale-[1.02]"
                 >
                   <Download className="w-5 h-5" />
                   Télécharger
                 </a>
                 <button
                   onClick={() => deleteSubmission(selectedPhoto.id)}
-                  className="flex items-center justify-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition"
+                  className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-2xl font-bold hover:from-red-700 hover:to-rose-700 transition-all duration-300 shadow-lg shadow-red-500/50 hover:shadow-xl hover:scale-[1.02]"
                 >
                   <Trash2 className="w-5 h-5" />
                   Supprimer
