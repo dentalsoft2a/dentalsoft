@@ -746,7 +746,7 @@ export function LandingPage({ onNavigate }: LandingPageProps = {}) {
               </div>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 mb-8">
+            <div className={`grid gap-6 mb-8 ${contactPhone ? 'md:grid-cols-4' : 'md:grid-cols-3'}`}>
               {contactPhone && (
                 <div className="bg-white rounded-2xl p-6 shadow-lg border border-slate-200 hover:shadow-xl transition-all group">
                   <div className="w-14 h-14 bg-gradient-to-br from-green-500 to-emerald-500 rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
