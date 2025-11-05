@@ -111,19 +111,21 @@ export function LandingPage() {
   if (currentView === 'login') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
-        <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <DentalCloudLogo size={32} showText={true} />
-              <button
-                onClick={() => setCurrentView('landing')}
-                className="px-3 sm:px-6 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
-              >
-                Retour
-              </button>
+        {!isPWA && (
+          <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                <DentalCloudLogo size={32} showText={true} />
+                <button
+                  onClick={() => setCurrentView('landing')}
+                  className="px-3 sm:px-6 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
+                >
+                  Retour
+                </button>
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
+        )}
         <LoginPage
           onToggleRegister={() => setCurrentView('register')}
         />
@@ -134,19 +136,21 @@ export function LandingPage() {
   if (currentView === 'register') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
-        <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between items-center h-16">
-              <DentalCloudLogo size={32} showText={true} />
-              <button
-                onClick={() => setCurrentView('landing')}
-                className="px-3 sm:px-6 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
-              >
-                Retour
-              </button>
+        {!isPWA && (
+          <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between items-center h-16">
+                <DentalCloudLogo size={32} showText={true} />
+                <button
+                  onClick={() => setCurrentView('landing')}
+                  className="px-3 sm:px-6 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-all duration-300 text-sm sm:text-base whitespace-nowrap"
+                >
+                  Retour
+                </button>
+              </div>
             </div>
-          </div>
-        </nav>
+          </nav>
+        )}
         <RegisterPage
           onToggleLogin={() => setCurrentView('login')}
         />
