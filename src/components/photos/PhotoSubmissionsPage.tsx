@@ -234,10 +234,12 @@ export default function PhotoSubmissionsPage() {
                     return (
                       <div
                         key={submission.id}
-                        className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all cursor-pointer"
-                        onClick={() => setSelectedPhoto(submission)}
+                        className="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden hover:shadow-lg transition-all group"
                       >
-                        <div className="aspect-square relative bg-slate-200">
+                        <div
+                          className="aspect-square relative bg-slate-200 cursor-pointer"
+                          onClick={() => setSelectedPhoto(submission)}
+                        >
                           <img
                             src={submission.photo_url}
                             alt={`Photo - ${submission.patient_name}`}
@@ -247,6 +249,16 @@ export default function PhotoSubmissionsPage() {
                             <StatusIcon className="w-3 h-3" />
                             {getStatusLabel(submission.status)}
                           </div>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteSubmission(submission.id);
+                            }}
+                            className="absolute top-2 left-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                            title="Supprimer la photo"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
                         </div>
 
                         <div className="p-4">
