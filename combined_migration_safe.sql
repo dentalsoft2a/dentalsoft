@@ -1598,6 +1598,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS resources_updated_at ON resources;
 CREATE TRIGGER resources_updated_at
   BEFORE UPDATE ON resources
   FOR EACH ROW
@@ -1896,17 +1897,20 @@ $$ LANGUAGE plpgsql;
 
 -- Create triggers on resource_variants table
 DROP TRIGGER IF EXISTS trigger_update_has_variants_on_insert ON resource_variants;
+DROP TRIGGER IF EXISTS trigger_update_has_variants_on_insert ON resource_variants;
 CREATE TRIGGER trigger_update_has_variants_on_insert
   AFTER INSERT ON resource_variants
   FOR EACH ROW
   EXECUTE FUNCTION update_resource_has_variants();
 
 DROP TRIGGER IF EXISTS trigger_update_has_variants_on_update ON resource_variants;
+DROP TRIGGER IF EXISTS trigger_update_has_variants_on_update ON resource_variants;
 CREATE TRIGGER trigger_update_has_variants_on_update
   AFTER UPDATE ON resource_variants
   FOR EACH ROW
   EXECUTE FUNCTION update_resource_has_variants();
 
+DROP TRIGGER IF EXISTS trigger_update_has_variants_on_delete ON resource_variants;
 DROP TRIGGER IF EXISTS trigger_update_has_variants_on_delete ON resource_variants;
 CREATE TRIGGER trigger_update_has_variants_on_delete
   AFTER DELETE ON resource_variants
@@ -2154,6 +2158,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger to assign trial on user creation
 DROP TRIGGER IF EXISTS assign_trial_on_signup ON user_profiles;
+DROP TRIGGER IF EXISTS assign_trial_on_signup ON user_profiles;
 CREATE TRIGGER assign_trial_on_signup
   BEFORE INSERT ON user_profiles
   FOR EACH ROW
@@ -2227,6 +2232,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger to auto-create user_profile when profile is created
+DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
 DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
 CREATE TRIGGER create_user_profile_trigger
   AFTER INSERT ON profiles
@@ -2384,6 +2390,7 @@ END;
 $$;
 
 -- Recreate the trigger
+DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
 CREATE TRIGGER create_user_profile_trigger
   AFTER INSERT ON profiles
   FOR EACH ROW
@@ -2895,11 +2902,13 @@ $$ LANGUAGE plpgsql;
 
 -- Triggers for updated_at
 DROP TRIGGER IF EXISTS update_help_topics_updated_at ON help_topics;
+DROP TRIGGER IF EXISTS update_help_topics_updated_at ON help_topics;
 CREATE TRIGGER update_help_topics_updated_at
   BEFORE UPDATE ON help_topics
   FOR EACH ROW
   EXECUTE FUNCTION update_help_updated_at();
 
+DROP TRIGGER IF EXISTS update_help_replies_updated_at ON help_replies;
 DROP TRIGGER IF EXISTS update_help_replies_updated_at ON help_replies;
 CREATE TRIGGER update_help_replies_updated_at
   BEFORE UPDATE ON help_replies
@@ -3489,6 +3498,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 DROP TRIGGER IF EXISTS set_used_by_trigger ON access_codes;
 
 -- Create trigger
+DROP TRIGGER IF EXISTS set_used_by_trigger ON access_codes;
 CREATE TRIGGER set_used_by_trigger
   BEFORE UPDATE ON access_codes
   FOR EACH ROW
@@ -3847,179 +3857,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger pour updated_at
-CREATE TRIGGER update_credit_notes_updated_at
-  BEFORE UPDATE ON credit_notes
-  FOR EACH ROW
-  EXECUTE FUNCTION update_updated_at_column();
-
--- Index pour améliorer les performances
-CREATE INDEX IF NOT EXISTS idx_credit_notes_user_id ON credit_notes(user_id);
-CREATE INDEX IF NOT EXISTS idx_credit_notes_invoice_id ON credit_notes(invoice_id);
-CREATE INDEX IF NOT EXISTS idx_credit_note_items_credit_note_id ON credit_note_items(credit_note_id);
-
-
--- ============================================
--- Migration: 20251102212943_20251102200815_create_credit_notes_system.sql
--- ============================================
-
-/*
-  # Création du système d'avoirs (credit notes)
-
-  1. Nouvelle table
-    - `credit_notes`
-      - `id` (uuid, clé primaire)
-      - `user_id` (uuid, référence à profiles)
-      - `invoice_id` (uuid, référence à invoices)
-      - `credit_note_number` (text, unique, numéro de l'avoir)
-      - `date` (date, date de création de l'avoir)
-      - `reason` (text, raison de l'avoir)
-      - `subtotal` (decimal, sous-total)
-      - `tax_rate` (decimal, taux de TVA)
-      - `tax_amount` (decimal, montant TVA)
-      - `total` (decimal, montant total de l'avoir)
-      - `created_at` (timestamptz)
-      - `updated_at` (timestamptz)
-
-  2. Table de liaison pour les articles d'avoir
-    - `credit_note_items`
-      - `id` (uuid, clé primaire)
-      - `credit_note_id` (uuid, référence à credit_notes)
-      - `description` (text, description de l'article)
-      - `quantity` (decimal, quantité)
-      - `unit_price` (decimal, prix unitaire)
-      - `total` (decimal, montant total de la ligne)
-
-  3. Sécurité
-    - Enable RLS sur les deux tables
-    - Politiques pour que les utilisateurs ne voient que leurs propres avoirs
-
-  4. Trigger
-    - Mise à jour automatique de updated_at
-*/
-
--- Table des avoirs
-CREATE TABLE IF NOT EXISTS credit_notes (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id uuid NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  invoice_id uuid NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
-  credit_note_number text UNIQUE NOT NULL,
-  date date NOT NULL DEFAULT CURRENT_DATE,
-  reason text,
-  subtotal decimal(10, 2) NOT NULL DEFAULT 0,
-  tax_rate decimal(10, 2) NOT NULL DEFAULT 20,
-  tax_amount decimal(10, 2) NOT NULL DEFAULT 0,
-  total decimal(10, 2) NOT NULL DEFAULT 0,
-  created_at timestamptz DEFAULT now(),
-  updated_at timestamptz DEFAULT now()
-);
-
--- Table des articles d'avoir
-CREATE TABLE IF NOT EXISTS credit_note_items (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  credit_note_id uuid NOT NULL REFERENCES credit_notes(id) ON DELETE CASCADE,
-  description text NOT NULL,
-  quantity decimal(10, 2) NOT NULL DEFAULT 1,
-  unit_price decimal(10, 2) NOT NULL DEFAULT 0,
-  total decimal(10, 2) NOT NULL DEFAULT 0,
-  created_at timestamptz DEFAULT now()
-);
-
--- Enable RLS
-ALTER TABLE credit_notes ENABLE ROW LEVEL SECURITY;
-ALTER TABLE credit_note_items ENABLE ROW LEVEL SECURITY;
-
--- Policies pour credit_notes
-DROP POLICY IF EXISTS "Users can view own credit notes" ON credit_notes;
-CREATE POLICY "Users can view own credit notes"
-  ON credit_notes FOR SELECT
-  TO authenticated
-  USING (user_id = auth.uid());
-
-DROP POLICY IF EXISTS "Users can insert own credit notes" ON credit_notes;
-CREATE POLICY "Users can insert own credit notes"
-  ON credit_notes FOR INSERT
-  TO authenticated
-  WITH CHECK (user_id = auth.uid());
-
-DROP POLICY IF EXISTS "Users can update own credit notes" ON credit_notes;
-CREATE POLICY "Users can update own credit notes"
-  ON credit_notes FOR UPDATE
-  TO authenticated
-  USING (user_id = auth.uid())
-  WITH CHECK (user_id = auth.uid());
-
-DROP POLICY IF EXISTS "Users can delete own credit notes" ON credit_notes;
-CREATE POLICY "Users can delete own credit notes"
-  ON credit_notes FOR DELETE
-  TO authenticated
-  USING (user_id = auth.uid());
-
--- Policies pour credit_note_items
-DROP POLICY IF EXISTS "Users can view own credit note items" ON credit_note_items;
-CREATE POLICY "Users can view own credit note items"
-  ON credit_note_items FOR SELECT
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM credit_notes
-      WHERE credit_notes.id = credit_note_items.credit_note_id
-      AND credit_notes.user_id = auth.uid()
-    )
-  );
-
-DROP POLICY IF EXISTS "Users can insert own credit note items" ON credit_note_items;
-CREATE POLICY "Users can insert own credit note items"
-  ON credit_note_items FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM credit_notes
-      WHERE credit_notes.id = credit_note_items.credit_note_id
-      AND credit_notes.user_id = auth.uid()
-    )
-  );
-
-DROP POLICY IF EXISTS "Users can update own credit note items" ON credit_note_items;
-CREATE POLICY "Users can update own credit note items"
-  ON credit_note_items FOR UPDATE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM credit_notes
-      WHERE credit_notes.id = credit_note_items.credit_note_id
-      AND credit_notes.user_id = auth.uid()
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM credit_notes
-      WHERE credit_notes.id = credit_note_items.credit_note_id
-      AND credit_notes.user_id = auth.uid()
-    )
-  );
-
-DROP POLICY IF EXISTS "Users can delete own credit note items" ON credit_note_items;
-CREATE POLICY "Users can delete own credit note items"
-  ON credit_note_items FOR DELETE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM credit_notes
-      WHERE credit_notes.id = credit_note_items.credit_note_id
-      AND credit_notes.user_id = auth.uid()
-    )
-  );
-
--- Fonction pour updated_at si elle n'existe pas
-CREATE OR REPLACE FUNCTION update_updated_at_column()
-RETURNS TRIGGER AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
--- Trigger pour updated_at
+DROP TRIGGER IF EXISTS update_credit_notes_updated_at ON credit_notes;
 CREATE TRIGGER update_credit_notes_updated_at
   BEFORE UPDATE ON credit_notes
   FOR EACH ROW
@@ -4193,6 +4031,7 @@ $$;
 
 -- Ensure the trigger exists
 DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
+DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
 CREATE TRIGGER create_user_profile_trigger
   AFTER INSERT ON profiles
   FOR EACH ROW
@@ -4304,6 +4143,7 @@ $$ LANGUAGE plpgsql;
 
 -- Trigger to enforce single active configuration
 DROP TRIGGER IF EXISTS ensure_single_active_smtp_trigger ON smtp_settings;
+DROP TRIGGER IF EXISTS ensure_single_active_smtp_trigger ON smtp_settings;
 CREATE TRIGGER ensure_single_active_smtp_trigger
   BEFORE INSERT OR UPDATE ON smtp_settings
   FOR EACH ROW
@@ -4386,6 +4226,7 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS trigger_update_invoice_status ON invoice_payments;
 
 -- Create trigger for invoice_payments
+DROP TRIGGER IF EXISTS trigger_update_invoice_status ON invoice_payments;
 CREATE TRIGGER trigger_update_invoice_status
 AFTER INSERT OR UPDATE OR DELETE ON invoice_payments
 FOR EACH ROW
@@ -4950,6 +4791,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_laboratory_role_permissions_updated_at ON laboratory_role_permissions;
 CREATE TRIGGER trigger_update_laboratory_role_permissions_updated_at
   BEFORE UPDATE ON laboratory_role_permissions
   FOR EACH ROW

@@ -4,15 +4,19 @@
 Vous avez ces erreurs :
 - ❌ `column catalog_items.is_active does not exist`
 - ❌ `column user_profiles.trial_ends_at does not exist`
+- ❌ `policy "Users can view own profile" already exists`
+- ❌ `trigger "update_credit_notes_updated_at" already exists`
 - ❌ Erreur 400 sur toutes les requêtes API
 
 ## La solution en 2 étapes
+
+**⚠️ IMPORTANT** : Utilisez UNIQUEMENT `combined_migration_safe.sql` (PAS `combined_migration.sql`)
 
 ### Étape 1 : Appliquer la migration SQL ⚙️
 
 1. Ouvrez : https://supabase.com/dashboard/project/eovmrvtiizyhyzcmpvov/sql/new
 2. Ouvrez le fichier `combined_migration_safe.sql` sur votre ordinateur
-3. Copiez TOUT le contenu (5570 lignes)
+3. Copiez TOUT le contenu (~5597 lignes)
 4. Collez dans l'éditeur SQL de Supabase
 5. Cliquez sur **"Run"**
 6. ⏱️ Attendez ~30-60 secondes
