@@ -1,8 +1,6 @@
 -- =============================================================================
 -- SUPABASE COMPLETE DATABASE DUMP - DentalCloud
 -- Généré: 2025-11-06
--- Ce fichier contient DROP IF EXISTS pour tous les objets (policies, triggers, 
--- functions, indexes) afin d'éviter toute erreur de duplication
 -- =============================================================================
 
 SET session_replication_role = replica;
@@ -4201,84 +4199,6 @@ CREATE INDEX IF NOT EXISTS idx_smtp_settings_active ON smtp_settings(is_active) 
 CREATE INDEX IF NOT EXISTS idx_smtp_settings_configured_by ON smtp_settings(configured_by);
 
 -- =============================================================================
--- Migration: 20251105085234_add_invoice_status_auto_update.sql
--- =============================================================================
-
-/*
-  # Auto-update invoice status based on payments
-
-  1. Changes
-    - Create a function to calculate and update invoice status
-    - Add a trigger to update invoice status when payments are added/deleted/updated
-  
-  2. Logic
-    - Calculate total paid from invoice_payments
-    - Compare with invoice total
-    - Update status: 'paid' if fully paid, 'partial' if partially paid, 'draft' if unpaid
-*/
-
--- Function to update invoice status based on payments
-CREATE OR REPLACE FUNCTION update_invoice_status()
-RETURNS TRIGGER AS $$
-DECLARE
-  v_invoice_total NUMERIC;
-  v_total_paid NUMERIC;
-  v_new_status TEXT;
-BEGIN
-  -- Get the invoice_id (works for INSERT, UPDATE, DELETE)
-  DECLARE
-    v_invoice_id UUID;
-  BEGIN
-    IF TG_OP = 'DELETE' THEN
-      v_invoice_id := OLD.invoice_id;
-    ELSE
-      v_invoice_id := NEW.invoice_id;
-    END IF;
-
-    -- Get invoice total
-    SELECT total INTO v_invoice_total
-    FROM invoices
-    WHERE id = v_invoice_id;
-
-    -- Calculate total paid
-    SELECT COALESCE(SUM(amount), 0) INTO v_total_paid
-    FROM invoice_payments
-    WHERE invoice_id = v_invoice_id;
-
-    -- Determine new status
-    IF v_total_paid = 0 THEN
-      v_new_status := 'draft';
-    ELSIF v_total_paid >= v_invoice_total THEN
-      v_new_status := 'paid';
-    ELSE
-      v_new_status := 'partial';
-    END IF;
-
-    -- Update invoice status
-    UPDATE invoices
-    SET status = v_new_status
-    WHERE id = v_invoice_id;
-  END;
-
-  IF TG_OP = 'DELETE' THEN
-    RETURN OLD;
-  ELSE
-    RETURN NEW;
-  END IF;
-END;
-$$ LANGUAGE plpgsql;
-
--- Drop existing trigger if it exists
-DROP TRIGGER IF EXISTS trigger_update_invoice_status ON invoice_payments;
-
--- Create trigger for invoice_payments
-DROP TRIGGER IF EXISTS trigger_update_invoice_status ON invoice_payments;
-CREATE TRIGGER trigger_update_invoice_status
-AFTER INSERT OR UPDATE OR DELETE ON invoice_payments
-FOR EACH ROW
-EXECUTE FUNCTION update_invoice_status();
-
--- =============================================================================
 -- Migration: 20251105104651_add_rcs_field_to_profiles.sql
 -- =============================================================================
 
@@ -5790,6 +5710,151 @@ BEGIN
   RETURN COALESCE(is_admin, false);
 END;
 $$;
+
+
+-- =============================================================================
+-- CREATE INVOICE_PAYMENTS TABLE (AJOUTÉ AUTOMATIQUEMENT)
+-- =============================================================================
+
+CREATE TABLE IF NOT EXISTS invoice_payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  invoice_id UUID NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+  amount NUMERIC NOT NULL CHECK (amount > 0),
+  payment_date TIMESTAMPTZ NOT NULL DEFAULT now(),
+  payment_method TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable RLS
+ALTER TABLE invoice_payments ENABLE ROW LEVEL SECURITY;
+
+-- Policies
+DROP POLICY IF EXISTS "Users can view own invoice payments" ON invoice_payments;
+CREATE POLICY "Users can view own invoice payments" ON invoice_payments
+  FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM invoices
+      WHERE invoices.id = invoice_payments.invoice_id
+      AND invoices.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can insert own invoice payments" ON invoice_payments;
+CREATE POLICY "Users can insert own invoice payments" ON invoice_payments
+  FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM invoices
+      WHERE invoices.id = invoice_payments.invoice_id
+      AND invoices.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can update own invoice payments" ON invoice_payments;
+CREATE POLICY "Users can update own invoice payments" ON invoice_payments
+  FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM invoices
+      WHERE invoices.id = invoice_payments.invoice_id
+      AND invoices.user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM invoices
+      WHERE invoices.id = invoice_payments.invoice_id
+      AND invoices.user_id = auth.uid()
+    )
+  );
+
+DROP POLICY IF EXISTS "Users can delete own invoice payments" ON invoice_payments;
+CREATE POLICY "Users can delete own invoice payments" ON invoice_payments
+  FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM invoices
+      WHERE invoices.id = invoice_payments.invoice_id
+      AND invoices.user_id = auth.uid()
+    )
+  );
+
+-- Indexes
+CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice_id ON invoice_payments(invoice_id);
+CREATE INDEX IF NOT EXISTS idx_invoice_payments_payment_date ON invoice_payments(payment_date);
+
+-- Trigger for updated_at
+DROP TRIGGER IF EXISTS update_invoice_payments_updated_at ON invoice_payments;
+CREATE TRIGGER update_invoice_payments_updated_at
+  BEFORE UPDATE ON invoice_payments
+  FOR EACH ROW
+  EXECUTE FUNCTION update_updated_at_column();
+
+-- =============================================================================
+-- AUTO-UPDATE INVOICE STATUS BASED ON PAYMENTS
+-- =============================================================================
+
+-- Function to update invoice status based on payments
+CREATE OR REPLACE FUNCTION update_invoice_status()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_invoice_total NUMERIC;
+  v_total_paid NUMERIC;
+  v_new_status TEXT;
+  v_invoice_id UUID;
+BEGIN
+  -- Get the invoice_id
+  IF TG_OP = 'DELETE' THEN
+    v_invoice_id := OLD.invoice_id;
+  ELSE
+    v_invoice_id := NEW.invoice_id;
+  END IF;
+
+  -- Get invoice total
+  SELECT total INTO v_invoice_total
+  FROM invoices
+  WHERE id = v_invoice_id;
+
+  -- Calculate total paid
+  SELECT COALESCE(SUM(amount), 0) INTO v_total_paid
+  FROM invoice_payments
+  WHERE invoice_id = v_invoice_id;
+
+  -- Determine new status
+  IF v_total_paid = 0 THEN
+    v_new_status := 'draft';
+  ELSIF v_total_paid >= v_invoice_total THEN
+    v_new_status := 'paid';
+  ELSE
+    v_new_status := 'partial';
+  END IF;
+
+  -- Update invoice status
+  UPDATE invoices
+  SET status = v_new_status
+  WHERE id = v_invoice_id;
+
+  IF TG_OP = 'DELETE' THEN
+    RETURN OLD;
+  ELSE
+    RETURN NEW;
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Create trigger
+DROP TRIGGER IF EXISTS trigger_update_invoice_status ON invoice_payments;
+CREATE TRIGGER trigger_update_invoice_status
+AFTER INSERT OR UPDATE OR DELETE ON invoice_payments
+FOR EACH ROW
+EXECUTE FUNCTION update_invoice_status();
 
 
 SET session_replication_role = DEFAULT;
