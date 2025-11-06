@@ -146,7 +146,8 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
         .select('*, resource:resources!inner(name, user_id)')
         .eq('resource.user_id', user.id)
         .eq('is_active', true)
-        .order('subcategory, name', { ascending: true });
+        .order('subcategory', { ascending: true })
+        .order('variant_name', { ascending: true });
 
       if (variantsError) throw variantsError;
 
