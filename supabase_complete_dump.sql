@@ -1,6 +1,8 @@
 -- =============================================================================
 -- SUPABASE COMPLETE DATABASE DUMP - DentalCloud
 -- Généré: 2025-11-06
+-- Ce fichier contient DROP IF EXISTS pour tous les objets (policies, triggers, 
+-- functions, indexes) afin d'éviter toute erreur de duplication
 -- =============================================================================
 
 SET session_replication_role = replica;
@@ -1119,7 +1121,8 @@ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created'
   ) THEN
-    CREATE TRIGGER on_auth_user_created
+    DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
       AFTER INSERT ON auth.users
       FOR EACH ROW
       EXECUTE FUNCTION create_user_profile();
@@ -1543,6 +1546,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS resources_updated_at ON resources;
 CREATE TRIGGER resources_updated_at
   BEFORE UPDATE ON resources
   FOR EACH ROW
@@ -1835,17 +1839,20 @@ $$ LANGUAGE plpgsql;
 
 -- Create triggers on resource_variants table
 DROP TRIGGER IF EXISTS trigger_update_has_variants_on_insert ON resource_variants;
+DROP TRIGGER IF EXISTS trigger_update_has_variants_on_insert ON resource_variants;
 CREATE TRIGGER trigger_update_has_variants_on_insert
   AFTER INSERT ON resource_variants
   FOR EACH ROW
   EXECUTE FUNCTION update_resource_has_variants();
 
 DROP TRIGGER IF EXISTS trigger_update_has_variants_on_update ON resource_variants;
+DROP TRIGGER IF EXISTS trigger_update_has_variants_on_update ON resource_variants;
 CREATE TRIGGER trigger_update_has_variants_on_update
   AFTER UPDATE ON resource_variants
   FOR EACH ROW
   EXECUTE FUNCTION update_resource_has_variants();
 
+DROP TRIGGER IF EXISTS trigger_update_has_variants_on_delete ON resource_variants;
 DROP TRIGGER IF EXISTS trigger_update_has_variants_on_delete ON resource_variants;
 CREATE TRIGGER trigger_update_has_variants_on_delete
   AFTER DELETE ON resource_variants
@@ -2090,6 +2097,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger to assign trial on user creation
 DROP TRIGGER IF EXISTS assign_trial_on_signup ON user_profiles;
+DROP TRIGGER IF EXISTS assign_trial_on_signup ON user_profiles;
 CREATE TRIGGER assign_trial_on_signup
   BEFORE INSERT ON user_profiles
   FOR EACH ROW
@@ -2163,6 +2171,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- Trigger to auto-create user_profile when profile is created
+DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
 DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
 CREATE TRIGGER create_user_profile_trigger
   AFTER INSERT ON profiles
@@ -2316,6 +2325,7 @@ END;
 $$;
 
 -- Recreate the trigger
+DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
 CREATE TRIGGER create_user_profile_trigger
   AFTER INSERT ON profiles
   FOR EACH ROW
@@ -2807,11 +2817,13 @@ $$ LANGUAGE plpgsql;
 
 -- Triggers for updated_at
 DROP TRIGGER IF EXISTS update_help_topics_updated_at ON help_topics;
+DROP TRIGGER IF EXISTS update_help_topics_updated_at ON help_topics;
 CREATE TRIGGER update_help_topics_updated_at
   BEFORE UPDATE ON help_topics
   FOR EACH ROW
   EXECUTE FUNCTION update_help_updated_at();
 
+DROP TRIGGER IF EXISTS update_help_replies_updated_at ON help_replies;
 DROP TRIGGER IF EXISTS update_help_replies_updated_at ON help_replies;
 CREATE TRIGGER update_help_replies_updated_at
   BEFORE UPDATE ON help_replies
@@ -3384,6 +3396,7 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 DROP TRIGGER IF EXISTS set_used_by_trigger ON access_codes;
 
 -- Create trigger
+DROP TRIGGER IF EXISTS set_used_by_trigger ON access_codes;
 CREATE TRIGGER set_used_by_trigger
   BEFORE UPDATE ON access_codes
   FOR EACH ROW
@@ -3728,6 +3741,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger pour updated_at
+DROP TRIGGER IF EXISTS update_credit_notes_updated_at ON credit_notes;
 CREATE TRIGGER update_credit_notes_updated_at
   BEFORE UPDATE ON credit_notes
   FOR EACH ROW
@@ -3893,6 +3907,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Trigger pour updated_at
+DROP TRIGGER IF EXISTS update_credit_notes_updated_at ON credit_notes;
 CREATE TRIGGER update_credit_notes_updated_at
   BEFORE UPDATE ON credit_notes
   FOR EACH ROW
@@ -4066,6 +4081,7 @@ $$;
 
 -- Ensure the trigger exists
 DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
+DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
 CREATE TRIGGER create_user_profile_trigger
   AFTER INSERT ON profiles
   FOR EACH ROW
@@ -4173,6 +4189,7 @@ $$ LANGUAGE plpgsql;
 
 -- Trigger to enforce single active configuration
 DROP TRIGGER IF EXISTS ensure_single_active_smtp_trigger ON smtp_settings;
+DROP TRIGGER IF EXISTS ensure_single_active_smtp_trigger ON smtp_settings;
 CREATE TRIGGER ensure_single_active_smtp_trigger
   BEFORE INSERT OR UPDATE ON smtp_settings
   FOR EACH ROW
@@ -4255,6 +4272,7 @@ $$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS trigger_update_invoice_status ON invoice_payments;
 
 -- Create trigger for invoice_payments
+DROP TRIGGER IF EXISTS trigger_update_invoice_status ON invoice_payments;
 CREATE TRIGGER trigger_update_invoice_status
 AFTER INSERT OR UPDATE OR DELETE ON invoice_payments
 FOR EACH ROW
@@ -4795,6 +4813,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS trigger_update_laboratory_role_permissions_updated_at ON laboratory_role_permissions;
 CREATE TRIGGER trigger_update_laboratory_role_permissions_updated_at
   BEFORE UPDATE ON laboratory_role_permissions
   FOR EACH ROW
