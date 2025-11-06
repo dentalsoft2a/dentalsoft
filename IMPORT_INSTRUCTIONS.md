@@ -2,7 +2,8 @@
 
 ## Fichiers créés
 
-1. `supabase_complete_backup.sql` - Dump complet du schéma (toutes les migrations)
+1. `supabase_complete_dump.sql` - Dump complet du schéma (toutes les migrations)
+2. `clean_and_import.sql` - Script de nettoyage pour éviter les erreurs de duplication
 
 ## Comment importer dans votre nouvelle instance Supabase sur Coolify
 
@@ -16,10 +17,17 @@
 
 ### Étape 2 : Importer le schéma
 
+#### Si vous obtenez l'erreur "policy already exists" :
+
 1. Ouvrez le SQL Editor dans votre nouveau dashboard Supabase
-2. Copiez le contenu du fichier `supabase_complete_backup.sql`
-3. Collez-le dans l'éditeur SQL
-4. Exécutez le script
+2. **D'abord**, copiez et exécutez le contenu de `clean_and_import.sql`
+3. **Ensuite**, copiez et exécutez le contenu de `supabase_complete_dump.sql`
+
+#### Pour une nouvelle instance vide (recommandé) :
+
+1. Ouvrez le SQL Editor dans votre nouveau dashboard Supabase
+2. Copiez le contenu du fichier `supabase_complete_dump.sql`
+3. Collez-le dans l'éditeur SQL et exécutez
 
 ### Étape 3 : Importer les données (méthode manuelle)
 
