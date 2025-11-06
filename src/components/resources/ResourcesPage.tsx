@@ -222,18 +222,38 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
     }
   };
 
-  const handleExport = () => {
-    const exportData = resources.map(({ id, user_id, created_at, updated_at, total_variant_stock, ...rest }) => rest);
-    const dataStr = JSON.stringify(exportData, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `ressources_export_${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
+  const handleExport = async () => {
+    try {
+      const exportData = await Promise.all(
+        resources.map(async ({ id, user_id, created_at, updated_at, total_variant_stock, ...rest }) => {
+          const { data: variants } = await supabase
+            .from('resource_variants')
+            .select('*')
+            .eq('resource_id', id);
+
+          const cleanedVariants = (variants || []).map(({ id: variantId, resource_id, created_at: vCreatedAt, updated_at: vUpdatedAt, ...variantRest }) => variantRest);
+
+          return {
+            ...rest,
+            variants: cleanedVariants
+          };
+        })
+      );
+
+      const dataStr = JSON.stringify(exportData, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ressources_export_${new Date().toISOString().split('T')[0]}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error exporting resources:', error);
+      alert('Erreur lors de l\'exportation');
+    }
   };
 
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -249,16 +269,40 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
         return;
       }
 
-      const resourcesToInsert = importedResources.map(resource => ({
-        ...resource,
-        user_id: user.id,
-      }));
+      let totalVariantsImported = 0;
 
-      const { error } = await supabase.from('resources').insert(resourcesToInsert);
+      for (const resource of importedResources) {
+        const { variants, ...resourceData } = resource;
 
-      if (error) throw error;
+        const { data: insertedResource, error: resourceError } = await supabase
+          .from('resources')
+          .insert({
+            ...resourceData,
+            user_id: user.id,
+          })
+          .select()
+          .single();
 
-      alert(`${resourcesToInsert.length} ressource(s) importée(s) avec succès`);
+        if (resourceError) throw resourceError;
+
+        if (variants && Array.isArray(variants) && variants.length > 0) {
+          const variantsToInsert = variants.map((variant: any) => ({
+            ...variant,
+            resource_id: insertedResource.id,
+          }));
+
+          const { error: variantsError } = await supabase
+            .from('resource_variants')
+            .insert(variantsToInsert);
+
+          if (variantsError) throw variantsError;
+          totalVariantsImported += variantsToInsert.length;
+        }
+      }
+
+      alert(
+        `${importedResources.length} ressource(s) et ${totalVariantsImported} variante(s) importée(s) avec succès`
+      );
       await loadResources();
     } catch (error) {
       console.error('Error importing resources:', error);
