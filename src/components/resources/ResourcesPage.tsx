@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, Save, X, Box, AlertTriangle, TrendingUp, RefreshCw, Palette, BookOpen, ChevronDown, ChevronUp, HelpCircle, Package, CheckCircle2, Tag, Layers } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { Plus, Edit, Trash2, Search, Save, X, Box, AlertTriangle, TrendingUp, RefreshCw, Palette, BookOpen, ChevronDown, ChevronUp, HelpCircle, Package, CheckCircle2, Tag, Layers, Download, Upload } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import ResourceVariantManager from './ResourceVariantManager';
@@ -39,6 +39,7 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
   const [showQuickFill, setShowQuickFill] = useState<{ id: string; name: string; currentStock: number; type: 'resource' | 'variant' } | null>(null);
   const [quickFillQuantity, setQuickFillQuantity] = useState<number>(0);
   const [showTutorial, setShowTutorial] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -221,6 +222,54 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
     }
   };
 
+  const handleExport = () => {
+    const exportData = resources.map(({ id, user_id, created_at, updated_at, total_variant_stock, ...rest }) => rest);
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `ressources_export_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      const text = await file.text();
+      const importedResources = JSON.parse(text);
+
+      if (!Array.isArray(importedResources)) {
+        alert('Format de fichier invalide');
+        return;
+      }
+
+      const resourcesToInsert = importedResources.map(resource => ({
+        ...resource,
+        user_id: user.id,
+      }));
+
+      const { error } = await supabase.from('resources').insert(resourcesToInsert);
+
+      if (error) throw error;
+
+      alert(`${resourcesToInsert.length} ressource(s) importée(s) avec succès`);
+      await loadResources();
+    } catch (error) {
+      console.error('Error importing resources:', error);
+      alert('Erreur lors de l\'importation. Vérifiez le format du fichier.');
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleQuickFill = async () => {
     if (!showQuickFill || !user) return;
 
@@ -266,6 +315,28 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
           <p className="text-slate-600 mt-2">Gérez vos matières premières (disques, blocs, etc.)</p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleExport}
+            disabled={resources.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-5 h-5" />
+            Exporter
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition"
+          >
+            <Upload className="w-5 h-5" />
+            Importer
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+          />
           <button
             onClick={() => setShowTutorial(!showTutorial)}
             className="flex items-center gap-2 px-4 py-2 border border-primary-300 text-primary-700 bg-primary-50 shadow-sm hover:bg-primary-100 rounded-lg transition"

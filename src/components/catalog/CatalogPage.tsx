@@ -1,5 +1,5 @@
-import { useEffect, useState, useMemo } from 'react';
-import { Plus, Edit, Trash2, Search, Save, X, Package, Tag, DollarSign, CheckCircle2, XCircle, Filter, Archive, AlertTriangle, HelpCircle, BookOpen } from 'lucide-react';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import { Plus, Edit, Trash2, Search, Save, X, Package, Tag, DollarSign, CheckCircle2, XCircle, Filter, Archive, AlertTriangle, HelpCircle, BookOpen, Download, Upload } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
@@ -17,6 +17,7 @@ export default function CatalogPage() {
   const [showModal, setShowModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -272,6 +273,54 @@ export default function CatalogPage() {
     }
   };
 
+  const handleExport = () => {
+    const exportData = items.map(({ id, user_id, created_at, updated_at, ...rest }) => rest);
+    const dataStr = JSON.stringify(exportData, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `catalogue_export_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      const text = await file.text();
+      const importedItems = JSON.parse(text);
+
+      if (!Array.isArray(importedItems)) {
+        alert('Format de fichier invalide');
+        return;
+      }
+
+      const itemsToInsert = importedItems.map(item => ({
+        ...item,
+        user_id: user.id,
+      }));
+
+      const { error } = await supabase.from('catalog_items').insert(itemsToInsert);
+
+      if (error) throw error;
+
+      alert(`${itemsToInsert.length} article(s) importé(s) avec succès`);
+      await loadItems();
+    } catch (error) {
+      console.error('Error importing catalog items:', error);
+      alert('Erreur lors de l\'importation. Vérifiez le format du fichier.');
+    }
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleToggleActive = async (item: CatalogItem) => {
     try {
       const { error } = await supabase
@@ -295,6 +344,28 @@ export default function CatalogPage() {
           <p className="text-slate-600 mt-2">Gérez vos articles et prestations</p>
         </div>
         <div className="flex items-center gap-3">
+          <button
+            onClick={handleExport}
+            disabled={items.length === 0}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Download className="w-5 h-5" />
+            Exporter
+          </button>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition"
+          >
+            <Upload className="w-5 h-5" />
+            Importer
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".json"
+            onChange={handleImport}
+            className="hidden"
+          />
           <button
             onClick={() => setShowTutorial(true)}
             className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition"
