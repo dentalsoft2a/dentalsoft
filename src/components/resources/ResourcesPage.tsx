@@ -298,6 +298,7 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
           const variantsToInsert = variants.map((variant: any) => ({
             ...variant,
             resource_id: insertedResource.id,
+            user_id: user.id,
           }));
 
           console.log('Inserting variants:', variantsToInsert);
