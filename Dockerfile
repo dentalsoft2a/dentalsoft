@@ -12,16 +12,14 @@ RUN npm ci
 # Copy source code
 COPY . .
 
-# Build arguments for environment variables
-ARG VITE_SUPABASE_URL
-ARG VITE_SUPABASE_ANON_KEY
+# Copy build script
+COPY build.sh ./
 
-# Set environment variables for build
-ENV VITE_SUPABASE_URL=$VITE_SUPABASE_URL
-ENV VITE_SUPABASE_ANON_KEY=$VITE_SUPABASE_ANON_KEY
+# Make build script executable
+RUN chmod +x build.sh
 
-# Build the application
-RUN npm run build
+# Build the application (script will use environment variables from Coolify)
+RUN ./build.sh
 
 # Production stage
 FROM node:20-alpine
