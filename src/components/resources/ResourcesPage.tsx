@@ -264,6 +264,8 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
       const text = await file.text();
       const importedResources = JSON.parse(text);
 
+      console.log('Imported resources:', importedResources);
+
       if (!Array.isArray(importedResources)) {
         alert('Format de fichier invalide');
         return;
@@ -274,6 +276,8 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
       for (const resource of importedResources) {
         const { variants, ...resourceData } = resource;
 
+        console.log('Inserting resource:', resourceData);
+
         const { data: insertedResource, error: resourceError } = await supabase
           .from('resources')
           .insert({
@@ -283,7 +287,12 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
           .select()
           .single();
 
-        if (resourceError) throw resourceError;
+        if (resourceError) {
+          console.error('Resource insert error:', resourceError);
+          throw resourceError;
+        }
+
+        console.log('Inserted resource:', insertedResource);
 
         if (variants && Array.isArray(variants) && variants.length > 0) {
           const variantsToInsert = variants.map((variant: any) => ({
@@ -291,11 +300,17 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
             resource_id: insertedResource.id,
           }));
 
+          console.log('Inserting variants:', variantsToInsert);
+
           const { error: variantsError } = await supabase
             .from('resource_variants')
             .insert(variantsToInsert);
 
-          if (variantsError) throw variantsError;
+          if (variantsError) {
+            console.error('Variants insert error:', variantsError);
+            throw variantsError;
+          }
+
           totalVariantsImported += variantsToInsert.length;
         }
       }
@@ -304,9 +319,10 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
         `${importedResources.length} ressource(s) et ${totalVariantsImported} variante(s) importée(s) avec succès`
       );
       await loadResources();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error importing resources:', error);
-      alert('Erreur lors de l\'importation. Vérifiez le format du fichier.');
+      const errorMessage = error?.message || 'Erreur inconnue';
+      alert(`Erreur lors de l'importation: ${errorMessage}\n\nVérifiez le format du fichier et consultez la console pour plus de détails.`);
     }
 
     if (fileInputRef.current) {
