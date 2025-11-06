@@ -724,6 +724,20 @@ $function$;
 -- 5. TRIGGERS
 -- =====================================================
 
+-- Drop existing triggers first (if they exist)
+DROP TRIGGER IF EXISTS create_user_profile_trigger ON profiles;
+DROP TRIGGER IF EXISTS assign_trial_on_signup ON user_profiles;
+DROP TRIGGER IF EXISTS trigger_update_invoice_status ON invoice_payments;
+DROP TRIGGER IF EXISTS trigger_update_has_variants_on_insert ON resource_variants;
+DROP TRIGGER IF EXISTS trigger_update_has_variants_on_update ON resource_variants;
+DROP TRIGGER IF EXISTS trigger_update_has_variants_on_delete ON resource_variants;
+DROP TRIGGER IF EXISTS resources_updated_at ON resources;
+DROP TRIGGER IF EXISTS update_credit_notes_updated_at ON credit_notes;
+DROP TRIGGER IF EXISTS update_help_topics_updated_at ON help_topics;
+DROP TRIGGER IF EXISTS update_help_replies_updated_at ON help_replies;
+DROP TRIGGER IF EXISTS trigger_update_laboratory_role_permissions_updated_at ON laboratory_role_permissions;
+DROP TRIGGER IF EXISTS ensure_single_active_smtp_trigger ON smtp_settings;
+
 CREATE TRIGGER create_user_profile_trigger
   AFTER INSERT ON profiles
   FOR EACH ROW EXECUTE FUNCTION create_user_profile_on_signup();
