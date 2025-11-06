@@ -17,17 +17,17 @@
 
 ### Étape 2 : Importer le schéma
 
-#### Si vous obtenez l'erreur "policy already exists" :
-
-1. Ouvrez le SQL Editor dans votre nouveau dashboard Supabase
-2. **D'abord**, copiez et exécutez le contenu de `clean_and_import.sql`
-3. **Ensuite**, copiez et exécutez le contenu de `supabase_complete_dump.sql`
-
-#### Pour une nouvelle instance vide (recommandé) :
+Le fichier `supabase_complete_dump.sql` contient maintenant des `DROP POLICY IF EXISTS` avant chaque `CREATE POLICY`, donc plus de problème de duplication !
 
 1. Ouvrez le SQL Editor dans votre nouveau dashboard Supabase
 2. Copiez le contenu du fichier `supabase_complete_dump.sql`
 3. Collez-le dans l'éditeur SQL et exécutez
+4. Le script va :
+   - Supprimer les policies existantes si elles existent (DROP IF EXISTS)
+   - Recréer toutes les tables et policies
+   - Configurer tous les triggers et functions
+
+**Note** : Le fichier contient 75 migrations et 59 policies. L'exécution peut prendre 1-2 minutes.
 
 ### Étape 3 : Importer les données (méthode manuelle)
 

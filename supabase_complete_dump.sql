@@ -1,24 +1,18 @@
 -- =============================================================================
--- SUPABASE COMPLETE DATABASE DUMP - DentalCloud
+-- SUPABASE COMPLETE DATABASE DUMP - DentalCloud (avec DROP POLICY)
 -- Generated: 2025-11-06
 -- =============================================================================
---
--- This file contains the complete database schema with:
--- - All tables, indexes, constraints
--- - All RLS policies (with DROP IF EXISTS to avoid conflicts)
--- - All functions and triggers
---
--- IMPORTANT: Run this on a FRESH Supabase instance
--- If running on an existing instance, this will DROP and recreate policies
+-- Ce fichier contient DROP POLICY IF EXISTS avant chaque CREATE POLICY
 -- =============================================================================
 
--- Disable triggers temporarily
 SET session_replication_role = replica;
+
 
 
 -- =============================================================================
 -- Migration: 00000000000000_init_supabase.sql
 -- =============================================================================
+
 /*
   # Initialize Supabase Schema and Roles
 
@@ -166,9 +160,11 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 COMMENT ON SCHEMA auth IS 'Supabase authentication schema';
 COMMENT ON TABLE auth.users IS 'Supabase authentication users table';
 
+
 -- =============================================================================
 -- Migration: 20251029132912_create_gb_dental_schema.sql
 -- =============================================================================
+
 /*
   # GB Dental Cloud - Database Schema
 
@@ -588,9 +584,11 @@ CREATE INDEX IF NOT EXISTS idx_invoice_proformas_invoice_id ON invoice_proformas
 CREATE INDEX IF NOT EXISTS idx_invoice_proformas_proforma_id ON invoice_proformas(proforma_id);
 CREATE INDEX IF NOT EXISTS idx_delivery_notes_user_id ON delivery_notes(user_id);
 CREATE INDEX IF NOT EXISTS idx_delivery_notes_dentist_id ON delivery_notes(dentist_id);
+
 -- =============================================================================
 -- Migration: 20251029135224_add_delivery_note_fields.sql
 -- =============================================================================
+
 /*
   # Ajout de champs pour les bons de livraison
 
@@ -623,9 +621,11 @@ BEGIN
     ALTER TABLE delivery_notes ADD COLUMN prescription_date date;
   END IF;
 END $$;
+
 -- =============================================================================
 -- Migration: 20251029140622_add_patients_and_catalog.sql
 -- =============================================================================
+
 /*
   # Add Patients and Catalog Items
 
@@ -754,9 +754,11 @@ END $$;
 CREATE INDEX IF NOT EXISTS idx_patients_user_id ON patients(user_id);
 CREATE INDEX IF NOT EXISTS idx_catalog_items_user_id ON catalog_items(user_id);
 CREATE INDEX IF NOT EXISTS idx_delivery_notes_patient_id ON delivery_notes(patient_id);
+
 -- =============================================================================
 -- Migration: 20251029141813_add_patient_name_to_delivery_notes.sql
 -- =============================================================================
+
 /*
   # Add patient_name to delivery_notes
 
@@ -775,9 +777,11 @@ BEGIN
     ALTER TABLE delivery_notes ADD COLUMN patient_name text;
   END IF;
 END $$;
+
 -- =============================================================================
 -- Migration: 20251029152543_add_delivery_note_id_to_proforma_items.sql
 -- =============================================================================
+
 /*
   # Ajout de la référence aux bons de livraison dans proforma_items
 
@@ -801,9 +805,11 @@ BEGIN
     ALTER TABLE proforma_items ADD COLUMN delivery_note_id uuid REFERENCES delivery_notes(id) ON DELETE SET NULL;
   END IF;
 END $$;
+
 -- =============================================================================
 -- Migration: 20251030095109_add_partial_status_to_invoices.sql
 -- =============================================================================
+
 /*
   # Add partial payment status to invoices
 
@@ -830,9 +836,11 @@ BEGIN
   ADD CONSTRAINT invoices_status_check 
   CHECK (status IN ('draft', 'sent', 'paid', 'partial'));
 END $$;
+
 -- =============================================================================
 -- Migration: 20251101235239_add_status_to_delivery_notes.sql
 -- =============================================================================
+
 /*
   # Add status field to delivery_notes
 
@@ -856,9 +864,11 @@ BEGIN
     ALTER TABLE delivery_notes ADD COLUMN status text DEFAULT 'pending' CHECK (status IN ('pending', 'in_progress', 'completed'));
   END IF;
 END $$;
+
 -- =============================================================================
 -- Migration: 20251102040215_create_super_admin_system.sql
 -- =============================================================================
+
 /*
   # Create Super Admin System
 
@@ -1137,9 +1147,11 @@ CREATE INDEX IF NOT EXISTS idx_support_tickets_status ON support_tickets(status)
 CREATE INDEX IF NOT EXISTS idx_support_messages_ticket_id ON support_messages(ticket_id);
 CREATE INDEX IF NOT EXISTS idx_admin_audit_log_admin_id ON admin_audit_log(admin_id);
 CREATE INDEX IF NOT EXISTS idx_admin_audit_log_created_at ON admin_audit_log(created_at DESC);
+
 -- =============================================================================
 -- Migration: 20251102041247_fix_user_profiles_rls_policies.sql
 -- =============================================================================
+
 /*
   # Fix User Profiles RLS Policies
 
@@ -1219,9 +1231,11 @@ CREATE POLICY "Super admins can delete profiles"
   TO authenticated
   USING ((auth.jwt()->>'role')::text = 'super_admin');
 
+
 -- =============================================================================
 -- Migration: 20251102132309_add_stock_management_to_catalog.sql
 -- =============================================================================
+
 /*
   # Add Stock Management to Catalog Items
 
@@ -1292,9 +1306,11 @@ BEGIN
   END IF;
 END $$;
 
+
 -- =============================================================================
 -- Migration: 20251102132412_create_stock_movements_tracking.sql
 -- =============================================================================
+
 /*
   # Create Stock Movements Tracking System
 
@@ -1368,9 +1384,11 @@ CREATE INDEX IF NOT EXISTS idx_stock_movements_catalog_item ON stock_movements(c
 CREATE INDEX IF NOT EXISTS idx_stock_movements_delivery_note ON stock_movements(delivery_note_id);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_created_by ON stock_movements(created_by);
 
+
 -- =============================================================================
 -- Migration: 20251102134348_create_resources_system.sql
 -- =============================================================================
+
 /*
   # Create Resources Management System
 
@@ -1532,9 +1550,11 @@ CREATE TRIGGER resources_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_resources_updated_at();
 
+
 -- =============================================================================
 -- Migration: 20251102141642_add_resource_tracking_to_stock_movements.sql
 -- =============================================================================
+
 /*
   # Add resource tracking to stock_movements table
 
@@ -1600,9 +1620,11 @@ CREATE POLICY "Users can create own stock movements"
     created_by = auth.uid() OR
     user_id = auth.uid()
   );
+
 -- =============================================================================
 -- Migration: 20251102142646_fix_resource_stock_quantity_type.sql
 -- =============================================================================
+
 /*
   # Fix resource stock_quantity type to support decimals
   
@@ -1617,9 +1639,11 @@ CREATE POLICY "Users can create own stock movements"
 
 ALTER TABLE resources 
 ALTER COLUMN stock_quantity TYPE NUMERIC(10,4) USING stock_quantity::NUMERIC(10,4);
+
 -- =============================================================================
 -- Migration: 20251102142833_fix_stock_movements_quantity_type.sql
 -- =============================================================================
+
 /*
   # Fix stock_movements quantity type to support decimals
   
@@ -1635,9 +1659,11 @@ ALTER COLUMN stock_quantity TYPE NUMERIC(10,4) USING stock_quantity::NUMERIC(10,
 
 ALTER TABLE stock_movements 
 ALTER COLUMN quantity TYPE NUMERIC(10,4) USING quantity::NUMERIC(10,4);
+
 -- =============================================================================
 -- Migration: 20251102143826_add_track_stock_to_resources.sql
 -- =============================================================================
+
 /*
   # Add track_stock column to resources table
 
@@ -1664,9 +1690,11 @@ END $$;
 
 -- Ensure all existing resources have track_stock set to true
 UPDATE resources SET track_stock = true WHERE track_stock IS NULL;
+
 -- =============================================================================
 -- Migration: 20251102152620_create_resource_variants_system.sql
 -- =============================================================================
+
 /*
   # Create resource variants system for shade management
 
@@ -1749,9 +1777,11 @@ CREATE POLICY "Users can delete own resource variants"
 CREATE INDEX IF NOT EXISTS idx_resource_variants_resource_id ON resource_variants(resource_id);
 CREATE INDEX IF NOT EXISTS idx_resource_variants_user_id ON resource_variants(user_id);
 CREATE INDEX IF NOT EXISTS idx_stock_movements_resource_variant_id ON stock_movements(resource_variant_id);
+
 -- =============================================================================
 -- Migration: 20251102153812_add_has_variants_to_resources.sql
 -- =============================================================================
+
 /*
   # Add has_variants column to resources
 
@@ -1823,9 +1853,11 @@ CREATE TRIGGER trigger_update_has_variants_on_delete
   AFTER DELETE ON resource_variants
   FOR EACH ROW
   EXECUTE FUNCTION update_resource_has_variants();
+
 -- =============================================================================
 -- Migration: 20251102162032_add_low_stock_threshold_to_variants.sql
 -- =============================================================================
+
 /*
   # Add low stock threshold to resource variants
 
@@ -1849,9 +1881,11 @@ BEGIN
   END IF;
 END $$;
 
+
 -- =============================================================================
 -- Migration: 20251102170035_add_subcategories_to_resource_variants.sql
 -- =============================================================================
+
 /*
   # Add subcategories system to resource variants
 
@@ -1887,9 +1921,11 @@ COMMENT ON COLUMN resource_variants.subcategory IS 'Optional subcategory for gro
 
 -- Create index for better query performance
 CREATE INDEX IF NOT EXISTS idx_resource_variants_subcategory ON resource_variants(resource_id, subcategory) WHERE is_active = true;
+
 -- =============================================================================
 -- Migration: 20251102170905_update_unique_constraint_for_subcategories.sql
 -- =============================================================================
+
 /*
   # Update unique constraint for resource variants with subcategories
 
@@ -1913,9 +1949,11 @@ ALTER TABLE resource_variants DROP CONSTRAINT IF EXISTS unique_resource_variant;
 ALTER TABLE resource_variants 
 ADD CONSTRAINT unique_resource_variant 
 UNIQUE (resource_id, subcategory, variant_name);
+
 -- =============================================================================
 -- Migration: 20251102175511_create_access_codes_system.sql
 -- =============================================================================
+
 /*
   # Create Access Codes System
 
@@ -2082,9 +2120,11 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 CREATE INDEX IF NOT EXISTS idx_access_codes_code ON access_codes(code);
 CREATE INDEX IF NOT EXISTS idx_access_codes_is_used ON access_codes(is_used);
 CREATE INDEX IF NOT EXISTS idx_user_profiles_subscription_status ON user_profiles(subscription_status);
+
 -- =============================================================================
 -- Migration: 20251102180100_link_profiles_and_user_profiles.sql
 -- =============================================================================
+
 /*
   # Link profiles and user_profiles tables
 
@@ -2152,9 +2192,11 @@ WHERE NOT EXISTS (
   SELECT 1 FROM user_profiles up WHERE up.id = p.id
 )
 ON CONFLICT (id) DO NOTHING;
+
 -- =============================================================================
 -- Migration: 20251102180746_fix_profiles_signup_policy.sql
 -- =============================================================================
+
 /*
   # Fix profiles insertion policy for signup
 
@@ -2183,9 +2225,11 @@ CREATE POLICY "Allow profile creation during signup"
   ON profiles FOR INSERT
   TO anon
   WITH CHECK (true);
+
 -- =============================================================================
 -- Migration: 20251102180934_fix_user_profiles_rls_for_signup.sql
 -- =============================================================================
+
 /*
   # Fix user_profiles RLS policies for signup
 
@@ -2214,9 +2258,11 @@ CREATE POLICY "Allow profile creation during signup"
   ON user_profiles FOR INSERT
   TO anon
   WITH CHECK (true);
+
 -- =============================================================================
 -- Migration: 20251102181124_fix_user_profile_creation_trigger.sql
 -- =============================================================================
+
 /*
   # Fix user profile creation trigger to bypass RLS
 
@@ -2280,9 +2326,11 @@ CREATE TRIGGER create_user_profile_trigger
 -- Grant execute permission on the function
 GRANT EXECUTE ON FUNCTION create_user_profile_on_signup() TO authenticated;
 GRANT EXECUTE ON FUNCTION create_user_profile_on_signup() TO anon;
+
 -- =============================================================================
 -- Migration: 20251102181135_remove_anon_policies_after_trigger_fix.sql
 -- =============================================================================
+
 /*
   # Remove temporary anon policies
 
@@ -2302,9 +2350,11 @@ DROP POLICY IF EXISTS "Allow profile creation during signup" ON profiles;
 
 -- Remove anon policy from user_profiles
 DROP POLICY IF EXISTS "Allow profile creation during signup" ON user_profiles;
+
 -- =============================================================================
 -- Migration: 20251102181316_fix_profiles_insert_with_hook.sql
 -- =============================================================================
+
 /*
   # Fix profiles table to work with Supabase Auth hooks
 
@@ -2332,9 +2382,11 @@ CREATE POLICY "Authenticated users can insert own profile"
   ON profiles FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = id);
+
 -- =============================================================================
 -- Migration: 20251102181338_fix_profiles_rls_allow_service_role.sql
 -- =============================================================================
+
 /*
   # Fix profiles RLS to allow insertion after auth.signUp
 
@@ -2365,9 +2417,11 @@ CREATE POLICY "Users can insert own profile during signup"
     -- Allow if no auth.uid() yet (during signup process)
     (auth.uid() IS NULL)
   );
+
 -- =============================================================================
 -- Migration: 20251102181359_simplify_profiles_rls_for_insert.sql
 -- =============================================================================
+
 /*
   # Simplify profiles INSERT policy to work with signup
 
@@ -2395,9 +2449,11 @@ CREATE POLICY "Allow profile creation"
   ON profiles FOR INSERT
   TO authenticated, anon
   WITH CHECK (true);
+
 -- =============================================================================
 -- Migration: 20251102181550_remove_auth_users_trigger.sql
 -- =============================================================================
+
 /*
   # Remove obsolete trigger on auth.users
 
@@ -2422,9 +2478,11 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 
 -- Drop the obsolete function
 DROP FUNCTION IF EXISTS create_user_profile();
+
 -- =============================================================================
 -- Migration: 20251102181830_fix_trigger_add_email_to_user_profiles.sql
 -- =============================================================================
+
 /*
   # Fix trigger to include email in user_profiles
 
@@ -2506,9 +2564,11 @@ SELECT
 FROM auth.users
 WHERE id = '6a0e255f-ac1c-42cd-8298-6a10409b6870'
 ON CONFLICT (id) DO NOTHING;
+
 -- =============================================================================
 -- Migration: 20251102182659_fix_super_admin_rls_policies.sql
 -- =============================================================================
+
 /*
   # Fix Super Admin RLS Policies
 
@@ -2565,9 +2625,11 @@ CREATE POLICY "Super admins can delete any profile"
   ON user_profiles FOR DELETE
   TO authenticated
   USING (is_super_admin());
+
 -- =============================================================================
 -- Migration: 20251102185944_create_help_center_system.sql
 -- =============================================================================
+
 /*
   # Create Help Center System
 
@@ -2758,9 +2820,11 @@ CREATE TRIGGER update_help_replies_updated_at
   FOR EACH ROW
   EXECUTE FUNCTION update_help_updated_at();
 
+
 -- =============================================================================
 -- Migration: 20251102190503_link_help_center_to_profiles.sql
 -- =============================================================================
+
 /*
   # Link Help Center to Profiles
 
@@ -2799,9 +2863,11 @@ ALTER TABLE help_votes
   REFERENCES profiles(id)
   ON DELETE CASCADE;
 
+
 -- =============================================================================
 -- Migration: 20251102192338_add_public_profile_access.sql
 -- =============================================================================
+
 /*
   # Add Public Profile Access for Help Center
 
@@ -2821,9 +2887,11 @@ CREATE POLICY "Users can view all profiles for community features"
   TO authenticated
   USING (true);
 
+
 -- =============================================================================
 -- Migration: 20251102192911_add_super_admin_help_center_policies.sql
 -- =============================================================================
+
 /*
   # Add Super Admin Policies for Help Center
 
@@ -2881,9 +2949,11 @@ CREATE POLICY "Super admins can delete any reply"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251102193604_fix_access_codes_redeem_policy.sql
 -- =============================================================================
+
 /*
   # Fix Access Codes Redeem Policy
 
@@ -2924,9 +2994,11 @@ CREATE POLICY "Users can redeem codes"
     AND used_at IS NOT NULL
   );
 
+
 -- =============================================================================
 -- Migration: 20251102193841_fix_access_codes_policies_conflict.sql
 -- =============================================================================
+
 /*
   # Fix Access Codes Policies Conflict
 
@@ -3002,9 +3074,11 @@ CREATE POLICY "Super admins can delete codes"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251102193910_simplify_access_codes_user_policy.sql
 -- =============================================================================
+
 /*
   # Simplify Access Codes User Redemption Policy
 
@@ -3051,9 +3125,11 @@ CREATE POLICY "Users can redeem codes"
 -- Remove the separate super admin UPDATE policy since it's now handled above
 DROP POLICY IF EXISTS "Super admins can update codes" ON access_codes;
 
+
 -- =============================================================================
 -- Migration: 20251102194232_debug_access_codes_policy.sql
 -- =============================================================================
+
 /*
   # Debug Access Codes Policy
   
@@ -3085,9 +3161,11 @@ CREATE POLICY "Users can redeem codes"
     is_used = true AND used_by = auth.uid()
   );
 
+
 -- =============================================================================
 -- Migration: 20251102194250_test_minimal_access_code_policy.sql
 -- =============================================================================
+
 /*
   # Test Minimal Access Code Policy
   
@@ -3114,9 +3192,11 @@ CREATE POLICY "Users can redeem codes"
   USING (true)  -- Allow reading any row
   WITH CHECK (true);  -- Allow any update
 
+
 -- =============================================================================
 -- Migration: 20251102194609_final_fix_access_codes_rls.sql
 -- =============================================================================
+
 /*
   # Final Fix for Access Codes RLS
   
@@ -3211,9 +3291,11 @@ CREATE POLICY "access_codes_delete_policy"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251102195004_fix_access_codes_without_auth_uid_check.sql
 -- =============================================================================
+
 /*
   # Fix Access Codes - Remove auth.uid() from WITH CHECK
   
@@ -3264,9 +3346,11 @@ CREATE POLICY "access_codes_update_policy"
     is_used = true
   );
 
+
 -- =============================================================================
 -- Migration: 20251102195028_add_trigger_auto_set_used_by.sql
 -- =============================================================================
+
 /*
   # Add Trigger to Auto-Set used_by Field
   
@@ -3336,9 +3420,11 @@ CREATE POLICY "access_codes_update_policy"
     is_used = true
   );
 
+
 -- =============================================================================
 -- Migration: 20251102195223_force_fix_access_codes_policy.sql
 -- =============================================================================
+
 /*
   # FORCE FIX - Access Codes Policy
   
@@ -3382,9 +3468,11 @@ CREATE POLICY "access_codes_update_policy"
   )
   WITH CHECK (true);  -- Pas de vérification APRÈS update
 
+
 -- =============================================================================
 -- Migration: 20251102195629_fix_audit_log_policies.sql
 -- =============================================================================
+
 /*
   # Fix Admin Audit Log Policies
   
@@ -3424,9 +3512,11 @@ CREATE POLICY "Super admins can create audit log entries"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251102200322_add_unique_code_per_user_constraint.sql
 -- =============================================================================
+
 /*
   # Add Unique Code Per User Constraint
   
@@ -3485,9 +3575,11 @@ CREATE INDEX IF NOT EXISTS idx_access_code_usage_user
 CREATE INDEX IF NOT EXISTS idx_access_code_usage_code 
   ON access_code_usage(access_code_id);
 
+
 -- =============================================================================
 -- Migration: 20251102200815_create_credit_notes_system.sql
 -- =============================================================================
+
 /*
   # Création du système d'avoirs (credit notes)
 
@@ -3647,10 +3739,12 @@ CREATE TRIGGER update_credit_notes_updated_at
 CREATE INDEX IF NOT EXISTS idx_credit_notes_user_id ON credit_notes(user_id);
 CREATE INDEX IF NOT EXISTS idx_credit_notes_invoice_id ON credit_notes(invoice_id);
 CREATE INDEX IF NOT EXISTS idx_credit_note_items_credit_note_id ON credit_note_items(credit_note_id);
+
 
 -- =============================================================================
 -- Migration: 20251102212943_20251102200815_create_credit_notes_system.sql
 -- =============================================================================
+
 /*
   # Création du système d'avoirs (credit notes)
 
@@ -3811,9 +3905,11 @@ CREATE INDEX IF NOT EXISTS idx_credit_notes_user_id ON credit_notes(user_id);
 CREATE INDEX IF NOT EXISTS idx_credit_notes_invoice_id ON credit_notes(invoice_id);
 CREATE INDEX IF NOT EXISTS idx_credit_note_items_credit_note_id ON credit_note_items(credit_note_id);
 
+
 -- =============================================================================
 -- Migration: 20251102220300_update_credit_notes_link_to_dentist_v2.sql
 -- =============================================================================
+
 /*
   # Modifier les avoirs pour les lier au dentiste
 
@@ -3893,9 +3989,11 @@ END $$;
 -- Créer des index pour améliorer les performances
 CREATE INDEX IF NOT EXISTS idx_credit_notes_dentist_id ON credit_notes(dentist_id);
 CREATE INDEX IF NOT EXISTS idx_credit_notes_used ON credit_notes(used);
+
 -- =============================================================================
 -- Migration: 20251104165627_fix_duplicate_triggers_signup.sql
 -- =============================================================================
+
 /*
   # Fix Duplicate Triggers Causing 500 Error on Signup
 
@@ -3975,9 +4073,11 @@ CREATE TRIGGER create_user_profile_trigger
   FOR EACH ROW
   EXECUTE FUNCTION create_user_profile_on_signup();
 
+
 -- =============================================================================
 -- Migration: 20251105080539_create_smtp_settings.sql
 -- =============================================================================
+
 /*
   # SMTP Settings Configuration for Super Admin
 
@@ -4084,9 +4184,11 @@ CREATE TRIGGER ensure_single_active_smtp_trigger
 -- Create index for faster lookups
 CREATE INDEX IF NOT EXISTS idx_smtp_settings_active ON smtp_settings(is_active) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_smtp_settings_configured_by ON smtp_settings(configured_by);
+
 -- =============================================================================
 -- Migration: 20251105085234_add_invoice_status_auto_update.sql
 -- =============================================================================
+
 /*
   # Auto-update invoice status based on payments
 
@@ -4159,9 +4261,11 @@ CREATE TRIGGER trigger_update_invoice_status
 AFTER INSERT OR UPDATE OR DELETE ON invoice_payments
 FOR EACH ROW
 EXECUTE FUNCTION update_invoice_status();
+
 -- =============================================================================
 -- Migration: 20251105104651_add_rcs_field_to_profiles.sql
 -- =============================================================================
+
 /*
   # Add RCS Field to Profiles
 
@@ -4191,9 +4295,11 @@ BEGIN
     ADD COLUMN laboratory_rcs text DEFAULT 'RCS 919 832 287 R.C.S. Ajaccio - Département immatriculation 2A';
   END IF;
 END $$;
+
 -- =============================================================================
 -- Migration: 20251105113038_create_dentist_photo_submission_system.sql
 -- =============================================================================
+
 /*
   # Create Dentist Photo Submission System
 
@@ -4360,9 +4466,11 @@ CREATE INDEX IF NOT EXISTS idx_photo_submissions_laboratory ON photo_submissions
 CREATE INDEX IF NOT EXISTS idx_photo_submissions_created ON photo_submissions(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_dentist_accounts_email ON dentist_accounts(email);
 
+
 -- =============================================================================
 -- Migration: 20251105121005_add_laboratory_response_to_photo_submissions.sql
 -- =============================================================================
+
 /*
   # Add laboratory response field to photo submissions
 
@@ -4386,9 +4494,11 @@ BEGIN
   END IF;
 END $$;
 
+
 -- =============================================================================
 -- Migration: 20251105122029_add_auto_delete_old_photos.sql
 -- =============================================================================
+
 /*
   # Add automatic deletion of old photo submissions
 
@@ -4424,9 +4534,11 @@ SELECT cron.schedule(
   'SELECT delete_old_photo_submissions();'
 );
 
+
 -- =============================================================================
 -- Migration: 20251105141919_add_dentist_favorite_laboratories.sql
 -- =============================================================================
+
 /*
   # Add Dentist Favorite Laboratories System
 
@@ -4506,9 +4618,11 @@ CREATE INDEX IF NOT EXISTS idx_dentist_favorites_dentist_id
 CREATE INDEX IF NOT EXISTS idx_dentist_favorites_laboratory_id 
   ON dentist_favorite_laboratories(laboratory_profile_id);
 
+
 -- =============================================================================
 -- Migration: 20251105143531_create_employee_management_system.sql
 -- =============================================================================
+
 /*
   # Create Employee Management System
 
@@ -4687,9 +4801,11 @@ CREATE TRIGGER trigger_update_laboratory_role_permissions_updated_at
   BEFORE UPDATE ON laboratory_role_permissions
   FOR EACH ROW
   EXECUTE FUNCTION update_laboratory_role_permissions_updated_at();
+
 -- =============================================================================
 -- Migration: 20251105150455_add_employee_view_lab_profile_policy.sql
 -- =============================================================================
+
 /*
   # Allow employees to view their laboratory's profile
 
@@ -4715,9 +4831,11 @@ CREATE POLICY "Employees can view their laboratory profile"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251105150514_add_employee_photo_submissions_policies.sql
 -- =============================================================================
+
 /*
   # Allow employees to access their laboratory's photo submissions
 
@@ -4764,9 +4882,11 @@ CREATE POLICY "Employees can update their laboratory submission status"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251105150629_add_employee_access_to_all_tables_v2.sql
 -- =============================================================================
+
 /*
   # Allow employees to access their laboratory's data
 
@@ -5126,9 +5246,11 @@ CREATE POLICY "Employees can manage their laboratory credit notes"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251105152517_add_laboratory_can_view_dentist_accounts.sql
 -- =============================================================================
+
 /*
   # Allow laboratories to view dentist accounts who submitted photos
 
@@ -5154,9 +5276,11 @@ CREATE POLICY "Laboratories can view dentists who submitted to them"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251105152531_add_employee_can_view_dentist_accounts.sql
 -- =============================================================================
+
 /*
   # Allow laboratory employees to view dentist accounts
 
@@ -5184,9 +5308,11 @@ CREATE POLICY "Employees can view dentists who submitted to their lab"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251105152829_add_delete_policy_photo_submissions_v2.sql
 -- =============================================================================
+
 /*
   # Add delete policy for photo submissions
 
@@ -5221,9 +5347,11 @@ CREATE POLICY "Employees can delete submissions sent to their lab"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251105153521_add_laboratory_can_insert_photo_submissions.sql
 -- =============================================================================
+
 /*
   # Allow laboratories to insert photo submissions
 
@@ -5258,9 +5386,11 @@ CREATE POLICY "Employees can insert submissions for their lab"
     )
   );
 
+
 -- =============================================================================
 -- Migration: 20251105154954_fix_employee_access_dentist_accounts.sql
 -- =============================================================================
+
 /*
   # Fix employee access to dentist_accounts
 
@@ -5284,9 +5414,11 @@ CREATE POLICY "Authenticated users can view all dentist accounts"
   TO authenticated
   USING (true);
 
+
 -- =============================================================================
 -- Migration: 20251105163234_fix_subscription_plans_rls_policies.sql
 -- =============================================================================
+
 /*
   # Fix Subscription Plans RLS Policies
 
@@ -5377,9 +5509,11 @@ CREATE POLICY "Users can view active plans"
   TO authenticated
   USING (is_active = true);
 
+
 -- =============================================================================
 -- Migration: 20251105164556_add_contact_phone_to_settings.sql
 -- =============================================================================
+
 /*
   # Add contact phone number to settings
 
@@ -5402,9 +5536,11 @@ BEGIN
   END IF;
 END $$;
 
+
 -- =============================================================================
 -- Migration: 20251105165346_allow_public_access_to_contact_phone.sql
 -- =============================================================================
+
 /*
   # Allow public access to contact phone number
 
@@ -5425,9 +5561,11 @@ CREATE POLICY "Anyone can view contact phone from active settings"
   TO public
   USING (is_active = true);
 
+
 -- =============================================================================
 -- Migration: 20251106141919_fix_user_profiles_infinite_recursion.sql
 -- =============================================================================
+
 /*
   # Fix Infinite Recursion in user_profiles Policies
   
@@ -5487,9 +5625,11 @@ CREATE POLICY "Super admins have full access"
     (auth.jwt() -> 'user_metadata' ->> 'role')::text = 'super_admin' OR
     (auth.jwt() -> 'app_metadata' ->> 'role')::text = 'super_admin'
   );
+
 -- =============================================================================
 -- Migration: 20251106142009_fix_infinite_recursion_complete.sql
 -- =============================================================================
+
 /*
   # Fix Infinite Recursion in RLS Policies
   
@@ -5598,9 +5738,11 @@ CREATE POLICY "Super admins delete SMTP"
   ON smtp_settings FOR DELETE
   TO authenticated
   USING (is_super_admin());
+
 -- =============================================================================
 -- Migration: 20251106155226_fix_is_super_admin_function.sql
 -- =============================================================================
+
 /*
   # Fix is_super_admin() function to use email instead of id
 
@@ -5632,17 +5774,6 @@ BEGIN
 END;
 $$;
 
--- =============================================================================
--- Re-enable triggers
--- =============================================================================
+
+
 SET session_replication_role = DEFAULT;
-
--- =============================================================================
--- NOTES
--- =============================================================================
--- 1. This dump contains the complete schema but NOT the data
--- 2. To migrate data, use Supabase's built-in backup/restore tools
--- 3. Or export/import data table by table using CSV
--- 4. Users in auth.users table need to be migrated separately
--- =============================================================================
-
