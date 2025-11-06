@@ -13,12 +13,19 @@ BEGIN
     END LOOP;
 END $$;
 
--- Drop existing triggers to avoid conflicts
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-DROP TRIGGER IF EXISTS on_auth_user_created_profile ON auth.users;
-DROP TRIGGER IF EXISTS create_user_profile_trigger ON auth.users;
-DROP TRIGGER IF EXISTS update_invoice_status_on_payment ON public.invoice_payments;
-DROP TRIGGER IF EXISTS auto_delete_old_photos_trigger ON public.photo_submissions;
+-- Drop existing triggers to avoid conflicts (check if tables exist first)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created') THEN
+    DROP TRIGGER on_auth_user_created ON auth.users;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'on_auth_user_created_profile') THEN
+    DROP TRIGGER on_auth_user_created_profile ON auth.users;
+  END IF;
+  IF EXISTS (SELECT 1 FROM pg_trigger WHERE tgname = 'create_user_profile_trigger') THEN
+    DROP TRIGGER create_user_profile_trigger ON auth.users;
+  END IF;
+END $$;
 
 -- Drop existing functions
 DROP FUNCTION IF EXISTS create_user_profile() CASCADE;
