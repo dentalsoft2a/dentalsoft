@@ -89,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .maybeSingle(),
         supabase
           .from('laboratory_employees')
-          .select('laboratory_id, role, is_active, email')
+          .select('laboratory_profile_id, role_name, is_active, email')
           .eq('email', (await supabase.auth.getUser()).data.user?.email || '')
           .eq('is_active', true)
           .maybeSingle()
