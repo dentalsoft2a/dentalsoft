@@ -30,8 +30,8 @@ export function usePermissions() {
       const { data: role, error: roleError } = await supabase
         .from('laboratory_role_permissions')
         .select('role_name, menu_access, permissions')
-        .eq('laboratory_profile_id', employeeInfo.laboratory_profile_id)
-        .eq('role_name', employeeInfo.role_name)
+        .eq('laboratory_id', employeeInfo.laboratory_id)
+        .eq('role_name', employeeInfo.role)
         .maybeSingle();
 
       if (roleError) {
