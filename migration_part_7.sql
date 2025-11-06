@@ -517,14 +517,85 @@ CREATE INDEX IF NOT EXISTS idx_smtp_settings_configured_by ON smtp_settings(conf
   # Auto-update invoice status based on payments
 
   1. Changes
+    - Create invoice_payments table if it doesn't exist
     - Create a function to calculate and update invoice status
     - Add a trigger to update invoice status when payments are added/deleted/updated
-  
+
   2. Logic
     - Calculate total paid from invoice_payments
     - Compare with invoice total
     - Update status: 'paid' if fully paid, 'partial' if partially paid, 'draft' if unpaid
 */
+
+-- Create invoice_payments table if not exists
+CREATE TABLE IF NOT EXISTS invoice_payments (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  invoice_id uuid NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+  amount decimal(10, 2) NOT NULL,
+  payment_date date NOT NULL DEFAULT CURRENT_DATE,
+  payment_method text,
+  notes text,
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now()
+);
+
+-- Enable RLS on invoice_payments
+ALTER TABLE invoice_payments ENABLE ROW LEVEL SECURITY;
+
+-- Policies for invoice_payments
+CREATE POLICY "Users can view own invoice payments"
+  ON invoice_payments FOR SELECT
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM invoices
+      WHERE invoices.id = invoice_payments.invoice_id
+      AND invoices.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can insert own invoice payments"
+  ON invoice_payments FOR INSERT
+  TO authenticated
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM invoices
+      WHERE invoices.id = invoice_payments.invoice_id
+      AND invoices.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can update own invoice payments"
+  ON invoice_payments FOR UPDATE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM invoices
+      WHERE invoices.id = invoice_payments.invoice_id
+      AND invoices.user_id = auth.uid()
+    )
+  )
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM invoices
+      WHERE invoices.id = invoice_payments.invoice_id
+      AND invoices.user_id = auth.uid()
+    )
+  );
+
+CREATE POLICY "Users can delete own invoice payments"
+  ON invoice_payments FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM invoices
+      WHERE invoices.id = invoice_payments.invoice_id
+      AND invoices.user_id = auth.uid()
+    )
+  );
+
+-- Create index for better performance
+CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice_id ON invoice_payments(invoice_id);
 
 -- Function to update invoice status based on payments
 CREATE OR REPLACE FUNCTION update_invoice_status()
