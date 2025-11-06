@@ -1,8 +1,6 @@
 -- =============================================================================
--- SUPABASE COMPLETE DATABASE DUMP - DentalCloud (avec DROP POLICY)
--- Generated: 2025-11-06
--- =============================================================================
--- Ce fichier contient DROP POLICY IF EXISTS avant chaque CREATE POLICY
+-- SUPABASE COMPLETE DATABASE DUMP - DentalCloud
+-- Généré: 2025-11-06
 -- =============================================================================
 
 SET session_replication_role = replica;
@@ -293,18 +291,18 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own profile"
-  ON profiles FOR SELECT
+DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+CREATE POLICY "Users can view own profile" ON profiles FOR SELECT
   TO authenticated
   USING (auth.uid() = id);
 
-CREATE POLICY "Users can insert own profile"
-  ON profiles FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Users can update own profile"
-  ON profiles FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE
   TO authenticated
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
@@ -323,24 +321,24 @@ CREATE TABLE IF NOT EXISTS dentists (
 
 ALTER TABLE dentists ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own dentists"
-  ON dentists FOR SELECT
+DROP POLICY IF EXISTS "Users can view own dentists" ON dentists;
+CREATE POLICY "Users can view own dentists" ON dentists FOR SELECT
   TO authenticated
   USING (user_id = auth.uid());
 
-CREATE POLICY "Users can insert own dentists"
-  ON dentists FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own dentists" ON dentists;
+CREATE POLICY "Users can insert own dentists" ON dentists FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can update own dentists"
-  ON dentists FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own dentists" ON dentists;
+CREATE POLICY "Users can update own dentists" ON dentists FOR UPDATE
   TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can delete own dentists"
-  ON dentists FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own dentists" ON dentists;
+CREATE POLICY "Users can delete own dentists" ON dentists FOR DELETE
   TO authenticated
   USING (user_id = auth.uid());
 
@@ -363,24 +361,24 @@ CREATE TABLE IF NOT EXISTS proformas (
 
 ALTER TABLE proformas ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own proformas"
-  ON proformas FOR SELECT
+DROP POLICY IF EXISTS "Users can view own proformas" ON proformas;
+CREATE POLICY "Users can view own proformas" ON proformas FOR SELECT
   TO authenticated
   USING (user_id = auth.uid());
 
-CREATE POLICY "Users can insert own proformas"
-  ON proformas FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own proformas" ON proformas;
+CREATE POLICY "Users can insert own proformas" ON proformas FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can update own proformas"
-  ON proformas FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own proformas" ON proformas;
+CREATE POLICY "Users can update own proformas" ON proformas FOR UPDATE
   TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can delete own proformas"
-  ON proformas FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own proformas" ON proformas;
+CREATE POLICY "Users can delete own proformas" ON proformas FOR DELETE
   TO authenticated
   USING (user_id = auth.uid());
 
@@ -397,8 +395,8 @@ CREATE TABLE IF NOT EXISTS proforma_items (
 
 ALTER TABLE proforma_items ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own proforma items"
-  ON proforma_items FOR SELECT
+DROP POLICY IF EXISTS "Users can view own proforma items" ON proforma_items;
+CREATE POLICY "Users can view own proforma items" ON proforma_items FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -408,8 +406,8 @@ CREATE POLICY "Users can view own proforma items"
     )
   );
 
-CREATE POLICY "Users can insert own proforma items"
-  ON proforma_items FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own proforma items" ON proforma_items;
+CREATE POLICY "Users can insert own proforma items" ON proforma_items FOR INSERT
   TO authenticated
   WITH CHECK (
     EXISTS (
@@ -419,8 +417,8 @@ CREATE POLICY "Users can insert own proforma items"
     )
   );
 
-CREATE POLICY "Users can update own proforma items"
-  ON proforma_items FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own proforma items" ON proforma_items;
+CREATE POLICY "Users can update own proforma items" ON proforma_items FOR UPDATE
   TO authenticated
   USING (
     EXISTS (
@@ -437,8 +435,8 @@ CREATE POLICY "Users can update own proforma items"
     )
   );
 
-CREATE POLICY "Users can delete own proforma items"
-  ON proforma_items FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own proforma items" ON proforma_items;
+CREATE POLICY "Users can delete own proforma items" ON proforma_items FOR DELETE
   TO authenticated
   USING (
     EXISTS (
@@ -469,24 +467,24 @@ CREATE TABLE IF NOT EXISTS invoices (
 
 ALTER TABLE invoices ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own invoices"
-  ON invoices FOR SELECT
+DROP POLICY IF EXISTS "Users can view own invoices" ON invoices;
+CREATE POLICY "Users can view own invoices" ON invoices FOR SELECT
   TO authenticated
   USING (user_id = auth.uid());
 
-CREATE POLICY "Users can insert own invoices"
-  ON invoices FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own invoices" ON invoices;
+CREATE POLICY "Users can insert own invoices" ON invoices FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can update own invoices"
-  ON invoices FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own invoices" ON invoices;
+CREATE POLICY "Users can update own invoices" ON invoices FOR UPDATE
   TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can delete own invoices"
-  ON invoices FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own invoices" ON invoices;
+CREATE POLICY "Users can delete own invoices" ON invoices FOR DELETE
   TO authenticated
   USING (user_id = auth.uid());
 
@@ -501,8 +499,8 @@ CREATE TABLE IF NOT EXISTS invoice_proformas (
 
 ALTER TABLE invoice_proformas ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own invoice proformas"
-  ON invoice_proformas FOR SELECT
+DROP POLICY IF EXISTS "Users can view own invoice proformas" ON invoice_proformas;
+CREATE POLICY "Users can view own invoice proformas" ON invoice_proformas FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -512,8 +510,8 @@ CREATE POLICY "Users can view own invoice proformas"
     )
   );
 
-CREATE POLICY "Users can insert own invoice proformas"
-  ON invoice_proformas FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own invoice proformas" ON invoice_proformas;
+CREATE POLICY "Users can insert own invoice proformas" ON invoice_proformas FOR INSERT
   TO authenticated
   WITH CHECK (
     EXISTS (
@@ -523,8 +521,8 @@ CREATE POLICY "Users can insert own invoice proformas"
     )
   );
 
-CREATE POLICY "Users can delete own invoice proformas"
-  ON invoice_proformas FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own invoice proformas" ON invoice_proformas;
+CREATE POLICY "Users can delete own invoice proformas" ON invoice_proformas FOR DELETE
   TO authenticated
   USING (
     EXISTS (
@@ -551,24 +549,24 @@ CREATE TABLE IF NOT EXISTS delivery_notes (
 
 ALTER TABLE delivery_notes ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own delivery notes"
-  ON delivery_notes FOR SELECT
+DROP POLICY IF EXISTS "Users can view own delivery notes" ON delivery_notes;
+CREATE POLICY "Users can view own delivery notes" ON delivery_notes FOR SELECT
   TO authenticated
   USING (user_id = auth.uid());
 
-CREATE POLICY "Users can insert own delivery notes"
-  ON delivery_notes FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own delivery notes" ON delivery_notes;
+CREATE POLICY "Users can insert own delivery notes" ON delivery_notes FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can update own delivery notes"
-  ON delivery_notes FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own delivery notes" ON delivery_notes;
+CREATE POLICY "Users can update own delivery notes" ON delivery_notes FOR UPDATE
   TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can delete own delivery notes"
-  ON delivery_notes FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own delivery notes" ON delivery_notes;
+CREATE POLICY "Users can delete own delivery notes" ON delivery_notes FOR DELETE
   TO authenticated
   USING (user_id = auth.uid());
 
@@ -681,24 +679,24 @@ CREATE TABLE IF NOT EXISTS patients (
 
 ALTER TABLE patients ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own patients"
-  ON patients FOR SELECT
+DROP POLICY IF EXISTS "Users can view own patients" ON patients;
+CREATE POLICY "Users can view own patients" ON patients FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own patients"
-  ON patients FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own patients" ON patients;
+CREATE POLICY "Users can insert own patients" ON patients FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own patients"
-  ON patients FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own patients" ON patients;
+CREATE POLICY "Users can update own patients" ON patients FOR UPDATE
   TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete own patients"
-  ON patients FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own patients" ON patients;
+CREATE POLICY "Users can delete own patients" ON patients FOR DELETE
   TO authenticated
   USING (auth.uid() = user_id);
 
@@ -718,24 +716,24 @@ CREATE TABLE IF NOT EXISTS catalog_items (
 
 ALTER TABLE catalog_items ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own catalog items"
-  ON catalog_items FOR SELECT
+DROP POLICY IF EXISTS "Users can view own catalog items" ON catalog_items;
+CREATE POLICY "Users can view own catalog items" ON catalog_items FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own catalog items"
-  ON catalog_items FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own catalog items" ON catalog_items;
+CREATE POLICY "Users can insert own catalog items" ON catalog_items FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own catalog items"
-  ON catalog_items FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own catalog items" ON catalog_items;
+CREATE POLICY "Users can update own catalog items" ON catalog_items FOR UPDATE
   TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete own catalog items"
-  ON catalog_items FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own catalog items" ON catalog_items;
+CREATE POLICY "Users can delete own catalog items" ON catalog_items FOR DELETE
   TO authenticated
   USING (auth.uid() = user_id);
 
@@ -954,21 +952,21 @@ CREATE TABLE IF NOT EXISTS user_profiles (
 
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own profile"
-  ON user_profiles FOR SELECT
+DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
+CREATE POLICY "Users can view own profile" ON user_profiles FOR SELECT
   TO authenticated
   USING (auth.uid() = id OR EXISTS (
     SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'super_admin'
   ));
 
-CREATE POLICY "Users can update own profile"
-  ON user_profiles FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
+CREATE POLICY "Users can update own profile" ON user_profiles FOR UPDATE
   TO authenticated
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
-CREATE POLICY "Super admins can manage all profiles"
-  ON user_profiles FOR ALL
+DROP POLICY IF EXISTS "Super admins can manage all profiles" ON user_profiles;
+CREATE POLICY "Super admins can manage all profiles" ON user_profiles FOR ALL
   TO authenticated
   USING (EXISTS (
     SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'super_admin'
@@ -992,15 +990,15 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
 
 ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Anyone can view active plans"
-  ON subscription_plans FOR SELECT
+DROP POLICY IF EXISTS "Anyone can view active plans" ON subscription_plans;
+CREATE POLICY "Anyone can view active plans" ON subscription_plans FOR SELECT
   TO authenticated
   USING (is_active = true OR EXISTS (
     SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'super_admin'
   ));
 
-CREATE POLICY "Super admins can manage plans"
-  ON subscription_plans FOR ALL
+DROP POLICY IF EXISTS "Super admins can manage plans" ON subscription_plans;
+CREATE POLICY "Super admins can manage plans" ON subscription_plans FOR ALL
   TO authenticated
   USING (EXISTS (
     SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'super_admin'
@@ -1022,20 +1020,20 @@ CREATE TABLE IF NOT EXISTS support_tickets (
 
 ALTER TABLE support_tickets ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own tickets"
-  ON support_tickets FOR SELECT
+DROP POLICY IF EXISTS "Users can view own tickets" ON support_tickets;
+CREATE POLICY "Users can view own tickets" ON support_tickets FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id OR EXISTS (
     SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'super_admin'
   ));
 
-CREATE POLICY "Users can create own tickets"
-  ON support_tickets FOR INSERT
+DROP POLICY IF EXISTS "Users can create own tickets" ON support_tickets;
+CREATE POLICY "Users can create own tickets" ON support_tickets FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Super admins can manage all tickets"
-  ON support_tickets FOR ALL
+DROP POLICY IF EXISTS "Super admins can manage all tickets" ON support_tickets;
+CREATE POLICY "Super admins can manage all tickets" ON support_tickets FOR ALL
   TO authenticated
   USING (EXISTS (
     SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'super_admin'
@@ -1056,8 +1054,8 @@ CREATE TABLE IF NOT EXISTS support_messages (
 
 ALTER TABLE support_messages ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view messages for own tickets"
-  ON support_messages FOR SELECT
+DROP POLICY IF EXISTS "Users can view messages for own tickets" ON support_messages;
+CREATE POLICY "Users can view messages for own tickets" ON support_messages FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -1067,8 +1065,8 @@ CREATE POLICY "Users can view messages for own tickets"
     )
   );
 
-CREATE POLICY "Users can create messages for own tickets"
-  ON support_messages FOR INSERT
+DROP POLICY IF EXISTS "Users can create messages for own tickets" ON support_messages;
+CREATE POLICY "Users can create messages for own tickets" ON support_messages FOR INSERT
   TO authenticated
   WITH CHECK (
     EXISTS (
@@ -1090,15 +1088,15 @@ CREATE TABLE IF NOT EXISTS admin_audit_log (
 
 ALTER TABLE admin_audit_log ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Super admins can view audit log"
-  ON admin_audit_log FOR SELECT
+DROP POLICY IF EXISTS "Super admins can view audit log" ON admin_audit_log;
+CREATE POLICY "Super admins can view audit log" ON admin_audit_log FOR SELECT
   TO authenticated
   USING (EXISTS (
     SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'super_admin'
   ));
 
-CREATE POLICY "Super admins can create audit log entries"
-  ON admin_audit_log FOR INSERT
+DROP POLICY IF EXISTS "Super admins can create audit log entries" ON admin_audit_log;
+CREATE POLICY "Super admins can create audit log entries" ON admin_audit_log FOR INSERT
   TO authenticated
   WITH CHECK (EXISTS (
     SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'super_admin'
@@ -1177,20 +1175,20 @@ DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
 DROP POLICY IF EXISTS "Super admins can manage all profiles" ON user_profiles;
 
 -- Create new simplified policies
-CREATE POLICY "Users can view own profile"
-  ON user_profiles FOR SELECT
+DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
+CREATE POLICY "Users can view own profile" ON user_profiles FOR SELECT
   TO authenticated
   USING (auth.uid() = id);
 
-CREATE POLICY "Users can update own profile"
-  ON user_profiles FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
+CREATE POLICY "Users can update own profile" ON user_profiles FOR UPDATE
   TO authenticated
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
 -- Super admins can view all profiles (using raw_app_metadata)
-CREATE POLICY "Super admins can view all profiles"
-  ON user_profiles FOR SELECT
+DROP POLICY IF EXISTS "Super admins can view all profiles" ON user_profiles;
+CREATE POLICY "Super admins can view all profiles" ON user_profiles FOR SELECT
   TO authenticated
   USING (
     auth.uid() = id OR
@@ -1204,8 +1202,8 @@ CREATE POLICY "Super admins can view all profiles"
   );
 
 -- Super admins can update all profiles
-CREATE POLICY "Super admins can update all profiles"
-  ON user_profiles FOR UPDATE
+DROP POLICY IF EXISTS "Super admins can update all profiles" ON user_profiles;
+CREATE POLICY "Super admins can update all profiles" ON user_profiles FOR UPDATE
   TO authenticated
   USING (
     auth.uid() = id OR
@@ -1217,8 +1215,8 @@ CREATE POLICY "Super admins can update all profiles"
   );
 
 -- Super admins can insert profiles
-CREATE POLICY "Super admins can insert profiles"
-  ON user_profiles FOR INSERT
+DROP POLICY IF EXISTS "Super admins can insert profiles" ON user_profiles;
+CREATE POLICY "Super admins can insert profiles" ON user_profiles FOR INSERT
   TO authenticated
   WITH CHECK (
     auth.uid() = id OR
@@ -1226,8 +1224,8 @@ CREATE POLICY "Super admins can insert profiles"
   );
 
 -- Super admins can delete profiles
-CREATE POLICY "Super admins can delete profiles"
-  ON user_profiles FOR DELETE
+DROP POLICY IF EXISTS "Super admins can delete profiles" ON user_profiles;
+CREATE POLICY "Super admins can delete profiles" ON user_profiles FOR DELETE
   TO authenticated
   USING ((auth.jwt()->>'role')::text = 'super_admin');
 
@@ -1348,22 +1346,22 @@ CREATE TABLE IF NOT EXISTS stock_movements (
 
 ALTER TABLE stock_movements ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Users can view own stock movements"
-  ON stock_movements FOR SELECT
+DROP POLICY IF EXISTS "Users can view own stock movements" ON stock_movements;
+CREATE POLICY "Users can view own stock movements" ON stock_movements FOR SELECT
   TO authenticated
   USING (
     created_by = auth.uid()
   );
 
-CREATE POLICY "Users can insert own stock movements"
-  ON stock_movements FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own stock movements" ON stock_movements;
+CREATE POLICY "Users can insert own stock movements" ON stock_movements FOR INSERT
   TO authenticated
   WITH CHECK (
     created_by = auth.uid()
   );
 
-CREATE POLICY "Users can update own stock movements"
-  ON stock_movements FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own stock movements" ON stock_movements;
+CREATE POLICY "Users can update own stock movements" ON stock_movements FOR UPDATE
   TO authenticated
   USING (
     created_by = auth.uid()
@@ -1372,8 +1370,8 @@ CREATE POLICY "Users can update own stock movements"
     created_by = auth.uid()
   );
 
-CREATE POLICY "Users can delete own stock movements"
-  ON stock_movements FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own stock movements" ON stock_movements;
+CREATE POLICY "Users can delete own stock movements" ON stock_movements FOR DELETE
   TO authenticated
   USING (
     created_by = auth.uid()
@@ -1458,30 +1456,30 @@ ALTER TABLE resources ENABLE ROW LEVEL SECURITY;
 ALTER TABLE catalog_item_resources ENABLE ROW LEVEL SECURITY;
 
 -- Resources policies
-CREATE POLICY "Users can view own resources"
-  ON resources FOR SELECT
+DROP POLICY IF EXISTS "Users can view own resources" ON resources;
+CREATE POLICY "Users can view own resources" ON resources FOR SELECT
   TO authenticated
   USING (user_id = auth.uid());
 
-CREATE POLICY "Users can insert own resources"
-  ON resources FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own resources" ON resources;
+CREATE POLICY "Users can insert own resources" ON resources FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can update own resources"
-  ON resources FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own resources" ON resources;
+CREATE POLICY "Users can update own resources" ON resources FOR UPDATE
   TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can delete own resources"
-  ON resources FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own resources" ON resources;
+CREATE POLICY "Users can delete own resources" ON resources FOR DELETE
   TO authenticated
   USING (user_id = auth.uid());
 
 -- Catalog item resources policies
-CREATE POLICY "Users can view own catalog item resources"
-  ON catalog_item_resources FOR SELECT
+DROP POLICY IF EXISTS "Users can view own catalog item resources" ON catalog_item_resources;
+CREATE POLICY "Users can view own catalog item resources" ON catalog_item_resources FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -1491,8 +1489,8 @@ CREATE POLICY "Users can view own catalog item resources"
     )
   );
 
-CREATE POLICY "Users can insert own catalog item resources"
-  ON catalog_item_resources FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own catalog item resources" ON catalog_item_resources;
+CREATE POLICY "Users can insert own catalog item resources" ON catalog_item_resources FOR INSERT
   TO authenticated
   WITH CHECK (
     EXISTS (
@@ -1502,8 +1500,8 @@ CREATE POLICY "Users can insert own catalog item resources"
     )
   );
 
-CREATE POLICY "Users can update own catalog item resources"
-  ON catalog_item_resources FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own catalog item resources" ON catalog_item_resources;
+CREATE POLICY "Users can update own catalog item resources" ON catalog_item_resources FOR UPDATE
   TO authenticated
   USING (
     EXISTS (
@@ -1520,8 +1518,8 @@ CREATE POLICY "Users can update own catalog item resources"
     )
   );
 
-CREATE POLICY "Users can delete own catalog item resources"
-  ON catalog_item_resources FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own catalog item resources" ON catalog_item_resources;
+CREATE POLICY "Users can delete own catalog item resources" ON catalog_item_resources FOR DELETE
   TO authenticated
   USING (
     EXISTS (
@@ -1605,16 +1603,16 @@ CREATE INDEX IF NOT EXISTS idx_stock_movements_user_id ON stock_movements(user_i
 DROP POLICY IF EXISTS "Users can view own stock movements" ON stock_movements;
 DROP POLICY IF EXISTS "Users can create own stock movements" ON stock_movements;
 
-CREATE POLICY "Users can view own stock movements"
-  ON stock_movements FOR SELECT
+DROP POLICY IF EXISTS "Users can view own stock movements" ON stock_movements;
+CREATE POLICY "Users can view own stock movements" ON stock_movements FOR SELECT
   TO authenticated
   USING (
     created_by = auth.uid() OR
     user_id = auth.uid()
   );
 
-CREATE POLICY "Users can create own stock movements"
-  ON stock_movements FOR INSERT
+DROP POLICY IF EXISTS "Users can create own stock movements" ON stock_movements;
+CREATE POLICY "Users can create own stock movements" ON stock_movements FOR INSERT
   TO authenticated
   WITH CHECK (
     created_by = auth.uid() OR
@@ -1752,24 +1750,24 @@ END $$;
 ALTER TABLE resource_variants ENABLE ROW LEVEL SECURITY;
 
 -- Policies for resource_variants
-CREATE POLICY "Users can view own resource variants"
-  ON resource_variants FOR SELECT
+DROP POLICY IF EXISTS "Users can view own resource variants" ON resource_variants;
+CREATE POLICY "Users can view own resource variants" ON resource_variants FOR SELECT
   TO authenticated
   USING (auth.uid() = user_id);
 
-CREATE POLICY "Users can insert own resource variants"
-  ON resource_variants FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own resource variants" ON resource_variants;
+CREATE POLICY "Users can insert own resource variants" ON resource_variants FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own resource variants"
-  ON resource_variants FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own resource variants" ON resource_variants;
+CREATE POLICY "Users can update own resource variants" ON resource_variants FOR UPDATE
   TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete own resource variants"
-  ON resource_variants FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own resource variants" ON resource_variants;
+CREATE POLICY "Users can delete own resource variants" ON resource_variants FOR DELETE
   TO authenticated
   USING (auth.uid() = user_id);
 
@@ -2037,8 +2035,8 @@ END $$;
 ALTER TABLE access_codes ENABLE ROW LEVEL SECURITY;
 
 -- Super admins can do everything with access codes
-CREATE POLICY "Super admins can manage access codes"
-  ON access_codes FOR ALL
+DROP POLICY IF EXISTS "Super admins can manage access codes" ON access_codes;
+CREATE POLICY "Super admins can manage access codes" ON access_codes FOR ALL
   TO authenticated
   USING (
     EXISTS (
@@ -2056,8 +2054,8 @@ CREATE POLICY "Super admins can manage access codes"
   );
 
 -- Authenticated users can view available codes (not used, not expired)
-CREATE POLICY "Users can view available codes"
-  ON access_codes FOR SELECT
+DROP POLICY IF EXISTS "Users can view available codes" ON access_codes;
+CREATE POLICY "Users can view available codes" ON access_codes FOR SELECT
   TO authenticated
   USING (
     is_used = false 
@@ -2065,8 +2063,8 @@ CREATE POLICY "Users can view available codes"
   );
 
 -- Users can update codes when redeeming them
-CREATE POLICY "Users can redeem codes"
-  ON access_codes FOR UPDATE
+DROP POLICY IF EXISTS "Users can redeem codes" ON access_codes;
+CREATE POLICY "Users can redeem codes" ON access_codes FOR UPDATE
   TO authenticated
   USING (
     is_used = false 
@@ -2214,15 +2212,15 @@ ON CONFLICT (id) DO NOTHING;
 DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 
 -- Create new INSERT policy that works during signup
-CREATE POLICY "Users can insert own profile"
-  ON profiles FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = id);
 
 -- Also allow anon users to insert during signup (they become authenticated immediately after)
 -- This is needed because the signup happens in a transaction
-CREATE POLICY "Allow profile creation during signup"
-  ON profiles FOR INSERT
+DROP POLICY IF EXISTS "Allow profile creation during signup" ON profiles;
+CREATE POLICY "Allow profile creation during signup" ON profiles FOR INSERT
   TO anon
   WITH CHECK (true);
 
@@ -2248,14 +2246,14 @@ CREATE POLICY "Allow profile creation during signup"
 DROP POLICY IF EXISTS "Super admins can insert profiles" ON user_profiles;
 
 -- Create new INSERT policy for authenticated users
-CREATE POLICY "Users can insert own profile"
-  ON user_profiles FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
+CREATE POLICY "Users can insert own profile" ON user_profiles FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = id OR (auth.jwt() ->> 'role'::text) = 'super_admin'::text);
 
 -- Allow anonymous users to insert during signup (for the trigger)
-CREATE POLICY "Allow profile creation during signup"
-  ON user_profiles FOR INSERT
+DROP POLICY IF EXISTS "Allow profile creation during signup" ON user_profiles;
+CREATE POLICY "Allow profile creation during signup" ON user_profiles FOR INSERT
   TO anon
   WITH CHECK (true);
 
@@ -2373,13 +2371,13 @@ DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
 
 -- Create a new policy that allows service_role to insert during signup
 -- This is the role Supabase uses internally for auth operations
-CREATE POLICY "Allow auth system to create profiles"
-  ON profiles FOR INSERT
+DROP POLICY IF EXISTS "Allow auth system to create profiles" ON profiles;
+CREATE POLICY "Allow auth system to create profiles" ON profiles FOR INSERT
   WITH CHECK (true);
 
 -- Also allow authenticated users to insert their own profile (for manual operations)
-CREATE POLICY "Authenticated users can insert own profile"
-  ON profiles FOR INSERT
+DROP POLICY IF EXISTS "Authenticated users can insert own profile" ON profiles;
+CREATE POLICY "Authenticated users can insert own profile" ON profiles FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = id);
 
@@ -2409,8 +2407,8 @@ DROP POLICY IF EXISTS "Authenticated users can insert own profile" ON profiles;
 
 -- Create a single comprehensive INSERT policy
 -- This works both during signup (when auth.uid() might be null) and after authentication
-CREATE POLICY "Users can insert own profile during signup"
-  ON profiles FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own profile during signup" ON profiles;
+CREATE POLICY "Users can insert own profile during signup" ON profiles FOR INSERT
   WITH CHECK (
     -- Allow if authenticated and id matches
     (auth.uid() = id) OR
@@ -2445,8 +2443,8 @@ CREATE POLICY "Users can insert own profile during signup"
 DROP POLICY IF EXISTS "Users can insert own profile during signup" ON profiles;
 
 -- Create simple policy for INSERT - allow all authenticated inserts
-CREATE POLICY "Allow profile creation"
-  ON profiles FOR INSERT
+DROP POLICY IF EXISTS "Allow profile creation" ON profiles;
+CREATE POLICY "Allow profile creation" ON profiles FOR INSERT
   TO authenticated, anon
   WITH CHECK (true);
 
@@ -2605,24 +2603,24 @@ DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
 DROP POLICY IF EXISTS "Super admins can delete profiles" ON user_profiles;
 
 -- Recreate policies with correct super admin check
-CREATE POLICY "Users can view own profile or super admin can view all"
-  ON user_profiles FOR SELECT
+DROP POLICY IF EXISTS "Users can view own profile or super admin can view all" ON user_profiles;
+CREATE POLICY "Users can view own profile or super admin can view all" ON user_profiles FOR SELECT
   TO authenticated
   USING (auth.uid() = id OR is_super_admin());
 
-CREATE POLICY "Users can update own profile or super admin can update all"
-  ON user_profiles FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own profile or super admin can update all" ON user_profiles;
+CREATE POLICY "Users can update own profile or super admin can update all" ON user_profiles FOR UPDATE
   TO authenticated
   USING (auth.uid() = id OR is_super_admin())
   WITH CHECK (auth.uid() = id OR is_super_admin());
 
-CREATE POLICY "Users can insert own profile or super admin can insert"
-  ON user_profiles FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own profile or super admin can insert" ON user_profiles;
+CREATE POLICY "Users can insert own profile or super admin can insert" ON user_profiles FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = id OR is_super_admin());
 
-CREATE POLICY "Super admins can delete any profile"
-  ON user_profiles FOR DELETE
+DROP POLICY IF EXISTS "Super admins can delete any profile" ON user_profiles;
+CREATE POLICY "Super admins can delete any profile" ON user_profiles FOR DELETE
   TO authenticated
   USING (is_super_admin());
 
@@ -2719,68 +2717,68 @@ ALTER TABLE help_replies ENABLE ROW LEVEL SECURITY;
 ALTER TABLE help_votes ENABLE ROW LEVEL SECURITY;
 
 -- Policies for help_topics
-CREATE POLICY "Anyone can view topics"
-  ON help_topics FOR SELECT
+DROP POLICY IF EXISTS "Anyone can view topics" ON help_topics;
+CREATE POLICY "Anyone can view topics" ON help_topics FOR SELECT
   TO authenticated
   USING (true);
 
-CREATE POLICY "Users can create topics"
-  ON help_topics FOR INSERT
+DROP POLICY IF EXISTS "Users can create topics" ON help_topics;
+CREATE POLICY "Users can create topics" ON help_topics FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own topics"
-  ON help_topics FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own topics" ON help_topics;
+CREATE POLICY "Users can update own topics" ON help_topics FOR UPDATE
   TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete own topics"
-  ON help_topics FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own topics" ON help_topics;
+CREATE POLICY "Users can delete own topics" ON help_topics FOR DELETE
   TO authenticated
   USING (auth.uid() = user_id);
 
 -- Policies for help_replies
-CREATE POLICY "Anyone can view replies"
-  ON help_replies FOR SELECT
+DROP POLICY IF EXISTS "Anyone can view replies" ON help_replies;
+CREATE POLICY "Anyone can view replies" ON help_replies FOR SELECT
   TO authenticated
   USING (true);
 
-CREATE POLICY "Users can create replies"
-  ON help_replies FOR INSERT
+DROP POLICY IF EXISTS "Users can create replies" ON help_replies;
+CREATE POLICY "Users can create replies" ON help_replies FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own replies"
-  ON help_replies FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own replies" ON help_replies;
+CREATE POLICY "Users can update own replies" ON help_replies FOR UPDATE
   TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete own replies"
-  ON help_replies FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own replies" ON help_replies;
+CREATE POLICY "Users can delete own replies" ON help_replies FOR DELETE
   TO authenticated
   USING (auth.uid() = user_id);
 
 -- Policies for help_votes
-CREATE POLICY "Anyone can view votes"
-  ON help_votes FOR SELECT
+DROP POLICY IF EXISTS "Anyone can view votes" ON help_votes;
+CREATE POLICY "Anyone can view votes" ON help_votes FOR SELECT
   TO authenticated
   USING (true);
 
-CREATE POLICY "Users can create votes"
-  ON help_votes FOR INSERT
+DROP POLICY IF EXISTS "Users can create votes" ON help_votes;
+CREATE POLICY "Users can create votes" ON help_votes FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can update own votes"
-  ON help_votes FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own votes" ON help_votes;
+CREATE POLICY "Users can update own votes" ON help_votes FOR UPDATE
   TO authenticated
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Users can delete own votes"
-  ON help_votes FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own votes" ON help_votes;
+CREATE POLICY "Users can delete own votes" ON help_votes FOR DELETE
   TO authenticated
   USING (auth.uid() = user_id);
 
@@ -2882,8 +2880,8 @@ ALTER TABLE help_votes
 */
 
 -- Add policy to allow authenticated users to view all profiles (read-only)
-CREATE POLICY "Users can view all profiles for community features"
-  ON profiles FOR SELECT
+DROP POLICY IF EXISTS "Users can view all profiles for community features" ON profiles;
+CREATE POLICY "Users can view all profiles for community features" ON profiles FOR SELECT
   TO authenticated
   USING (true);
 
@@ -2907,8 +2905,8 @@ CREATE POLICY "Users can view all profiles for community features"
 */
 
 -- Super admins can update any topic (for pinning, status changes, etc.)
-CREATE POLICY "Super admins can update any topic"
-  ON help_topics FOR UPDATE
+DROP POLICY IF EXISTS "Super admins can update any topic" ON help_topics;
+CREATE POLICY "Super admins can update any topic" ON help_topics FOR UPDATE
   TO authenticated
   USING (
     EXISTS (
@@ -2926,8 +2924,8 @@ CREATE POLICY "Super admins can update any topic"
   );
 
 -- Super admins can delete any topic
-CREATE POLICY "Super admins can delete any topic"
-  ON help_topics FOR DELETE
+DROP POLICY IF EXISTS "Super admins can delete any topic" ON help_topics;
+CREATE POLICY "Super admins can delete any topic" ON help_topics FOR DELETE
   TO authenticated
   USING (
     EXISTS (
@@ -2938,8 +2936,8 @@ CREATE POLICY "Super admins can delete any topic"
   );
 
 -- Super admins can delete any reply
-CREATE POLICY "Super admins can delete any reply"
-  ON help_replies FOR DELETE
+DROP POLICY IF EXISTS "Super admins can delete any reply" ON help_replies;
+CREATE POLICY "Super admins can delete any reply" ON help_replies FOR DELETE
   TO authenticated
   USING (
     EXISTS (
@@ -2979,8 +2977,8 @@ CREATE POLICY "Super admins can delete any reply"
 DROP POLICY IF EXISTS "Users can redeem codes" ON access_codes;
 
 -- Create a new policy that allows users to redeem (update) codes
-CREATE POLICY "Users can redeem codes"
-  ON access_codes FOR UPDATE
+DROP POLICY IF EXISTS "Users can redeem codes" ON access_codes;
+CREATE POLICY "Users can redeem codes" ON access_codes FOR UPDATE
   TO authenticated
   USING (
     -- Can only update codes that are not used and not expired
@@ -3020,8 +3018,8 @@ CREATE POLICY "Users can redeem codes"
 DROP POLICY IF EXISTS "Super admins can manage access codes" ON access_codes;
 
 -- Super admins can view all codes
-CREATE POLICY "Super admins can view all codes"
-  ON access_codes FOR SELECT
+DROP POLICY IF EXISTS "Super admins can view all codes" ON access_codes;
+CREATE POLICY "Super admins can view all codes" ON access_codes FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -3032,8 +3030,8 @@ CREATE POLICY "Super admins can view all codes"
   );
 
 -- Super admins can create codes
-CREATE POLICY "Super admins can create codes"
-  ON access_codes FOR INSERT
+DROP POLICY IF EXISTS "Super admins can create codes" ON access_codes;
+CREATE POLICY "Super admins can create codes" ON access_codes FOR INSERT
   TO authenticated
   WITH CHECK (
     EXISTS (
@@ -3044,8 +3042,8 @@ CREATE POLICY "Super admins can create codes"
   );
 
 -- Super admins can update any code
-CREATE POLICY "Super admins can update codes"
-  ON access_codes FOR UPDATE
+DROP POLICY IF EXISTS "Super admins can update codes" ON access_codes;
+CREATE POLICY "Super admins can update codes" ON access_codes FOR UPDATE
   TO authenticated
   USING (
     EXISTS (
@@ -3063,8 +3061,8 @@ CREATE POLICY "Super admins can update codes"
   );
 
 -- Super admins can delete codes
-CREATE POLICY "Super admins can delete codes"
-  ON access_codes FOR DELETE
+DROP POLICY IF EXISTS "Super admins can delete codes" ON access_codes;
+CREATE POLICY "Super admins can delete codes" ON access_codes FOR DELETE
   TO authenticated
   USING (
     EXISTS (
@@ -3100,8 +3098,8 @@ CREATE POLICY "Super admins can delete codes"
 -- Drop and recreate the user redemption policy with better logic
 DROP POLICY IF EXISTS "Users can redeem codes" ON access_codes;
 
-CREATE POLICY "Users can redeem codes"
-  ON access_codes FOR UPDATE
+DROP POLICY IF EXISTS "Users can redeem codes" ON access_codes;
+CREATE POLICY "Users can redeem codes" ON access_codes FOR UPDATE
   TO authenticated
   USING (
     -- Can update if: code is available for redemption OR user is super admin
@@ -3148,8 +3146,8 @@ DROP POLICY IF EXISTS "Super admins can update codes" ON access_codes;
 
 DROP POLICY IF EXISTS "Users can redeem codes" ON access_codes;
 
-CREATE POLICY "Users can redeem codes"
-  ON access_codes FOR UPDATE
+DROP POLICY IF EXISTS "Users can redeem codes" ON access_codes;
+CREATE POLICY "Users can redeem codes" ON access_codes FOR UPDATE
   TO authenticated
   USING (
     -- Can update if: code is available for redemption
@@ -3186,8 +3184,8 @@ CREATE POLICY "Users can redeem codes"
 DROP POLICY IF EXISTS "Users can redeem codes" ON access_codes;
 
 -- Extremely permissive policy for testing
-CREATE POLICY "Users can redeem codes"
-  ON access_codes FOR UPDATE
+DROP POLICY IF EXISTS "Users can redeem codes" ON access_codes;
+CREATE POLICY "Users can redeem codes" ON access_codes FOR UPDATE
   TO authenticated
   USING (true)  -- Allow reading any row
   WITH CHECK (true);  -- Allow any update
@@ -3225,8 +3223,8 @@ DROP POLICY IF EXISTS "Super admins can update codes" ON access_codes;
 DROP POLICY IF EXISTS "Super admins can manage access codes" ON access_codes;
 
 -- SELECT: Everyone can view codes based on role
-CREATE POLICY "access_codes_select_policy"
-  ON access_codes FOR SELECT
+DROP POLICY IF EXISTS "access_codes_select_policy" ON access_codes;
+CREATE POLICY "access_codes_select_policy" ON access_codes FOR SELECT
   TO authenticated
   USING (
     -- Super admins see everything
@@ -3241,8 +3239,8 @@ CREATE POLICY "access_codes_select_policy"
   );
 
 -- INSERT: Only super admins
-CREATE POLICY "access_codes_insert_policy"
-  ON access_codes FOR INSERT
+DROP POLICY IF EXISTS "access_codes_insert_policy" ON access_codes;
+CREATE POLICY "access_codes_insert_policy" ON access_codes FOR INSERT
   TO authenticated
   WITH CHECK (
     EXISTS (
@@ -3253,8 +3251,8 @@ CREATE POLICY "access_codes_insert_policy"
   );
 
 -- UPDATE: Super admins can update anything, users can redeem
-CREATE POLICY "access_codes_update_policy"
-  ON access_codes FOR UPDATE
+DROP POLICY IF EXISTS "access_codes_update_policy" ON access_codes;
+CREATE POLICY "access_codes_update_policy" ON access_codes FOR UPDATE
   TO authenticated
   USING (
     -- Super admins can update any code
@@ -3280,8 +3278,8 @@ CREATE POLICY "access_codes_update_policy"
   );
 
 -- DELETE: Only super admins
-CREATE POLICY "access_codes_delete_policy"
-  ON access_codes FOR DELETE
+DROP POLICY IF EXISTS "access_codes_delete_policy" ON access_codes;
+CREATE POLICY "access_codes_delete_policy" ON access_codes FOR DELETE
   TO authenticated
   USING (
     EXISTS (
@@ -3320,8 +3318,8 @@ CREATE POLICY "access_codes_delete_policy"
 -- Drop and recreate the UPDATE policy
 DROP POLICY IF EXISTS "access_codes_update_policy" ON access_codes;
 
-CREATE POLICY "access_codes_update_policy"
-  ON access_codes FOR UPDATE
+DROP POLICY IF EXISTS "access_codes_update_policy" ON access_codes;
+CREATE POLICY "access_codes_update_policy" ON access_codes FOR UPDATE
   TO authenticated
   USING (
     -- Check BEFORE update: can they access this code?
@@ -3394,8 +3392,8 @@ CREATE TRIGGER set_used_by_trigger
 -- Now update the policy to not check used_by since it's set by trigger
 DROP POLICY IF EXISTS "access_codes_update_policy" ON access_codes;
 
-CREATE POLICY "access_codes_update_policy"
-  ON access_codes FOR UPDATE
+DROP POLICY IF EXISTS "access_codes_update_policy" ON access_codes;
+CREATE POLICY "access_codes_update_policy" ON access_codes FOR UPDATE
   TO authenticated
   USING (
     -- Can update if super admin OR code is available
@@ -3452,8 +3450,8 @@ DROP POLICY IF EXISTS "access_codes_update_policy" ON access_codes;
 DROP POLICY IF EXISTS "Users can redeem codes" ON access_codes;
 
 -- Créer UNE SEULE politique UPDATE simple
-CREATE POLICY "access_codes_update_policy"
-  ON access_codes FOR UPDATE
+DROP POLICY IF EXISTS "access_codes_update_policy" ON access_codes;
+CREATE POLICY "access_codes_update_policy" ON access_codes FOR UPDATE
   TO authenticated
   USING (
     -- Vérification AVANT update : qui peut accéder à ce code ?
@@ -3490,8 +3488,8 @@ DROP POLICY IF EXISTS "Super admins can view audit log" ON admin_audit_log;
 DROP POLICY IF EXISTS "Super admins can create audit log entries" ON admin_audit_log;
 
 -- Recreate with correct checks
-CREATE POLICY "Super admins can view audit log"
-  ON admin_audit_log FOR SELECT
+DROP POLICY IF EXISTS "Super admins can view audit log" ON admin_audit_log;
+CREATE POLICY "Super admins can view audit log" ON admin_audit_log FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -3501,8 +3499,8 @@ CREATE POLICY "Super admins can view audit log"
     )
   );
 
-CREATE POLICY "Super admins can create audit log entries"
-  ON admin_audit_log FOR INSERT
+DROP POLICY IF EXISTS "Super admins can create audit log entries" ON admin_audit_log;
+CREATE POLICY "Super admins can create audit log entries" ON admin_audit_log FOR INSERT
   TO authenticated
   WITH CHECK (
     EXISTS (
@@ -3550,8 +3548,8 @@ CREATE TABLE IF NOT EXISTS access_code_usage (
 ALTER TABLE access_code_usage ENABLE ROW LEVEL SECURITY;
 
 -- Policies for access_code_usage
-CREATE POLICY "Users can view their own code usage"
-  ON access_code_usage FOR SELECT
+DROP POLICY IF EXISTS "Users can view their own code usage" ON access_code_usage;
+CREATE POLICY "Users can view their own code usage" ON access_code_usage FOR SELECT
   TO authenticated
   USING (
     user_id = auth.uid()
@@ -3563,8 +3561,8 @@ CREATE POLICY "Users can view their own code usage"
     )
   );
 
-CREATE POLICY "Users can insert their own usage records"
-  ON access_code_usage FOR INSERT
+DROP POLICY IF EXISTS "Users can insert their own usage records" ON access_code_usage;
+CREATE POLICY "Users can insert their own usage records" ON access_code_usage FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
 
@@ -3647,30 +3645,30 @@ ALTER TABLE credit_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE credit_note_items ENABLE ROW LEVEL SECURITY;
 
 -- Policies pour credit_notes
-CREATE POLICY "Users can view own credit notes"
-  ON credit_notes FOR SELECT
+DROP POLICY IF EXISTS "Users can view own credit notes" ON credit_notes;
+CREATE POLICY "Users can view own credit notes" ON credit_notes FOR SELECT
   TO authenticated
   USING (user_id = auth.uid());
 
-CREATE POLICY "Users can insert own credit notes"
-  ON credit_notes FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own credit notes" ON credit_notes;
+CREATE POLICY "Users can insert own credit notes" ON credit_notes FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can update own credit notes"
-  ON credit_notes FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own credit notes" ON credit_notes;
+CREATE POLICY "Users can update own credit notes" ON credit_notes FOR UPDATE
   TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can delete own credit notes"
-  ON credit_notes FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own credit notes" ON credit_notes;
+CREATE POLICY "Users can delete own credit notes" ON credit_notes FOR DELETE
   TO authenticated
   USING (user_id = auth.uid());
 
 -- Policies pour credit_note_items
-CREATE POLICY "Users can view own credit note items"
-  ON credit_note_items FOR SELECT
+DROP POLICY IF EXISTS "Users can view own credit note items" ON credit_note_items;
+CREATE POLICY "Users can view own credit note items" ON credit_note_items FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -3680,8 +3678,8 @@ CREATE POLICY "Users can view own credit note items"
     )
   );
 
-CREATE POLICY "Users can insert own credit note items"
-  ON credit_note_items FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own credit note items" ON credit_note_items;
+CREATE POLICY "Users can insert own credit note items" ON credit_note_items FOR INSERT
   TO authenticated
   WITH CHECK (
     EXISTS (
@@ -3691,8 +3689,8 @@ CREATE POLICY "Users can insert own credit note items"
     )
   );
 
-CREATE POLICY "Users can update own credit note items"
-  ON credit_note_items FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own credit note items" ON credit_note_items;
+CREATE POLICY "Users can update own credit note items" ON credit_note_items FOR UPDATE
   TO authenticated
   USING (
     EXISTS (
@@ -3709,8 +3707,8 @@ CREATE POLICY "Users can update own credit note items"
     )
   );
 
-CREATE POLICY "Users can delete own credit note items"
-  ON credit_note_items FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own credit note items" ON credit_note_items;
+CREATE POLICY "Users can delete own credit note items" ON credit_note_items FOR DELETE
   TO authenticated
   USING (
     EXISTS (
@@ -3812,30 +3810,30 @@ ALTER TABLE credit_notes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE credit_note_items ENABLE ROW LEVEL SECURITY;
 
 -- Policies pour credit_notes
-CREATE POLICY "Users can view own credit notes"
-  ON credit_notes FOR SELECT
+DROP POLICY IF EXISTS "Users can view own credit notes" ON credit_notes;
+CREATE POLICY "Users can view own credit notes" ON credit_notes FOR SELECT
   TO authenticated
   USING (user_id = auth.uid());
 
-CREATE POLICY "Users can insert own credit notes"
-  ON credit_notes FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own credit notes" ON credit_notes;
+CREATE POLICY "Users can insert own credit notes" ON credit_notes FOR INSERT
   TO authenticated
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can update own credit notes"
-  ON credit_notes FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own credit notes" ON credit_notes;
+CREATE POLICY "Users can update own credit notes" ON credit_notes FOR UPDATE
   TO authenticated
   USING (user_id = auth.uid())
   WITH CHECK (user_id = auth.uid());
 
-CREATE POLICY "Users can delete own credit notes"
-  ON credit_notes FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own credit notes" ON credit_notes;
+CREATE POLICY "Users can delete own credit notes" ON credit_notes FOR DELETE
   TO authenticated
   USING (user_id = auth.uid());
 
 -- Policies pour credit_note_items
-CREATE POLICY "Users can view own credit note items"
-  ON credit_note_items FOR SELECT
+DROP POLICY IF EXISTS "Users can view own credit note items" ON credit_note_items;
+CREATE POLICY "Users can view own credit note items" ON credit_note_items FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -3845,8 +3843,8 @@ CREATE POLICY "Users can view own credit note items"
     )
   );
 
-CREATE POLICY "Users can insert own credit note items"
-  ON credit_note_items FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own credit note items" ON credit_note_items;
+CREATE POLICY "Users can insert own credit note items" ON credit_note_items FOR INSERT
   TO authenticated
   WITH CHECK (
     EXISTS (
@@ -3856,8 +3854,8 @@ CREATE POLICY "Users can insert own credit note items"
     )
   );
 
-CREATE POLICY "Users can update own credit note items"
-  ON credit_note_items FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own credit note items" ON credit_note_items;
+CREATE POLICY "Users can update own credit note items" ON credit_note_items FOR UPDATE
   TO authenticated
   USING (
     EXISTS (
@@ -3874,8 +3872,8 @@ CREATE POLICY "Users can update own credit note items"
     )
   );
 
-CREATE POLICY "Users can delete own credit note items"
-  ON credit_note_items FOR DELETE
+DROP POLICY IF EXISTS "Users can delete own credit note items" ON credit_note_items;
+CREATE POLICY "Users can delete own credit note items" ON credit_note_items FOR DELETE
   TO authenticated
   USING (
     EXISTS (
@@ -4131,30 +4129,30 @@ CREATE TABLE IF NOT EXISTS smtp_settings (
 ALTER TABLE smtp_settings ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Only super admins can view SMTP settings
-CREATE POLICY "Super admins can view SMTP settings"
-  ON smtp_settings
+DROP POLICY IF EXISTS "Super admins can view SMTP settings" ON smtp_settings;
+CREATE POLICY "Super admins can view SMTP settings" ON smtp_settings
   FOR SELECT
   TO authenticated
   USING (is_super_admin());
 
 -- Policy: Only super admins can insert SMTP settings
-CREATE POLICY "Super admins can insert SMTP settings"
-  ON smtp_settings
+DROP POLICY IF EXISTS "Super admins can insert SMTP settings" ON smtp_settings;
+CREATE POLICY "Super admins can insert SMTP settings" ON smtp_settings
   FOR INSERT
   TO authenticated
   WITH CHECK (is_super_admin());
 
 -- Policy: Only super admins can update SMTP settings
-CREATE POLICY "Super admins can update SMTP settings"
-  ON smtp_settings
+DROP POLICY IF EXISTS "Super admins can update SMTP settings" ON smtp_settings;
+CREATE POLICY "Super admins can update SMTP settings" ON smtp_settings
   FOR UPDATE
   TO authenticated
   USING (is_super_admin())
   WITH CHECK (is_super_admin());
 
 -- Policy: Only super admins can delete SMTP settings
-CREATE POLICY "Super admins can delete SMTP settings"
-  ON smtp_settings
+DROP POLICY IF EXISTS "Super admins can delete SMTP settings" ON smtp_settings;
+CREATE POLICY "Super admins can delete SMTP settings" ON smtp_settings
   FOR DELETE
   TO authenticated
   USING (is_super_admin());
@@ -4363,27 +4361,27 @@ ALTER TABLE photo_submissions ENABLE ROW LEVEL SECURITY;
 -- RLS Policies for dentist_accounts
 
 -- Dentists can read their own account
-CREATE POLICY "Dentists can read own account"
-  ON dentist_accounts FOR SELECT
+DROP POLICY IF EXISTS "Dentists can read own account" ON dentist_accounts;
+CREATE POLICY "Dentists can read own account" ON dentist_accounts FOR SELECT
   TO authenticated
   USING (auth.uid() = id);
 
 -- Dentists can update their own account
-CREATE POLICY "Dentists can update own account"
-  ON dentist_accounts FOR UPDATE
+DROP POLICY IF EXISTS "Dentists can update own account" ON dentist_accounts;
+CREATE POLICY "Dentists can update own account" ON dentist_accounts FOR UPDATE
   TO authenticated
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
 -- Allow dentist account creation during signup
-CREATE POLICY "Allow dentist signup"
-  ON dentist_accounts FOR INSERT
+DROP POLICY IF EXISTS "Allow dentist signup" ON dentist_accounts;
+CREATE POLICY "Allow dentist signup" ON dentist_accounts FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = id);
 
 -- Super admins can view all dentist accounts
-CREATE POLICY "Super admins can view all dentist accounts"
-  ON dentist_accounts FOR SELECT
+DROP POLICY IF EXISTS "Super admins can view all dentist accounts" ON dentist_accounts;
+CREATE POLICY "Super admins can view all dentist accounts" ON dentist_accounts FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -4396,35 +4394,35 @@ CREATE POLICY "Super admins can view all dentist accounts"
 -- RLS Policies for photo_submissions
 
 -- Dentists can insert their own photo submissions
-CREATE POLICY "Dentists can insert own submissions"
-  ON photo_submissions FOR INSERT
+DROP POLICY IF EXISTS "Dentists can insert own submissions" ON photo_submissions;
+CREATE POLICY "Dentists can insert own submissions" ON photo_submissions FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = dentist_id);
 
 -- Dentists can read their own photo submissions
-CREATE POLICY "Dentists can read own submissions"
-  ON photo_submissions FOR SELECT
+DROP POLICY IF EXISTS "Dentists can read own submissions" ON photo_submissions;
+CREATE POLICY "Dentists can read own submissions" ON photo_submissions FOR SELECT
   TO authenticated
   USING (auth.uid() = dentist_id);
 
 -- Laboratories can read photo submissions sent to them
-CREATE POLICY "Laboratories can read submissions sent to them"
-  ON photo_submissions FOR SELECT
+DROP POLICY IF EXISTS "Laboratories can read submissions sent to them" ON photo_submissions;
+CREATE POLICY "Laboratories can read submissions sent to them" ON photo_submissions FOR SELECT
   TO authenticated
   USING (
     auth.uid() = laboratory_id
   );
 
 -- Laboratories can update status of submissions sent to them
-CREATE POLICY "Laboratories can update submission status"
-  ON photo_submissions FOR UPDATE
+DROP POLICY IF EXISTS "Laboratories can update submission status" ON photo_submissions;
+CREATE POLICY "Laboratories can update submission status" ON photo_submissions FOR UPDATE
   TO authenticated
   USING (auth.uid() = laboratory_id)
   WITH CHECK (auth.uid() = laboratory_id);
 
 -- Super admins can access all photo submissions
-CREATE POLICY "Super admins can access all submissions"
-  ON photo_submissions FOR ALL
+DROP POLICY IF EXISTS "Super admins can access all submissions" ON photo_submissions;
+CREATE POLICY "Super admins can access all submissions" ON photo_submissions FOR ALL
   TO authenticated
   USING (
     EXISTS (
@@ -4440,23 +4438,23 @@ VALUES ('dentist-photos', 'dentist-photos', true)
 ON CONFLICT (id) DO NOTHING;
 
 -- Storage policies for dentist-photos bucket
-CREATE POLICY "Authenticated users can upload dentist photos"
-  ON storage.objects FOR INSERT
+DROP POLICY IF EXISTS "Authenticated users can upload dentist photos" ON storage.objects;
+CREATE POLICY "Authenticated users can upload dentist photos" ON storage.objects FOR INSERT
   TO authenticated
   WITH CHECK (bucket_id = 'dentist-photos');
 
-CREATE POLICY "Anyone can view dentist photos"
-  ON storage.objects FOR SELECT
+DROP POLICY IF EXISTS "Anyone can view dentist photos" ON storage.objects;
+CREATE POLICY "Anyone can view dentist photos" ON storage.objects FOR SELECT
   TO authenticated
   USING (bucket_id = 'dentist-photos');
 
-CREATE POLICY "Users can update their own uploads"
-  ON storage.objects FOR UPDATE
+DROP POLICY IF EXISTS "Users can update their own uploads" ON storage.objects;
+CREATE POLICY "Users can update their own uploads" ON storage.objects FOR UPDATE
   TO authenticated
   USING (bucket_id = 'dentist-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
 
-CREATE POLICY "Users can delete their own uploads"
-  ON storage.objects FOR DELETE
+DROP POLICY IF EXISTS "Users can delete their own uploads" ON storage.objects;
+CREATE POLICY "Users can delete their own uploads" ON storage.objects FOR DELETE
   TO authenticated
   USING (bucket_id = 'dentist-photos' AND auth.uid()::text = (storage.foldername(name))[1]);
 
@@ -4570,8 +4568,8 @@ CREATE TABLE IF NOT EXISTS dentist_favorite_laboratories (
 ALTER TABLE dentist_favorite_laboratories ENABLE ROW LEVEL SECURITY;
 
 -- Dentists can view their own favorites
-CREATE POLICY "Dentists can view own favorites"
-  ON dentist_favorite_laboratories
+DROP POLICY IF EXISTS "Dentists can view own favorites" ON dentist_favorite_laboratories;
+CREATE POLICY "Dentists can view own favorites" ON dentist_favorite_laboratories
   FOR SELECT
   TO authenticated
   USING (
@@ -4584,8 +4582,8 @@ CREATE POLICY "Dentists can view own favorites"
   );
 
 -- Dentists can add their own favorites
-CREATE POLICY "Dentists can add own favorites"
-  ON dentist_favorite_laboratories
+DROP POLICY IF EXISTS "Dentists can add own favorites" ON dentist_favorite_laboratories;
+CREATE POLICY "Dentists can add own favorites" ON dentist_favorite_laboratories
   FOR INSERT
   TO authenticated
   WITH CHECK (
@@ -4598,8 +4596,8 @@ CREATE POLICY "Dentists can add own favorites"
   );
 
 -- Dentists can remove their own favorites
-CREATE POLICY "Dentists can remove own favorites"
-  ON dentist_favorite_laboratories
+DROP POLICY IF EXISTS "Dentists can remove own favorites" ON dentist_favorite_laboratories;
+CREATE POLICY "Dentists can remove own favorites" ON dentist_favorite_laboratories
   FOR DELETE
   TO authenticated
   USING (
@@ -4692,8 +4690,8 @@ ALTER TABLE laboratory_role_permissions ENABLE ROW LEVEL SECURITY;
 -- Policies for laboratory_employees
 
 -- Laboratory owners can view their employees
-CREATE POLICY "Laboratory owners can view employees"
-  ON laboratory_employees
+DROP POLICY IF EXISTS "Laboratory owners can view employees" ON laboratory_employees;
+CREATE POLICY "Laboratory owners can view employees" ON laboratory_employees
   FOR SELECT
   TO authenticated
   USING (
@@ -4703,15 +4701,15 @@ CREATE POLICY "Laboratory owners can view employees"
   );
 
 -- Employees can view their own profile
-CREATE POLICY "Employees can view own profile"
-  ON laboratory_employees
+DROP POLICY IF EXISTS "Employees can view own profile" ON laboratory_employees;
+CREATE POLICY "Employees can view own profile" ON laboratory_employees
   FOR SELECT
   TO authenticated
   USING (user_profile_id = auth.uid());
 
 -- Laboratory owners can insert employees
-CREATE POLICY "Laboratory owners can insert employees"
-  ON laboratory_employees
+DROP POLICY IF EXISTS "Laboratory owners can insert employees" ON laboratory_employees;
+CREATE POLICY "Laboratory owners can insert employees" ON laboratory_employees
   FOR INSERT
   TO authenticated
   WITH CHECK (
@@ -4721,8 +4719,8 @@ CREATE POLICY "Laboratory owners can insert employees"
   );
 
 -- Laboratory owners can update their employees
-CREATE POLICY "Laboratory owners can update employees"
-  ON laboratory_employees
+DROP POLICY IF EXISTS "Laboratory owners can update employees" ON laboratory_employees;
+CREATE POLICY "Laboratory owners can update employees" ON laboratory_employees
   FOR UPDATE
   TO authenticated
   USING (
@@ -4732,8 +4730,8 @@ CREATE POLICY "Laboratory owners can update employees"
   );
 
 -- Laboratory owners can delete their employees
-CREATE POLICY "Laboratory owners can delete employees"
-  ON laboratory_employees
+DROP POLICY IF EXISTS "Laboratory owners can delete employees" ON laboratory_employees;
+CREATE POLICY "Laboratory owners can delete employees" ON laboratory_employees
   FOR DELETE
   TO authenticated
   USING (
@@ -4745,8 +4743,8 @@ CREATE POLICY "Laboratory owners can delete employees"
 -- Policies for laboratory_role_permissions
 
 -- Laboratory owners can view their role permissions
-CREATE POLICY "Laboratory owners can view role permissions"
-  ON laboratory_role_permissions
+DROP POLICY IF EXISTS "Laboratory owners can view role permissions" ON laboratory_role_permissions;
+CREATE POLICY "Laboratory owners can view role permissions" ON laboratory_role_permissions
   FOR SELECT
   TO authenticated
   USING (
@@ -4756,8 +4754,8 @@ CREATE POLICY "Laboratory owners can view role permissions"
   );
 
 -- Employees can view their laboratory's role permissions
-CREATE POLICY "Employees can view role permissions"
-  ON laboratory_role_permissions
+DROP POLICY IF EXISTS "Employees can view role permissions" ON laboratory_role_permissions;
+CREATE POLICY "Employees can view role permissions" ON laboratory_role_permissions
   FOR SELECT
   TO authenticated
   USING (
@@ -4768,8 +4766,8 @@ CREATE POLICY "Employees can view role permissions"
   );
 
 -- Laboratory owners can manage role permissions
-CREATE POLICY "Laboratory owners can manage role permissions"
-  ON laboratory_role_permissions
+DROP POLICY IF EXISTS "Laboratory owners can manage role permissions" ON laboratory_role_permissions;
+CREATE POLICY "Laboratory owners can manage role permissions" ON laboratory_role_permissions
   FOR ALL
   TO authenticated
   USING (
@@ -4818,8 +4816,8 @@ CREATE TRIGGER trigger_update_laboratory_role_permissions_updated_at
     - Can only view the profile of their assigned laboratory
 */
 
-CREATE POLICY "Employees can view their laboratory profile"
-  ON user_profiles
+DROP POLICY IF EXISTS "Employees can view their laboratory profile" ON user_profiles;
+CREATE POLICY "Employees can view their laboratory profile" ON user_profiles
   FOR SELECT
   TO authenticated
   USING (
@@ -4848,8 +4846,8 @@ CREATE POLICY "Employees can view their laboratory profile"
     - Can only access submissions for their assigned laboratory
 */
 
-CREATE POLICY "Employees can read their laboratory submissions"
-  ON photo_submissions
+DROP POLICY IF EXISTS "Employees can read their laboratory submissions" ON photo_submissions;
+CREATE POLICY "Employees can read their laboratory submissions" ON photo_submissions
   FOR SELECT
   TO authenticated
   USING (
@@ -4861,8 +4859,8 @@ CREATE POLICY "Employees can read their laboratory submissions"
     )
   );
 
-CREATE POLICY "Employees can update their laboratory submission status"
-  ON photo_submissions
+DROP POLICY IF EXISTS "Employees can update their laboratory submission status" ON photo_submissions;
+CREATE POLICY "Employees can update their laboratory submission status" ON photo_submissions
   FOR UPDATE
   TO authenticated
   USING (
@@ -4900,8 +4898,8 @@ CREATE POLICY "Employees can update their laboratory submission status"
 */
 
 -- Dentists
-CREATE POLICY "Employees can view their laboratory dentists"
-  ON dentists FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory dentists" ON dentists;
+CREATE POLICY "Employees can view their laboratory dentists" ON dentists FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -4911,8 +4909,8 @@ CREATE POLICY "Employees can view their laboratory dentists"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory dentists"
-  ON dentists FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory dentists" ON dentists;
+CREATE POLICY "Employees can manage their laboratory dentists" ON dentists FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -4931,8 +4929,8 @@ CREATE POLICY "Employees can manage their laboratory dentists"
   );
 
 -- Proformas
-CREATE POLICY "Employees can view their laboratory proformas"
-  ON proformas FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory proformas" ON proformas;
+CREATE POLICY "Employees can view their laboratory proformas" ON proformas FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -4942,8 +4940,8 @@ CREATE POLICY "Employees can view their laboratory proformas"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory proformas"
-  ON proformas FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory proformas" ON proformas;
+CREATE POLICY "Employees can manage their laboratory proformas" ON proformas FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -4962,8 +4960,8 @@ CREATE POLICY "Employees can manage their laboratory proformas"
   );
 
 -- Proforma Items
-CREATE POLICY "Employees can view their laboratory proforma items"
-  ON proforma_items FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory proforma items" ON proforma_items;
+CREATE POLICY "Employees can view their laboratory proforma items" ON proforma_items FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM proformas p
@@ -4974,8 +4972,8 @@ CREATE POLICY "Employees can view their laboratory proforma items"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory proforma items"
-  ON proforma_items FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory proforma items" ON proforma_items;
+CREATE POLICY "Employees can manage their laboratory proforma items" ON proforma_items FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM proformas p
@@ -4996,8 +4994,8 @@ CREATE POLICY "Employees can manage their laboratory proforma items"
   );
 
 -- Delivery Notes
-CREATE POLICY "Employees can view their laboratory delivery notes"
-  ON delivery_notes FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory delivery notes" ON delivery_notes;
+CREATE POLICY "Employees can view their laboratory delivery notes" ON delivery_notes FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5007,8 +5005,8 @@ CREATE POLICY "Employees can view their laboratory delivery notes"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory delivery notes"
-  ON delivery_notes FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory delivery notes" ON delivery_notes;
+CREATE POLICY "Employees can manage their laboratory delivery notes" ON delivery_notes FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5027,8 +5025,8 @@ CREATE POLICY "Employees can manage their laboratory delivery notes"
   );
 
 -- Invoices
-CREATE POLICY "Employees can view their laboratory invoices"
-  ON invoices FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory invoices" ON invoices;
+CREATE POLICY "Employees can view their laboratory invoices" ON invoices FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5038,8 +5036,8 @@ CREATE POLICY "Employees can view their laboratory invoices"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory invoices"
-  ON invoices FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory invoices" ON invoices;
+CREATE POLICY "Employees can manage their laboratory invoices" ON invoices FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5058,8 +5056,8 @@ CREATE POLICY "Employees can manage their laboratory invoices"
   );
 
 -- Patients
-CREATE POLICY "Employees can view their laboratory patients"
-  ON patients FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory patients" ON patients;
+CREATE POLICY "Employees can view their laboratory patients" ON patients FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5069,8 +5067,8 @@ CREATE POLICY "Employees can view their laboratory patients"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory patients"
-  ON patients FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory patients" ON patients;
+CREATE POLICY "Employees can manage their laboratory patients" ON patients FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5089,8 +5087,8 @@ CREATE POLICY "Employees can manage their laboratory patients"
   );
 
 -- Catalog Items
-CREATE POLICY "Employees can view their laboratory catalog items"
-  ON catalog_items FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory catalog items" ON catalog_items;
+CREATE POLICY "Employees can view their laboratory catalog items" ON catalog_items FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5100,8 +5098,8 @@ CREATE POLICY "Employees can view their laboratory catalog items"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory catalog items"
-  ON catalog_items FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory catalog items" ON catalog_items;
+CREATE POLICY "Employees can manage their laboratory catalog items" ON catalog_items FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5120,8 +5118,8 @@ CREATE POLICY "Employees can manage their laboratory catalog items"
   );
 
 -- Resources
-CREATE POLICY "Employees can view their laboratory resources"
-  ON resources FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory resources" ON resources;
+CREATE POLICY "Employees can view their laboratory resources" ON resources FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5131,8 +5129,8 @@ CREATE POLICY "Employees can view their laboratory resources"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory resources"
-  ON resources FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory resources" ON resources;
+CREATE POLICY "Employees can manage their laboratory resources" ON resources FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5151,8 +5149,8 @@ CREATE POLICY "Employees can manage their laboratory resources"
   );
 
 -- Resource Variants
-CREATE POLICY "Employees can view their laboratory resource variants"
-  ON resource_variants FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory resource variants" ON resource_variants;
+CREATE POLICY "Employees can view their laboratory resource variants" ON resource_variants FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM resources r
@@ -5163,8 +5161,8 @@ CREATE POLICY "Employees can view their laboratory resource variants"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory resource variants"
-  ON resource_variants FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory resource variants" ON resource_variants;
+CREATE POLICY "Employees can manage their laboratory resource variants" ON resource_variants FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM resources r
@@ -5185,8 +5183,8 @@ CREATE POLICY "Employees can manage their laboratory resource variants"
   );
 
 -- Stock Movements
-CREATE POLICY "Employees can view their laboratory stock movements"
-  ON stock_movements FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory stock movements" ON stock_movements;
+CREATE POLICY "Employees can view their laboratory stock movements" ON stock_movements FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5196,8 +5194,8 @@ CREATE POLICY "Employees can view their laboratory stock movements"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory stock movements"
-  ON stock_movements FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory stock movements" ON stock_movements;
+CREATE POLICY "Employees can manage their laboratory stock movements" ON stock_movements FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5216,8 +5214,8 @@ CREATE POLICY "Employees can manage their laboratory stock movements"
   );
 
 -- Credit Notes
-CREATE POLICY "Employees can view their laboratory credit notes"
-  ON credit_notes FOR SELECT TO authenticated
+DROP POLICY IF EXISTS "Employees can view their laboratory credit notes" ON credit_notes;
+CREATE POLICY "Employees can view their laboratory credit notes" ON credit_notes FOR SELECT TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5227,8 +5225,8 @@ CREATE POLICY "Employees can view their laboratory credit notes"
     )
   );
 
-CREATE POLICY "Employees can manage their laboratory credit notes"
-  ON credit_notes FOR ALL TO authenticated
+DROP POLICY IF EXISTS "Employees can manage their laboratory credit notes" ON credit_notes;
+CREATE POLICY "Employees can manage their laboratory credit notes" ON credit_notes FOR ALL TO authenticated
   USING (
     EXISTS (
       SELECT 1 FROM laboratory_employees
@@ -5265,8 +5263,8 @@ CREATE POLICY "Employees can manage their laboratory credit notes"
 */
 
 -- Allow laboratories to view dentist accounts who submitted photos to them
-CREATE POLICY "Laboratories can view dentists who submitted to them"
-  ON dentist_accounts FOR SELECT
+DROP POLICY IF EXISTS "Laboratories can view dentists who submitted to them" ON dentist_accounts;
+CREATE POLICY "Laboratories can view dentists who submitted to them" ON dentist_accounts FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -5295,8 +5293,8 @@ CREATE POLICY "Laboratories can view dentists who submitted to them"
 */
 
 -- Allow laboratory employees to view dentist accounts who submitted to their lab
-CREATE POLICY "Employees can view dentists who submitted to their lab"
-  ON dentist_accounts FOR SELECT
+DROP POLICY IF EXISTS "Employees can view dentists who submitted to their lab" ON dentist_accounts;
+CREATE POLICY "Employees can view dentists who submitted to their lab" ON dentist_accounts FOR SELECT
   TO authenticated
   USING (
     EXISTS (
@@ -5326,14 +5324,14 @@ CREATE POLICY "Employees can view dentists who submitted to their lab"
 */
 
 -- Laboratory owners can delete photo submissions sent to them
-CREATE POLICY "Laboratories can delete submissions sent to them"
-  ON photo_submissions FOR DELETE
+DROP POLICY IF EXISTS "Laboratories can delete submissions sent to them" ON photo_submissions;
+CREATE POLICY "Laboratories can delete submissions sent to them" ON photo_submissions FOR DELETE
   TO authenticated
   USING (auth.uid() = laboratory_id);
 
 -- Laboratory employees can delete photo submissions sent to their lab (if they have photo access)
-CREATE POLICY "Employees can delete submissions sent to their lab"
-  ON photo_submissions FOR DELETE
+DROP POLICY IF EXISTS "Employees can delete submissions sent to their lab" ON photo_submissions;
+CREATE POLICY "Employees can delete submissions sent to their lab" ON photo_submissions FOR DELETE
   TO authenticated
   USING (
     EXISTS (
@@ -5365,14 +5363,14 @@ CREATE POLICY "Employees can delete submissions sent to their lab"
 */
 
 -- Laboratories can insert photo submissions for their lab
-CREATE POLICY "Laboratories can insert submissions for their lab"
-  ON photo_submissions FOR INSERT
+DROP POLICY IF EXISTS "Laboratories can insert submissions for their lab" ON photo_submissions;
+CREATE POLICY "Laboratories can insert submissions for their lab" ON photo_submissions FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = laboratory_id);
 
 -- Laboratory employees can insert photo submissions for their lab
-CREATE POLICY "Employees can insert submissions for their lab"
-  ON photo_submissions FOR INSERT
+DROP POLICY IF EXISTS "Employees can insert submissions for their lab" ON photo_submissions;
+CREATE POLICY "Employees can insert submissions for their lab" ON photo_submissions FOR INSERT
   TO authenticated
   WITH CHECK (
     EXISTS (
@@ -5409,8 +5407,8 @@ DROP POLICY IF EXISTS "Employees can view dentists who submitted to their lab" O
 
 -- Allow ALL authenticated users (including employees) to view dentist accounts
 -- This is necessary because dentist_accounts are not tied to a specific laboratory
-CREATE POLICY "Authenticated users can view all dentist accounts"
-  ON dentist_accounts FOR SELECT
+DROP POLICY IF EXISTS "Authenticated users can view all dentist accounts" ON dentist_accounts;
+CREATE POLICY "Authenticated users can view all dentist accounts" ON dentist_accounts FOR SELECT
   TO authenticated
   USING (true);
 
@@ -5444,8 +5442,8 @@ DROP POLICY IF EXISTS "Super admins can manage plans" ON subscription_plans;
 DROP POLICY IF EXISTS "Anyone can view active plans" ON subscription_plans;
 
 -- Super admins can SELECT all plans
-CREATE POLICY "Super admins can view all plans"
-  ON subscription_plans
+DROP POLICY IF EXISTS "Super admins can view all plans" ON subscription_plans;
+CREATE POLICY "Super admins can view all plans" ON subscription_plans
   FOR SELECT
   TO authenticated
   USING (
@@ -5457,8 +5455,8 @@ CREATE POLICY "Super admins can view all plans"
   );
 
 -- Super admins can INSERT plans
-CREATE POLICY "Super admins can insert plans"
-  ON subscription_plans
+DROP POLICY IF EXISTS "Super admins can insert plans" ON subscription_plans;
+CREATE POLICY "Super admins can insert plans" ON subscription_plans
   FOR INSERT
   TO authenticated
   WITH CHECK (
@@ -5470,8 +5468,8 @@ CREATE POLICY "Super admins can insert plans"
   );
 
 -- Super admins can UPDATE plans
-CREATE POLICY "Super admins can update plans"
-  ON subscription_plans
+DROP POLICY IF EXISTS "Super admins can update plans" ON subscription_plans;
+CREATE POLICY "Super admins can update plans" ON subscription_plans
   FOR UPDATE
   TO authenticated
   USING (
@@ -5490,8 +5488,8 @@ CREATE POLICY "Super admins can update plans"
   );
 
 -- Super admins can DELETE plans
-CREATE POLICY "Super admins can delete plans"
-  ON subscription_plans
+DROP POLICY IF EXISTS "Super admins can delete plans" ON subscription_plans;
+CREATE POLICY "Super admins can delete plans" ON subscription_plans
   FOR DELETE
   TO authenticated
   USING (
@@ -5503,8 +5501,8 @@ CREATE POLICY "Super admins can delete plans"
   );
 
 -- All authenticated users can view active plans
-CREATE POLICY "Users can view active plans"
-  ON subscription_plans
+DROP POLICY IF EXISTS "Users can view active plans" ON subscription_plans;
+CREATE POLICY "Users can view active plans" ON subscription_plans
   FOR SELECT
   TO authenticated
   USING (is_active = true);
@@ -5555,8 +5553,8 @@ END $$;
     - All other fields remain protected by existing super admin policies
 */
 
-CREATE POLICY "Anyone can view contact phone from active settings"
-  ON smtp_settings
+DROP POLICY IF EXISTS "Anyone can view contact phone from active settings" ON smtp_settings;
+CREATE POLICY "Anyone can view contact phone from active settings" ON smtp_settings
   FOR SELECT
   TO public
   USING (is_active = true);
@@ -5593,27 +5591,27 @@ DROP POLICY IF EXISTS "Super admins can delete profiles" ON user_profiles;
 DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
 
 -- Simple policy: Users can view their own profile
-CREATE POLICY "Users can view own profile"
-  ON user_profiles FOR SELECT
+DROP POLICY IF EXISTS "Users can view own profile" ON user_profiles;
+CREATE POLICY "Users can view own profile" ON user_profiles FOR SELECT
   TO authenticated
   USING (auth.uid() = id);
 
 -- Simple policy: Users can update their own profile (except role field)
-CREATE POLICY "Users can update own profile"
-  ON user_profiles FOR UPDATE
+DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
+CREATE POLICY "Users can update own profile" ON user_profiles FOR UPDATE
   TO authenticated
   USING (auth.uid() = id)
   WITH CHECK (auth.uid() = id);
 
 -- Simple policy: Users can insert their own profile on signup
-CREATE POLICY "Users can insert own profile"
-  ON user_profiles FOR INSERT
+DROP POLICY IF EXISTS "Users can insert own profile" ON user_profiles;
+CREATE POLICY "Users can insert own profile" ON user_profiles FOR INSERT
   TO authenticated
   WITH CHECK (auth.uid() = id);
 
 -- Super admin policy using ONLY jwt (no recursion)
-CREATE POLICY "Super admins have full access"
-  ON user_profiles FOR ALL
+DROP POLICY IF EXISTS "Super admins have full access" ON user_profiles;
+CREATE POLICY "Super admins have full access" ON user_profiles FOR ALL
   TO authenticated
   USING (
     (auth.jwt() ->> 'role')::text = 'super_admin' OR
@@ -5694,48 +5692,48 @@ GRANT EXECUTE ON FUNCTION is_super_admin() TO authenticated;
 
 -- Step 4: Recreate user_profiles policies (simple, non-recursive)
 -- Regular users can view/update their own profile
-CREATE POLICY "Users view own profile"
-  ON user_profiles FOR SELECT
+DROP POLICY IF EXISTS "Users view own profile" ON user_profiles;
+CREATE POLICY "Users view own profile" ON user_profiles FOR SELECT
   TO authenticated
   USING (id = auth.uid());
 
-CREATE POLICY "Users update own profile"
-  ON user_profiles FOR UPDATE
+DROP POLICY IF EXISTS "Users update own profile" ON user_profiles;
+CREATE POLICY "Users update own profile" ON user_profiles FOR UPDATE
   TO authenticated
   USING (id = auth.uid())
   WITH CHECK (id = auth.uid());
 
-CREATE POLICY "Users insert own profile"
-  ON user_profiles FOR INSERT
+DROP POLICY IF EXISTS "Users insert own profile" ON user_profiles;
+CREATE POLICY "Users insert own profile" ON user_profiles FOR INSERT
   TO authenticated
   WITH CHECK (id = auth.uid());
 
 -- Super admins have full access (now safe because function uses SECURITY DEFINER)
-CREATE POLICY "Super admins full access"
-  ON user_profiles FOR ALL
+DROP POLICY IF EXISTS "Super admins full access" ON user_profiles;
+CREATE POLICY "Super admins full access" ON user_profiles FOR ALL
   TO authenticated
   USING (is_super_admin())
   WITH CHECK (is_super_admin());
 
 -- Step 5: Recreate smtp_settings policies
-CREATE POLICY "Super admins view SMTP"
-  ON smtp_settings FOR SELECT
+DROP POLICY IF EXISTS "Super admins view SMTP" ON smtp_settings;
+CREATE POLICY "Super admins view SMTP" ON smtp_settings FOR SELECT
   TO authenticated
   USING (is_super_admin());
 
-CREATE POLICY "Super admins insert SMTP"
-  ON smtp_settings FOR INSERT
+DROP POLICY IF EXISTS "Super admins insert SMTP" ON smtp_settings;
+CREATE POLICY "Super admins insert SMTP" ON smtp_settings FOR INSERT
   TO authenticated
   WITH CHECK (is_super_admin());
 
-CREATE POLICY "Super admins update SMTP"
-  ON smtp_settings FOR UPDATE
+DROP POLICY IF EXISTS "Super admins update SMTP" ON smtp_settings;
+CREATE POLICY "Super admins update SMTP" ON smtp_settings FOR UPDATE
   TO authenticated
   USING (is_super_admin())
   WITH CHECK (is_super_admin());
 
-CREATE POLICY "Super admins delete SMTP"
-  ON smtp_settings FOR DELETE
+DROP POLICY IF EXISTS "Super admins delete SMTP" ON smtp_settings;
+CREATE POLICY "Super admins delete SMTP" ON smtp_settings FOR DELETE
   TO authenticated
   USING (is_super_admin());
 
@@ -5773,7 +5771,6 @@ BEGIN
   RETURN COALESCE(is_admin, false);
 END;
 $$;
-
 
 
 SET session_replication_role = DEFAULT;
