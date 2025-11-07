@@ -1012,8 +1012,8 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       </div>
 
       {recentDeliveries.length > 0 && (
-        <div className="mb-8 bg-white rounded-2xl shadow-lg border border-slate-200/50 p-6 hover:shadow-xl transition-all duration-300 animate-slide-in">
-          <div className="flex items-center gap-3 mb-6">
+        <div className="mb-8 bg-white rounded-2xl shadow-lg border border-slate-200/50 p-4 md:p-6 hover:shadow-xl transition-all duration-300 animate-slide-in">
+          <div className="flex items-center gap-3 mb-4 md:mb-6">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg">
               <Clock className="w-6 h-6 text-white" />
             </div>
@@ -1023,7 +1023,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="hidden md:grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {recentDeliveries.map((delivery) => (
               <div
                 key={delivery.id}
@@ -1060,6 +1060,48 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="md:hidden overflow-x-auto -mx-4 px-4">
+            <div className="flex gap-3 pb-2" style={{ scrollSnapType: 'x mandatory' }}>
+              {recentDeliveries.map((delivery) => (
+                <div
+                  key={delivery.id}
+                  className="flex-shrink-0 w-[280px] bg-slate-50 rounded-xl p-4 border border-slate-200 hover:border-blue-300 transition-all duration-200"
+                  style={{ scrollSnapAlign: 'start' }}
+                >
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-2 flex-1">
+                      <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold">
+                        {delivery.dentist.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-slate-900 text-sm truncate">{delivery.dentist.name}</h4>
+                        <p className="text-xs text-slate-500">N° {delivery.delivery_number}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {delivery.patient_name && (
+                    <div className="flex items-center gap-2 text-xs text-slate-600 mb-3">
+                      <User className="w-4 h-4 text-slate-400" />
+                      <span className="truncate">{delivery.patient_name}</span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                      <Calendar className="w-4 h-4" />
+                      {new Date(delivery.date).toLocaleDateString('fr-FR')}
+                    </div>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-blue-100 text-blue-700">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+                      En cours
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )}
