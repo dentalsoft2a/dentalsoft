@@ -148,18 +148,44 @@ export function SupportTickets() {
 
     if (error) {
       alert('Erreur lors de la mise à jour: ' + error.message);
-    } else {
+      return;
+    }
+
+    await supabase.from('admin_audit_log').insert({
+      admin_id: (await supabase.auth.getUser()).data.user?.id,
+      action: 'update_ticket_status',
+      details: { ticket_id: ticketId, new_status: status }
+    });
+
+    const { data: ticketsData, error: ticketsError } = await supabase
+      .from('support_tickets')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (!ticketsError && ticketsData) {
+      const ticketsWithProfiles = await Promise.all(
+        ticketsData.map(async (ticket) => {
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('email')
+            .eq('id', ticket.user_id)
+            .single();
+
+          return {
+            ...ticket,
+            user_profiles: { email: profile?.email || 'Unknown' }
+          };
+        })
+      );
+
+      setTickets(ticketsWithProfiles);
+
       if (selectedTicket?.id === ticketId) {
-        setSelectedTicket({ ...selectedTicket, status });
+        const updatedTicket = ticketsWithProfiles.find(t => t.id === ticketId);
+        if (updatedTicket) {
+          setSelectedTicket(updatedTicket);
+        }
       }
-
-      await supabase.from('admin_audit_log').insert({
-        admin_id: (await supabase.auth.getUser()).data.user?.id,
-        action: 'update_ticket_status',
-        details: { ticket_id: ticketId, new_status: status }
-      });
-
-      await loadTickets();
     }
   };
 
