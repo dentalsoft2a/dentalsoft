@@ -173,7 +173,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
             )}
           </div>
 
-          <nav className="flex-1 p-3 space-y-0.5 overflow-hidden">
+          <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.page;
