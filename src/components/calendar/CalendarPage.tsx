@@ -212,17 +212,17 @@ export default function CalendarPage() {
       </div>
 
       {urgentDeliveries.length > 0 && (
-        <div className="mb-6 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-400 rounded-2xl p-6 shadow-lg">
-          <div className="flex items-center gap-3 mb-4">
-            <div className="w-12 h-12 bg-red-500 rounded-xl flex items-center justify-center shadow-lg">
-              <AlertTriangle className="w-7 h-7 text-white" />
+        <div className="mb-4 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-400 rounded-xl p-4 shadow-lg">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+              <AlertTriangle className="w-5 h-5 text-white" />
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-slate-900 uppercase tracking-wide">Livraisons urgentes (48h)</h3>
-              <p className="text-sm text-slate-600">{urgentDeliveries.length} livraison{urgentDeliveries.length > 1 ? 's' : ''} à traiter rapidement</p>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm md:text-base font-bold text-slate-900 uppercase tracking-wide truncate">Livraisons urgentes (48h)</h3>
+              <p className="text-xs text-slate-600">{urgentDeliveries.length} livraison{urgentDeliveries.length > 1 ? 's' : ''} à traiter rapidement</p>
             </div>
           </div>
-          <div className="flex flex-wrap gap-3">
+          <div className="space-y-2">
             {urgentDeliveries.map((delivery) => {
               const daysUntil = getDaysUntilDelivery(delivery.date);
 
@@ -230,23 +230,23 @@ export default function CalendarPage() {
                 <button
                   key={delivery.id}
                   onClick={() => setSelectedDelivery(delivery)}
-                  className="inline-flex items-center gap-3 px-4 py-3 bg-white border-2 border-slate-300 rounded-xl hover:bg-slate-50 hover:border-slate-400 hover:shadow-md transition-all duration-200 text-left"
+                  className="w-full flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 text-left"
                 >
-                  <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-md">
+                  <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-lg flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow">
                     {delivery.dentist.name.charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-base font-bold text-slate-900 truncate max-w-[180px]">{delivery.dentist.name}</p>
-                    <p className="text-sm text-slate-600 font-medium">N° {delivery.delivery_number}</p>
+                    <p className="text-sm font-bold text-slate-900 truncate">{delivery.dentist.name}</p>
+                    <p className="text-xs text-slate-600">N° {delivery.delivery_number}</p>
                   </div>
-                  <div className={`px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0 shadow-md ${
+                  <div className={`px-2 py-1 rounded-md text-xs font-bold flex-shrink-0 ${
                     daysUntil === 0
                       ? 'bg-red-500 text-white animate-pulse'
                       : daysUntil === 1
                       ? 'bg-orange-500 text-white'
                       : 'bg-amber-500 text-white'
                   }`}>
-                    {daysUntil === 0 ? "Aujourd'hui" : daysUntil === 1 ? 'Demain' : `Dans ${daysUntil}j`}
+                    {daysUntil === 0 ? "Auj" : daysUntil === 1 ? 'Demain' : `${daysUntil}j`}
                   </div>
                 </button>
               );
