@@ -634,21 +634,21 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
-        <div className="relative p-8 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 z-10 rounded-t-3xl backdrop-blur-xl flex-shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-t-3xl"></div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">Générer une facture mensuelle</h2>
-          <p className="text-slate-500 text-sm mt-2 relative">Sélectionnez un dentiste et une période</p>
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-2 md:p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-1rem)] md:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
+        <div className="relative p-4 md:p-6 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 z-10 rounded-t-2xl md:rounded-t-3xl backdrop-blur-xl flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-t-2xl md:rounded-t-3xl"></div>
+          <h2 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">Générer une facture mensuelle</h2>
+          <p className="text-slate-500 text-xs md:text-sm mt-1 md:mt-2 relative">Sélectionnez un dentiste et une période</p>
         </div>
 
-        <div className="p-8 space-y-8 overflow-y-auto flex-1">
-          <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-              <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+        <div className="p-3 md:p-6 space-y-4 md:space-y-6 overflow-y-auto flex-1">
+          <div className="bg-gradient-to-br from-slate-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
+            <h3 className="text-sm md:text-base font-bold text-slate-800 mb-3 md:mb-4 flex items-center gap-2">
+              <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
               Informations de la facture
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             <div className="md:col-span-3">
               <DentistSelector
                 selectedDentistId={selectedDentist}
@@ -658,14 +658,14 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+              <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
                 Mois
               </label>
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                className="w-full px-4 py-3.5 border border-cyan-200 rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-cyan-300"
+                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-cyan-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all bg-gradient-to-br from-white to-slate-50/30 shadow-sm"
               >
                 {months.map((month, index) => (
                   <option key={index} value={index + 1}>
@@ -676,38 +676,38 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary-500"></span>
+              <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
                 Année
               </label>
               <input
                 type="number"
                 value={selectedYear}
                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="w-full px-4 py-3.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-primary-300"
+                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-primary-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all bg-gradient-to-br from-white to-slate-50/30 shadow-sm"
               />
             </div>
             </div>
           </div>
 
           {selectedDentist && (
-            <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
-              <h3 className="text-lg font-bold text-slate-800 mb-3 flex items-center gap-2">
-                <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+            <div className="bg-gradient-to-br from-slate-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
+              <h3 className="text-sm md:text-base font-bold text-slate-800 mb-2 md:mb-3 flex items-center gap-2">
+                <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
                 Proformas validés trouvés
               </h3>
-              <p className="text-sm text-slate-600 font-semibold mb-4">
+              <p className="text-xs md:text-sm text-slate-600 font-semibold mb-3">
                 {validatedProformas.length} proforma(s) validé(s) pour cette période
               </p>
               {validatedProformas.length > 0 && (
-                <div className="mt-4 space-y-2 bg-white/50 rounded-xl p-4 border border-slate-200">
+                <div className="mt-3 space-y-1.5 bg-white/50 rounded-lg md:rounded-xl p-3 border border-slate-200">
                   {validatedProformas.map((proforma) => (
-                    <div key={proforma.id} className="text-sm text-slate-700 flex justify-between py-2">
-                      <span className="font-semibold">{proforma.proforma_number}</span>
-                      <span className="font-bold text-slate-900">{Number(proforma.total).toFixed(2)} €</span>
+                    <div key={proforma.id} className="text-xs md:text-sm text-slate-700 flex justify-between py-1.5">
+                      <span className="font-semibold truncate mr-2">{proforma.proforma_number}</span>
+                      <span className="font-bold text-slate-900 flex-shrink-0">{Number(proforma.total).toFixed(2)} €</span>
                     </div>
                   ))}
-                  <div className="pt-3 mt-3 border-t-2 border-slate-300 flex justify-between text-lg font-bold">
+                  <div className="pt-2 mt-2 border-t-2 border-slate-300 flex justify-between text-base md:text-lg font-bold">
                     <span className="bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">Total</span>
                     <span className="bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">
                       {validatedProformas.reduce((sum, p) => sum + Number(p.total), 0).toFixed(2)} €
@@ -720,22 +720,22 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
 
         </div>
 
-        <div className="relative p-8 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-b-3xl"></div>
-          <div className="flex gap-4 relative">
+        <div className="relative p-3 md:p-5 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 rounded-b-2xl md:rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-b-2xl md:rounded-b-3xl"></div>
+          <div className="flex gap-2 md:gap-3 relative">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-8 py-4 border-2 border-slate-300 text-slate-700 rounded-2xl hover:bg-white hover:border-slate-400 transition-all duration-300 font-bold hover:scale-[1.02] shadow-sm hover:shadow-md text-lg"
+              className="flex-1 px-4 py-2.5 md:px-6 md:py-3 border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-white hover:border-slate-400 transition-all duration-300 font-bold shadow-sm text-sm md:text-base"
             >
               Annuler
             </button>
             <button
               onClick={handleGenerate}
               disabled={loading || !selectedDentist || validatedProformas.length === 0}
-              className="flex-1 px-8 py-4 bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 text-white shadow-xl hover:shadow-2xl rounded-2xl hover:from-primary-700 hover:via-cyan-700 hover:to-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold hover:scale-[1.02] text-lg bg-[length:200%_100%] hover:bg-[position:100%_0]"
+              className="flex-1 px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 text-white shadow-lg rounded-lg md:rounded-xl hover:from-primary-700 hover:via-cyan-700 hover:to-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm md:text-base bg-[length:200%_100%] hover:bg-[position:100%_0]"
             >
-              {loading ? 'Génération...' : 'Générer la facture'}
+              {loading ? 'Génération...' : 'Générer'}
             </button>
           </div>
         </div>

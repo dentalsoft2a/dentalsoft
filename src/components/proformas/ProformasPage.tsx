@@ -840,23 +840,23 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
   const { subtotal, tax_amount, total } = calculateTotals();
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-2rem)] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
-        <div className="relative p-8 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 z-10 rounded-t-3xl backdrop-blur-xl flex-shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-t-3xl"></div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-2 md:p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-1rem)] md:max-h-[calc(100vh-2rem)] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
+        <div className="relative p-4 md:p-6 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 z-10 rounded-t-2xl md:rounded-t-3xl backdrop-blur-xl flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-t-2xl md:rounded-t-3xl"></div>
+          <h2 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">
             {proformaId ? 'Modifier le proforma' : 'Nouveau proforma'}
           </h2>
-          <p className="text-slate-500 text-sm mt-2 relative">Gérez vos devis et proformas</p>
+          <p className="text-slate-500 text-xs md:text-sm mt-1 md:mt-2 relative">Gérez vos devis et proformas</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8 overflow-y-auto flex-1">
-          <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-              <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+        <form onSubmit={handleSubmit} className="p-3 md:p-6 space-y-4 md:space-y-6 overflow-y-auto flex-1">
+          <div className="bg-gradient-to-br from-slate-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
+            <h3 className="text-sm md:text-base font-bold text-slate-800 mb-3 md:mb-4 flex items-center gap-2">
+              <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
               Informations générales
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
               <DentistSelector
                 selectedDentistId={formData.dentist_id}
@@ -866,8 +866,8 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+              <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
                 Numéro <span className="text-red-500">*</span>
               </label>
               <input
@@ -875,13 +875,13 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
                 required
                 value={formData.proforma_number}
                 onChange={(e) => setFormData({ ...formData, proforma_number: e.target.value })}
-                className="w-full px-4 py-3.5 border border-cyan-200 rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-cyan-300"
+                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-cyan-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all bg-gradient-to-br from-white to-slate-50/30 shadow-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary-500"></span>
+              <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
                 Date <span className="text-red-500">*</span>
               </label>
               <input
@@ -889,13 +889,13 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
                 required
                 value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                className="w-full px-4 py-3.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-primary-300"
+                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-primary-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all bg-gradient-to-br from-white to-slate-50/30 shadow-sm"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+              <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
                 Statut
               </label>
               <select
@@ -903,7 +903,7 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
                 onChange={(e) =>
                   setFormData({ ...formData, status: e.target.value as 'pending' | 'validated' | 'invoiced' })
                 }
-                className="w-full px-4 py-3.5 border border-cyan-200 rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-cyan-300"
+                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-cyan-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all bg-gradient-to-br from-white to-slate-50/30 shadow-sm"
               >
                 <option value="pending">En attente</option>
                 <option value="validated">Validé</option>
@@ -912,36 +912,36 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-primary-500"></span>
+              <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
                 Mois
               </label>
               <input
                 type="month"
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full px-4 py-3.5 border border-primary-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-primary-300"
+                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-primary-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all bg-gradient-to-br from-white to-slate-50/30 shadow-sm"
               />
             </div>
             </div>
           </div>
 
           {deliveryNotes.length > 0 && (
-            <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
-                <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                  <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+            <div className="bg-gradient-to-br from-slate-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:justify-between mb-3">
+                <h3 className="text-sm md:text-base font-bold text-slate-800 flex items-center gap-2">
+                  <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
                   Bons de livraison ({deliveryNotes.length})
                 </h3>
                 <button
                   type="button"
                   onClick={importAllDeliveryNotes}
-                  className="px-4 py-2 text-sm bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105"
+                  className="w-full md:w-auto px-3 py-2 text-xs md:text-sm bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg md:rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-300 font-semibold shadow-md"
                 >
                   Tout importer
                 </button>
               </div>
-              <div className="max-h-64 overflow-y-auto border border-slate-200 rounded-2xl shadow-sm">
+              <div className="max-h-48 md:max-h-64 overflow-y-auto border border-slate-200 rounded-xl md:rounded-2xl shadow-sm">
                 {loadingDeliveryNotes ? (
                   <div className="p-4 text-center text-slate-600">Chargement...</div>
                 ) : (
@@ -949,11 +949,11 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
                     {deliveryNotes.map((note) => (
                       <div
                         key={note.id}
-                        className="p-4 hover:bg-gradient-to-r hover:from-primary-50/50 hover:to-cyan-50/50 flex justify-between items-center transition-all duration-200 group"
+                        className="p-3 hover:bg-gradient-to-r hover:from-primary-50/50 hover:to-cyan-50/50 flex justify-between items-center gap-2 transition-all duration-200 group"
                       >
-                        <div>
-                          <div className="font-bold text-slate-900 group-hover:text-primary-600 transition-colors">{note.delivery_number}</div>
-                          <div className="text-sm text-slate-600 mt-1">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-bold text-sm text-slate-900 group-hover:text-primary-600 transition-colors truncate">{note.delivery_number}</div>
+                          <div className="text-xs text-slate-600 mt-0.5 truncate">
                             {note.dentists?.name} - {new Date(note.date).toLocaleDateString('fr-FR')}
                             {note.patient_name && ` - ${note.patient_name}`}
                           </div>
@@ -961,7 +961,7 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
                         <button
                           type="button"
                           onClick={() => importDeliveryNote(note)}
-                          className="px-4 py-2 text-sm bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-300 font-semibold shadow-md hover:shadow-lg hover:scale-105"
+                          className="flex-shrink-0 px-3 py-1.5 text-xs md:text-sm bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-lg md:rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-300 font-semibold shadow-md"
                         >
                           Importer
                         </button>
@@ -973,21 +973,21 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
             </div>
           )}
 
-          <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-              <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+          <div className="bg-gradient-to-br from-slate-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
+            <h3 className="text-sm md:text-base font-bold text-slate-800 mb-3 md:mb-4 flex items-center gap-2">
+              <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
               Récapitulatif
             </h3>
-            <div className="space-y-3">
-              <div className="flex justify-between text-sm">
+            <div className="space-y-2">
+              <div className="flex justify-between text-xs md:text-sm">
                 <span className="text-slate-600 font-semibold">Sous-total HT</span>
                 <span className="font-bold text-slate-900">{subtotal.toFixed(2)} €</span>
               </div>
-              <div className="flex justify-between text-sm">
+              <div className="flex justify-between text-xs md:text-sm">
                 <span className="text-slate-600 font-semibold">TVA ({formData.tax_rate}%)</span>
                 <span className="font-bold text-slate-900">{tax_amount.toFixed(2)} €</span>
               </div>
-              <div className="flex justify-between text-xl font-bold pt-3 border-t-2 border-slate-200">
+              <div className="flex justify-between text-base md:text-lg font-bold pt-2 border-t-2 border-slate-200">
                 <span className="bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">Total TTC</span>
                 <span className="bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">{total.toFixed(2)} €</span>
               </div>
@@ -996,13 +996,13 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
 
         </form>
 
-        <div className="relative p-8 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-b-3xl"></div>
-          <div className="flex gap-4 relative">
+        <div className="relative p-3 md:p-5 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 rounded-b-2xl md:rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-b-2xl md:rounded-b-3xl"></div>
+          <div className="flex gap-2 md:gap-3 relative">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-8 py-4 border-2 border-slate-300 text-slate-700 rounded-2xl hover:bg-white hover:border-slate-400 transition-all duration-300 font-bold hover:scale-[1.02] shadow-sm hover:shadow-md text-lg"
+              className="flex-1 px-4 py-2.5 md:px-6 md:py-3 border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-white hover:border-slate-400 transition-all duration-300 font-bold shadow-sm text-sm md:text-base"
             >
               Annuler
             </button>
@@ -1010,7 +1010,7 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
               type="submit"
               onClick={handleSubmit}
               disabled={loading}
-              className="flex-1 px-8 py-4 bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 text-white shadow-xl hover:shadow-2xl rounded-2xl hover:from-primary-700 hover:via-cyan-700 hover:to-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold hover:scale-[1.02] text-lg bg-[length:200%_100%] hover:bg-[position:100%_0]"
+              className="flex-1 px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 text-white shadow-lg rounded-lg md:rounded-xl hover:from-primary-700 hover:via-cyan-700 hover:to-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm md:text-base bg-[length:200%_100%] hover:bg-[position:100%_0]"
             >
               {loading ? 'Enregistrement...' : 'Enregistrer'}
             </button>
