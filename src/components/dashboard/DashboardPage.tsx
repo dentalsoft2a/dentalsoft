@@ -934,7 +934,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-6 mb-8">
         {statCards.map((card, index) => {
           const Icon = card.icon;
           const colors = {
@@ -947,16 +947,16 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
           return (
             <div
               key={card.title}
-              className="bg-white rounded-xl shadow-lg border border-slate-200/50 p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in"
+              className="bg-white rounded-xl shadow-lg border border-slate-200/50 p-4 md:p-6 hover:shadow-xl transition-all duration-300 hover:-translate-y-1 animate-scale-in"
               style={{ animationDelay: `${index * 100}ms` }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 rounded-lg bg-gradient-to-br ${colors[card.color as keyof typeof colors]} shadow-lg`}>
-                  <Icon className="w-6 h-6 text-white" />
+              <div className="flex items-center justify-between mb-2 md:mb-4">
+                <div className={`p-2 md:p-3 rounded-lg bg-gradient-to-br ${colors[card.color as keyof typeof colors]} shadow-lg`}>
+                  <Icon className="w-4 h-4 md:w-6 md:h-6 text-white" />
                 </div>
               </div>
-              <h3 className="text-sm font-medium text-slate-600 mb-1">{card.title}</h3>
-              <p className="text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">{card.value}</p>
+              <h3 className="text-xs md:text-sm font-medium text-slate-600 mb-1">{card.title}</h3>
+              <p className="text-lg md:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">{card.value}</p>
             </div>
           );
         })}
