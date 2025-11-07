@@ -149,7 +149,6 @@ export function SupportTickets() {
     if (error) {
       alert('Erreur lors de la mise à jour: ' + error.message);
     } else {
-      loadTickets();
       if (selectedTicket?.id === ticketId) {
         setSelectedTicket({ ...selectedTicket, status });
       }
@@ -159,6 +158,8 @@ export function SupportTickets() {
         action: 'update_ticket_status',
         details: { ticket_id: ticketId, new_status: status }
       });
+
+      await loadTickets();
     }
   };
 
