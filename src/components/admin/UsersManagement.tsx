@@ -36,15 +36,22 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (userType === 'laboratories') {
+    loadBothLists();
+  }, []);
+
+  useEffect(() => {
+    if (userType === 'laboratories' && filterStatus !== 'all') {
       loadUsers();
-    } else {
-      loadDentists();
     }
-  }, [userType]);
+  }, [filterStatus]);
+
+  const loadBothLists = async () => {
+    setLoading(true);
+    await Promise.all([loadUsers(), loadDentists()]);
+    setLoading(false);
+  };
 
   const loadUsers = async () => {
-    setLoading(true);
     let query = supabase
       .from('user_profiles')
       .select('*')
@@ -61,11 +68,9 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
     } else {
       setUsers(data || []);
     }
-    setLoading(false);
   };
 
   const loadDentists = async () => {
-    setLoading(true);
     const { data, error } = await supabase
       .from('dentist_accounts')
       .select('*')
@@ -76,7 +81,6 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
     } else {
       setDentists(data || []);
     }
-    setLoading(false);
   };
 
   const updateUserStatus = async (userId: string, status: string) => {
@@ -97,7 +101,7 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
       details: { new_status: status }
     });
 
-    loadUsers();
+    await loadUsers();
     onStatsUpdate();
   };
 
@@ -121,7 +125,7 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
       details: { new_role: newRole }
     });
 
-    loadUsers();
+    await loadUsers();
   };
 
   const deleteUser = async (userId: string, userEmail: string) => {
@@ -165,7 +169,7 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
       }
 
       alert('Utilisateur supprimé avec succès');
-      loadUsers();
+      await loadUsers();
       onStatsUpdate();
     } catch (error: any) {
       alert('Erreur lors de la suppression: ' + error.message);
@@ -195,7 +199,7 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
     });
 
     alert('Dentiste supprimé avec succès');
-    loadDentists();
+    await loadDentists();
   };
 
   const filteredUsers = users.filter(user =>
