@@ -34,6 +34,9 @@ function AppContent() {
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
   const [initialPageSet, setInitialPageSet] = useState(false);
 
+  // Only show server monitor for authenticated users
+  const showServerMonitor = !!user;
+
   useEffect(() => {
     if (user) {
       checkSuperAdminAndSubscription();
@@ -201,12 +204,22 @@ function AppContent() {
   }
 
   if (isDentist) {
-    return <DentistPhotoPanel />;
+    return (
+      <>
+        {showServerMonitor && <ServerStatusMonitor />}
+        <DentistPhotoPanel />
+      </>
+    );
   }
 
   if (currentPage === 'admin') {
     if (isSuperAdmin) {
-      return <SuperAdminPanel onNavigate={setCurrentPage} />;
+      return (
+        <>
+          {showServerMonitor && <ServerStatusMonitor />}
+          <SuperAdminPanel onNavigate={setCurrentPage} />
+        </>
+      );
     } else {
       setCurrentPage('dashboard');
       return null;
@@ -259,35 +272,37 @@ function AppContent() {
   };
 
   return (
-    <DashboardLayout
-      currentPage={currentPage}
-      onNavigate={(page) => {
-        // Block admin page for non-super admins
-        if (page === 'admin' && !isSuperAdmin) {
-          return;
-        }
+    <>
+      {showServerMonitor && <ServerStatusMonitor />}
+      <DashboardLayout
+        currentPage={currentPage}
+        onNavigate={(page) => {
+          // Block admin page for non-super admins
+          if (page === 'admin' && !isSuperAdmin) {
+            return;
+          }
 
-        // Allow navigation to specific pages even with invalid subscription
-        const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'settings', 'subscription', 'support', 'help-center'];
-        if (!hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(page)) {
-          return;
-        }
-        setCurrentPage(page);
-      }}
-      isSuperAdmin={isSuperAdmin}
-      lowStockCount={lowStockCount}
-      lowStockResourcesCount={lowStockResourcesCount}
-      hasValidSubscription={hasValidSubscription}
-    >
-      {renderPage()}
-    </DashboardLayout>
+          // Allow navigation to specific pages even with invalid subscription
+          const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'settings', 'subscription', 'support', 'help-center'];
+          if (!hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(page)) {
+            return;
+          }
+          setCurrentPage(page);
+        }}
+        isSuperAdmin={isSuperAdmin}
+        lowStockCount={lowStockCount}
+        lowStockResourcesCount={lowStockResourcesCount}
+        hasValidSubscription={hasValidSubscription}
+      >
+        {renderPage()}
+      </DashboardLayout>
+    </>
   );
 }
 
 function App() {
   return (
     <AuthProvider>
-      <ServerStatusMonitor />
       <AppContent />
     </AuthProvider>
   );
