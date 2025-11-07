@@ -5,6 +5,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
 import { generateInvoicePDF } from '../../utils/pdfGenerator';
 import DentistSelector from '../proformas/DentistSelector';
+import MonthOnlyPicker from '../common/MonthOnlyPicker';
+import YearPicker from '../common/YearPicker';
 
 type Invoice = Database['public']['Tables']['invoices']['Row'] & {
   dentists?: { name: string };
@@ -658,33 +660,20 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
             </div>
 
             <div>
-              <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
-                Mois
-              </label>
-              <select
+              <MonthOnlyPicker
                 value={selectedMonth}
-                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-cyan-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all bg-gradient-to-br from-white to-slate-50/30 shadow-sm"
-              >
-                {months.map((month, index) => (
-                  <option key={index} value={index + 1}>
-                    {month}
-                  </option>
-                ))}
-              </select>
+                onChange={(value) => setSelectedMonth(value)}
+                label="Mois"
+                color="cyan"
+              />
             </div>
 
             <div>
-              <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-primary-500"></span>
-                Année
-              </label>
-              <input
-                type="number"
+              <YearPicker
                 value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-primary-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all bg-gradient-to-br from-white to-slate-50/30 shadow-sm"
+                onChange={(value) => setSelectedYear(value)}
+                label="Année"
+                color="primary"
               />
             </div>
             </div>
