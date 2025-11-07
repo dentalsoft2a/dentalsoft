@@ -18,6 +18,7 @@ import HelpCenterPage from './components/help-center/HelpCenterPage';
 import DentistRegisterPage from './components/dentist/DentistRegisterPage';
 import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
+import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { supabase } from './lib/supabase';
 import { usePermissions } from './hooks/usePermissions';
 
@@ -286,6 +287,7 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
+      <ServerStatusMonitor />
       <AppContent />
     </AuthProvider>
   );
