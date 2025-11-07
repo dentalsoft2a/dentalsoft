@@ -212,92 +212,158 @@ export default function DeliveryNotesPage() {
             {searchTerm ? 'Aucun bon de livraison trouvé' : 'Aucun bon de livraison enregistré'}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Numéro
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Dentiste
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {filteredNotes.map((note) => (
-                  <tr key={note.id} className="hover:bg-slate-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-slate-900">{note.delivery_number}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {note.dentists?.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {new Date(note.date).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                        note.status === 'completed'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-orange-100 text-orange-800'
-                      }`}>
-                        {note.status === 'completed' ? 'Terminé' : 'En cours'}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => handleToggleStatus(note)}
-                          className={`p-2 rounded-lg transition-all duration-200 ${
-                            note.status === 'completed'
-                              ? 'text-orange-600 hover:bg-orange-50'
-                              : 'text-green-600 hover:bg-green-50'
-                          }`}
-                          title={note.status === 'completed' ? 'Réactiver' : 'Marquer comme terminé'}
-                        >
-                          <CheckCircle className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDownloadPDF(note)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                          title="Télécharger PDF"
-                        >
-                          <FileDown className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => {
-                            setEditingNote(note.id);
-                            setShowModal(true);
-                          }}
-                          className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
-                          title="Modifier"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(note.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Numéro
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Dentiste
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {filteredNotes.map((note) => (
+                    <tr key={note.id} className="hover:bg-slate-50 transition">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-slate-900">{note.delivery_number}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {note.dentists?.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {new Date(note.date).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                          note.status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-orange-100 text-orange-800'
+                        }`}>
+                          {note.status === 'completed' ? 'Terminé' : 'En cours'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => handleToggleStatus(note)}
+                            className={`p-2 rounded-lg transition-all duration-200 ${
+                              note.status === 'completed'
+                                ? 'text-orange-600 hover:bg-orange-50'
+                                : 'text-green-600 hover:bg-green-50'
+                            }`}
+                            title={note.status === 'completed' ? 'Réactiver' : 'Marquer comme terminé'}
+                          >
+                            <CheckCircle className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDownloadPDF(note)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                            title="Télécharger PDF"
+                          >
+                            <FileDown className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => {
+                              setEditingNote(note.id);
+                              setShowModal(true);
+                            }}
+                            className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
+                            title="Modifier"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(note.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden divide-y divide-slate-200">
+              {filteredNotes.map((note) => (
+                <div key={note.id} className="p-4 hover:bg-slate-50 transition-colors active:bg-slate-100">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-semibold text-slate-900 text-sm truncate">{note.delivery_number}</h3>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+                          note.status === 'completed'
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-orange-100 text-orange-800'
+                        }`}>
+                          {note.status === 'completed' ? 'Terminé' : 'En cours'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-1">
+                        <User className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate">{note.dentists?.name}</span>
+                      </div>
+                      <p className="text-xs text-slate-500">
+                        {new Date(note.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                    <button
+                      onClick={() => handleToggleStatus(note)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all active:scale-95 ${
+                        note.status === 'completed'
+                          ? 'bg-orange-50 text-orange-700 hover:bg-orange-100'
+                          : 'bg-green-50 text-green-700 hover:bg-green-100'
+                      }`}
+                    >
+                      <CheckCircle className="w-3.5 h-3.5" />
+                      {note.status === 'completed' ? 'Réactiver' : 'Terminer'}
+                    </button>
+                    <button
+                      onClick={() => handleDownloadPDF(note)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      PDF
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingNote(note.id);
+                        setShowModal(true);
+                      }}
+                      className="p-2 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg transition-all active:scale-95"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(note.id)}
+                      className="p-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg transition-all active:scale-95"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
