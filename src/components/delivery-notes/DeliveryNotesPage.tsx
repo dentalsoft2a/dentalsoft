@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, FileDown, User, CheckCircle } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, FileDown, User, CheckCircle, Play } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
@@ -93,24 +93,36 @@ export default function DeliveryNotesPage() {
     return matchesSearch;
   });
 
-  const handleToggleStatus = async (note: DeliveryNote) => {
-    const newStatus = note.status === 'completed' ? 'in_progress' : 'completed';
-    const confirmMessage = newStatus === 'completed'
-      ? 'Marquer ce bon de livraison comme terminé ?'
-      : 'Réactiver ce bon de livraison ?';
-
-    if (!confirm(confirmMessage)) return;
+  const handleStartWork = async (note: DeliveryNote) => {
+    if (!confirm('Démarrer ce travail ?')) return;
 
     try {
       const { error } = await supabase
         .from('delivery_notes')
-        .update({ status: newStatus })
+        .update({ status: 'in_progress' })
         .eq('id', note.id);
 
       if (error) throw error;
       await loadDeliveryNotes();
     } catch (error) {
-      console.error('Error updating status:', error);
+      console.error('Error starting work:', error);
+      alert('Erreur lors du démarrage du travail');
+    }
+  };
+
+  const handleCompleteWork = async (note: DeliveryNote) => {
+    if (!confirm('Marquer ce bon de livraison comme terminé ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('delivery_notes')
+        .update({ status: 'completed' })
+        .eq('id', note.id);
+
+      if (error) throw error;
+      await loadDeliveryNotes();
+    } catch (error) {
+      console.error('Error completing work:', error);
       alert('Erreur lors de la mise à jour du statut');
     }
   };
@@ -250,24 +262,33 @@ export default function DeliveryNotesPage() {
                         <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
                           note.status === 'completed'
                             ? 'bg-green-100 text-green-800'
-                            : 'bg-orange-100 text-orange-800'
+                            : note.status === 'in_progress'
+                            ? 'bg-orange-100 text-orange-800'
+                            : 'bg-blue-100 text-blue-800'
                         }`}>
-                          {note.status === 'completed' ? 'Terminé' : 'En cours'}
+                          {note.status === 'completed' ? 'Terminé' : note.status === 'in_progress' ? 'En cours' : 'En attente'}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => handleToggleStatus(note)}
-                            className={`p-2 rounded-lg transition-all duration-200 ${
-                              note.status === 'completed'
-                                ? 'text-orange-600 hover:bg-orange-50'
-                                : 'text-green-600 hover:bg-green-50'
-                            }`}
-                            title={note.status === 'completed' ? 'Réactiver' : 'Marquer comme terminé'}
-                          >
-                            <CheckCircle className="w-4 h-4" />
-                          </button>
+                          {note.status === 'pending' && (
+                            <button
+                              onClick={() => handleStartWork(note)}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                              title="Démarrer le travail"
+                            >
+                              <Play className="w-4 h-4" />
+                            </button>
+                          )}
+                          {note.status === 'in_progress' && (
+                            <button
+                              onClick={() => handleCompleteWork(note)}
+                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+                              title="Marquer comme terminé"
+                            >
+                              <CheckCircle className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleDownloadPDF(note)}
                             className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
@@ -310,9 +331,11 @@ export default function DeliveryNotesPage() {
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
                           note.status === 'completed'
                             ? 'bg-green-100 text-green-800'
-                            : 'bg-orange-100 text-orange-800'
+                            : note.status === 'in_progress'
+                            ? 'bg-orange-100 text-orange-800'
+                            : 'bg-blue-100 text-blue-800'
                         }`}>
-                          {note.status === 'completed' ? 'Terminé' : 'En cours'}
+                          {note.status === 'completed' ? 'Terminé' : note.status === 'in_progress' ? 'En cours' : 'En attente'}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-1">
@@ -326,17 +349,24 @@ export default function DeliveryNotesPage() {
                   </div>
 
                   <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-                    <button
-                      onClick={() => handleToggleStatus(note)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all active:scale-95 ${
-                        note.status === 'completed'
-                          ? 'bg-orange-50 text-orange-700 hover:bg-orange-100'
-                          : 'bg-green-50 text-green-700 hover:bg-green-100'
-                      }`}
-                    >
-                      <CheckCircle className="w-3.5 h-3.5" />
-                      {note.status === 'completed' ? 'Réactiver' : 'Terminer'}
-                    </button>
+                    {note.status === 'pending' && (
+                      <button
+                        onClick={() => handleStartWork(note)}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                      >
+                        <Play className="w-3.5 h-3.5" />
+                        Démarrer
+                      </button>
+                    )}
+                    {note.status === 'in_progress' && (
+                      <button
+                        onClick={() => handleCompleteWork(note)}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                      >
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Terminer
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDownloadPDF(note)}
                       className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-all active:scale-95"
