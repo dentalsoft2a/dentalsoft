@@ -316,95 +316,156 @@ export default function InvoicesPage() {
             {searchTerm ? 'Aucune facture trouvée' : 'Aucune facture enregistrée'}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Numéro
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Dentiste
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Période
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Total TTC
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {filteredInvoices.map((invoice) => (
-                  <tr key={invoice.id} className="hover:bg-slate-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-slate-900">{invoice.invoice_number}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {invoice.dentists?.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {new Date(invoice.year, invoice.month - 1).toLocaleDateString('fr-FR', {
-                        month: 'long',
-                        year: 'numeric',
-                      })}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {new Date(invoice.date).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(invoice.status)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-slate-900">
-                      {Number(invoice.total).toFixed(2)} €
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => {
-                            setSelectedInvoice(invoice);
-                            setShowPaymentModal(true);
-                          }}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                          title="Gérer les paiements"
-                        >
-                          <CreditCard className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleSendEmail(invoice)}
-                          className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all duration-200"
-                          title="Envoyer par email"
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleGeneratePDF(invoice)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
-                          title="Générer PDF"
-                        >
-                          <FileDown className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(invoice.id)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                          title="Supprimer"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Numéro
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Dentiste
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Période
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Total TTC
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {filteredInvoices.map((invoice) => (
+                    <tr key={invoice.id} className="hover:bg-slate-50 transition">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-slate-900">{invoice.invoice_number}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {invoice.dentists?.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {new Date(invoice.year, invoice.month - 1).toLocaleDateString('fr-FR', {
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {new Date(invoice.date).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(invoice.status)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-slate-900">
+                        {Number(invoice.total).toFixed(2)} €
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => {
+                              setSelectedInvoice(invoice);
+                              setShowPaymentModal(true);
+                            }}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                            title="Gérer les paiements"
+                          >
+                            <CreditCard className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleSendEmail(invoice)}
+                            className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all duration-200"
+                            title="Envoyer par email"
+                          >
+                            <Send className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleGeneratePDF(invoice)}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+                            title="Générer PDF"
+                          >
+                            <FileDown className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(invoice.id)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden divide-y divide-slate-200">
+              {filteredInvoices.map((invoice) => (
+                <div key={invoice.id} className="p-4 hover:bg-slate-50 transition-colors active:bg-slate-100">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="font-semibold text-slate-900 text-sm">{invoice.invoice_number}</h3>
+                        {getStatusBadge(invoice.status)}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-1">
+                        <CreditCard className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate">{invoice.dentists?.name}</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mb-1">
+                        {new Date(invoice.year, invoice.month - 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                      </p>
+                      <p className="text-xs text-slate-500 mb-2">
+                        {new Date(invoice.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                      <p className="text-sm font-bold text-slate-900">
+                        {Number(invoice.total).toFixed(2)} €
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                    <button
+                      onClick={() => {
+                        setSelectedInvoice(invoice);
+                        setShowPaymentModal(true);
+                      }}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                    >
+                      <CreditCard className="w-3.5 h-3.5" />
+                      Paiements
+                    </button>
+                    <button
+                      onClick={() => handleSendEmail(invoice)}
+                      className="p-2 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 rounded-lg transition-all active:scale-95"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleGeneratePDF(invoice)}
+                      className="p-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg transition-all active:scale-95"
+                    >
+                      <FileDown className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDelete(invoice.id)}
+                      className="p-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg transition-all active:scale-95"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 

@@ -365,99 +365,170 @@ export default function ProformasPage() {
             {searchTerm || statusFilter !== 'all' ? 'Aucun proforma trouvé' : 'Aucun proforma enregistré'}
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-slate-50 border-b border-slate-200">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Numéro
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Dentiste
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Date
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Statut
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Total TTC
-                  </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {filteredProformas.map((proforma) => (
-                  <tr key={proforma.id} className="hover:bg-slate-50 transition">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="font-medium text-slate-900">{proforma.proforma_number}</div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {proforma.dentists?.name}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                      {new Date(proforma.date).toLocaleDateString('fr-FR')}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(proforma.status)}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-slate-900">
-                      {Number(proforma.total).toFixed(2)} €
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        {proforma.status !== 'invoiced' && (
-                          <button
-                            onClick={() => handleConvertToInvoice(proforma)}
-                            className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all duration-200"
-                            title="Facturer"
-                          >
-                            <Receipt className="w-4 h-4" />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => handleGeneratePDF(proforma, false)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
-                          title="Générer PDF"
-                        >
-                          <FileDown className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleSendEmail(proforma)}
-                          className="p-2 text-violet-600 hover:bg-violet-50 rounded-lg transition-all duration-200"
-                          title="Envoyer par email"
-                        >
-                          <Send className="w-4 h-4" />
-                        </button>
-                        {proforma.status !== 'invoiced' && (
-                          <>
-                            <button
-                              onClick={() => {
-                                setEditingProforma(proforma.id);
-                                setShowModal(true);
-                              }}
-                              className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
-                              title="Modifier"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDelete(proforma.id)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                              title="Supprimer"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+          <>
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Numéro
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Dentiste
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Date
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Statut
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Total TTC
+                    </th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody className="divide-y divide-slate-200">
+                  {filteredProformas.map((proforma) => (
+                    <tr key={proforma.id} className="hover:bg-slate-50 transition">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="font-medium text-slate-900">{proforma.proforma_number}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {proforma.dentists?.name}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
+                        {new Date(proforma.date).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(proforma.status)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-slate-900">
+                        {Number(proforma.total).toFixed(2)} €
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          {proforma.status !== 'invoiced' && (
+                            <button
+                              onClick={() => handleConvertToInvoice(proforma)}
+                              className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all duration-200"
+                              title="Facturer"
+                            >
+                              <Receipt className="w-4 h-4" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => handleGeneratePDF(proforma, false)}
+                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+                            title="Générer PDF"
+                          >
+                            <FileDown className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleSendEmail(proforma)}
+                            className="p-2 text-violet-600 hover:bg-violet-50 rounded-lg transition-all duration-200"
+                            title="Envoyer par email"
+                          >
+                            <Send className="w-4 h-4" />
+                          </button>
+                          {proforma.status !== 'invoiced' && (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setEditingProforma(proforma.id);
+                                  setShowModal(true);
+                                }}
+                                className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
+                                title="Modifier"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(proforma.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="md:hidden divide-y divide-slate-200">
+              {filteredProformas.map((proforma) => (
+                <div key={proforma.id} className="p-4 hover:bg-slate-50 transition-colors active:bg-slate-100">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <h3 className="font-semibold text-slate-900 text-sm">{proforma.proforma_number}</h3>
+                        {getStatusBadge(proforma.status)}
+                      </div>
+                      <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-1">
+                        <Eye className="w-3.5 h-3.5 flex-shrink-0" />
+                        <span className="truncate">{proforma.dentists?.name}</span>
+                      </div>
+                      <p className="text-xs text-slate-500 mb-2">
+                        {new Date(proforma.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                      <p className="text-sm font-bold text-slate-900">
+                        {Number(proforma.total).toFixed(2)} €
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
+                    {proforma.status !== 'invoiced' && (
+                      <button
+                        onClick={() => handleConvertToInvoice(proforma)}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                      >
+                        <Receipt className="w-3.5 h-3.5" />
+                        Facturer
+                      </button>
+                    )}
+                    <button
+                      onClick={() => handleGeneratePDF(proforma, false)}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                    >
+                      <FileDown className="w-3.5 h-3.5" />
+                      PDF
+                    </button>
+                    <button
+                      onClick={() => handleSendEmail(proforma)}
+                      className="p-2 bg-violet-50 text-violet-700 hover:bg-violet-100 rounded-lg transition-all active:scale-95"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                    {proforma.status !== 'invoiced' && (
+                      <>
+                        <button
+                          onClick={() => {
+                            setEditingProforma(proforma.id);
+                            setShowModal(true);
+                          }}
+                          className="p-2 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg transition-all active:scale-95"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(proforma.id)}
+                          className="p-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg transition-all active:scale-95"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
 
