@@ -3,6 +3,7 @@ import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
+import AlertBanner from '../common/AlertBanner';
 
 type DeliveryNote = Database['public']['Tables']['delivery_notes']['Row'];
 type Dentist = Database['public']['Tables']['dentists']['Row'];
@@ -727,6 +728,8 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
           Générer un rapport
         </button>
       </div>
+
+      <AlertBanner />
 
       {(lowStockItems.length > 0 || lowStockResources.length > 0 || lowStockVariants.length > 0) && (
         <div className="mb-6 bg-gradient-to-br from-orange-50 to-red-50 border-l-4 border-orange-500 rounded-xl p-5 shadow-lg animate-pulse-slow">

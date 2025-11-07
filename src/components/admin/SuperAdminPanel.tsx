@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle } from 'lucide-react';
+import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { UsersManagement } from './UsersManagement';
 import { SubscriptionSettings } from './SubscriptionSettings';
@@ -7,8 +7,9 @@ import { SupportTickets } from './SupportTickets';
 import { AdminAuditLog } from './AdminAuditLog';
 import { AccessCodesManagement } from './AccessCodesManagement';
 import { SmtpSettings } from './SmtpSettings';
+import AlertsManagement from './AlertsManagement';
 
-type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit';
+type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit' | 'alerts';
 
 interface SuperAdminPanelProps {
   onNavigate?: (page: string) => void;
@@ -48,6 +49,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
   const tabs = [
     { id: 'users' as TabType, label: 'Utilisateurs', icon: Users, color: 'from-blue-500 to-blue-600' },
     { id: 'subscriptions' as TabType, label: 'Abonnements', icon: DollarSign, color: 'from-emerald-500 to-emerald-600' },
+    { id: 'alerts' as TabType, label: 'Alertes', icon: Bell, color: 'from-red-500 to-red-600' },
     { id: 'codes' as TabType, label: 'Codes d\'accès', icon: Key, color: 'from-amber-500 to-amber-600' },
     { id: 'smtp' as TabType, label: 'Configuration Email', icon: Mail, color: 'from-pink-500 to-pink-600' },
     { id: 'support' as TabType, label: 'Support', icon: MessageSquare, color: 'from-orange-500 to-orange-600' },
@@ -200,6 +202,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
           <div className="p-8">
             {activeTab === 'users' && <UsersManagement onStatsUpdate={loadStats} />}
             {activeTab === 'subscriptions' && <SubscriptionSettings />}
+            {activeTab === 'alerts' && <AlertsManagement />}
             {activeTab === 'codes' && <AccessCodesManagement />}
             {activeTab === 'smtp' && <SmtpSettings />}
             {activeTab === 'support' && <SupportTickets />}
