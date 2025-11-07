@@ -73,8 +73,10 @@ export function ServerStatusMonitor() {
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
+    // Initial check immediately on mount
     checkServerStatus();
 
+    // Then check every 10 seconds
     intervalId = setInterval(checkServerStatus, 10000);
 
     return () => {
