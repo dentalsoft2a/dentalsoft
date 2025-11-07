@@ -637,7 +637,7 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
 
   return (
     <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-2 md:p-4 animate-in fade-in duration-300">
-      <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-1rem)] md:max-h-[90vh] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
+      <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl max-w-5xl w-full max-h-[calc(100vh-1rem)] md:max-h-[95vh] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
         <div className="relative p-4 md:p-6 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 z-10 rounded-t-2xl md:rounded-t-3xl backdrop-blur-xl flex-shrink-0">
           <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-t-2xl md:rounded-t-3xl"></div>
           <h2 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">Générer une facture mensuelle</h2>
