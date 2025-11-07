@@ -141,6 +141,7 @@ export function SupportTickets() {
   };
 
   const updateTicketStatus = async (ticketId: string, status: string) => {
+    // Update in database
     const { error } = await supabase
       .from('support_tickets')
       .update({ status, updated_at: new Date().toISOString() })
@@ -151,41 +152,25 @@ export function SupportTickets() {
       return;
     }
 
+    // Log audit
     await supabase.from('admin_audit_log').insert({
       admin_id: (await supabase.auth.getUser()).data.user?.id,
       action: 'update_ticket_status',
       details: { ticket_id: ticketId, new_status: status }
     });
 
-    const { data: ticketsData, error: ticketsError } = await supabase
-      .from('support_tickets')
-      .select('*')
-      .order('created_at', { ascending: false });
+    // Update local state immediately
+    setTickets(prevTickets =>
+      prevTickets.map(ticket =>
+        ticket.id === ticketId
+          ? { ...ticket, status }
+          : ticket
+      )
+    );
 
-    if (!ticketsError && ticketsData) {
-      const ticketsWithProfiles = await Promise.all(
-        ticketsData.map(async (ticket) => {
-          const { data: profile } = await supabase
-            .from('user_profiles')
-            .select('email')
-            .eq('id', ticket.user_id)
-            .maybeSingle();
-
-          return {
-            ...ticket,
-            user_profiles: { email: profile?.email || 'Unknown' }
-          };
-        })
-      );
-
-      setTickets(ticketsWithProfiles);
-
-      if (selectedTicket?.id === ticketId) {
-        const updatedTicket = ticketsWithProfiles.find(t => t.id === ticketId);
-        if (updatedTicket) {
-          setSelectedTicket(updatedTicket);
-        }
-      }
+    // Update selected ticket if it's the one being updated
+    if (selectedTicket?.id === ticketId) {
+      setSelectedTicket(prev => prev ? { ...prev, status } : null);
     }
   };
 
