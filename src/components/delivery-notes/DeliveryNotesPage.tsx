@@ -622,24 +622,24 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
   };
 
   return (
-    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
-      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-2rem)] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
-        <div className="relative p-8 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 z-10 rounded-t-3xl backdrop-blur-xl flex-shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-t-3xl"></div>
-          <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-2 md:p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-2xl md:rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-1rem)] md:max-h-[calc(100vh-2rem)] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
+        <div className="relative p-4 md:p-6 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 z-10 rounded-t-2xl md:rounded-t-3xl backdrop-blur-xl flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-t-2xl md:rounded-t-3xl"></div>
+          <h2 className="text-lg md:text-2xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">
             {noteId ? 'Modifier le bon de livraison' : 'Nouveau bon de livraison'}
           </h2>
-          <p className="text-slate-500 text-sm mt-2 relative">Remplissez les informations du bon de livraison</p>
+          <p className="text-slate-500 text-xs md:text-sm mt-1 md:mt-2 relative">Remplissez les informations du bon de livraison</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-8 overflow-y-auto flex-1">
-          <div className="space-y-8">
-            <div className="bg-gradient-to-br from-slate-50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
-              <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-                <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+        <form onSubmit={handleSubmit} className="p-3 md:p-6 space-y-4 md:space-y-6 overflow-y-auto flex-1">
+          <div className="space-y-4 md:space-y-6">
+            <div className="bg-gradient-to-br from-slate-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
+              <h3 className="text-sm md:text-base font-bold text-slate-800 mb-3 md:mb-4 flex items-center gap-2">
+                <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
                 Informations générales
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <CustomSelect
                   value={formData.dentist_id}
                   onChange={(value) => setFormData({ ...formData, dentist_id: value })}
@@ -652,8 +652,8 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                 />
 
                 <div className="group">
-                  <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors group-focus-within:text-primary-600 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-cyan-500 group-focus-within:scale-150 transition-transform"></span>
+                  <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors group-focus-within:text-primary-600 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 group-focus-within:scale-150 transition-transform"></span>
                     Patient
                   </label>
                   <input
@@ -661,21 +661,21 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                     value={formData.patient_name}
                     onChange={(e) => setFormData({ ...formData, patient_name: e.target.value })}
                     placeholder="Nom du patient"
-                    className="w-full px-5 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 placeholder:text-slate-400 bg-white shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-slate-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 placeholder:text-slate-400 bg-white shadow-sm"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="bg-gradient-to-br from-cyan-50/50 to-white p-6 rounded-2xl border border-slate-200/50 shadow-sm">
-              <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
-                <div className="w-1.5 h-6 bg-gradient-to-b from-cyan-500 to-primary-500 rounded-full"></div>
+            <div className="bg-gradient-to-br from-cyan-50/50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
+              <h3 className="text-sm md:text-base font-bold text-slate-800 mb-3 md:mb-4 flex items-center gap-2">
+                <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-cyan-500 to-primary-500 rounded-full"></div>
                 Dates et numérotation
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div className="group">
-                  <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors group-focus-within:text-primary-600 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-primary-500 group-focus-within:scale-150 transition-transform"></span>
+                  <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors group-focus-within:text-primary-600 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary-500 group-focus-within:scale-150 transition-transform"></span>
                     Numéro <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -683,7 +683,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                     required
                     value={formData.delivery_number}
                     onChange={(e) => setFormData({ ...formData, delivery_number: e.target.value })}
-                    className="w-full px-5 py-3.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white shadow-sm hover:shadow-md"
+                    className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-slate-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white shadow-sm"
                   />
                 </div>
 
@@ -707,24 +707,24 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
             </div>
           </div>
 
-          <div className="bg-gradient-to-br from-primary-50/30 to-cyan-50/30 p-6 rounded-2xl border border-primary-200/50 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-3">
-                <div className="w-1.5 h-8 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+          <div className="bg-gradient-to-br from-primary-50/30 to-cyan-50/30 p-3 md:p-5 rounded-xl md:rounded-2xl border border-primary-200/50 shadow-sm">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-3 md:justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-1 h-5 md:w-1.5 md:h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">
+                  <h3 className="text-sm md:text-base font-bold text-slate-800">
                     Articles <span className="text-red-500">*</span>
                   </h3>
-                  <p className="text-xs text-slate-500 mt-0.5">Liste des prothèses et dispositifs</p>
+                  <p className="text-xs text-slate-500">Liste des prothèses</p>
                 </div>
               </div>
               <button
                 type="button"
                 onClick={addItem}
-                className="text-sm px-5 py-2.5 bg-gradient-to-r from-primary-500 to-cyan-500 text-white hover:from-primary-600 hover:to-cyan-600 font-bold rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg shadow-md flex items-center gap-2"
+                className="w-full md:w-auto text-xs md:text-sm px-3 py-2 md:px-4 md:py-2.5 bg-gradient-to-r from-primary-500 to-cyan-500 text-white hover:from-primary-600 hover:to-cyan-600 font-bold rounded-lg md:rounded-xl transition-all duration-300 shadow-md flex items-center justify-center gap-1.5"
               >
-                <Plus className="w-4 h-4" />
-                Ajouter un élément
+                <Plus className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                Ajouter
               </button>
             </div>
 
@@ -744,22 +744,22 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
               }}
             />
 
-            <div className="space-y-4 mt-4">
+            <div className="space-y-3 mt-3">
               {items.map((item, index) => (
-                <div key={index} className="relative border border-slate-200/80 rounded-2xl p-6 space-y-5 bg-white hover:border-primary-200 transition-all duration-300 hover:shadow-lg shadow group overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary-100/20 to-cyan-100/20 rounded-bl-[100px] -z-0"></div>
+                <div key={index} className="relative border border-slate-200/80 rounded-xl md:rounded-2xl p-3 md:p-4 space-y-3 md:space-y-4 bg-white hover:border-primary-200 transition-all duration-300 shadow group overflow-hidden">
+                  <div className="absolute top-0 right-0 w-20 h-20 md:w-32 md:h-32 bg-gradient-to-br from-primary-100/20 to-cyan-100/20 rounded-bl-[60px] md:rounded-bl-[100px] -z-0"></div>
                   <div className="relative z-10">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                    <div className="flex items-center gap-1.5 md:gap-2 mb-3">
+                      <div className="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-gradient-to-br from-primary-500 to-cyan-500 flex items-center justify-center text-white font-bold text-xs md:text-sm shadow-md">
                         {index + 1}
                       </div>
                       <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">Article</span>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="md:col-span-2 group/item">
-                        <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary-500 group-focus-within/item:scale-150 transition-transform"></span>
-                          Description de l'article <span className="text-red-500">*</span>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-primary-500 group-focus-within/item:scale-150 transition-transform"></span>
+                          Description <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="text"
@@ -767,13 +767,13 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                           required
                           value={item.description}
                           onChange={(e) => updateItem(index, 'description', e.target.value)}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white/80 shadow-sm"
                         />
                       </div>
                       <div className="group/item">
-                        <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
-                          Quantité <span className="text-red-500">*</span>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
+                          Qte <span className="text-red-500">*</span>
                         </label>
                         <input
                           type="number"
@@ -782,13 +782,13 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                           min="1"
                           value={item.quantity}
                           onChange={(e) => updateItem(index, 'quantity', parseInt(e.target.value) || 1)}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white/80 shadow-sm"
                         />
                       </div>
                       <div className="group/item">
-                        <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary-500 group-focus-within/item:scale-150 transition-transform"></span>
-                          Prix unitaire HT (€)
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-primary-500 group-focus-within/item:scale-150 transition-transform"></span>
+                          Prix HT (€)
                         </label>
                         <input
                           type="number"
@@ -797,12 +797,12 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                           step="0.01"
                           value={item.unit_price || ''}
                           onChange={(e) => updateItem(index, 'unit_price', e.target.value === '' ? 0 : parseFloat(e.target.value))}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white/80 shadow-sm"
                         />
                       </div>
                       <div className="group/item">
-                        <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
                           Unité
                         </label>
                         <input
@@ -810,18 +810,18 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                           placeholder="Ex: unité, set"
                           value={item.unit}
                           onChange={(e) => updateItem(index, 'unit', e.target.value)}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white/80 shadow-sm"
                         />
                       </div>
                       <div className="group/item">
-                        <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-primary-500 group-focus-within/item:scale-150 transition-transform"></span>
+                        <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
+                          <span className="w-1 h-1 rounded-full bg-primary-500 group-focus-within/item:scale-150 transition-transform"></span>
                           Teinte
                         </label>
                         <select
                           value={item.shade}
                           onChange={(e) => updateItem(index, 'shade', e.target.value)}
-                          className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white/80 shadow-sm"
                         >
                         <option value="">Sélectionner une teinte</option>
                         <optgroup label="Teintes A (Rougeâtre-brunâtre)">
@@ -891,14 +891,14 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                       </select>
                     </div>
                     <div className="group/item">
-                      <label className="block text-xs font-bold text-slate-700 mb-2.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
-                        Numéro de dent
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
+                        <span className="w-1 h-1 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
+                        N° dent
                       </label>
                       <select
                         value={item.tooth_number}
                         onChange={(e) => updateItem(index, 'tooth_number', e.target.value)}
-                        className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 bg-white/80 backdrop-blur-sm shadow-sm"
+                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white/80 shadow-sm"
                       >
                         <option value="">Sélectionner un numéro</option>
                         <optgroup label="Maxillaire droit (adulte)">
@@ -965,14 +965,14 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                   )}
 
                   {items.length > 1 && (
-                    <div className="flex justify-end pt-4 mt-4 border-t border-slate-100">
+                    <div className="flex justify-end pt-2 md:pt-3 mt-2 md:mt-3 border-t border-slate-100">
                       <button
                         type="button"
                         onClick={() => removeItem(index)}
-                        className="flex items-center gap-2 px-5 py-2.5 text-sm text-white bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-xl transition-all duration-300 hover:scale-105 font-semibold shadow-md hover:shadow-lg"
+                        className="flex items-center gap-1.5 px-3 py-2 text-xs md:text-sm text-white bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 rounded-lg md:rounded-xl transition-all duration-300 font-semibold shadow-md"
                       >
-                        <Trash2 className="w-4 h-4" />
-                        Supprimer l'article
+                        <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                        Supprimer
                       </button>
                     </div>
                   )}
@@ -984,13 +984,13 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
 
         </form>
 
-        <div className="relative p-8 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
-          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-b-3xl"></div>
-          <div className="flex gap-4 relative">
+        <div className="relative p-3 md:p-5 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 rounded-b-2xl md:rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-primary-500/5 to-cyan-500/5 rounded-b-2xl md:rounded-b-3xl"></div>
+          <div className="flex gap-2 md:gap-3 relative">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-8 py-4 border-2 border-slate-300 text-slate-700 rounded-2xl hover:bg-white hover:border-slate-400 transition-all duration-300 font-bold hover:scale-[1.02] shadow-sm hover:shadow-md text-lg"
+              className="flex-1 px-4 py-2.5 md:px-6 md:py-3 border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-white hover:border-slate-400 transition-all duration-300 font-bold shadow-sm text-sm md:text-base"
             >
               Annuler
             </button>
@@ -998,7 +998,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
               type="submit"
               onClick={handleSubmit}
               disabled={loading}
-              className="flex-1 px-8 py-4 bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 text-white shadow-xl hover:shadow-2xl rounded-2xl hover:from-primary-700 hover:via-cyan-700 hover:to-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold hover:scale-[1.02] text-lg bg-[length:200%_100%] hover:bg-[position:100%_0]"
+              className="flex-1 px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 text-white shadow-lg rounded-lg md:rounded-xl hover:from-primary-700 hover:via-cyan-700 hover:to-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm md:text-base bg-[length:200%_100%] hover:bg-[position:100%_0]"
             >
               {loading ? 'Enregistrement...' : 'Enregistrer'}
             </button>
