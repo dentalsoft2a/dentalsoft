@@ -10,32 +10,68 @@ export function ServerStatusMonitor() {
     let intervalId: NodeJS.Timeout;
 
     const checkServerStatus = async () => {
+      let hasError = false;
+
       try {
-        const { data, error } = await supabase
+        // Check if the application server is accessible
+        const appServerCheck = await fetch(window.location.origin + '/logo.png', {
+          method: 'HEAD',
+          cache: 'no-cache'
+        });
+
+        if (!appServerCheck.ok) {
+          console.error('Application server not accessible');
+          hasError = true;
+        }
+      } catch (appError) {
+        console.error('Application server connection error:', appError);
+        hasError = true;
+      }
+
+      try {
+        // Check if Supabase is accessible
+        const { error } = await supabase
           .from('user_profiles')
           .select('id')
           .limit(1);
 
         if (error) {
-          console.error('Server check error:', error);
-          setCheckCount(prev => prev + 1);
+          console.error('Supabase server check error:', error);
+          hasError = true;
+        }
+      } catch (supabaseError) {
+        console.error('Supabase connection error:', supabaseError);
+        hasError = true;
+      }
 
-          if (checkCount >= 2) {
+      if (hasError) {
+        setCheckCount(prev => {
+          const newCount = prev + 1;
+          if (newCount >= 2) {
             setIsOffline(true);
           }
-        } else {
-          setIsOffline(false);
-          setCheckCount(0);
-        }
-      } catch (err) {
-        console.error('Server connection error:', err);
-        setCheckCount(prev => prev + 1);
-
-        if (checkCount >= 2) {
-          setIsOffline(true);
-        }
+          return newCount;
+        });
+      } else {
+        setIsOffline(false);
+        setCheckCount(0);
       }
     };
+
+    // Listen to online/offline events
+    const handleOnline = () => {
+      setIsOffline(false);
+      setCheckCount(0);
+      checkServerStatus();
+    };
+
+    const handleOffline = () => {
+      setCheckCount(prev => prev + 1);
+      setIsOffline(true);
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     checkServerStatus();
 
@@ -45,8 +81,10 @@ export function ServerStatusMonitor() {
       if (intervalId) {
         clearInterval(intervalId);
       }
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
     };
-  }, [checkCount]);
+  }, []);
 
   if (!isOffline) return null;
 
