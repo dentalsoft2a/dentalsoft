@@ -885,7 +885,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
           </div>
 
           <div className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-6 gap-2">
+            <div className="hidden md:grid md:grid-cols-3 xl:grid-cols-6 gap-2">
               {urgentDeliveries.map((delivery) => {
                 const daysUntil = getDaysUntilDelivery(delivery.date);
                 return (
@@ -929,6 +929,55 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                   </div>
                 );
               })}
+            </div>
+
+            <div className="md:hidden overflow-x-auto -mx-4 px-4">
+              <div className="flex gap-3 pb-2" style={{ scrollSnapType: 'x mandatory' }}>
+                {urgentDeliveries.map((delivery) => {
+                  const daysUntil = getDaysUntilDelivery(delivery.date);
+                  return (
+                    <div
+                      key={delivery.id}
+                      className="flex-shrink-0 w-[280px] p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-red-400 transition-colors"
+                      style={{ scrollSnapAlign: 'start' }}
+                    >
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="font-medium text-slate-900 text-sm truncate flex-1 mr-2">
+                          {delivery.dentist.name}
+                        </h4>
+                        <span className={`px-2 py-1 rounded text-xs font-semibold flex-shrink-0 ${
+                          daysUntil === 0
+                            ? 'bg-red-500 text-white'
+                            : daysUntil === 1
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-amber-500 text-white'
+                        }`}>
+                          {daysUntil === 0 ? "Aujourd'hui" : daysUntil === 1 ? 'Demain' : `${daysUntil} jours`}
+                        </span>
+                      </div>
+
+                      <div className="space-y-1 mb-3">
+                        <p className="text-xs text-slate-500">N° {delivery.delivery_number}</p>
+                        {delivery.patient_name && (
+                          <p className="text-xs text-slate-600 truncate">{delivery.patient_name}</p>
+                        )}
+                        <p className="text-xs text-slate-500">
+                          {new Date(delivery.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}
+                        </p>
+                      </div>
+
+                      <button
+                        onClick={() => handleCompleteDelivery(delivery.id)}
+                        className="w-full py-2 px-3 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5"
+                        title="Marquer comme terminé"
+                      >
+                        <CheckCircle className="w-4 h-4" />
+                        Terminé
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </div>
