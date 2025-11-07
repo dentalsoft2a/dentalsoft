@@ -24,6 +24,11 @@ import { usePermissions } from '../../hooks/usePermissions';
 import { supabase } from '../../lib/supabase';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 
+function getAppVersion(): string {
+  const cachedVersion = localStorage.getItem('app_version');
+  return cachedVersion || '1.0.0';
+}
+
 interface DashboardLayoutProps {
   children: ReactNode;
   currentPage: string;
@@ -39,6 +44,11 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
   const { hasMenuAccess, isOwner, rolePermissions, loading: permissionsLoading } = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [laboratoryProfile, setLaboratoryProfile] = useState<any>(null);
+  const [appVersion, setAppVersion] = useState<string>('');
+
+  useEffect(() => {
+    setAppVersion(getAppVersion());
+  }, []);
 
   useEffect(() => {
     console.log('DashboardLayout - isEmployee:', isEmployee);
@@ -241,6 +251,11 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
               <LogOut className="w-[18px] h-[18px]" />
               <span className="text-[14px]">Déconnexion</span>
             </button>
+            <div className="mt-2 text-center">
+              <p className="text-[10px] text-slate-400 font-mono">
+                v{appVersion}
+              </p>
+            </div>
           </div>
         </div>
       </aside>
