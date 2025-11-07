@@ -62,7 +62,7 @@ export function SupportTickets() {
           .from('user_profiles')
           .select('email')
           .eq('id', ticket.user_id)
-          .single();
+          .maybeSingle();
 
         return {
           ...ticket,
@@ -169,7 +169,7 @@ export function SupportTickets() {
             .from('user_profiles')
             .select('email')
             .eq('id', ticket.user_id)
-            .single();
+            .maybeSingle();
 
           return {
             ...ticket,
