@@ -34,27 +34,42 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
     try {
       setLoading(true);
 
-      const [labsResult, favoritesResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('id, laboratory_name')
-          .not('laboratory_name', 'is', null)
-          .neq('laboratory_name', '')
-          .order('laboratory_name'),
-        supabase
-          .from('dentist_favorite_laboratories')
-          .select('laboratory_profile_id')
-          .eq('dentist_id', dentistId)
-      ]);
+      const { data: allProfiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, laboratory_name')
+        .not('laboratory_name', 'is', null)
+        .neq('laboratory_name', '')
+        .order('laboratory_name');
 
-      if (labsResult.error) throw labsResult.error;
+      if (profilesError) throw profilesError;
 
-      const labs = (labsResult.data || []).filter(
-        lab => lab.laboratory_name && lab.laboratory_name.trim() !== ''
+      const { data: userProfiles, error: userProfilesError } = await supabase
+        .from('user_profiles')
+        .select('id, role');
+
+      if (userProfilesError) {
+        console.warn('Could not fetch user_profiles, showing all laboratories');
+      }
+
+      const labOwnerIds = new Set(
+        (userProfiles || [])
+          .filter(up => up.role === 'user')
+          .map(up => up.id)
       );
 
+      const labs = (allProfiles || []).filter(lab =>
+        lab.laboratory_name &&
+        lab.laboratory_name.trim() !== '' &&
+        (userProfiles === null || labOwnerIds.has(lab.id))
+      );
+
+      const { data: favoritesData } = await supabase
+        .from('dentist_favorite_laboratories')
+        .select('laboratory_profile_id')
+        .eq('dentist_id', dentistId);
+
       const favoriteIds = new Set(
-        (favoritesResult.data || []).map(fav => fav.laboratory_profile_id)
+        (favoritesData || []).map(fav => fav.laboratory_profile_id)
       );
 
       setLaboratories(labs);
