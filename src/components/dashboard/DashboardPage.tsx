@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User, Calendar, CheckCircle, Download, BarChart3, Filter, X, AlertTriangle, Archive, Save, DollarSign, Check } from 'lucide-react';
+import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User, Calendar, CheckCircle, Download, BarChart3, Filter, X, AlertTriangle, Archive, Save, DollarSign, Check, Play } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import type { Database } from '../../lib/database.types';
@@ -359,6 +359,22 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     const diffTime = deliveryDate.getTime() - now.getTime();
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
+  };
+
+  const handleStartDelivery = async (deliveryId: string) => {
+    try {
+      const { error } = await supabase
+        .from('delivery_notes')
+        .update({ status: 'in_progress' })
+        .eq('id', deliveryId);
+
+      if (error) throw error;
+      await loadDeliveries();
+      await loadStats();
+    } catch (error) {
+      console.error('Error starting delivery:', error);
+      alert('Erreur lors du démarrage du travail');
+    }
   };
 
   const handleCompleteDelivery = async (deliveryId: string) => {
@@ -918,14 +934,25 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                       </p>
                     </div>
 
-                    <button
-                      onClick={() => handleCompleteDelivery(delivery.id)}
-                      className="w-full py-1 px-2 bg-green-500 hover:bg-green-600 text-white rounded text-[10px] font-semibold transition-all duration-200 flex items-center justify-center gap-1"
-                      title="Marquer comme terminé"
-                    >
-                      <CheckCircle className="w-3 h-3" />
-                      Terminé
-                    </button>
+                    {delivery.status === 'pending' ? (
+                      <button
+                        onClick={() => handleStartDelivery(delivery.id)}
+                        className="w-full py-1 px-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-[10px] font-semibold transition-all duration-200 flex items-center justify-center gap-1"
+                        title="Démarrer le travail"
+                      >
+                        <Play className="w-3 h-3" />
+                        Démarrer
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleCompleteDelivery(delivery.id)}
+                        className="w-full py-1 px-2 bg-green-500 hover:bg-green-600 text-white rounded text-[10px] font-semibold transition-all duration-200 flex items-center justify-center gap-1"
+                        title="Marquer comme terminé"
+                      >
+                        <CheckCircle className="w-3 h-3" />
+                        Terminé
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -966,14 +993,25 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                         </p>
                       </div>
 
-                      <button
-                        onClick={() => handleCompleteDelivery(delivery.id)}
-                        className="w-full py-2 px-3 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5"
-                        title="Marquer comme terminé"
-                      >
-                        <CheckCircle className="w-4 h-4" />
-                        Terminé
-                      </button>
+                      {delivery.status === 'pending' ? (
+                        <button
+                          onClick={() => handleStartDelivery(delivery.id)}
+                          className="w-full py-2 px-3 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5"
+                          title="Démarrer le travail"
+                        >
+                          <Play className="w-4 h-4" />
+                          Démarrer
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => handleCompleteDelivery(delivery.id)}
+                          className="w-full py-2 px-3 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5"
+                          title="Marquer comme terminé"
+                        >
+                          <CheckCircle className="w-4 h-4" />
+                          Terminé
+                        </button>
+                      )}
                     </div>
                   );
                 })}
