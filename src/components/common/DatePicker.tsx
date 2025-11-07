@@ -125,8 +125,8 @@ export default function DatePicker({ value, onChange, label, required = false, c
 
   return (
     <div className="relative" ref={pickerRef}>
-      <label className="block text-sm font-bold text-slate-700 mb-3 transition-colors flex items-center gap-2">
-        <span className={`w-2 h-2 rounded-full ${color === 'cyan' ? 'bg-cyan-500' : 'bg-primary-500'}`}></span>
+      <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors flex items-center gap-1.5">
+        <span className={`w-1.5 h-1.5 rounded-full ${color === 'cyan' ? 'bg-cyan-500' : 'bg-primary-500'}`}></span>
         {label} {required && <span className="text-red-500">*</span>}
       </label>
 
@@ -134,11 +134,11 @@ export default function DatePicker({ value, onChange, label, required = false, c
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
-          className={`w-full pl-12 pr-5 py-3.5 border ${colors.border} rounded-xl ${colors.focus} outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md text-left ${!value && 'text-slate-400'}`}
+          className={`w-full pl-10 md:pl-12 pr-3 md:pr-5 py-2 md:py-3 text-sm border ${colors.border} rounded-lg md:rounded-xl ${colors.focus} outline-none transition-all bg-gradient-to-br from-white to-slate-50/30 shadow-sm text-left ${!value && 'text-slate-400'}`}
         >
           {value ? formatDisplayDate(value) : 'Sélectionner une date'}
         </button>
-        <Calendar className={`w-5 h-5 ${colors.icon} absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none`} />
+        <Calendar className={`w-4 h-4 md:w-5 md:h-5 ${colors.icon} absolute left-3 md:left-4 top-1/2 -translate-y-1/2 pointer-events-none`} />
       </div>
 
       {isOpen && (
