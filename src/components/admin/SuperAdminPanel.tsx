@@ -122,6 +122,13 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {statCards.map((stat, index) => {
               const Icon = stat.icon;
+              const getIconColor = (color: string) => {
+                if (color.includes('blue')) return 'text-blue-600';
+                if (color.includes('emerald')) return 'text-emerald-600';
+                if (color.includes('orange')) return 'text-orange-600';
+                if (color.includes('violet')) return 'text-violet-600';
+                return 'text-slate-600';
+              };
               return (
                 <div
                   key={index}
@@ -129,7 +136,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className={`${stat.bgColor} p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow`}>
-                      <Icon className={`w-6 h-6 bg-gradient-to-br ${stat.color} bg-clip-text text-transparent`} />
+                      <Icon className={`w-6 h-6 ${getIconColor(stat.color)}`} />
                     </div>
                     <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
                       stat.trend.includes('+')
