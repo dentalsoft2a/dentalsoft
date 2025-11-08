@@ -108,8 +108,8 @@ export default function CustomSelect({
 
       {isOpen && (
         <>
-          <div className="fixed inset-0 z-[100]" onClick={() => { setIsOpen(false); setSearchTerm(''); }} />
-          <div className="absolute z-[101] mt-2 w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="fixed inset-0 z-30" onClick={() => { setIsOpen(false); setSearchTerm(''); }} />
+          <div className="absolute z-[31] mt-2 w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
             <div className="p-3 border-b border-slate-200">
               <input
                 ref={inputRef}
