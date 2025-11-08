@@ -135,26 +135,28 @@ export default function DentistsPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Dentistes</h1>
-          <p className="text-slate-600 mt-2">Gérez vos clients dentistes</p>
+      <div className="mb-4 md:mb-8">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <div>
+            <h1 className="text-xl md:text-3xl font-bold text-slate-900">Dentistes</h1>
+            <p className="text-xs md:text-base text-slate-600 mt-1 md:mt-2">Gérez vos clients dentistes</p>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-1">
           <button
             onClick={handleExport}
             disabled={dentists.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base whitespace-nowrap"
           >
-            <Download className="w-5 h-5" />
-            Exporter
+            <Download className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Exporter</span>
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition text-sm md:text-base whitespace-nowrap"
           >
-            <Upload className="w-5 h-5" />
-            Importer
+            <Upload className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Importer</span>
           </button>
           <input
             ref={fileInputRef}
@@ -168,23 +170,24 @@ export default function DentistsPage() {
               setEditingDentist(null);
               setShowModal(true);
             }}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-primary-700 hover:to-cyan-700 transition"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-primary-700 hover:to-cyan-700 transition text-sm md:text-base whitespace-nowrap"
           >
-            <Plus className="w-5 h-5" />
-            Ajouter un dentiste
+            <Plus className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Ajouter un dentiste</span>
+            <span className="sm:hidden">Ajouter</span>
           </button>
         </div>
       </div>
 
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <div className="relative max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
           <input
             type="text"
             placeholder="Rechercher un dentiste..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-5 py-3.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-200 hover:border-slate-400 bg-white shadow-sm placeholder:text-slate-400"
+            className="w-full pl-9 md:pl-12 pr-4 md:pr-5 py-2.5 md:py-3.5 border border-slate-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-200 hover:border-slate-400 bg-white shadow-sm placeholder:text-slate-400 text-sm md:text-base"
           />
         </div>
       </div>
