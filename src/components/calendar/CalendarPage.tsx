@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Package, User, Clock, MapPin, X, FileText, Palette, AlertTriangle, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 import type { Database } from '../../lib/database.types';
 
 type DeliveryNote = Database['public']['Tables']['delivery_notes']['Row'];
@@ -33,6 +34,8 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryWithDentist | null>(null);
+
+  useLockScroll(!!selectedDelivery);
 
   useEffect(() => {
     if (user) {

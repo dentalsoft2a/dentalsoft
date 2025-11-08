@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2, Plus, Upload, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 
 interface PhotoSubmission {
   id: string;
@@ -34,6 +35,8 @@ export default function PhotoSubmissionsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [groupBy, setGroupBy] = useState<'dentist' | 'patient'>('dentist');
   const [showAddModal, setShowAddModal] = useState(false);
+
+  useLockScroll(!!selectedPhoto || showAddModal);
   const [dentists, setDentists] = useState<DentistAccount[]>([]);
   const [selectedDentistId, setSelectedDentistId] = useState('');
   const [patientName, setPatientName] = useState('');

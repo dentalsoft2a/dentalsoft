@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { CreditCard, CheckCircle, Clock, AlertCircle, DollarSign, Key } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 
 interface UserProfile {
   subscription_status: string;
@@ -30,6 +31,8 @@ export function SubscriptionPage() {
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [accessCode, setAccessCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
+
+  useLockScroll(showRedeemModal);
 
   useEffect(() => {
     if (user) {

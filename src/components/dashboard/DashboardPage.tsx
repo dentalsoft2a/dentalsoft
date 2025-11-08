@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User, Calendar, CheckCircle, Download, BarChart3, Filter, X, AlertTriangle, Archive, Save, DollarSign, Check, Play } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 import type { Database } from '../../lib/database.types';
 import AlertBanner from '../common/AlertBanner';
 
@@ -87,6 +88,8 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
   const [showQuickFill, setShowQuickFill] = useState<{ id: string; name: string; currentStock: number; type: 'catalog' | 'resource' | 'variant' } | null>(null);
   const [quickFillQuantity, setQuickFillQuantity] = useState<number>(0);
   const [showPaymentModal, setShowPaymentModal] = useState<Invoice | null>(null);
+
+  useLockScroll(showReportModal || !!showQuickFill || !!showPaymentModal);
   const [paymentAmount, setPaymentAmount] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('bank_transfer');
   const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);

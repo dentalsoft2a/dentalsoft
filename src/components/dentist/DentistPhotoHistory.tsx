@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Clock, CheckCircle, XCircle, Eye, RefreshCw } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 
 interface PhotoSubmission {
   id: string;
@@ -24,6 +25,8 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoSubmission | null>(null);
+
+  useLockScroll(!!selectedPhoto);
 
   useEffect(() => {
     loadSubmissions();
