@@ -5,7 +5,11 @@
 @layer base {
   body {
     @apply bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50;
-    @apply min-h-screen;
+    @apply min-h-screen overflow-hidden;
+  }
+
+  #root {
+    @apply min-h-screen flex flex-col;
   }
 }
 
