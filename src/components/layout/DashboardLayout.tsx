@@ -118,7 +118,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
 
   return (
     <div className="min-h-screen">
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-40 px-4 py-4 shadow-md">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-[100] px-4 py-4 shadow-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -145,8 +145,8 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
       </div>
 
       <aside className={`
-        fixed top-0 left-0 bottom-0 w-[85vw] max-w-[320px] bg-white/95 backdrop-blur-xl border-r border-slate-200/50 z-50 shadow-2xl
-        transition-all duration-300 ease-out lg:w-64 lg:translate-x-0
+        fixed top-0 left-0 bottom-0 w-[85vw] max-w-[320px] bg-white/95 backdrop-blur-xl border-r border-slate-200/50 z-[110] shadow-2xl
+        transition-all duration-300 ease-out lg:w-64 lg:translate-x-0 lg:z-50
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="flex flex-col h-full">
@@ -262,7 +262,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
 
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[105] lg:hidden transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
         />
