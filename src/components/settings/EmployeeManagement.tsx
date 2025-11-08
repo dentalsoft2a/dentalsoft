@@ -331,38 +331,91 @@ export default function EmployeeManagement() {
           </button>
         </div>
 
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg border border-slate-200 overflow-x-auto">
-          <table className="w-full min-w-[640px]">
+        {/* Vue mobile en cartes */}
+        <div className="sm:hidden space-y-3">
+          {employees.length === 0 ? (
+            <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-8 text-center">
+              <Users className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+              <p className="text-xs text-slate-500">Aucun employé. Cliquez sur "Ajouter un employé" pour commencer.</p>
+            </div>
+          ) : (
+            employees.map(employee => (
+              <div key={employee.id} className="bg-white rounded-xl shadow-lg border border-slate-200 p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold text-slate-900 mb-1">{employee.full_name}</h3>
+                    <p className="text-xs text-slate-600 mb-2 break-all">{employee.email}</p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                        {employee.role_name}
+                      </span>
+                      <button
+                        onClick={() => toggleEmployeeStatus(employee)}
+                        className={`px-2 py-1 rounded-full text-xs font-semibold border transition ${
+                          employee.is_active
+                            ? 'bg-green-100 text-green-700 border-green-200'
+                            : 'bg-red-100 text-red-700 border-red-200'
+                        }`}
+                      >
+                        {employee.is_active ? 'Actif' : 'Inactif'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2 pt-3 border-t border-slate-200">
+                  <button
+                    onClick={() => openEmployeeModal(employee)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition text-xs font-medium"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                    Modifier
+                  </button>
+                  <button
+                    onClick={() => deleteEmployee(employee.id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition text-xs font-medium"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Supprimer
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Vue desktop en tableau */}
+        <div className="hidden sm:block bg-white rounded-2xl shadow-lg border border-slate-200 overflow-x-auto">
+          <table className="w-full">
             <thead className="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
               <tr>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Nom</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Email</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Rôle</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Statut</th>
-                <th className="px-3 sm:px-6 py-3 sm:py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Actions</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Nom</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Rôle</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Statut</th>
+                <th className="px-6 py-4 text-left text-xs font-bold text-slate-700 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200">
               {employees.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-3 sm:px-6 py-6 sm:py-8 text-center text-xs sm:text-sm text-slate-500">
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-slate-500">
                     Aucun employé. Cliquez sur "Ajouter un employé" pour commencer.
                   </td>
                 </tr>
               ) : (
                 employees.map(employee => (
                   <tr key={employee.id} className="hover:bg-slate-50 transition">
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm font-medium text-slate-900">{employee.full_name}</td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-slate-600">{employee.email}</td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4">
-                      <span className="inline-flex items-center px-2 sm:px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                    <td className="px-6 py-4 text-sm font-medium text-slate-900">{employee.full_name}</td>
+                    <td className="px-6 py-4 text-sm text-slate-600">{employee.email}</td>
+                    <td className="px-6 py-4">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
                         {employee.role_name}
                       </span>
                     </td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4">
+                    <td className="px-6 py-4">
                       <button
                         onClick={() => toggleEmployeeStatus(employee)}
-                        className={`px-2 sm:px-3 py-1 rounded-full text-xs font-semibold border transition ${
+                        className={`px-3 py-1 rounded-full text-xs font-semibold border transition ${
                           employee.is_active
                             ? 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200'
                             : 'bg-red-100 text-red-700 border-red-200 hover:bg-red-200'
@@ -371,21 +424,21 @@ export default function EmployeeManagement() {
                         {employee.is_active ? 'Actif' : 'Inactif'}
                       </button>
                     </td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4">
-                      <div className="flex items-center gap-1 sm:gap-2">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => openEmployeeModal(employee)}
-                          className="p-1.5 sm:p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
                           title="Modifier"
                         >
-                          <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <Edit className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => deleteEmployee(employee.id)}
-                          className="p-1.5 sm:p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
                           title="Supprimer"
                         >
-                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </td>
