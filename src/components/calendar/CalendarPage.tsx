@@ -43,6 +43,17 @@ export default function CalendarPage() {
     }
   }, [user, currentDate]);
 
+  useEffect(() => {
+    if (!loading && deliveries.length > 0 && !selectedDate) {
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0];
+      const todayDeliveries = deliveries.filter(d => d.date === dateStr);
+      if (todayDeliveries.length > 0) {
+        setSelectedDate(today);
+      }
+    }
+  }, [loading, deliveries, selectedDate]);
+
   const loadDeliveries = async () => {
     if (!user) return;
 
