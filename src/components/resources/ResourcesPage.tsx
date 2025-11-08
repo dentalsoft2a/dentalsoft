@@ -370,26 +370,28 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Ressources</h1>
-          <p className="text-slate-600 mt-2">Gérez vos matières premières (disques, blocs, etc.)</p>
+      <div className="mb-4 md:mb-8">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <div>
+            <h1 className="text-xl md:text-3xl font-bold text-slate-900">Ressources</h1>
+            <p className="text-xs md:text-base text-slate-600 mt-1 md:mt-2">Gérez vos matières premières (disques, blocs, etc.)</p>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-1">
           <button
             onClick={handleExport}
             disabled={resources.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base whitespace-nowrap"
           >
-            <Download className="w-5 h-5" />
-            Exporter
+            <Download className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Exporter</span>
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition text-sm md:text-base whitespace-nowrap"
           >
-            <Upload className="w-5 h-5" />
-            Importer
+            <Upload className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Importer</span>
           </button>
           <input
             ref={fileInputRef}
@@ -400,27 +402,28 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
           />
           <button
             onClick={() => setShowTutorial(!showTutorial)}
-            className="flex items-center gap-2 px-4 py-2 border border-primary-300 text-primary-700 bg-primary-50 shadow-sm hover:bg-primary-100 rounded-lg transition"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 border border-primary-300 text-primary-700 bg-primary-50 shadow-sm hover:bg-primary-100 rounded-lg transition text-sm md:text-base whitespace-nowrap"
             title="Afficher le tutoriel"
           >
-            <BookOpen className="w-5 h-5" />
-            Guide
+            <BookOpen className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Guide</span>
           </button>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
-            className="flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-700 bg-white shadow-sm hover:bg-slate-50 rounded-lg transition disabled:opacity-50"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 border border-slate-300 text-slate-700 bg-white shadow-sm hover:bg-slate-50 rounded-lg transition disabled:opacity-50 text-sm md:text-base whitespace-nowrap"
             title="Actualiser les stocks"
           >
-            <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-            Actualiser
+            <RefreshCw className={`w-4 h-4 md:w-5 md:h-5 ${refreshing ? 'animate-spin' : ''}`} />
+            <span className="hidden sm:inline">Actualiser</span>
           </button>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-primary-700 hover:to-cyan-700 transition"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-primary-700 hover:to-cyan-700 transition text-sm md:text-base whitespace-nowrap"
           >
-            <Plus className="w-5 h-5" />
-            Nouvelle ressource
+            <Plus className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Nouvelle ressource</span>
+            <span className="sm:hidden">Nouveau</span>
           </button>
         </div>
       </div>
@@ -666,42 +669,42 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
       )}
 
       {(lowStockResources.length > 0 || lowStockVariants.length > 0) && (
-        <div className="mb-6 bg-gradient-to-br from-orange-50 to-red-50 border-l-4 border-orange-500 rounded-xl p-5 shadow-lg animate-pulse-slow">
-          <div className="flex items-start gap-4">
+        <div className="mb-4 md:mb-6 bg-gradient-to-br from-orange-50 to-red-50 border-l-4 border-orange-500 rounded-xl p-3 md:p-5 shadow-lg animate-pulse-slow">
+          <div className="flex items-start gap-3 md:gap-4">
             <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                <AlertTriangle className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
             </div>
             <div className="flex-1">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="text-base font-bold text-orange-900 flex items-center gap-2">
+                <h3 className="text-sm md:text-base font-bold text-orange-900 flex items-center gap-1.5 md:gap-2">
                   Alerte stock faible
-                  <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-bold rounded-full">
+                  <span className="px-1.5 md:px-2 py-0.5 bg-orange-500 text-white text-[10px] md:text-xs font-bold rounded-full">
                     {lowStockResources.length + lowStockVariants.length}
                   </span>
                 </h3>
               </div>
-              <p className="text-sm text-orange-800 mb-3">
+              <p className="text-xs md:text-sm text-orange-800 mb-3">
                 {lowStockResources.length + lowStockVariants.length === 1
                   ? 'Une ressource/variante nécessite un réapprovisionnement'
                   : `${lowStockResources.length + lowStockVariants.length} ressources/variantes nécessitent un réapprovisionnement`}
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-1.5 md:gap-2">
                 {lowStockResources.map((resource) => (
                   <div
                     key={resource.id}
-                    className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-orange-200 text-sm"
+                    className="flex items-center justify-between bg-white rounded-lg px-2 md:px-3 py-1.5 md:py-2 border border-orange-200 text-xs md:text-sm"
                   >
-                    <div className="flex items-center gap-2">
-                      <Box className="w-4 h-4 text-orange-600" />
-                      <span className="font-medium text-slate-900">{resource.name}</span>
-                      <span className="text-orange-600 font-bold">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                      <Box className="w-3 h-3 md:w-4 md:h-4 text-orange-600" />
+                      <span className="font-medium text-slate-900 text-xs md:text-sm">{resource.name}</span>
+                      <span className="text-orange-600 font-bold text-xs md:text-sm">
                         {resource.has_variants && resource.total_variant_stock !== undefined
                           ? resource.total_variant_stock
                           : resource.stock_quantity}/{resource.low_stock_threshold}
                       </span>
-                      <span className="text-xs text-slate-500">(Ressource)</span>
+                      <span className="text-[10px] md:text-xs text-slate-500 hidden sm:inline">(Ressource)</span>
                     </div>
                     <button
                       onClick={() => setShowQuickFill({
@@ -710,7 +713,7 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                         currentStock: resource.stock_quantity,
                         type: 'resource'
                       })}
-                      className="px-2 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600 transition-colors font-medium"
+                      className="px-1.5 md:px-2 py-0.5 md:py-1 bg-orange-500 text-white rounded text-[10px] md:text-xs hover:bg-orange-600 transition-colors font-medium"
                     >
                       Remplir
                     </button>
@@ -723,19 +726,19 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                 }).map((variant) => (
                   <div
                     key={variant.id}
-                    className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-orange-200 text-sm"
+                    className="flex items-center justify-between bg-white rounded-lg px-2 md:px-3 py-1.5 md:py-2 border border-orange-200 text-xs md:text-sm"
                   >
-                    <div className="flex items-center gap-2">
-                      <Box className="w-4 h-4 text-orange-600" />
-                      <span className="font-medium text-slate-900">
+                    <div className="flex items-center gap-1.5 md:gap-2">
+                      <Box className="w-3 h-3 md:w-4 md:h-4 text-orange-600" />
+                      <span className="font-medium text-slate-900 text-xs md:text-sm">
                         {variant.resource_name}
                         {variant.subcategory && ` - ${variant.subcategory}`}
                         {' - '}{variant.variant_name}
                       </span>
-                      <span className="text-orange-600 font-bold">
+                      <span className="text-orange-600 font-bold text-xs md:text-sm">
                         {variant.stock_quantity}/{variant.low_stock_threshold}
                       </span>
-                      <span className="text-xs text-slate-500">(Variante)</span>
+                      <span className="text-[10px] md:text-xs text-slate-500 hidden sm:inline">(Variante)</span>
                     </div>
                     <button
                       onClick={() => setShowQuickFill({
@@ -744,14 +747,14 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                         currentStock: variant.stock_quantity,
                         type: 'variant'
                       })}
-                      className="px-2 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600 transition-colors font-medium"
+                      className="px-1.5 md:px-2 py-0.5 md:py-1 bg-orange-500 text-white rounded text-[10px] md:text-xs hover:bg-orange-600 transition-colors font-medium"
                     >
                       Remplir
                     </button>
                   </div>
                 ))}
                 {(lowStockResources.length + lowStockVariants.length > 8) && (
-                  <div className="flex items-center gap-2 bg-orange-100 rounded-lg px-3 py-2 text-sm font-medium text-orange-700">
+                  <div className="flex items-center gap-1.5 md:gap-2 bg-orange-100 rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm font-medium text-orange-700">
                     +{lowStockResources.length + lowStockVariants.length - 8} autres
                   </div>
                 )}
@@ -761,15 +764,15 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
         </div>
       )}
 
-      <div className="mb-6">
+      <div className="mb-4 md:mb-6">
         <div className="relative max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
           <input
             type="text"
             placeholder="Rechercher une ressource..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-5 py-3.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-200 hover:border-slate-400 bg-white shadow-sm"
+            className="w-full pl-9 md:pl-12 pr-4 md:pr-5 py-2.5 md:py-3.5 border border-slate-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-200 hover:border-slate-400 bg-white shadow-sm text-sm md:text-base"
           />
         </div>
       </div>
