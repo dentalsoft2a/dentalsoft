@@ -32,7 +32,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [deliveries, setDeliveries] = useState<DeliveryWithDentist[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryWithDentist | null>(null);
 
   useLockScroll(!!selectedDelivery);
@@ -42,17 +42,6 @@ export default function CalendarPage() {
       loadDeliveries();
     }
   }, [user, currentDate]);
-
-  useEffect(() => {
-    if (!loading && deliveries.length > 0 && !selectedDate) {
-      const today = new Date();
-      const dateStr = today.toISOString().split('T')[0];
-      const todayDeliveries = deliveries.filter(d => d.date === dateStr);
-      if (todayDeliveries.length > 0) {
-        setSelectedDate(today);
-      }
-    }
-  }, [loading, deliveries, selectedDate]);
 
   const loadDeliveries = async () => {
     if (!user) return;
