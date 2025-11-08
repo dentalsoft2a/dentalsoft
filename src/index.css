@@ -5,20 +5,29 @@
 @layer base {
   html {
     padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   body {
     @apply bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50;
     @apply min-h-screen;
-    overscroll-behavior-y: none;
+    overscroll-behavior: none;
+    overscroll-behavior-y: contain;
     position: fixed;
     width: 100%;
-    overflow-y: auto;
+    height: 100%;
+    overflow: hidden;
+    touch-action: pan-y;
   }
 
   #root {
     min-height: 100vh;
     min-height: 100dvh;
+    height: 100%;
+    overflow-y: auto;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
