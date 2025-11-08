@@ -338,26 +338,28 @@ export default function CatalogPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Catalogue</h1>
-          <p className="text-slate-600 mt-2">Gérez vos articles et prestations</p>
+      <div className="mb-4 md:mb-8">
+        <div className="flex items-center justify-between mb-3 md:mb-4">
+          <div>
+            <h1 className="text-xl md:text-3xl font-bold text-slate-900">Catalogue</h1>
+            <p className="text-xs md:text-base text-slate-600 mt-1 md:mt-2">Gérez vos articles et prestations</p>
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-1">
           <button
             onClick={handleExport}
             disabled={items.length === 0}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base whitespace-nowrap"
           >
-            <Download className="w-5 h-5" />
-            Exporter
+            <Download className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Exporter</span>
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition text-sm md:text-base whitespace-nowrap"
           >
-            <Upload className="w-5 h-5" />
-            Importer
+            <Upload className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Importer</span>
           </button>
           <input
             ref={fileInputRef}
@@ -368,37 +370,38 @@ export default function CatalogPage() {
           />
           <button
             onClick={() => setShowTutorial(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-sm md:text-base whitespace-nowrap"
           >
-            <HelpCircle className="w-5 h-5" />
-            Guide
+            <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Guide</span>
           </button>
           <button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-primary-700 hover:to-cyan-700 transition"
+            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-primary-700 hover:to-cyan-700 transition text-sm md:text-base whitespace-nowrap"
           >
-            <Plus className="w-5 h-5" />
-            Nouvel article
+            <Plus className="w-4 h-4 md:w-5 md:h-5" />
+            <span className="hidden sm:inline">Nouvel article</span>
+            <span className="sm:hidden">Nouveau</span>
           </button>
         </div>
       </div>
 
       {lowStockItems.length > 0 && (
-        <div className="mb-6 bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-500 rounded-lg p-5 shadow-lg">
-          <div className="flex items-start gap-4">
+        <div className="mb-4 md:mb-6 bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-500 rounded-lg p-3 md:p-5 shadow-lg">
+          <div className="flex items-start gap-3 md:gap-4">
             <div className="flex-shrink-0">
-              <div className="w-12 h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                <AlertTriangle className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+                <AlertTriangle className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
+              <h3 className="text-base md:text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
                 Alerte stock faible
-                <span className="px-3 py-1 bg-orange-500 text-white text-sm font-bold rounded-full shadow">
+                <span className="px-2 md:px-3 py-0.5 md:py-1 bg-orange-500 text-white text-xs md:text-sm font-bold rounded-full shadow">
                   {lowStockItems.length}
                 </span>
               </h3>
-              <p className="text-orange-800 mb-3">
+              <p className="text-xs md:text-base text-orange-800 mb-3">
                 {lowStockItems.length === 1
                   ? 'Un article a atteint le seuil d\'alerte de stock :'
                   : `${lowStockItems.length} articles ont atteint leur seuil d'alerte de stock :`}
@@ -407,35 +410,36 @@ export default function CatalogPage() {
                 {lowStockItems.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between bg-white rounded-lg p-3 border border-orange-200 hover:border-orange-300 transition-colors"
+                    className="flex items-center justify-between bg-white rounded-lg p-2 md:p-3 border border-orange-200 hover:border-orange-300 transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <Package className="w-5 h-5 text-orange-600" />
+                    <div className="flex items-center gap-2 md:gap-3">
+                      <Package className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />
                       <div>
-                        <p className="font-semibold text-slate-900">{item.name}</p>
+                        <p className="font-semibold text-slate-900 text-xs md:text-base">{item.name}</p>
                         {item.category && (
-                          <p className="text-xs text-slate-600">{item.category}</p>
+                          <p className="text-[10px] md:text-xs text-slate-600">{item.category}</p>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2 md:gap-4">
                       <div className="text-right">
-                        <p className="text-sm text-slate-600">Stock actuel</p>
-                        <p className="font-bold text-orange-600">
+                        <p className="text-[10px] md:text-sm text-slate-600">Stock actuel</p>
+                        <p className="font-bold text-orange-600 text-xs md:text-base">
                           {item.stock_quantity} {item.stock_unit}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-sm text-slate-600">Seuil</p>
-                        <p className="font-medium text-slate-700">
+                      <div className="text-right hidden sm:block">
+                        <p className="text-[10px] md:text-sm text-slate-600">Seuil</p>
+                        <p className="font-medium text-slate-700 text-xs md:text-base">
                           {item.low_stock_threshold} {item.stock_unit}
                         </p>
                       </div>
                       <button
                         onClick={() => handleOpenModal(item)}
-                        className="px-3 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                        className="px-2 md:px-3 py-1.5 md:py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-xs md:text-sm font-medium whitespace-nowrap"
                       >
-                        Réapprovisionner
+                        <span className="hidden sm:inline">Réapprovisionner</span>
+                        <span className="sm:hidden">Stock</span>
                       </button>
                     </div>
                   </div>
@@ -446,24 +450,24 @@ export default function CatalogPage() {
         </div>
       )}
 
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+      <div className="mb-4 md:mb-6 flex flex-col sm:flex-row gap-3 md:gap-4">
         <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
           <input
             type="text"
             placeholder="Rechercher un article..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-12 pr-5 py-3.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-200 hover:border-slate-400 bg-white shadow-sm placeholder:text-slate-400"
+            className="w-full pl-9 md:pl-12 pr-4 md:pr-5 py-2.5 md:py-3.5 border border-slate-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-200 hover:border-slate-400 bg-white shadow-sm placeholder:text-slate-400 text-sm md:text-base"
           />
         </div>
 
         <div className="relative min-w-[200px]">
-          <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+          <Filter className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
           <select
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="w-full pl-12 pr-10 py-3.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-200 hover:border-slate-400 bg-white shadow-sm appearance-none cursor-pointer"
+            className="w-full pl-9 md:pl-12 pr-8 md:pr-10 py-2.5 md:py-3.5 border border-slate-300 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-200 hover:border-slate-400 bg-white shadow-sm appearance-none cursor-pointer text-sm md:text-base"
           >
             <option value="all">Toutes les catégories</option>
             {categories.map(category => (
