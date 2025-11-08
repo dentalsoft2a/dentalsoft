@@ -450,41 +450,41 @@ export default function HelpCenterPage() {
 
   if (selectedTopic) {
     return (
-      <div className="max-w-5xl mx-auto">
-        <div className="mb-6">
+      <div className="max-w-5xl mx-auto p-3 sm:p-6">
+        <div className="mb-4 sm:mb-6">
           <button
             onClick={() => {
               setSelectedTopic(null);
               setReplies([]);
             }}
-            className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all duration-200 mb-4"
+            className="flex items-center gap-2 px-3 sm:px-4 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg sm:rounded-xl transition-all duration-200 mb-3 sm:mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            <span className="font-medium">Retour aux sujets</span>
+            <span className="text-sm sm:text-base font-medium">Retour aux sujets</span>
           </button>
-          <div className="bg-gradient-to-br from-primary-50 to-cyan-50 rounded-2xl p-8 border border-primary-100">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex items-start gap-3">
+          <div className="bg-gradient-to-br from-primary-50 to-cyan-50 rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-primary-100">
+            <div className="flex flex-col sm:flex-row items-start justify-between gap-3 mb-3 sm:mb-4">
+              <div className="flex items-start gap-2 sm:gap-3">
                 {selectedTopic.is_pinned && (
-                  <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-100 text-amber-700 rounded-full text-sm font-semibold border border-amber-200">
-                    <Pin className="w-4 h-4" />
-                    Épinglé
+                  <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 bg-amber-100 text-amber-700 rounded-full text-xs sm:text-sm font-semibold border border-amber-200">
+                    <Pin className="w-3 h-3 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Épinglé</span>
                   </div>
                 )}
               </div>
               {isSuperAdmin && (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => handleTogglePin(selectedTopic.id, selectedTopic.is_pinned)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-white/80 hover:bg-white border border-amber-300 text-amber-700 rounded-lg transition-all duration-200 font-medium text-sm"
+                    className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 bg-white/80 hover:bg-white border border-amber-300 text-amber-700 rounded-lg transition-all duration-200 font-medium text-xs sm:text-sm"
                   >
-                    {selectedTopic.is_pinned ? <Unlock className="w-4 h-4" /> : <Pin className="w-4 h-4" />}
-                    {selectedTopic.is_pinned ? 'Désépingler' : 'Épingler'}
+                    {selectedTopic.is_pinned ? <Unlock className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <Pin className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
+                    <span className="hidden sm:inline">{selectedTopic.is_pinned ? 'Désépingler' : 'Épingler'}</span>
                   </button>
                   <select
                     value={selectedTopic.status}
                     onChange={(e) => handleChangeStatus(selectedTopic.id, e.target.value)}
-                    className="px-3 py-1.5 bg-white/80 hover:bg-white border border-slate-300 rounded-lg font-medium text-sm transition-all"
+                    className="px-2 sm:px-3 py-1.5 bg-white/80 hover:bg-white border border-slate-300 rounded-lg font-medium text-xs sm:text-sm transition-all"
                   >
                     <option value="open">Ouvert</option>
                     <option value="resolved">Résolu</option>
@@ -492,116 +492,119 @@ export default function HelpCenterPage() {
                   </select>
                   <button
                     onClick={() => handleDeleteTopic(selectedTopic.id)}
-                    className="flex items-center gap-2 px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-300 text-red-700 rounded-lg transition-all duration-200 font-medium text-sm"
+                    className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 bg-red-50 hover:bg-red-100 border border-red-300 text-red-700 rounded-lg transition-all duration-200 font-medium text-xs sm:text-sm"
                   >
-                    <Trash2 className="w-4 h-4" />
-                    Supprimer
+                    <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                    <span className="hidden sm:inline">Supprimer</span>
                   </button>
                 </div>
               )}
             </div>
-            <h1 className="text-4xl font-bold text-slate-900 mb-4 leading-tight">{selectedTopic.title}</h1>
-            <div className="flex flex-wrap items-center gap-3 text-sm">
-              <div className="flex items-center gap-2 text-slate-700">
-                <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+            <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 mb-3 sm:mb-4 leading-tight break-words">{selectedTopic.title}</h1>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-slate-700">
+                <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-full flex items-center justify-center text-white font-bold text-xs sm:text-sm">
                   {selectedTopic.profiles?.first_name?.charAt(0).toUpperCase()}{selectedTopic.profiles?.last_name?.charAt(0).toUpperCase()}
                 </div>
-                <span className="font-semibold">{selectedTopic.profiles?.first_name} {selectedTopic.profiles?.last_name}</span>
+                <span className="text-xs sm:text-sm font-semibold">{selectedTopic.profiles?.first_name} {selectedTopic.profiles?.last_name}</span>
               </div>
-              <span className="text-slate-400">•</span>
-              <span className="text-slate-600">{new Date(selectedTopic.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-              <span className="text-slate-400">•</span>
+              <span className="text-slate-400 hidden sm:inline">•</span>
+              <span className="text-slate-600 hidden sm:inline">{new Date(selectedTopic.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+              <span className="text-slate-600 sm:hidden">{new Date(selectedTopic.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
+              <span className="text-slate-400 hidden sm:inline">•</span>
               {getStatusBadge(selectedTopic.status)}
               {getCategoryBadge(selectedTopic.category)}
-              <span className="flex items-center gap-1.5 text-slate-600 bg-white/60 px-3 py-1 rounded-full">
-                <Eye className="w-4 h-4" />
-                <span className="font-medium">{selectedTopic.views_count}</span>
+              <span className="flex items-center gap-1 sm:gap-1.5 text-slate-600 bg-white/60 px-2 sm:px-3 py-1 rounded-full">
+                <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="text-xs sm:text-sm font-medium">{selectedTopic.views_count}</span>
               </span>
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 mb-6 hover:shadow-md transition-shadow">
-          <div className="prose prose-slate max-w-none mb-6">
-            <p className="text-slate-700 text-lg leading-relaxed whitespace-pre-wrap">{selectedTopic.content}</p>
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-8 mb-4 sm:mb-6 hover:shadow-md transition-shadow">
+          <div className="prose prose-slate max-w-none mb-4 sm:mb-6">
+            <p className="text-slate-700 text-sm sm:text-lg leading-relaxed whitespace-pre-wrap break-words">{selectedTopic.content}</p>
           </div>
-          <div className="flex items-center gap-3 pt-4 border-t border-slate-100">
+          <div className="flex items-center gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-slate-100">
             <button
               onClick={() => handleVote(selectedTopic.id, 'topic', 'up')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl font-medium transition-all duration-200 ${
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl font-medium text-sm transition-all duration-200 ${
                 selectedTopic.user_vote === 'up'
                   ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30 scale-105'
                   : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
               }`}
             >
-              <ThumbsUp className="w-4 h-4" />
+              <ThumbsUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>{selectedTopic.votes_count || 0}</span>
             </button>
-            <span className="text-sm text-slate-500">Utile</span>
+            <span className="text-xs sm:text-sm text-slate-500">Utile</span>
           </div>
         </div>
 
-        <div className="space-y-4 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <MessageSquare className="w-6 h-6 text-primary-600" />
-            <h2 className="text-2xl font-bold text-slate-900">
+        <div className="space-y-3 sm:space-y-4 mb-4 sm:mb-6">
+          <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
+            <MessageSquare className="w-5 h-5 sm:w-6 sm:h-6 text-primary-600" />
+            <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
               {replies.length} {replies.length > 1 ? 'Réponses' : 'Réponse'}
             </h2>
           </div>
           {replies.map((reply) => (
             <div
               key={reply.id}
-              className={`bg-white rounded-2xl shadow-sm border p-6 hover:shadow-md transition-all duration-200 ${
+              className={`bg-white rounded-xl sm:rounded-2xl shadow-sm border p-4 sm:p-6 hover:shadow-md transition-all duration-200 ${
                 reply.is_solution ? 'border-green-300 ring-2 ring-green-100 bg-green-50/30' : 'border-slate-200'
               }`}
             >
               {reply.is_solution && (
-                <div className="flex items-center gap-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-4 py-2 rounded-xl font-semibold mb-4 shadow-lg shadow-green-500/20">
-                  <CheckCircle className="w-5 h-5" />
+                <div className="flex items-center gap-1.5 sm:gap-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold mb-3 sm:mb-4 shadow-lg shadow-green-500/20">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
                   Solution acceptée
                 </div>
               )}
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-2 text-sm">
-                  <div className="w-8 h-8 bg-gradient-to-br from-slate-400 to-slate-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
+                <div className="flex items-center gap-2 text-xs sm:text-sm">
+                  <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-slate-400 to-slate-600 rounded-full flex items-center justify-center text-white font-bold text-xs">
                     {reply.profiles?.first_name?.charAt(0).toUpperCase()}{reply.profiles?.last_name?.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <span className="font-semibold text-slate-900 block">{reply.profiles?.first_name} {reply.profiles?.last_name}</span>
-                    <span className="text-slate-500 text-xs">{new Date(reply.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    <span className="font-semibold text-slate-900 block text-xs sm:text-sm">{reply.profiles?.first_name} {reply.profiles?.last_name}</span>
+                    <span className="text-slate-500 text-xs hidden sm:block">{new Date(reply.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                    <span className="text-slate-500 text-xs sm:hidden">{new Date(reply.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 w-full sm:w-auto">
                   {selectedTopic.user_id === user?.id && !reply.is_solution && (
                     <button
                       onClick={() => handleMarkAsSolution(reply.id)}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 border border-green-200 rounded-lg font-medium transition-all duration-200"
+                      className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-green-600 hover:bg-green-50 border border-green-200 rounded-lg font-medium transition-all duration-200"
                     >
-                      <CheckCircle className="w-4 h-4" />
-                      Marquer comme solution
+                      <CheckCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                      <span className="hidden sm:inline">Marquer comme solution</span>
+                      <span className="sm:hidden">Solution</span>
                     </button>
                   )}
                   {isSuperAdmin && (
                     <button
                       onClick={() => handleDeleteReply(reply.id)}
-                      className="flex items-center gap-2 px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 border border-red-200 rounded-lg font-medium transition-all duration-200"
+                      className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 text-xs sm:text-sm text-red-600 hover:bg-red-50 border border-red-200 rounded-lg font-medium transition-all duration-200"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                     </button>
                   )}
                 </div>
               </div>
-              <p className="text-slate-700 leading-relaxed whitespace-pre-wrap mb-4 text-base">{reply.content}</p>
-              <div className="flex items-center gap-3 pt-3 border-t border-slate-100">
+              <p className="text-slate-700 leading-relaxed whitespace-pre-wrap mb-3 sm:mb-4 text-sm sm:text-base break-words">{reply.content}</p>
+              <div className="flex items-center gap-2 sm:gap-3 pt-2 sm:pt-3 border-t border-slate-100">
                 <button
                   onClick={() => handleVote(reply.id, 'reply', 'up')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium text-sm transition-all duration-200 ${
+                  className={`flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 rounded-lg font-medium text-xs sm:text-sm transition-all duration-200 ${
                     reply.user_vote === 'up'
                       ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md shadow-green-500/20'
                       : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'
                   }`}
                 >
-                  <ThumbsUp className="w-4 h-4" />
+                  <ThumbsUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                   <span>{reply.votes_count || 0}</span>
                 </button>
                 <span className="text-xs text-slate-500">Utile</span>
@@ -610,9 +613,9 @@ export default function HelpCenterPage() {
           ))}
         </div>
 
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-          <h3 className="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <MessageSquare className="w-5 h-5 text-primary-600" />
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6">
+          <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-3 sm:mb-4 flex items-center gap-2">
+            <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600" />
             Ajouter une réponse
           </h3>
           <form onSubmit={handleCreateReply}>
@@ -620,13 +623,13 @@ export default function HelpCenterPage() {
               value={newReplyContent}
               onChange={(e) => setNewReplyContent(e.target.value)}
               placeholder="Partagez votre solution ou vos idées pour aider..."
-              className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none min-h-32 text-base transition-all"
+              className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-slate-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none min-h-24 sm:min-h-32 text-sm sm:text-base transition-all"
               required
             />
-            <div className="flex justify-end mt-4">
+            <div className="flex justify-end mt-3 sm:mt-4">
               <button
                 type="submit"
-                className="px-8 py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-200 font-semibold"
+                className="px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-lg sm:rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-200 font-semibold"
               >
                 Publier la réponse
               </button>
@@ -638,42 +641,42 @@ export default function HelpCenterPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto">
-      <div className="mb-8">
-        <div className="bg-gradient-to-br from-primary-50 via-cyan-50 to-teal-50 rounded-2xl p-8 border border-primary-100">
-          <div className="flex items-center justify-between">
+    <div className="max-w-6xl mx-auto p-3 sm:p-6">
+      <div className="mb-4 sm:mb-8">
+        <div className="bg-gradient-to-br from-primary-50 via-cyan-50 to-teal-50 rounded-xl sm:rounded-2xl p-4 sm:p-8 border border-primary-100">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0">
             <div>
-              <h1 className="text-4xl font-bold text-slate-900 mb-2">Centre d'aide</h1>
-              <p className="text-slate-600 text-lg">Posez vos questions et aidez la communauté 👫</p>
+              <h1 className="text-2xl sm:text-4xl font-bold text-slate-900 mb-1 sm:mb-2">Centre d'aide</h1>
+              <p className="text-slate-600 text-sm sm:text-lg">Posez vos questions et aidez la communauté 👫</p>
             </div>
             <button
               onClick={() => setShowNewTopicModal(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-xl hover:scale-105 transition-all duration-200 font-semibold"
+              className="flex items-center gap-1.5 sm:gap-2 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg sm:rounded-xl hover:scale-105 transition-all duration-200 font-semibold w-full sm:w-auto justify-center"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               Nouveau sujet
             </button>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-6 bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-200">
-          <div className="flex flex-col sm:flex-row gap-4">
+      <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="p-3 sm:p-6 bg-gradient-to-r from-slate-50 to-slate-100/50 border-b border-slate-200">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Rechercher un sujet..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-12 pr-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white text-base transition-all"
+                className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-2 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none bg-white transition-all"
               />
             </div>
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none bg-white font-medium text-sm transition-all"
+              className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm border border-slate-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 outline-none bg-white font-medium transition-all"
             >
               <option value="all">Toutes les catégories</option>
               <option value="general">Général</option>
@@ -684,7 +687,7 @@ export default function HelpCenterPage() {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none bg-white font-medium text-sm transition-all"
+              className="px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm border border-slate-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 outline-none bg-white font-medium transition-all"
             >
               <option value="all">Tous les statuts</option>
               <option value="open">Ouvert</option>
@@ -695,24 +698,24 @@ export default function HelpCenterPage() {
         </div>
 
         {loading ? (
-          <div className="p-12 text-center">
-            <div className="inline-block w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-            <p className="text-slate-600 mt-4">Chargement...</p>
+          <div className="p-8 sm:p-12 text-center">
+            <div className="inline-block w-6 h-6 sm:w-8 sm:h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
+            <p className="text-slate-600 mt-3 sm:mt-4 text-sm sm:text-base">Chargement...</p>
           </div>
         ) : filteredTopics.length === 0 ? (
-          <div className="p-12 text-center">
-            <MessageSquare className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-600 text-lg">Aucun sujet trouvé</p>
-            <p className="text-slate-500 text-sm mt-2">Soyez le premier à poser une question !</p>
+          <div className="p-8 sm:p-12 text-center">
+            <MessageSquare className="w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-3 sm:mb-4" />
+            <p className="text-slate-600 text-base sm:text-lg">Aucun sujet trouvé</p>
+            <p className="text-slate-500 text-xs sm:text-sm mt-2">Soyez le premier à poser une question !</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 p-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4">
             {filteredTopics.map((topic) => {
               const categoryColors = getCategoryColors(topic.category);
               return (
               <div
                 key={topic.id}
-                className={`bg-gradient-to-br ${categoryColors.light} border ${categoryColors.border} rounded-2xl p-6 transition-all duration-300 hover:shadow-xl ${categoryColors.shadow} hover:scale-[1.02] group relative`}
+                className={`bg-gradient-to-br ${categoryColors.light} border ${categoryColors.border} rounded-xl sm:rounded-2xl p-4 sm:p-6 transition-all duration-300 hover:shadow-xl ${categoryColors.shadow} hover:scale-[1.02] group relative`}
               >
                 {isSuperAdmin && (
                   <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
@@ -749,20 +752,20 @@ export default function HelpCenterPage() {
                     {getStatusBadge(topic.status)}
                   </div>
 
-                  <h3 className="text-xl font-bold text-slate-900 mb-3 line-clamp-2 leading-tight group-hover:text-primary-600 transition-colors">
+                  <h3 className="text-base sm:text-xl font-bold text-slate-900 mb-2 sm:mb-3 line-clamp-2 leading-tight group-hover:text-primary-600 transition-colors">
                     {topic.title}
                   </h3>
 
-                  <p className="text-slate-700 text-sm mb-4 line-clamp-3 leading-relaxed flex-grow">{topic.content}</p>
+                  <p className="text-slate-700 text-xs sm:text-sm mb-3 sm:mb-4 line-clamp-3 leading-relaxed flex-grow">{topic.content}</p>
 
-                  <div className="space-y-3 pt-3 border-t border-slate-200/50">
+                  <div className="space-y-2 sm:space-y-3 pt-2 sm:pt-3 border-t border-slate-200/50">
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className={`w-8 h-8 bg-gradient-to-br ${categoryColors.gradient} rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md`}>
+                      <div className="flex items-center gap-1.5 sm:gap-2">
+                        <div className={`w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br ${categoryColors.gradient} rounded-full flex items-center justify-center text-white font-bold text-xs shadow-md`}>
                           {topic.profiles?.first_name?.charAt(0).toUpperCase()}{topic.profiles?.last_name?.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <span className="font-semibold text-slate-900 text-sm block">
+                          <span className="font-semibold text-slate-900 text-xs sm:text-sm block">
                             {topic.profiles?.first_name} {topic.profiles?.last_name}
                           </span>
                           <span className="text-slate-500 text-xs">{new Date(topic.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</span>
@@ -773,24 +776,24 @@ export default function HelpCenterPage() {
                           e.stopPropagation();
                           handleVote(topic.id, 'topic', 'up');
                         }}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg transition-all duration-200 font-semibold text-sm ${
+                        className={`flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 rounded-lg transition-all duration-200 font-semibold text-xs sm:text-sm ${
                           topic.user_vote === 'up'
                             ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-md'
                             : 'bg-white/80 text-slate-700 hover:bg-white border border-slate-200'
                         }`}
                       >
-                        <ThumbsUp className="w-4 h-4" />
+                        <ThumbsUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         <span>{topic.votes_count || 0}</span>
                       </button>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1.5 text-slate-700 bg-white/80 px-3 py-1.5 rounded-lg font-medium text-sm border border-slate-200">
-                        <MessageSquare className="w-4 h-4" />
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <span className="flex items-center gap-1 sm:gap-1.5 text-slate-700 bg-white/80 px-2 sm:px-3 py-1.5 rounded-lg font-medium text-xs sm:text-sm border border-slate-200">
+                        <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         {topic.replies_count}
                       </span>
-                      <span className="flex items-center gap-1.5 text-slate-700 bg-white/80 px-3 py-1.5 rounded-lg font-medium text-sm border border-slate-200">
-                        <Eye className="w-4 h-4" />
+                      <span className="flex items-center gap-1 sm:gap-1.5 text-slate-700 bg-white/80 px-2 sm:px-3 py-1.5 rounded-lg font-medium text-xs sm:text-sm border border-slate-200">
+                        <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                         {topic.views_count}
                       </span>
                     </div>
@@ -804,31 +807,31 @@ export default function HelpCenterPage() {
       </div>
 
       {showNewTopicModal && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
-            <div className="p-8 border-b border-slate-200 bg-gradient-to-r from-primary-50 to-cyan-50">
-              <h2 className="text-3xl font-bold text-slate-900">Nouveau sujet</h2>
-              <p className="text-slate-600 mt-2">Partagez votre question avec la communauté</p>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+            <div className="p-4 sm:p-8 border-b border-slate-200 bg-gradient-to-r from-primary-50 to-cyan-50">
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">Nouveau sujet</h2>
+              <p className="text-slate-600 mt-1 sm:mt-2 text-sm sm:text-base">Partagez votre question avec la communauté</p>
             </div>
-            <form onSubmit={handleCreateTopic} className="p-8">
-              <div className="space-y-6">
+            <form onSubmit={handleCreateTopic} className="p-4 sm:p-8">
+              <div className="space-y-4 sm:space-y-6">
                 <div>
-                  <label className="block text-sm font-semibold text-slate-900 mb-3">Titre</label>
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-900 mb-2 sm:mb-3">Titre</label>
                   <input
                     type="text"
                     value={newTopicTitle}
                     onChange={(e) => setNewTopicTitle(e.target.value)}
                     placeholder="Résumez votre question en quelques mots..."
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-base transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none transition-all"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-900 mb-3">Catégorie</label>
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-900 mb-2 sm:mb-3">Catégorie</label>
                   <select
                     value={newTopicCategory}
                     onChange={(e) => setNewTopicCategory(e.target.value)}
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-base font-medium transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 outline-none font-medium transition-all"
                   >
                     <option value="general">Général</option>
                     <option value="billing">Facturation</option>
@@ -837,17 +840,17 @@ export default function HelpCenterPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-slate-900 mb-3">Description</label>
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-900 mb-2 sm:mb-3">Description</label>
                   <textarea
                     value={newTopicContent}
                     onChange={(e) => setNewTopicContent(e.target.value)}
                     placeholder="Décrivez votre problème ou votre question en détail..."
-                    className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none min-h-48 text-base transition-all"
+                    className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base border border-slate-300 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none min-h-32 sm:min-h-48 transition-all"
                     required
                   />
                 </div>
               </div>
-              <div className="flex justify-end gap-3 mt-8">
+              <div className="flex justify-end gap-2 sm:gap-3 mt-4 sm:mt-8">
                 <button
                   type="button"
                   onClick={() => {
@@ -856,13 +859,13 @@ export default function HelpCenterPage() {
                     setNewTopicContent('');
                     setNewTopicCategory('general');
                   }}
-                  className="px-6 py-3 border border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all font-medium"
+                  className="px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base border border-slate-300 text-slate-700 rounded-lg sm:rounded-xl hover:bg-slate-50 transition-all font-medium"
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
-                  className="px-8 py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-200 font-semibold"
+                  className="px-4 sm:px-8 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-lg sm:rounded-xl hover:shadow-xl hover:scale-105 transition-all duration-200 font-semibold"
                 >
                   Publier
                 </button>
