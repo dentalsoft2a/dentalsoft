@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Copy, Trash2, Check, Clock, Key, Calendar } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 
 interface AccessCode {
   id: string;
@@ -25,6 +26,8 @@ export function AccessCodesManagement() {
     quantity: 1,
     expires_in_days: 0,
   });
+
+  useLockScroll(showCreateModal);
 
   useEffect(() => {
     loadCodes();

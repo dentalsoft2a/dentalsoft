@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Edit, Trash2, Search, FileDown, User, CheckCircle, Play } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 import type { Database } from '../../lib/database.types';
 import { generateDeliveryNotePDF } from '../../utils/pdfGenerator';
 import { deductStockForDeliveryNote, restoreStockForDeliveryNote } from '../../utils/stockManager';
@@ -22,6 +23,8 @@ export default function DeliveryNotesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
+
+  useLockScroll(showModal);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
   useEffect(() => {

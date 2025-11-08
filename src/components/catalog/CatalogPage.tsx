@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useRef } from 'react';
 import { Plus, Edit, Trash2, Search, Save, X, Package, Tag, DollarSign, CheckCircle2, XCircle, Filter, Archive, AlertTriangle, HelpCircle, BookOpen, Download, Upload } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 import type { Database } from '../../lib/database.types';
 
 type CatalogItem = Database['public']['Tables']['catalog_items']['Row'];
@@ -17,6 +18,8 @@ export default function CatalogPage() {
   const [showModal, setShowModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
+
+  useLockScroll(showModal || showTutorial);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',

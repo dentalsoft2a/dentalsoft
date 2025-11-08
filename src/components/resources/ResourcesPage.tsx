@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Plus, Edit, Trash2, Search, Save, X, Box, AlertTriangle, TrendingUp, RefreshCw, Palette, BookOpen, ChevronDown, ChevronUp, HelpCircle, Package, CheckCircle2, Tag, Layers, Download, Upload } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 import ResourceVariantManager from './ResourceVariantManager';
 
 interface Resource {
@@ -37,6 +38,8 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
   const [showVariantManager, setShowVariantManager] = useState<{ id: string; name: string } | null>(null);
   const [lowStockVariants, setLowStockVariants] = useState<any[]>([]);
   const [showQuickFill, setShowQuickFill] = useState<{ id: string; name: string; currentStock: number; type: 'resource' | 'variant' } | null>(null);
+
+  useLockScroll(showModal || !!showVariantManager || !!showQuickFill);
   const [quickFillQuantity, setQuickFillQuantity] = useState<number>(0);
   const [showTutorial, setShowTutorial] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

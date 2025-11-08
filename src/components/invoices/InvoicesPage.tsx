@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Edit, Trash2, Search, FileDown, CreditCard, Send } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 import type { Database } from '../../lib/database.types';
 import { generateInvoicePDF } from '../../utils/pdfGenerator';
 import DentistSelector from '../proformas/DentistSelector';
@@ -21,6 +22,8 @@ export default function InvoicesPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+
+  useLockScroll(showModal || showGenerateModal || showPaymentModal);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 

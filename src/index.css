@@ -10,6 +10,10 @@
 }
 
 @layer utilities {
+  .modal-open {
+    overflow: hidden !important;
+  }
+
   .animate-shimmer {
     animation: shimmer 2s infinite;
     background: linear-gradient(

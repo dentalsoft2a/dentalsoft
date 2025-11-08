@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { MessageSquare, Plus, Search, ThumbsUp, Eye, CheckCircle, Pin, ArrowLeft, Trash2, Lock, Unlock, AlertCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 
 type HelpTopic = {
   id: string;
@@ -48,6 +49,8 @@ export default function HelpCenterPage() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showNewTopicModal, setShowNewTopicModal] = useState(false);
   const [selectedTopic, setSelectedTopic] = useState<HelpTopic | null>(null);
+
+  useLockScroll(showNewTopicModal);
   const [replies, setReplies] = useState<HelpReply[]>([]);
   const [newTopicTitle, setNewTopicTitle] = useState('');
   const [newTopicContent, setNewTopicContent] = useState('');

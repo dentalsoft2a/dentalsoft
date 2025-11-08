@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 import { Users, Plus, Edit, Trash2, Shield, Save, X } from 'lucide-react';
 
 interface Employee {
@@ -41,6 +42,8 @@ export default function EmployeeManagement() {
   const [loading, setLoading] = useState(true);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
+
+  useLockScroll(showEmployeeModal || showRoleModal);
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
   const [editingRole, setEditingRole] = useState<RolePermission | null>(null);
 

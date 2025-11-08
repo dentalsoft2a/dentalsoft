@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus, Eye, Edit, Trash2, Search, FileDown, Receipt, Mail, Send } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 import type { Database } from '../../lib/database.types';
 import { generateProformaPDF, generateProformaPDFBase64 } from '../../utils/pdfGenerator';
 import DentistSelector from './DentistSelector';
@@ -20,6 +21,8 @@ export default function ProformasPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showModal, setShowModal] = useState(false);
   const [editingProforma, setEditingProforma] = useState<string | null>(null);
+
+  useLockScroll(showModal);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 

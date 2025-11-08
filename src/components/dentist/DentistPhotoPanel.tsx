@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Camera, X, Send, CheckCircle, LogOut, History } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 import DentistPhotoHistory from './DentistPhotoHistory';
 import LaboratorySelector from './LaboratorySelector';
 
@@ -18,6 +19,8 @@ export default function DentistPhotoPanel() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+
+  useLockScroll(showModal || showHistory);
 
   useEffect(() => {
     loadDentistId();

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { Plus, Edit, Trash2, Search, Mail, Phone, MapPin, User, CheckCircle2, Clock, Download, Upload } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLockScroll } from '../../hooks/useLockScroll';
 import type { Database } from '../../lib/database.types';
 
 type Dentist = Database['public']['Tables']['dentists']['Row'];
@@ -19,6 +20,8 @@ export default function DentistsPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingDentist, setEditingDentist] = useState<Dentist | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useLockScroll(showModal);
 
   useEffect(() => {
     loadDentists();
