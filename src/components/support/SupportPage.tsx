@@ -206,42 +206,42 @@ export function SupportPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50 p-3 sm:p-6">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900 mb-2">Support</h1>
-              <p className="text-slate-600">Contactez notre équipe pour toute question ou assistance</p>
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 mb-1 sm:mb-2">Support</h1>
+              <p className="text-sm sm:text-base text-slate-600">Contactez notre équipe pour toute question ou assistance</p>
             </div>
             {contactPhone && (
               <a
                 href={`tel:${contactPhone.replace(/\s/g, '')}`}
-                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:shadow-lg transition-all group"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 sm:py-3 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-lg hover:shadow-lg transition-all group w-full sm:w-auto justify-center sm:justify-start"
               >
-                <Phone className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                <Phone className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
                 <div className="text-left">
                   <div className="text-xs opacity-90">Appelez-nous</div>
-                  <div className="font-semibold">{contactPhone}</div>
+                  <div className="text-sm sm:text-base font-semibold">{contactPhone}</div>
                 </div>
               </a>
             )}
           </div>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 h-[600px]">
-          <div className="md:col-span-1 bg-white rounded-xl shadow-lg border border-slate-200 p-4 overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-slate-900">Mes tickets</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6 h-[calc(100vh-220px)] sm:h-[600px]">
+          <div className="md:col-span-1 bg-white rounded-lg sm:rounded-xl shadow-lg border border-slate-200 p-3 sm:p-4 overflow-y-auto">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-sm sm:text-base font-bold text-slate-900">Mes tickets</h3>
               <button
                 onClick={() => setShowNewTicketForm(true)}
-                className="p-2 bg-gradient-to-r from-primary-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all"
+                className="p-1.5 sm:p-2 bg-gradient-to-r from-primary-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-1.5 sm:space-y-2">
               {tickets.map((ticket) => {
                 const StatusIcon = getStatusIcon(ticket.status);
                 return (
@@ -249,17 +249,17 @@ export function SupportPage() {
                     key={ticket.id}
                     onClick={() => setSelectedTicket(ticket)}
                     className={`
-                      w-full text-left p-4 rounded-lg border transition-all
+                      w-full text-left p-3 sm:p-4 rounded-lg border transition-all
                       ${selectedTicket?.id === ticket.id
                         ? 'bg-gradient-to-br from-primary-50 to-cyan-50 border-primary-500 shadow-md'
                         : 'bg-white border-slate-200 hover:border-slate-300'
                       }
                     `}
                   >
-                    <div className="flex items-start gap-3 mb-2">
-                      <StatusIcon className="w-5 h-5 text-primary-600 flex-shrink-0 mt-0.5" />
+                    <div className="flex items-start gap-2 sm:gap-3 mb-1.5 sm:mb-2">
+                      <StatusIcon className="w-4 h-4 sm:w-5 sm:h-5 text-primary-600 flex-shrink-0 mt-0.5" />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-slate-900 truncate">{ticket.subject}</p>
+                        <p className="text-sm sm:text-base font-medium text-slate-900 truncate">{ticket.subject}</p>
                         <p className="text-xs text-slate-500">
                           {new Date(ticket.created_at).toLocaleDateString('fr-FR')}
                         </p>
@@ -273,12 +273,12 @@ export function SupportPage() {
               })}
 
               {tickets.length === 0 && (
-                <div className="text-center py-8 text-slate-500">
-                  <MessageSquare className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                  <p className="text-sm">Aucun ticket de support</p>
+                <div className="text-center py-6 sm:py-8 text-slate-500">
+                  <MessageSquare className="w-10 h-10 sm:w-12 sm:h-12 text-slate-300 mx-auto mb-2 sm:mb-3" />
+                  <p className="text-xs sm:text-sm">Aucun ticket de support</p>
                   <button
                     onClick={() => setShowNewTicketForm(true)}
-                    className="mt-4 px-4 py-2 bg-gradient-to-r from-primary-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all text-sm font-medium"
+                    className="mt-3 sm:mt-4 px-3 sm:px-4 py-2 bg-gradient-to-r from-primary-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all text-xs sm:text-sm font-medium"
                   >
                     Créer un ticket
                   </button>
@@ -287,14 +287,14 @@ export function SupportPage() {
             </div>
           </div>
 
-          <div className="md:col-span-2 bg-white rounded-xl shadow-lg border border-slate-200 flex flex-col">
+          <div className="md:col-span-2 bg-white rounded-lg sm:rounded-xl shadow-lg border border-slate-200 flex flex-col">
             {showNewTicketForm ? (
-              <div className="flex-1 flex flex-col p-6">
-                <h3 className="font-bold text-slate-900 mb-4">Nouveau ticket de support</h3>
+              <div className="flex-1 flex flex-col p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-bold text-slate-900 mb-3 sm:mb-4">Nouveau ticket de support</h3>
 
-                <div className="space-y-4 flex-1">
+                <div className="space-y-3 sm:space-y-4 flex-1">
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">
                       Sujet
                     </label>
                     <input
@@ -302,18 +302,18 @@ export function SupportPage() {
                       value={newTicket.subject}
                       onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
                       placeholder="Décrivez brièvement votre problème"
-                      className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">
                       Priorité
                     </label>
                     <select
                       value={newTicket.priority}
                       onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
-                      className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                     >
                       <option value="low">Basse</option>
                       <option value="medium">Moyenne</option>
@@ -323,30 +323,30 @@ export function SupportPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-xs sm:text-sm font-medium text-slate-700 mb-1.5 sm:mb-2">
                       Message
                     </label>
                     <textarea
                       value={newTicket.message}
                       onChange={(e) => setNewTicket({ ...newTicket, message: e.target.value })}
                       placeholder="Décrivez votre problème en détail..."
-                      rows={8}
-                      className="w-full px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                      rows={6}
+                      className="w-full px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                     />
                   </div>
                 </div>
 
-                <div className="flex gap-3 mt-4">
+                <div className="flex gap-2 sm:gap-3 mt-3 sm:mt-4">
                   <button
                     onClick={() => setShowNewTicketForm(false)}
-                    className="flex-1 px-6 py-3 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
+                    className="flex-1 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors font-medium"
                   >
                     Annuler
                   </button>
                   <button
                     onClick={createTicket}
                     disabled={sending || !newTicket.subject.trim() || !newTicket.message.trim()}
-                    className="flex-1 px-6 py-3 bg-gradient-to-r from-primary-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                    className="flex-1 px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-primary-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium"
                   >
                     {sending ? 'Création...' : 'Créer le ticket'}
                   </button>
@@ -354,9 +354,9 @@ export function SupportPage() {
               </div>
             ) : selectedTicket ? (
               <>
-                <div className="p-4 border-b border-slate-200">
-                  <h3 className="font-bold text-slate-900 mb-1">{selectedTicket.subject}</h3>
-                  <div className="flex items-center gap-2">
+                <div className="p-3 sm:p-4 border-b border-slate-200">
+                  <h3 className="text-sm sm:text-base font-bold text-slate-900 mb-1 break-words">{selectedTicket.subject}</h3>
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className={`px-2 py-1 rounded text-xs font-medium ${getStatusColor(selectedTicket.status)}`}>
                       {getStatusLabel(selectedTicket.status)}
                     </span>
@@ -366,23 +366,23 @@ export function SupportPage() {
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
                   {messages.map((msg) => (
                     <div
                       key={msg.id}
                       className={`flex ${msg.is_admin ? 'justify-start' : 'justify-end'}`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-lg p-4 ${
+                        className={`max-w-[85%] sm:max-w-[70%] rounded-lg p-3 sm:p-4 ${
                           msg.is_admin
                             ? 'bg-slate-100 text-slate-900'
                             : 'bg-gradient-to-br from-primary-500 to-cyan-500 text-white'
                         }`}
                       >
                         {msg.is_admin && (
-                          <p className="text-xs font-medium text-primary-600 mb-2">Support DentalCloud</p>
+                          <p className="text-xs font-medium text-primary-600 mb-1.5 sm:mb-2">Support DentalCloud</p>
                         )}
-                        <p className="text-sm mb-2">{msg.message}</p>
+                        <p className="text-xs sm:text-sm mb-1.5 sm:mb-2 break-words">{msg.message}</p>
                         <p className={`text-xs ${msg.is_admin ? 'text-slate-500' : 'text-white/80'}`}>
                           {new Date(msg.created_at).toLocaleString('fr-FR')}
                         </p>
@@ -392,7 +392,7 @@ export function SupportPage() {
                 </div>
 
                 {selectedTicket.status !== 'closed' && (
-                  <div className="p-4 border-t border-slate-200">
+                  <div className="p-3 sm:p-4 border-t border-slate-200">
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -400,25 +400,25 @@ export function SupportPage() {
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                         placeholder="Votre message..."
-                        className="flex-1 px-4 py-3 rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
+                        className="flex-1 px-3 sm:px-4 py-2 sm:py-3 text-sm sm:text-base rounded-lg border border-slate-300 focus:border-primary-500 focus:ring-2 focus:ring-primary-200 outline-none"
                       />
                       <button
                         onClick={sendMessage}
                         disabled={sending || !newMessage.trim()}
-                        className="px-6 py-3 bg-gradient-to-r from-primary-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-3 sm:px-6 py-2 sm:py-3 bg-gradient-to-r from-primary-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 sm:gap-2"
                       >
-                        <Send className="w-5 h-5" />
-                        {sending ? 'Envoi...' : 'Envoyer'}
+                        <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span className="hidden sm:inline">{sending ? 'Envoi...' : 'Envoyer'}</span>
                       </button>
                     </div>
                   </div>
                 )}
               </>
             ) : (
-              <div className="flex-1 flex items-center justify-center text-slate-500">
+              <div className="flex-1 flex items-center justify-center text-slate-500 p-4">
                 <div className="text-center">
-                  <MessageSquare className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-                  <p>Sélectionnez un ticket pour voir la conversation</p>
+                  <MessageSquare className="w-12 h-12 sm:w-16 sm:h-16 text-slate-300 mx-auto mb-3 sm:mb-4" />
+                  <p className="text-sm sm:text-base">Sélectionnez un ticket pour voir la conversation</p>
                 </div>
               </div>
             )}
