@@ -283,100 +283,104 @@ export default function PhotoSubmissionsPage() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl">
-              <Camera className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Photos Reçues</h1>
-              <p className="text-slate-600">Photos envoyées par les dentistes</p>
+    <div className="p-3 md:p-6 max-w-7xl mx-auto">
+      <div className="mb-4 md:mb-8">
+        <div className="flex flex-col gap-3 md:gap-4 mb-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 md:gap-3">
+              <div className="p-2 md:p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg md:rounded-xl">
+                <Camera className="w-5 h-5 md:w-6 md:h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg md:text-2xl font-bold text-slate-900">Photos Reçues</h1>
+                <p className="text-xs md:text-sm text-slate-600 hidden sm:block">Photos envoyées par les dentistes</p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
             <button
               onClick={loadSubmissions}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base whitespace-nowrap"
               title="Actualiser la liste"
             >
-              <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
-              Actualiser
+              <RefreshCw className={`w-4 h-4 md:w-5 md:h-5 ${loading ? 'animate-spin' : ''}`} />
+              <span className="hidden sm:inline">Actualiser</span>
             </button>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition"
+              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition text-sm md:text-base whitespace-nowrap"
             >
-              <Plus className="w-5 h-5" />
-              Ajouter une photo
+              <Plus className="w-4 h-4 md:w-5 md:h-5" />
+              Ajouter
             </button>
           </div>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 flex items-start gap-3 mb-6">
-          <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-800">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 flex items-start gap-2 md:gap-3 mb-4 md:mb-6">
+          <Info className="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+          <div className="text-xs md:text-sm text-blue-800">
             <p className="font-medium mb-1">Conservation des photos</p>
             <p>Les photos sont automatiquement supprimées après 1 mois pour optimiser le stockage. Pensez à télécharger ou sauvegarder les images importantes.</p>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col gap-3 md:gap-4">
           <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Rechercher par dentiste ou patient..."
-              className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-9 md:pl-10 pr-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">Tous les statuts</option>
-            <option value="pending">En attente</option>
-            <option value="viewed">Vue</option>
-            <option value="completed">Terminé</option>
-            <option value="rejected">Rejeté</option>
-          </select>
+          <div className="grid grid-cols-2 gap-3">
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="px-3 md:px-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="all">Tous les statuts</option>
+              <option value="pending">En attente</option>
+              <option value="viewed">Vue</option>
+              <option value="completed">Terminé</option>
+              <option value="rejected">Rejeté</option>
+            </select>
 
-          <select
-            value={groupBy}
-            onChange={(e) => setGroupBy(e.target.value as 'dentist' | 'patient')}
-            className="px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="dentist">Grouper par dentiste</option>
-            <option value="patient">Grouper par patient</option>
-          </select>
+            <select
+              value={groupBy}
+              onChange={(e) => setGroupBy(e.target.value as 'dentist' | 'patient')}
+              className="px-3 md:px-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="dentist">Grouper par dentiste</option>
+              <option value="patient">Grouper par patient</option>
+            </select>
+          </div>
         </div>
       </div>
 
       {filteredSubmissions.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-2xl border border-slate-200">
-          <Camera className="w-16 h-16 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucune photo reçue</h3>
-          <p className="text-slate-600">Les photos envoyées par les dentistes apparaîtront ici</p>
+        <div className="text-center py-8 md:py-12 bg-white rounded-xl md:rounded-2xl border border-slate-200">
+          <Camera className="w-12 h-12 md:w-16 md:h-16 text-slate-300 mx-auto mb-3 md:mb-4" />
+          <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-2">Aucune photo reçue</h3>
+          <p className="text-sm md:text-base text-slate-600 px-4">Les photos envoyées par les dentistes apparaîtront ici</p>
         </div>
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-4 md:space-y-6">
           {Object.entries(groupedSubmissions).map(([group, items], index) => {
             const colors = getGroupColor(index);
             return (
-            <div key={group} className={`bg-white rounded-2xl shadow-lg border-2 ${colors.border} overflow-hidden hover:shadow-xl transition-shadow`}>
-              <div className={`bg-gradient-to-r ${colors.gradient} px-6 py-4 border-b border-white/30`}>
-                <h2 className="text-lg font-bold text-white drop-shadow-sm">{group}</h2>
-                <p className="text-sm text-white/90">{items.length} photo{items.length > 1 ? 's' : ''}</p>
+            <div key={group} className={`bg-white rounded-xl md:rounded-2xl shadow-lg border-2 ${colors.border} overflow-hidden hover:shadow-xl transition-shadow`}>
+              <div className={`bg-gradient-to-r ${colors.gradient} px-4 md:px-6 py-3 md:py-4 border-b border-white/30`}>
+                <h2 className="text-base md:text-lg font-bold text-white drop-shadow-sm">{group}</h2>
+                <p className="text-xs md:text-sm text-white/90">{items.length} photo{items.length > 1 ? 's' : ''}</p>
               </div>
 
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              <div className="p-3 md:p-6">
+                <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                   {items.map((submission) => {
                     const StatusIcon = getStatusIcon(submission.status);
                     return (
@@ -393,46 +397,48 @@ export default function PhotoSubmissionsPage() {
                             alt={`Photo - ${submission.patient_name}`}
                             className="w-full h-full object-cover"
                           />
-                          <div className={`absolute top-2 right-2 px-2 py-1 rounded-lg border text-xs font-semibold flex items-center gap-1 ${getStatusColor(submission.status)}`}>
-                            <StatusIcon className="w-3 h-3" />
-                            {getStatusLabel(submission.status)}
+                          <div className={`absolute top-1.5 md:top-2 right-1.5 md:right-2 px-1.5 md:px-2 py-0.5 md:py-1 rounded-md md:rounded-lg border text-[10px] md:text-xs font-semibold flex items-center gap-0.5 md:gap-1 ${getStatusColor(submission.status)}`}>
+                            <StatusIcon className="w-2.5 h-2.5 md:w-3 md:h-3" />
+                            <span className="hidden sm:inline">{getStatusLabel(submission.status)}</span>
                           </div>
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               deleteSubmission(submission.id);
                             }}
-                            className="absolute top-2 left-2 p-2 bg-red-500 text-white rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                            className="absolute top-1.5 md:top-2 left-1.5 md:left-2 p-1.5 md:p-2 bg-red-500 text-white rounded-md md:rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 active:scale-95"
                             title="Supprimer la photo"
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                           </button>
                         </div>
 
-                        <div className="p-4">
-                          <div className="flex items-center gap-2 mb-2">
-                            <User className="w-4 h-4 text-slate-400" />
-                            <span className="font-medium text-slate-900 text-sm truncate">
+                        <div className="p-3 md:p-4">
+                          <div className="flex items-center gap-1.5 md:gap-2 mb-1.5 md:mb-2">
+                            <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400 flex-shrink-0" />
+                            <span className="font-medium text-slate-900 text-xs md:text-sm truncate">
                               {submission.patient_name}
                             </span>
                           </div>
 
                           {groupBy === 'patient' && (
-                            <div className="flex items-center gap-2 mb-2">
-                              <User className="w-4 h-4 text-slate-400" />
-                              <span className="text-xs text-slate-600 truncate">
+                            <div className="flex items-center gap-1.5 md:gap-2 mb-1.5 md:mb-2">
+                              <User className="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400 flex-shrink-0" />
+                              <span className="text-[10px] md:text-xs text-slate-600 truncate">
                                 Dr. {submission.dentist_accounts?.name}
                               </span>
                             </div>
                           )}
 
-                          <div className="flex items-center gap-2 text-xs text-slate-500">
-                            <Calendar className="w-3 h-3" />
-                            {new Date(submission.created_at).toLocaleDateString('fr-FR', {
-                              day: '2-digit',
-                              month: 'short',
-                              year: 'numeric'
-                            })}
+                          <div className="flex items-center gap-1.5 md:gap-2 text-[10px] md:text-xs text-slate-500">
+                            <Calendar className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">
+                              {new Date(submission.created_at).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </span>
                           </div>
                         </div>
                       </div>
