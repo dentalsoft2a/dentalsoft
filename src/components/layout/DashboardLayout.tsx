@@ -119,7 +119,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-30 px-4 py-4 shadow-md h-[72px]">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-30 px-4 shadow-md" style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: '1rem', height: 'calc(72px + env(safe-area-inset-top))' }}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button
@@ -269,7 +269,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
         />
       )}
 
-      <main className="lg:pl-64 flex-1 overflow-y-auto mt-[72px] lg:mt-0">
+      <main className="lg:pl-64 flex-1 overflow-y-auto lg:mt-0" style={{ marginTop: 'calc(72px + env(safe-area-inset-top))' }}>
         <div className="p-4 sm:p-6 lg:p-8 min-h-full">
           {showSubscriptionWarning && (
             <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg shadow-md">
