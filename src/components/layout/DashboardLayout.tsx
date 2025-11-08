@@ -23,6 +23,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
 import { supabase } from '../../lib/supabase';
 import DentalCloudLogo from '../common/DentalCloudLogo';
+import PWAInstallPrompt from '../common/PWAInstallPrompt';
 
 function getAppVersion(): string {
   const cachedVersion = localStorage.getItem('app_version');
@@ -299,6 +300,8 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
           {children}
         </div>
       </main>
+
+      <PWAInstallPrompt />
     </div>
   );
 }
