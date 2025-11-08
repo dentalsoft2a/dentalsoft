@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users } from 'lucide-react';
+import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users, Shield } from 'lucide-react';
 import EmployeeManagement from './EmployeeManagement';
+import { FiscalPeriodsManager } from '../compliance/FiscalPeriodsManager';
+import { AuditLogViewer } from '../compliance/AuditLogViewer';
+import { ComplianceCertificate } from '../compliance/ComplianceCertificate';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'employees'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'employees' | 'compliance'>('profile');
+  const [complianceSubTab, setComplianceSubTab] = useState<'certificate' | 'periods' | 'audit'>('certificate');
   const { profile, updateProfile, userEmail } = useAuth();
   const [formData, setFormData] = useState({
     first_name: profile?.first_name || '',
@@ -113,10 +117,64 @@ export default function SettingsPage() {
               <Users className="w-4 h-4 sm:w-5 sm:h-5" />
               Employés
             </button>
+            <button
+              onClick={() => setActiveTab('compliance')}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3 font-semibold transition-all whitespace-nowrap text-sm sm:text-base ${
+                activeTab === 'compliance'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
+              Conformité
+            </button>
           </div>
         </div>
 
-        {activeTab === 'employees' ? (
+        {activeTab === 'compliance' ? (
+          <div className="space-y-6">
+            {/* Sous-onglets de conformité */}
+            <div className="bg-white rounded-lg border border-slate-200 p-2">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setComplianceSubTab('certificate')}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                    complianceSubTab === 'certificate'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  Attestation
+                </button>
+                <button
+                  onClick={() => setComplianceSubTab('periods')}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                    complianceSubTab === 'periods'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  Périodes fiscales
+                </button>
+                <button
+                  onClick={() => setComplianceSubTab('audit')}
+                  className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                    complianceSubTab === 'audit'
+                      ? 'bg-primary-500 text-white'
+                      : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
+                  }`}
+                >
+                  Journal d'audit
+                </button>
+              </div>
+            </div>
+
+            {/* Contenu des sous-onglets */}
+            {complianceSubTab === 'certificate' && <ComplianceCertificate />}
+            {complianceSubTab === 'periods' && <FiscalPeriodsManager />}
+            {complianceSubTab === 'audit' && <AuditLogViewer />}
+          </div>
+        ) : activeTab === 'employees' ? (
           <EmployeeManagement />
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
