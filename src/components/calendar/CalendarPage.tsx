@@ -32,7 +32,11 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [deliveries, setDeliveries] = useState<DeliveryWithDentist[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | null>(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryWithDentist | null>(null);
 
   useLockScroll(!!selectedDelivery);
