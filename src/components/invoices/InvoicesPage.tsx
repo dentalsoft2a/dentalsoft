@@ -374,18 +374,20 @@ export default function InvoicesPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Factures</h1>
-          <p className="text-slate-600 mt-2">Gérez vos factures mensuelles</p>
+      <div className="mb-6 md:mb-8 animate-fade-in">
+        <div className="flex items-start md:items-center justify-between gap-3 mb-4 md:mb-0">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Factures</h1>
+            <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez vos factures mensuelles</p>
+          </div>
         </div>
         <button
           onClick={() => setShowGenerateModal(true)}
           disabled={!hasValidSubscription && !isSuperAdmin}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-primary-700 hover:to-cyan-700 transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+          className="w-full md:w-auto flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:scale-100 text-sm md:text-base font-medium"
         >
-          <Plus className="w-5 h-5" />
-          Générer une facture
+          <Plus className="w-5 h-5 flex-shrink-0" />
+          <span>Générer une facture</span>
         </button>
       </div>
 
