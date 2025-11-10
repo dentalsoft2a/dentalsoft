@@ -340,7 +340,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
         const deliveryDate = new Date(delivery.date);
         deliveryDate.setHours(0, 0, 0, 0);
         return deliveryDate >= now && deliveryDate <= twoDaysFromNow;
-      });
+      }).slice(0, 6);
 
       const inProgress = deliveriesWithDentist.filter(delivery =>
         delivery.status === 'in_progress'
