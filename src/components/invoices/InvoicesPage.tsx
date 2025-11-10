@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Search, FileDown, CreditCard, Send } from 'lucide-react';
+import { Plus, Edit, Search, FileDown, CreditCard, Send, FileText } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -175,6 +175,10 @@ export default function InvoicesPage() {
       console.error('Error generating PDF:', error);
       alert('Erreur lors de la génération du PDF');
     }
+  };
+
+  const handleCreateCreditNote = (invoice: Invoice) => {
+    window.location.href = `/credit-notes?invoice_id=${invoice.id}`;
   };
 
   const handleSendEmail = async (invoice: Invoice) => {
@@ -353,6 +357,13 @@ export default function InvoicesPage() {
                             <CreditCard className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => handleCreateCreditNote(invoice)}
+                            className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200"
+                            title="Créer un avoir"
+                          >
+                            <FileText className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => handleSendEmail(invoice)}
                             className="p-2 text-cyan-600 hover:bg-cyan-50 rounded-lg transition-all duration-200"
                             title="Envoyer par email"
@@ -409,6 +420,13 @@ export default function InvoicesPage() {
                     >
                       <CreditCard className="w-3.5 h-3.5" />
                       Paiements
+                    </button>
+                    <button
+                      onClick={() => handleCreateCreditNote(invoice)}
+                      className="p-2 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg transition-all active:scale-95"
+                      title="Créer un avoir"
+                    >
+                      <FileText className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleSendEmail(invoice)}
