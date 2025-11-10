@@ -101,8 +101,35 @@ export default function ProformasPage() {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce proforma ?')) return;
 
     try {
+      // Get all proforma items to find associated delivery notes
+      const { data: proformaItems, error: itemsError } = await supabase
+        .from('proforma_items')
+        .select('delivery_note_id')
+        .eq('proforma_id', id);
+
+      if (itemsError) throw itemsError;
+
+      // Get unique delivery note IDs
+      const deliveryNoteIds = [...new Set(
+        proformaItems
+          ?.map(item => item.delivery_note_id)
+          .filter(id => id != null) || []
+      )];
+
+      // Delete the proforma
       const { error } = await supabase.from('proformas').delete().eq('id', id);
       if (error) throw error;
+
+      // Reset delivery notes status back to 'in_progress'
+      if (deliveryNoteIds.length > 0) {
+        const { error: updateError } = await supabase
+          .from('delivery_notes')
+          .update({ status: 'in_progress' })
+          .in('id', deliveryNoteIds);
+
+        if (updateError) console.error('Error updating delivery notes status:', updateError);
+      }
+
       await loadProformas();
     } catch (error) {
       console.error('Error deleting proforma:', error);
