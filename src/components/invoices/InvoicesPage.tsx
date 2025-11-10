@@ -380,16 +380,18 @@ export default function InvoicesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => {
-                              setSelectedInvoice(invoice);
-                              setShowPaymentModal(true);
-                            }}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                            title="Gérer les paiements"
-                          >
-                            <CreditCard className="w-4 h-4" />
-                          </button>
+                          {invoice.status !== 'credit_note' && (
+                            <button
+                              onClick={() => {
+                                setSelectedInvoice(invoice);
+                                setShowPaymentModal(true);
+                              }}
+                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                              title="Gérer les paiements"
+                            >
+                              <CreditCard className="w-4 h-4" />
+                            </button>
+                          )}
                           <button
                             onClick={() => handleViewCreditNotes(invoice)}
                             className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
