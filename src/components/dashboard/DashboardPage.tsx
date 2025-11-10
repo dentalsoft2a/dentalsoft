@@ -770,19 +770,19 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
   return (
     <div>
       <div className="mb-6 md:mb-8 animate-fade-in">
-        <div className="flex items-start md:items-center justify-between gap-3 mb-4 md:mb-0">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-slate-900 via-primary-900 to-slate-900 bg-clip-text text-transparent">Tableau de bord</h1>
             <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Vue d'ensemble de votre activité</p>
           </div>
+          <button
+            onClick={() => setShowReportModal(true)}
+            className="w-full md:w-auto flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
+          >
+            <BarChart3 className="w-5 h-5 flex-shrink-0" />
+            <span>Générer un rapport</span>
+          </button>
         </div>
-        <button
-          onClick={() => setShowReportModal(true)}
-          className="w-full md:w-auto flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
-        >
-          <BarChart3 className="w-5 h-5 flex-shrink-0" />
-          <span>Générer un rapport</span>
-        </button>
       </div>
 
       <AlertBanner />
