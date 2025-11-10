@@ -193,7 +193,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
           .eq('user_id', user.id),
         supabase
           .from('invoices')
-          .select('total')
+          .select('id, total')
           .eq('user_id', user.id)
           .eq('month', currentMonth)
           .eq('year', currentYear),
@@ -215,7 +215,24 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
           .lte('date', twoDaysFromNow.toISOString().split('T')[0]),
       ]);
 
-      const monthlyRevenue = revenueRes.data?.reduce((sum, invoice) => sum + Number(invoice.total), 0) || 0;
+      // Calculate monthly revenue taking into account correction credit notes
+      let monthlyRevenue = 0;
+      if (revenueRes.data) {
+        for (const invoice of revenueRes.data) {
+          let invoiceAmount = Number(invoice.total);
+
+          // Get correction credit notes for this invoice
+          const { data: corrections } = await supabase
+            .from('credit_notes')
+            .select('total')
+            .eq('corrects_invoice_id', invoice.id)
+            .eq('type', 'correction')
+            .eq('is_correction', true);
+
+          const correctionsTotal = corrections?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+          monthlyRevenue += (invoiceAmount - correctionsTotal);
+        }
+      }
 
       setStats({
         proformasCount: proformasRes.count || 0,
@@ -476,30 +493,48 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       const { data: deliveryNotes, error: deliveryError } = await deliveryNotesQuery;
       if (deliveryError) throw deliveryError;
 
-      const totalRevenue = invoices?.reduce((sum, inv) => sum + Number(inv.total), 0) || 0;
+      // Calculate total revenue taking correction credit notes into account
+      let totalRevenue = 0;
+      const dentistRevenueMap = new Map<string, number>();
+      const monthRevenueMap = new Map<string, number>();
+
+      if (invoices) {
+        for (const invoice of invoices) {
+          let invoiceAmount = Number(invoice.total);
+
+          // Get correction credit notes for this invoice
+          const { data: corrections } = await supabase
+            .from('credit_notes')
+            .select('total')
+            .eq('corrects_invoice_id', invoice.id)
+            .eq('type', 'correction')
+            .eq('is_correction', true);
+
+          const correctionsTotal = corrections?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+          const netAmount = invoiceAmount - correctionsTotal;
+          totalRevenue += netAmount;
+
+          // Update dentist revenue map
+          invoice.invoice_proformas?.forEach((ip: any) => {
+            const dentistName = ip.proforma?.dentist?.name || 'Inconnu';
+            const current = dentistRevenueMap.get(dentistName) || 0;
+            dentistRevenueMap.set(dentistName, current + netAmount / (invoice.invoice_proformas?.length || 1));
+          });
+
+          // Update month revenue map
+          const date = new Date(invoice.created_at);
+          const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          const current = monthRevenueMap.get(monthKey) || 0;
+          monthRevenueMap.set(monthKey, current + netAmount);
+        }
+      }
+
       const totalInvoices = invoices?.length || 0;
       const totalDeliveryNotes = deliveryNotes?.length || 0;
-
-      const dentistRevenueMap = new Map<string, number>();
-      invoices?.forEach(invoice => {
-        invoice.invoice_proformas?.forEach((ip: any) => {
-          const dentistName = ip.proforma?.dentist?.name || 'Inconnu';
-          const current = dentistRevenueMap.get(dentistName) || 0;
-          dentistRevenueMap.set(dentistName, current + Number(invoice.total) / (invoice.invoice_proformas?.length || 1));
-        });
-      });
 
       const revenueByDentist = Array.from(dentistRevenueMap.entries())
         .map(([dentist, revenue]) => ({ dentist, revenue }))
         .sort((a, b) => b.revenue - a.revenue);
-
-      const monthRevenueMap = new Map<string, number>();
-      invoices?.forEach(invoice => {
-        const date = new Date(invoice.created_at);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-        const current = monthRevenueMap.get(monthKey) || 0;
-        monthRevenueMap.set(monthKey, current + Number(invoice.total));
-      });
 
       const revenueByMonth = Array.from(monthRevenueMap.entries())
         .map(([month, revenue]) => ({ month, revenue }))
