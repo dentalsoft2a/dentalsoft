@@ -366,19 +366,21 @@ export default function ProformasPage() {
 
   return (
     <div>
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Proformas</h1>
-          <p className="text-slate-600 mt-2">Gérez vos devis et proformas</p>
+      <div className="mb-6 md:mb-8">
+        <div className="flex items-center justify-between mb-4 md:mb-0">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Proformas</h1>
+            <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez vos devis et proformas</p>
+          </div>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 md:gap-3 mt-4 md:mt-0">
           <button
             onClick={() => setShowBulkCreateModal(true)}
             disabled={!hasValidSubscription && !isSuperAdmin}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:scale-102 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+            className="flex-1 md:flex-none flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:scale-102 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg text-sm md:text-base"
           >
-            <Receipt className="w-5 h-5" />
-            Création en lot
+            <Receipt className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+            <span className="truncate">Création en lot</span>
           </button>
           <button
             onClick={() => {
@@ -386,10 +388,10 @@ export default function ProformasPage() {
               setShowModal(true);
             }}
             disabled={!hasValidSubscription && !isSuperAdmin}
-            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:scale-102 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+            className="flex-1 md:flex-none flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:scale-102 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg text-sm md:text-base"
           >
-            <Plus className="w-5 h-5" />
-            Nouveau proforma
+            <Plus className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+            <span className="truncate">Nouveau</span>
           </button>
         </div>
       </div>
@@ -555,47 +557,52 @@ export default function ProformasPage() {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-                    {proforma.status !== 'invoiced' && (
+                  <div className="flex flex-col gap-2 pt-3 border-t border-slate-100">
+                    <div className="flex items-center gap-2">
+                      {proforma.status !== 'invoiced' && (
+                        <button
+                          onClick={() => handleConvertToInvoice(proforma)}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                        >
+                          <Receipt className="w-4 h-4" />
+                          Facturer
+                        </button>
+                      )}
                       <button
-                        onClick={() => handleConvertToInvoice(proforma)}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-cyan-50 text-cyan-700 hover:bg-cyan-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                        onClick={() => handleGeneratePDF(proforma, false)}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-all active:scale-95"
                       >
-                        <Receipt className="w-3.5 h-3.5" />
-                        Facturer
+                        <FileDown className="w-4 h-4" />
+                        PDF
                       </button>
-                    )}
-                    <button
-                      onClick={() => handleGeneratePDF(proforma, false)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-all active:scale-95"
-                    >
-                      <FileDown className="w-3.5 h-3.5" />
-                      PDF
-                    </button>
-                    <button
-                      onClick={() => handleSendEmail(proforma)}
-                      className="p-2 bg-violet-50 text-violet-700 hover:bg-violet-100 rounded-lg transition-all active:scale-95"
-                    >
-                      <Send className="w-4 h-4" />
-                    </button>
+                      <button
+                        onClick={() => handleSendEmail(proforma)}
+                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-violet-50 text-violet-700 hover:bg-violet-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                      >
+                        <Send className="w-4 h-4" />
+                        Email
+                      </button>
+                    </div>
                     {proforma.status !== 'invoiced' && (
-                      <>
+                      <div className="flex items-center gap-2">
                         <button
                           onClick={() => {
                             setEditingProforma(proforma.id);
                             setShowModal(true);
                           }}
-                          className="p-2 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg transition-all active:scale-95"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg text-xs font-medium transition-all active:scale-95"
                         >
                           <Edit className="w-4 h-4" />
+                          Modifier
                         </button>
                         <button
                           onClick={() => handleDelete(proforma.id)}
-                          className="p-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg transition-all active:scale-95"
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg text-xs font-medium transition-all active:scale-95"
                         >
                           <Trash2 className="w-4 h-4" />
+                          Supprimer
                         </button>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
