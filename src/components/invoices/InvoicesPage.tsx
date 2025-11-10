@@ -880,8 +880,6 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
 
 
   const handleApplyCreditNote = async (creditNoteId: string) => {
-    if (!confirm("Voulez-vous appliquer cet avoir à cette facture ?")) return;
-
     setLoading(true);
     try {
       // Get the credit note
@@ -894,12 +892,42 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       if (fetchError) throw fetchError;
       if (!creditNote) throw new Error("Avoir introuvable");
 
+      // Calculate amounts
+      const creditNoteAmount = Number(creditNote.total);
+      const creditNoteSubtotal = Number(creditNote.subtotal);
+      const invoiceRemaining = Number(invoice.total) - totalPaid;
+
+      // Determine how much to apply
+      const amountToApply = Math.min(creditNoteAmount, invoiceRemaining);
+      const remainingCredit = creditNoteAmount - amountToApply;
+
+      // Calculate subtotal for the amount to apply (proportional)
+      const subtotalToApply = (creditNoteSubtotal / creditNoteAmount) * amountToApply;
+      const remainingSubtotal = creditNoteSubtotal - subtotalToApply;
+
+      // Confirm with user
+      if (remainingCredit > 0) {
+        const message = `Cette facture nécessite ${invoiceRemaining.toFixed(2)} € mais l'avoir est de ${creditNoteAmount.toFixed(2)} €.\n\n` +
+          `- Montant appliqué : ${amountToApply.toFixed(2)} €\n` +
+          `- Nouvel avoir créé : ${remainingCredit.toFixed(2)} €\n\n` +
+          `Voulez-vous continuer ?`;
+        if (!confirm(message)) {
+          setLoading(false);
+          return;
+        }
+      } else {
+        if (!confirm(`Voulez-vous appliquer cet avoir de ${amountToApply.toFixed(2)} € à cette facture ?`)) {
+          setLoading(false);
+          return;
+        }
+      }
+
       // Create a payment for this credit note (trigger will update invoice status automatically)
       const { error: paymentError } = await supabase
         .from('invoice_payments')
         .insert({
           invoice_id: invoice.id,
-          amount: Number(creditNote.total),
+          amount: amountToApply,
           payment_method: 'credit_note',
           payment_date: new Date().toISOString().split('T')[0],
           notes: `Avoir appliqué: ${creditNote.credit_note_number}`,
@@ -908,7 +936,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
 
       if (paymentError) throw paymentError;
 
-      // Mark credit note as used
+      // Mark original credit note as used
       const { error: updateError } = await supabase
         .from('credit_notes')
         .update({ used: true })
@@ -916,7 +944,48 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
 
       if (updateError) throw updateError;
 
-      alert("Avoir appliqué avec succès!");
+      // If there's remaining credit, create a new credit note
+      if (remainingCredit > 0.01) {
+        // Get the next credit note number
+        const { data: lastCreditNote } = await supabase
+          .from('credit_notes')
+          .select('credit_note_number')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        let nextNumber = 1;
+        if (lastCreditNote?.credit_note_number) {
+          const match = lastCreditNote.credit_note_number.match(/AV-(\d+)/);
+          if (match) {
+            nextNumber = parseInt(match[1]) + 1;
+          }
+        }
+        const newCreditNoteNumber = `AV-${String(nextNumber).padStart(4, '0')}`;
+
+        // Create new credit note with remaining amount
+        const { error: newCreditNoteError } = await supabase
+          .from('credit_notes')
+          .insert({
+            credit_note_number: newCreditNoteNumber,
+            date: new Date().toISOString().split('T')[0],
+            dentist_id: creditNote.dentist_id,
+            subtotal: remainingSubtotal,
+            tax_rate: creditNote.tax_rate,
+            tax_amount: remainingCredit - remainingSubtotal,
+            total: remainingCredit,
+            reason: `Solde de l'avoir ${creditNote.credit_note_number} (montant initial: ${creditNoteAmount.toFixed(2)} €, appliqué: ${amountToApply.toFixed(2)} €)`,
+            used: false,
+            user_id: user!.id,
+          });
+
+        if (newCreditNoteError) throw newCreditNoteError;
+
+        alert(`Avoir appliqué avec succès!\n\nUn nouvel avoir de ${remainingCredit.toFixed(2)} € a été créé: ${newCreditNoteNumber}`);
+      } else {
+        alert("Avoir appliqué avec succès!");
+      }
+
       onSave();
     } catch (error) {
       console.error('Error applying credit note:', error);
