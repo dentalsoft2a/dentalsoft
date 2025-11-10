@@ -1,5 +1,18 @@
 export async function checkAndClearCache() {
   try {
+    // Vérifier uniquement toutes les 5 minutes (pas à chaque chargement)
+    const lastCheck = localStorage.getItem('last_version_check');
+    const now = Date.now();
+    const fiveMinutes = 5 * 60 * 1000;
+
+    if (lastCheck && (now - parseInt(lastCheck)) < fiveMinutes) {
+      // Pas besoin de vérifier, c'est trop récent
+      return;
+    }
+
+    // Mettre à jour le timestamp de dernière vérification
+    localStorage.setItem('last_version_check', now.toString());
+
     const response = await fetch('/version.json', {
       cache: 'no-cache',
       headers: {
@@ -25,7 +38,7 @@ export async function checkAndClearCache() {
       console.log('New version detected, clearing cache...');
 
       // Clear localStorage (keep only essential items)
-      const keysToKeep = ['supabase.auth.token'];
+      const keysToKeep = ['supabase.auth.token', 'last_version_check'];
       const storage: { [key: string]: string } = {};
 
       keysToKeep.forEach(key => {
