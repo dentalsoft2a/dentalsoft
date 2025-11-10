@@ -837,7 +837,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       setTotalCreditNotes(creditNotesTotal);
 
       const totalPaid = data?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-      const remaining = Number(invoice.total) - totalPaid - creditNotesTotal;
+      const remaining = Number(invoice.total) - totalPaid;
       setAmount(remaining > 0 ? remaining.toFixed(2) : '');
     } catch (error) {
       console.error('Error loading payments:', error);
@@ -868,19 +868,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       setPaymentDate(new Date().toISOString().split('T')[0]);
       await loadPayments();
 
-      const totalPaid = [...payments, { amount: parseFloat(amount) }].reduce(
-        (sum, p) => sum + Number(p.amount),
-        0
-      );
-      const invoiceTotal = Number(invoice.total);
-      const totalWithCreditNotes = totalPaid + totalCreditNotes;
-      const newStatus = totalWithCreditNotes >= invoiceTotal ? 'paid' : totalWithCreditNotes > 0 ? 'partial' : 'draft';
-
-      await supabase
-        .from('invoices')
-        .update({ status: newStatus })
-        .eq('id', invoice.id);
-
+      // The trigger update_invoice_status() will automatically update the invoice status
       onSave();
     } catch (error) {
       console.error('Error adding payment:', error);
@@ -939,7 +927,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
   };
 
   const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-  const remaining = Number(invoice.total) - totalPaid - totalCreditNotes;
+  const remaining = Number(invoice.total) - totalPaid;
 
   const getPaymentMethodLabel = (method: string) => {
     const labels: Record<string, string> = {
