@@ -8,12 +8,13 @@ Toutes les migrations de conformité anti-fraude TVA ont été **appliquées ave
 
 ## ✅ Ce qui a été fait
 
-### 🗄️ Migrations appliquées (4/4)
+### 🗄️ Migrations appliquées (5/5)
 
 1. ✅ **create_audit_log_system** - Système de journal d'audit inaltérable
 2. ✅ **create_sealing_and_periods** - Scellement et périodes fiscales
 3. ✅ **create_certificates_and_archives** - Certificats numériques et archivage
 4. ✅ **alter_invoices_and_credit_notes** - Modification des factures et avoirs
+5. ✅ **add_credit_note_paid_status** - Statut combiné "Avoir + Payée" pour factures avec corrections payées
 
 ### 📋 Tables créées (5/5)
 

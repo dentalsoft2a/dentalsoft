@@ -313,6 +313,7 @@ export default function InvoicesPage() {
       paid: 'bg-green-100 text-green-700',
       partial: 'bg-orange-100 text-orange-700',
       credit_note: 'bg-purple-100 text-purple-700',
+      credit_note_paid: 'bg-gradient-to-r from-purple-100 to-green-100 text-purple-700',
     };
     const labels = {
       draft: 'Non payée',
@@ -320,6 +321,7 @@ export default function InvoicesPage() {
       paid: 'Payée',
       partial: 'Partiellement payée',
       credit_note: 'Avoir',
+      credit_note_paid: 'Avoir + Payée',
     };
     return (
       <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status as keyof typeof styles] || 'bg-slate-100 text-slate-700'}`}>
@@ -418,7 +420,7 @@ export default function InvoicesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {invoice.status !== 'credit_note' && (
+                          {invoice.status !== 'credit_note' && invoice.status !== 'credit_note_paid' && invoice.status !== 'paid' && (
                             <button
                               onClick={() => {
                                 setSelectedInvoice(invoice);
