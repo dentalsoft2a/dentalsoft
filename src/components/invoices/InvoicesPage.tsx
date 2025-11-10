@@ -457,7 +457,7 @@ export default function InvoicesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
-                          {invoice.status !== 'credit_note' && invoice.status !== 'credit_note_paid' && invoice.status !== 'paid' && (
+                          {invoice.status !== 'credit_note' && invoice.status !== 'credit_note_paid' && (
                             <button
                               onClick={() => {
                                 setSelectedInvoice(invoice);
