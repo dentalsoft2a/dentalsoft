@@ -18,23 +18,31 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
-      Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-      {
-        global: {
-          headers: { Authorization: req.headers.get("Authorization")! },
-        },
-      }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
 
-    // Vérifier l'authentification
-    const {
-      data: { user },
-      error: authError,
-    } = await supabaseClient.auth.getUser();
+    // Récupérer l'utilisateur depuis le header Authorization
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized - No authorization header" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    // Extraire le token JWT
+    const token = authHeader.replace("Bearer ", "");
+
+    // Vérifier l'utilisateur avec le service role key
+    const { data: { user }, error: authError } = await supabaseClient.auth.getUser(token);
 
     if (authError || !user) {
+      console.error("Auth error:", authError);
       return new Response(
-        JSON.stringify({ error: "Unauthorized" }),
+        JSON.stringify({ error: "Unauthorized - Invalid token", details: authError?.message }),
         {
           status: 401,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -45,13 +53,24 @@ Deno.serve(async (req: Request) => {
     // Récupérer le profil du laboratoire
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
-      .select("*")
+      .select("laboratory_name")
       .eq("id", user.id)
       .maybeSingle();
 
-    if (profileError || !profile) {
+    if (profileError) {
+      console.error("Profile error:", profileError);
       return new Response(
-        JSON.stringify({ error: "Profile not found" }),
+        JSON.stringify({ error: "Profile not found", details: profileError.message }),
+        {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    if (!profile) {
+      return new Response(
+        JSON.stringify({ error: "Profile not found for user" }),
         {
           status: 404,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -60,11 +79,22 @@ Deno.serve(async (req: Request) => {
     }
 
     // Vérifier si un certificat existe déjà
-    const { data: existingCert } = await supabaseClient
+    const { data: existingCert, error: checkError } = await supabaseClient
       .from("digital_certificates")
       .select("id")
       .eq("laboratory_id", user.id)
       .maybeSingle();
+
+    if (checkError) {
+      console.error("Check certificate error:", checkError);
+      return new Response(
+        JSON.stringify({ error: "Error checking existing certificate", details: checkError.message }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     if (existingCert) {
       return new Response(
@@ -77,18 +107,28 @@ Deno.serve(async (req: Request) => {
     }
 
     // Générer une paire de clés RSA
-    // Note: En production, utiliser une vraie génération RSA avec WebCrypto API
-    // Pour cette démo, on simule
-    const keyPair = await crypto.subtle.generateKey(
-      {
-        name: "RSA-PSS",
-        modulusLength: 4096,
-        publicExponent: new Uint8Array([1, 0, 1]),
-        hash: "SHA-256",
-      },
-      true,
-      ["sign", "verify"]
-    );
+    let keyPair;
+    try {
+      keyPair = await crypto.subtle.generateKey(
+        {
+          name: "RSA-PSS",
+          modulusLength: 4096,
+          publicExponent: new Uint8Array([1, 0, 1]),
+          hash: "SHA-256",
+        },
+        true,
+        ["sign", "verify"]
+      );
+    } catch (keyError) {
+      console.error("Key generation error:", keyError);
+      return new Response(
+        JSON.stringify({ error: "Failed to generate keys", details: keyError.message }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
 
     // Exporter la clé publique
     const publicKeyBuffer = await crypto.subtle.exportKey("spki", keyPair.publicKey);
@@ -99,7 +139,6 @@ Deno.serve(async (req: Request) => {
     const privateKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(privateKeyBuffer)));
 
     // En production, la clé privée devrait être chiffrée avec AES-256
-    // Pour cette démo, on stocke directement (à améliorer en production)
     const privateKeyEncrypted = privateKeyBase64;
 
     // Générer un numéro de série
@@ -112,7 +151,7 @@ Deno.serve(async (req: Request) => {
     const validUntil = new Date();
     validUntil.setFullYear(validUntil.getFullYear() + 3); // Valide 3 ans
 
-    const subject = `CN=${profile.laboratory_name}, O=DentalCloud, C=FR`;
+    const subject = `CN=${profile.laboratory_name || 'Laboratory'}, O=DentalCloud, C=FR`;
     const issuer = `CN=DentalCloud Self-Signed CA, O=DentalCloud, C=FR`;
 
     const { data: certificate, error: certError } = await supabaseClient
@@ -135,7 +174,12 @@ Deno.serve(async (req: Request) => {
     if (certError) {
       console.error("Error creating certificate:", certError);
       return new Response(
-        JSON.stringify({ error: "Failed to create certificate", details: certError }),
+        JSON.stringify({
+          error: "Failed to create certificate",
+          details: certError.message,
+          hint: certError.hint,
+          code: certError.code
+        }),
         {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -164,7 +208,11 @@ Deno.serve(async (req: Request) => {
   } catch (error) {
     console.error("Unexpected error:", error);
     return new Response(
-      JSON.stringify({ error: "Internal server error", details: error.message }),
+      JSON.stringify({
+        error: "Internal server error",
+        details: error.message,
+        stack: error.stack
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
