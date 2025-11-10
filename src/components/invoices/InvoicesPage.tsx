@@ -625,12 +625,26 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
     if (!user) return '';
 
     try {
-      const { count } = await supabase
+      // Get the last invoice number for this year to avoid duplicates
+      const { data: existingInvoices, error: fetchError } = await supabase
         .from('invoices')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id);
+        .select('invoice_number')
+        .eq('user_id', user.id)
+        .eq('year', selectedYear)
+        .order('invoice_number', { ascending: false })
+        .limit(1);
 
-      const nextNumber = (count || 0) + 1;
+      if (fetchError) throw fetchError;
+
+      let nextNumber = 1;
+      if (existingInvoices && existingInvoices.length > 0) {
+        const lastNumber = existingInvoices[0].invoice_number;
+        const match = lastNumber.match(/FACT-\d{4}-(\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+
       return `FACT-${selectedYear}-${String(nextNumber).padStart(4, '0')}`;
     } catch (error) {
       console.error('Error generating invoice number:', error);

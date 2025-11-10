@@ -117,12 +117,26 @@ export default function ProformasPage() {
       const month = proformaDate.getMonth() + 1;
       const year = proformaDate.getFullYear();
 
-      const { count } = await supabase
+      // Generate unique invoice number by finding the last invoice for this year
+      const { data: existingInvoices, error: fetchError } = await supabase
         .from('invoices')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user!.id);
+        .select('invoice_number')
+        .eq('user_id', user!.id)
+        .eq('year', year)
+        .order('invoice_number', { ascending: false })
+        .limit(1);
 
-      const nextNumber = (count || 0) + 1;
+      if (fetchError) throw fetchError;
+
+      let nextNumber = 1;
+      if (existingInvoices && existingInvoices.length > 0) {
+        const lastNumber = existingInvoices[0].invoice_number;
+        const match = lastNumber.match(/INV-\d{4}-(\d+)/);
+        if (match) {
+          nextNumber = parseInt(match[1]) + 1;
+        }
+      }
+
       const invoiceNumber = `INV-${year}-${String(nextNumber).padStart(4, '0')}`;
 
       const { data: invoiceData, error: invoiceError } = await supabase
