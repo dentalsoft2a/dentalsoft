@@ -18,6 +18,8 @@ import HelpCenterPage from './components/help-center/HelpCenterPage';
 import DentistRegisterPage from './components/dentist/DentistRegisterPage';
 import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
+import DScoreSyncDashboard from './components/dscore/DScoreSyncDashboard';
+import DScoreDentistMapping from './components/dscore/DScoreDentistMapping';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { supabase } from './lib/supabase';
 import { usePermissions } from './hooks/usePermissions';
@@ -266,6 +268,10 @@ function AppContent() {
         return <HelpCenterPage />;
       case 'photos':
         return <PhotoSubmissionsPage />;
+      case 'dscore-sync':
+        return <DScoreSyncDashboard />;
+      case 'dscore-mapping':
+        return <DScoreDentistMapping />;
       default:
         return <DashboardPage />;
     }
@@ -283,7 +289,7 @@ function AppContent() {
           }
 
           // Allow navigation to specific pages even with invalid subscription
-          const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'settings', 'subscription', 'support', 'help-center'];
+          const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'settings', 'subscription', 'support', 'help-center', 'dscore-sync', 'dscore-mapping'];
           if (!hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(page)) {
             return;
           }

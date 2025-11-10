@@ -17,7 +17,9 @@ import {
   Box,
   HelpCircle,
   AlertTriangle,
-  Camera
+  Camera,
+  Cloud,
+  Link as LinkIcon
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -96,6 +98,8 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     { name: 'Factures', icon: Receipt, page: 'invoices', allowedForCancelled: true, menuKey: 'invoices' },
     { name: 'Bons de livraison', icon: Truck, page: 'delivery-notes', allowedForCancelled: true, menuKey: 'delivery-notes' },
     { name: 'Photos reçues', icon: Camera, page: 'photos', allowedForCancelled: false, menuKey: 'photos' },
+    { name: 'Syncs DS-Core', icon: Cloud, page: 'dscore-sync', allowedForCancelled: true, menuKey: 'dscore-sync' },
+    { name: 'Mapping DS-Core', icon: LinkIcon, page: 'dscore-mapping', allowedForCancelled: true, menuKey: 'dscore-mapping' },
     { name: 'Dentistes', icon: Users, page: 'dentists', allowedForCancelled: false, menuKey: 'dentists' },
     { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog' },
     { name: 'Ressources', icon: Box, page: 'resources', allowedForCancelled: false, menuKey: 'resources' },

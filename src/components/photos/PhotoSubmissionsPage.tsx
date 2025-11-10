@@ -402,7 +402,7 @@ export default function PhotoSubmissionsPage() {
                               e.stopPropagation();
                               deleteSubmission(submission.id);
                             }}
-                            className="absolute top-1.5 md:top-2 left-1.5 md:left-2 p-1.5 md:p-2 bg-red-500 text-white rounded-md md:rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 active:scale-95"
+                            className="absolute bottom-1.5 md:bottom-2 left-1.5 md:left-2 p-1.5 md:p-2 bg-red-500 text-white rounded-md md:rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 active:scale-95"
                             title="Supprimer la photo"
                           >
                             <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
@@ -467,6 +467,18 @@ export default function PhotoSubmissionsPage() {
             </div>
 
             <div className="p-6 bg-gradient-to-br from-slate-50 to-cyan-50 overflow-y-auto max-h-[calc(90vh-80px)]">
+              {(selectedPhoto as any).source === 'dscore' && (
+                <div className="mb-4 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-xl p-4 flex items-center gap-3 text-white shadow-lg">
+                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                    <Cloud className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold">Photo synchronisée depuis DS-Core</p>
+                    <p className="text-sm text-white/90">Cette photo a été récupérée automatiquement depuis Dentsply Sirona</p>
+                  </div>
+                </div>
+              )}
+
               <div className="mb-6 flex justify-center">
                 <div className="relative group w-1/2 cursor-pointer" onClick={() => setFullscreenImage(true)}>
                   <div className="absolute inset-0 bg-gradient-to-br from-blue-200 to-cyan-200 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity"></div>
