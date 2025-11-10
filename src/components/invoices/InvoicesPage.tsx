@@ -11,6 +11,8 @@ import YearPicker from '../common/YearPicker';
 
 type Invoice = Database['public']['Tables']['invoices']['Row'] & {
   dentists?: { name: string };
+  correction_amount?: number;
+  net_amount?: number;
 };
 
 type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
@@ -86,7 +88,29 @@ export default function InvoicesPage() {
         .order('date', { ascending: false });
 
       if (error) throw error;
-      setInvoices(data || []);
+
+      // Load correction amounts for each invoice
+      const invoicesWithCorrections = await Promise.all(
+        (data || []).map(async (invoice) => {
+          const { data: corrections } = await supabase
+            .from('credit_notes')
+            .select('total')
+            .eq('corrects_invoice_id', invoice.id)
+            .eq('type', 'correction')
+            .eq('is_correction', true);
+
+          const correction_amount = corrections?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+          const net_amount = Number(invoice.total) - correction_amount;
+
+          return {
+            ...invoice,
+            correction_amount,
+            net_amount
+          };
+        })
+      );
+
+      setInvoices(invoicesWithCorrections);
     } catch (error) {
       console.error('Error loading invoices:', error);
     } finally {
@@ -416,7 +440,16 @@ export default function InvoicesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(invoice.status)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-slate-900">
-                        {Number(invoice.total).toFixed(2)} €
+                        <div className="flex flex-col items-end gap-1">
+                          <div className={invoice.correction_amount && invoice.correction_amount > 0 ? 'text-slate-500 line-through text-sm' : ''}>
+                            {Number(invoice.total).toFixed(2)} €
+                          </div>
+                          {invoice.correction_amount && invoice.correction_amount > 0 && (
+                            <div className="text-green-600 font-bold">
+                              {invoice.net_amount?.toFixed(2)} €
+                            </div>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -487,9 +520,16 @@ export default function InvoicesPage() {
                       <p className="text-xs text-slate-500 mb-2">
                         {new Date(invoice.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
-                      <p className="text-sm font-bold text-slate-900">
-                        {Number(invoice.total).toFixed(2)} €
-                      </p>
+                      <div className="flex flex-col gap-1">
+                        <p className={`text-sm font-bold ${invoice.correction_amount && invoice.correction_amount > 0 ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
+                          {Number(invoice.total).toFixed(2)} €
+                        </p>
+                        {invoice.correction_amount && invoice.correction_amount > 0 && (
+                          <p className="text-sm font-bold text-green-600">
+                            {invoice.net_amount?.toFixed(2)} €
+                          </p>
+                        )}
+                      </div>
                     </div>
                   </div>
 
