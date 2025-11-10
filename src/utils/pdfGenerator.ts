@@ -304,6 +304,13 @@ interface ProformaData {
   tax_rate: number;
 }
 
+interface CorrectionCreditNote {
+  credit_note_number: string;
+  date: string;
+  total: number;
+  reason: string;
+}
+
 interface InvoiceData {
   invoice_number: string;
   date: string;
@@ -319,6 +326,7 @@ interface InvoiceData {
   dentist_address: string;
   delivery_notes: ProformaDeliveryNote[];
   tax_rate: number;
+  correction_credit_notes?: CorrectionCreditNote[];
 }
 
 export async function generateProformaPDF(data: ProformaData) {
@@ -1191,6 +1199,80 @@ export async function generateInvoicePDF(data: InvoiceData, returnBase64 = false
   doc.setFont('helvetica', 'bold');
   doc.text('TOTAL TTC', totalsLabelX, yPos);
   doc.text(`${grandTotal.toFixed(2)} €`, totalsValueX, yPos, { align: 'right' });
+
+  // Add correction credit notes section if any
+  if (data.correction_credit_notes && data.correction_credit_notes.length > 0) {
+    yPos += 10;
+
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(200, 0, 0);
+    doc.text('AVOIRS DE CORRECTION', totalsLabelX, yPos);
+    doc.setTextColor(0, 0, 0);
+
+    yPos += 5;
+    doc.setDrawColor(200, 0, 0);
+    doc.setLineWidth(0.2);
+    doc.line(totalsLabelX, yPos - 2, totalsValueX, yPos - 2);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+
+    let totalCorrections = 0;
+    data.correction_credit_notes.forEach((cn) => {
+      if (yPos > pageHeight - 40) {
+        doc.addPage();
+        yPos = 20;
+      }
+
+      const cnDate = new Date(cn.date).toLocaleDateString('fr-FR');
+      const cnLabel = `Avoir ${cn.credit_note_number} du ${cnDate}`;
+      doc.text(cnLabel, totalsLabelX + 5, yPos);
+      doc.text(`- ${cn.total.toFixed(2)} €`, totalsValueX, yPos, { align: 'right' });
+
+      yPos += 4;
+      if (cn.reason) {
+        doc.setFontSize(6);
+        doc.setFont('helvetica', 'italic');
+        const reasonLines = doc.splitTextToSize(`Motif: ${cn.reason}`, 70);
+        reasonLines.forEach((line: string) => {
+          doc.text(line, totalsLabelX + 10, yPos);
+          yPos += 3;
+        });
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'normal');
+      }
+
+      totalCorrections += cn.total;
+      yPos += 2;
+    });
+
+    yPos += 2;
+    doc.setDrawColor(200, 0, 0);
+    doc.setLineWidth(0.3);
+    doc.line(totalsLabelX, yPos, totalsValueX, yPos);
+
+    yPos += 4;
+    doc.setFontSize(8);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(200, 0, 0);
+    doc.text('Total des corrections', totalsLabelX, yPos);
+    doc.text(`- ${totalCorrections.toFixed(2)} €`, totalsValueX, yPos, { align: 'right' });
+
+    yPos += 6;
+    doc.setLineWidth(0.5);
+    doc.setDrawColor(0, 100, 0);
+    doc.line(totalsLabelX, yPos - 2, totalsValueX, yPos - 2);
+
+    yPos += 2;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 100, 0);
+    const netAmount = grandTotal - totalCorrections;
+    doc.text('MONTANT NET À PAYER', totalsLabelX, yPos);
+    doc.text(`${netAmount.toFixed(2)} €`, totalsValueX, yPos, { align: 'right' });
+    doc.setTextColor(0, 0, 0);
+  }
 
   const footerY = pageHeight - 20;
   doc.setFontSize(8);

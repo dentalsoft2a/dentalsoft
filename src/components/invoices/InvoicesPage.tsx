@@ -160,6 +160,22 @@ export default function InvoicesPage() {
         items: Array.isArray(note.items) ? note.items : []
       }));
 
+      // Load correction credit notes for this invoice
+      const { data: correctionData } = await supabase
+        .from('credit_notes')
+        .select('credit_note_number, date, total, reason')
+        .eq('corrects_invoice_id', invoice.id)
+        .eq('type', 'correction')
+        .eq('is_correction', true)
+        .order('date', { ascending: true });
+
+      const correctionCreditNotes = correctionData?.map(cn => ({
+        credit_note_number: cn.credit_note_number,
+        date: cn.date,
+        total: Number(cn.total),
+        reason: cn.reason || ''
+      })) || [];
+
       return await generateInvoicePDF({
         invoice_number: invoice.invoice_number,
         date: invoice.date,
@@ -174,7 +190,8 @@ export default function InvoicesPage() {
         dentist_name: dentistData.name,
         dentist_address: dentistData.address || '',
         delivery_notes: deliveryNotes,
-        tax_rate: Number(invoice.tax_rate)
+        tax_rate: Number(invoice.tax_rate),
+        correction_credit_notes: correctionCreditNotes
       }, returnBase64);
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -905,11 +922,27 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       return;
     }
 
+    const paymentAmount = parseFloat(amount);
+
+    // Validate payment amount doesn't exceed remaining balance
+    const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+    const remaining = netAmount - totalPaid;
+
+    if (paymentAmount <= 0) {
+      alert('Le montant doit être supérieur à 0');
+      return;
+    }
+
+    if (paymentAmount > remaining) {
+      alert(`Le montant du paiement (${paymentAmount.toFixed(2)} €) dépasse le montant restant (${remaining.toFixed(2)} €)`);
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase.from('invoice_payments').insert({
         invoice_id: invoice.id,
-        amount: parseFloat(amount),
+        amount: paymentAmount,
         payment_method: paymentMethod,
         payment_date: paymentDate,
         notes: reference || null,
