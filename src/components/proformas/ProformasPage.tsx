@@ -360,6 +360,9 @@ export default function ProformasPage() {
   };
 
   const totalTTC = filteredProformas.reduce((sum, proforma) => sum + Number(proforma.total), 0);
+  const totalPendingTTC = proformas
+    .filter(proforma => proforma.status === 'pending')
+    .reduce((sum, proforma) => sum + Number(proforma.total), 0);
 
   return (
     <div>
@@ -415,15 +418,15 @@ export default function ProformasPage() {
               <option value="invoiced">Facturé</option>
             </select>
           </div>
-          <div className="bg-gradient-to-r from-primary-50 to-cyan-50 border border-primary-200 rounded-xl p-4">
+          <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-700">Total TTC</span>
-              <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">
-                {totalTTC.toFixed(2)} €
+              <span className="text-sm font-semibold text-slate-700">Total TTC en attente</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                {totalPendingTTC.toFixed(2)} €
               </span>
             </div>
             <p className="text-xs text-slate-600 mt-1">
-              {filteredProformas.length} proforma{filteredProformas.length > 1 ? 's' : ''}
+              {proformas.filter(p => p.status === 'pending').length} proforma{proformas.filter(p => p.status === 'pending').length > 1 ? 's' : ''} en attente
             </p>
           </div>
         </div>
