@@ -11,6 +11,10 @@ interface FiscalPeriod {
   invoices_count: number;
   total_revenue: number;
   total_tax: number;
+  credit_notes_count: number;
+  credit_notes_total: number;
+  net_revenue: number;
+  net_tax: number;
   closed_at: string | null;
   seal_hash: string | null;
 }
@@ -197,13 +201,13 @@ export function FiscalPeriodsManager() {
                 Statut
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                Factures
+                Documents
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                CA HT
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider" title="Chiffre d'affaires net (après avoirs)">
+                CA HT Net
               </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
-                TVA
+              <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider" title="TVA nette (après avoirs)">
+                TVA Nette
               </th>
               <th className="px-4 py-3 text-right text-xs font-medium text-slate-500 uppercase tracking-wider">
                 Actions
@@ -253,14 +257,35 @@ export function FiscalPeriodsManager() {
                       </span>
                     )}
                   </td>
-                  <td className="px-4 py-3 text-right text-sm text-slate-900">
-                    {period.invoices_count}
+                  <td className="px-4 py-3 text-right">
+                    <div className="text-sm text-slate-900">
+                      {period.invoices_count} fact.
+                    </div>
+                    {period.credit_notes_count > 0 && (
+                      <div className="text-xs text-red-600">
+                        -{period.credit_notes_count} avoir{period.credit_notes_count > 1 ? 's' : ''}
+                      </div>
+                    )}
                   </td>
-                  <td className="px-4 py-3 text-right text-sm font-medium text-slate-900">
-                    {period.total_revenue.toFixed(2)} €
+                  <td className="px-4 py-3 text-right">
+                    <div className="text-sm font-medium text-slate-900">
+                      {(period.net_revenue || 0).toFixed(2)} €
+                    </div>
+                    {period.credit_notes_count > 0 && (
+                      <div className="text-xs text-slate-500" title={`Brut: ${period.total_revenue.toFixed(2)} € - Avoirs: ${((period.total_revenue || 0) - (period.net_revenue || 0)).toFixed(2)} €`}>
+                        (brut: {period.total_revenue.toFixed(2)} €)
+                      </div>
+                    )}
                   </td>
-                  <td className="px-4 py-3 text-right text-sm text-slate-900">
-                    {period.total_tax.toFixed(2)} €
+                  <td className="px-4 py-3 text-right">
+                    <div className="text-sm text-slate-900">
+                      {(period.net_tax || 0).toFixed(2)} €
+                    </div>
+                    {period.credit_notes_count > 0 && (
+                      <div className="text-xs text-slate-500" title={`Brut: ${period.total_tax.toFixed(2)} € - Avoirs: ${((period.total_tax || 0) - (period.net_tax || 0)).toFixed(2)} €`}>
+                        (brut: {period.total_tax.toFixed(2)} €)
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
