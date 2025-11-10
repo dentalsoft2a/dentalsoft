@@ -21,8 +21,9 @@ export default function ProformasPage() {
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [showModal, setShowModal] = useState(false);
   const [editingProforma, setEditingProforma] = useState<string | null>(null);
+  const [showBulkCreateModal, setShowBulkCreateModal] = useState(false);
 
-  useLockScroll(showModal);
+  useLockScroll(showModal || showBulkCreateModal);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
@@ -338,17 +339,27 @@ export default function ProformasPage() {
           <h1 className="text-3xl font-bold text-slate-900">Proformas</h1>
           <p className="text-slate-600 mt-2">Gérez vos devis et proformas</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingProforma(null);
-            setShowModal(true);
-          }}
-          disabled={!hasValidSubscription && !isSuperAdmin}
-          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:scale-102 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
-        >
-          <Plus className="w-5 h-5" />
-          Nouveau proforma
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowBulkCreateModal(true)}
+            disabled={!hasValidSubscription && !isSuperAdmin}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:scale-102 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+          >
+            <Receipt className="w-5 h-5" />
+            Création en lot
+          </button>
+          <button
+            onClick={() => {
+              setEditingProforma(null);
+              setShowModal(true);
+            }}
+            disabled={!hasValidSubscription && !isSuperAdmin}
+            className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:scale-102 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+          >
+            <Plus className="w-5 h-5" />
+            Nouveau proforma
+          </button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-lg border border-slate-200/50 hover:shadow-xl transition-all duration-300 overflow-hidden">
@@ -561,6 +572,16 @@ export default function ProformasPage() {
           onSave={() => {
             setShowModal(false);
             setEditingProforma(null);
+            loadProformas();
+          }}
+        />
+      )}
+
+      {showBulkCreateModal && (
+        <BulkCreateProformasModal
+          onClose={() => setShowBulkCreateModal(false)}
+          onSave={() => {
+            setShowBulkCreateModal(false);
             loadProformas();
           }}
         />
@@ -1123,6 +1144,288 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
               className="flex-1 px-4 py-2.5 md:px-6 md:py-3 bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 text-white shadow-lg rounded-lg md:rounded-xl hover:from-primary-700 hover:via-cyan-700 hover:to-primary-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold text-sm md:text-base bg-[length:200%_100%] hover:bg-[position:100%_0]"
             >
               {loading ? 'Enregistrement...' : 'Enregistrer'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+interface BulkCreateProformasModalProps {
+  onClose: () => void;
+  onSave: () => void;
+}
+
+function BulkCreateProformasModal({ onClose, onSave }: BulkCreateProformasModalProps) {
+  const { user } = useAuth();
+  const [selectedMonth, setSelectedMonth] = useState(new Date().toISOString().slice(0, 7));
+  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState<Array<{
+    dentist: { id: string; name: string };
+    deliveryNotes: any[];
+    totalAmount: number;
+  }>>([]);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+
+  useEffect(() => {
+    loadPreview();
+  }, [selectedMonth]);
+
+  const loadPreview = async () => {
+    if (!user) return;
+    setLoadingPreview(true);
+
+    try {
+      const [year, month] = selectedMonth.split('-').map(Number);
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+
+      // Get all delivery notes for the selected month that are not completed
+      const { data: deliveryNotes, error: notesError } = await supabase
+        .from('delivery_notes')
+        .select('*, dentists(id, name)')
+        .eq('user_id', user.id)
+        .gte('date', startDate.toISOString().split('T')[0])
+        .lte('date', endDate.toISOString().split('T')[0])
+        .neq('status', 'completed')
+        .order('dentist_id')
+        .order('date');
+
+      if (notesError) throw notesError;
+
+      // Group by dentist
+      const groupedByDentist = new Map<string, {
+        dentist: { id: string; name: string };
+        deliveryNotes: any[];
+        totalAmount: number;
+      }>();
+
+      deliveryNotes?.forEach(note => {
+        if (!note.dentists) return;
+
+        const dentistId = note.dentist_id;
+        if (!groupedByDentist.has(dentistId)) {
+          groupedByDentist.set(dentistId, {
+            dentist: { id: note.dentists.id, name: note.dentists.name },
+            deliveryNotes: [],
+            totalAmount: 0
+          });
+        }
+
+        const group = groupedByDentist.get(dentistId)!;
+        group.deliveryNotes.push(note);
+
+        // Calculate total from items
+        const noteTotal = Array.isArray(note.items)
+          ? note.items.reduce((sum: number, item: any) => sum + (item.quantity * item.unit_price), 0)
+          : 0;
+        group.totalAmount += noteTotal;
+      });
+
+      setPreview(Array.from(groupedByDentist.values()));
+    } catch (error) {
+      console.error('Error loading preview:', error);
+    } finally {
+      setLoadingPreview(false);
+    }
+  };
+
+  const handleBulkCreate = async () => {
+    if (!user || preview.length === 0) return;
+
+    if (!confirm(`Créer ${preview.length} proforma(s) pour le mois sélectionné ?`)) return;
+
+    setLoading(true);
+    try {
+      // Get last proforma number to generate sequential numbers
+      const { data: lastProforma } = await supabase
+        .from('proformas')
+        .select('proforma_number')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      const year = new Date().getFullYear();
+      let nextNumber = 1;
+
+      if (lastProforma && lastProforma.length > 0) {
+        const lastNumber = lastProforma[0].proforma_number;
+        const match = lastNumber.match(/PRO-(\d{4})-(\d+)/);
+        if (match) {
+          const lastYear = parseInt(match[1]);
+          const lastNum = parseInt(match[2]);
+          if (lastYear === year) {
+            nextNumber = lastNum + 1;
+          }
+        }
+      }
+
+      let createdCount = 0;
+
+      for (const group of preview) {
+        const proformaNumber = `PRO-${year}-${String(nextNumber).padStart(4, '0')}`;
+        nextNumber++;
+
+        // Calculate totals
+        const items = group.deliveryNotes.flatMap(note =>
+          Array.isArray(note.items) ? note.items.map((item: any) => ({
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            delivery_note_id: note.id
+          })) : []
+        );
+
+        const subtotal = items.reduce((sum, item) => sum + (item.quantity * item.unit_price), 0);
+        const tax_rate = 20; // Default TVA
+        const tax_amount = subtotal * (tax_rate / 100);
+        const total = subtotal + tax_amount;
+
+        // Create proforma
+        const { data: proformaData, error: proformaError } = await supabase
+          .from('proformas')
+          .insert({
+            user_id: user.id,
+            dentist_id: group.dentist.id,
+            proforma_number: proformaNumber,
+            date: new Date().toISOString().split('T')[0],
+            status: 'pending',
+            notes: `Proforma créé automatiquement pour ${selectedMonth}`,
+            tax_rate,
+            subtotal,
+            tax_amount,
+            total,
+          })
+          .select()
+          .single();
+
+        if (proformaError) throw proformaError;
+
+        // Insert items
+        const { error: itemsError } = await supabase.from('proforma_items').insert(
+          items.map((item) => ({
+            proforma_id: proformaData.id,
+            description: item.description,
+            quantity: item.quantity,
+            unit_price: item.unit_price,
+            total: item.quantity * item.unit_price,
+            delivery_note_id: item.delivery_note_id,
+          }))
+        );
+
+        if (itemsError) throw itemsError;
+
+        // Mark delivery notes as completed
+        const deliveryNoteIds = group.deliveryNotes.map(note => note.id);
+        const { error: updateError } = await supabase
+          .from('delivery_notes')
+          .update({ status: 'completed' })
+          .in('id', deliveryNoteIds);
+
+        if (updateError) console.error('Error updating delivery notes status:', updateError);
+
+        createdCount++;
+      }
+
+      alert(`${createdCount} proforma(s) créé(s) avec succès`);
+      onSave();
+    } catch (error) {
+      console.error('Error creating proformas:', error);
+      alert('Erreur lors de la création des proformas');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-2rem)] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
+        <div className="relative p-6 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-emerald-50/20 z-10 rounded-t-3xl backdrop-blur-xl flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-green-500/5 to-emerald-500/5 rounded-t-3xl"></div>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 bg-clip-text text-transparent relative">
+            Création en lot de proformas
+          </h2>
+          <p className="text-slate-500 text-sm mt-2 relative">
+            Créez automatiquement des proformas pour tous les dentistes avec des bons de livraison non terminés
+          </p>
+        </div>
+
+        <div className="p-6 space-y-6 overflow-y-auto flex-1">
+          <div className="bg-gradient-to-br from-slate-50 to-white p-5 rounded-2xl border border-slate-200/50 shadow-sm">
+            <label className="block text-sm font-bold text-slate-700 mb-2">
+              Sélectionner le mois
+            </label>
+            <MonthPicker
+              value={selectedMonth}
+              onChange={setSelectedMonth}
+            />
+          </div>
+
+          {loadingPreview ? (
+            <div className="text-center py-8 text-slate-600">
+              Chargement de l'aperçu...
+            </div>
+          ) : preview.length === 0 ? (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 text-center">
+              <p className="text-yellow-800 font-medium">
+                Aucun bon de livraison non terminé pour ce mois
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <h3 className="text-lg font-bold text-slate-900">
+                Aperçu ({preview.length} proforma{preview.length > 1 ? 's' : ''})
+              </h3>
+              <div className="max-h-96 overflow-y-auto space-y-3 border border-slate-200 rounded-xl p-4">
+                {preview.map((group) => (
+                  <div
+                    key={group.dentist.id}
+                    className="bg-gradient-to-br from-white to-slate-50 p-4 rounded-xl border border-slate-200 hover:border-emerald-300 transition-all"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-bold text-slate-900">{group.dentist.name}</h4>
+                      <span className="text-sm font-bold text-emerald-600">
+                        {group.totalAmount.toFixed(2)} €
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600">
+                      {group.deliveryNotes.length} bon{group.deliveryNotes.length > 1 ? 's' : ''} de livraison
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {group.deliveryNotes.map(note => (
+                        <span
+                          key={note.id}
+                          className="text-xs px-2 py-1 bg-slate-100 text-slate-700 rounded"
+                        >
+                          {note.delivery_number}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="p-6 border-t border-slate-200 bg-slate-50 rounded-b-3xl flex-shrink-0">
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 px-6 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold shadow-sm"
+            >
+              Annuler
+            </button>
+            <button
+              type="button"
+              onClick={handleBulkCreate}
+              disabled={loading || preview.length === 0}
+              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-600 via-emerald-600 to-green-600 text-white shadow-lg rounded-xl hover:from-green-700 hover:via-emerald-700 hover:to-green-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold bg-[length:200%_100%] hover:bg-[position:100%_0]"
+            >
+              {loading ? 'Création en cours...' : `Créer ${preview.length} proforma${preview.length > 1 ? 's' : ''}`}
             </button>
           </div>
         </div>
