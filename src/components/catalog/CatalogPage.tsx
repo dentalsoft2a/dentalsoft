@@ -342,26 +342,28 @@ export default function CatalogPage() {
   return (
     <div>
       <div className="mb-6 md:mb-8 animate-fade-in">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Catalogue</h1>
-            <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez vos articles et prestations</p>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Catalogue</h1>
+              <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez vos articles et prestations</p>
+            </div>
           </div>
-          <div className="flex gap-2 md:gap-3">
+          <div className="flex gap-2 md:gap-3 md:justify-end">
             <button
               onClick={handleExport}
               disabled={items.length === 0}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm md:text-base font-medium"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 md:px-5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm md:text-base font-medium"
             >
-              <Download className="w-5 h-5 flex-shrink-0" />
-              <span>Exporter</span>
+              <Download className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+              <span className="hidden sm:inline">Exporter</span>
             </button>
             <button
               onClick={() => fileInputRef.current?.click()}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 md:px-5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
             >
-              <Upload className="w-5 h-5 flex-shrink-0" />
-              <span>Importer</span>
+              <Upload className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+              <span className="hidden sm:inline">Importer</span>
             </button>
             <input
               ref={fileInputRef}
@@ -372,17 +374,18 @@ export default function CatalogPage() {
             />
             <button
               onClick={() => setShowTutorial(true)}
-              className="hidden md:flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 md:px-5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
             >
-              <HelpCircle className="w-5 h-5 flex-shrink-0" />
-              <span>Guide</span>
+              <HelpCircle className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+              <span className="hidden sm:inline">Guide</span>
             </button>
             <button
               onClick={() => handleOpenModal()}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
+              className="flex items-center justify-center gap-1.5 px-3 py-2 md:px-5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
             >
-              <Plus className="w-5 h-5 flex-shrink-0" />
-              <span>Nouveau</span>
+              <Plus className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+              <span className="hidden sm:inline">Nouveau</span>
+              <span className="sm:hidden">+</span>
             </button>
           </div>
         </div>
