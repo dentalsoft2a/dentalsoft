@@ -360,18 +360,7 @@ export default function ProformasPage() {
   };
 
   const totalTTC = filteredProformas.reduce((sum, proforma) => sum + Number(proforma.total), 0);
-
-  // Calculate totals for current month
-  const now = new Date();
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-
-  const currentMonthProformas = proformas.filter(proforma => {
-    const proformaDate = new Date(proforma.date);
-    return proformaDate.getMonth() === currentMonth && proformaDate.getFullYear() === currentYear;
-  });
-
-  const totalPendingCurrentMonth = currentMonthProformas
+  const totalPendingTTC = proformas
     .filter(proforma => proforma.status === 'pending')
     .reduce((sum, proforma) => sum + Number(proforma.total), 0);
 
@@ -431,13 +420,13 @@ export default function ProformasPage() {
           </div>
           <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-semibold text-slate-700">Total TTC en attente (mois en cours)</span>
+              <span className="text-sm font-semibold text-slate-700">Total TTC en attente</span>
               <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
-                {totalPendingCurrentMonth.toFixed(2)} €
+                {totalPendingTTC.toFixed(2)} €
               </span>
             </div>
             <p className="text-xs text-slate-600 mt-1">
-              {currentMonthProformas.filter(p => p.status === 'pending').length} proforma{currentMonthProformas.filter(p => p.status === 'pending').length > 1 ? 's' : ''} en attente
+              {proformas.filter(p => p.status === 'pending').length} proforma{proformas.filter(p => p.status === 'pending').length > 1 ? 's' : ''} en attente
             </p>
           </div>
         </div>
