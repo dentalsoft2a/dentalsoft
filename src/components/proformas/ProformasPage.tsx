@@ -859,6 +859,20 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
         );
 
         if (itemsError) throw itemsError;
+
+        // For updates, also mark delivery notes as completed
+        const updateDeliveryNoteIds = items
+          .filter(item => item.delivery_note_id)
+          .map(item => item.delivery_note_id);
+
+        if (updateDeliveryNoteIds.length > 0) {
+          const { error: updateError } = await supabase
+            .from('delivery_notes')
+            .update({ status: 'completed' })
+            .in('id', updateDeliveryNoteIds);
+
+          if (updateError) console.error('Error updating delivery notes status:', updateError);
+        }
       } else {
         // Re-generate proforma number just before insert to avoid duplicates
         const { data: lastProforma } = await supabase
@@ -916,6 +930,20 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
         );
 
         if (itemsError) throw itemsError;
+
+        // Mark all imported delivery notes as completed
+        const deliveryNoteIds = items
+          .filter(item => item.delivery_note_id)
+          .map(item => item.delivery_note_id);
+
+        if (deliveryNoteIds.length > 0) {
+          const { error: updateError } = await supabase
+            .from('delivery_notes')
+            .update({ status: 'completed' })
+            .in('id', deliveryNoteIds);
+
+          if (updateError) console.error('Error updating delivery notes status:', updateError);
+        }
       }
 
       onSave();
