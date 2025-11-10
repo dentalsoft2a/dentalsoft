@@ -440,16 +440,20 @@ export default function InvoicesPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">{getStatusBadge(invoice.status)}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-right font-medium text-slate-900">
-                        <div className="flex flex-col items-end gap-1">
-                          <div className={invoice.correction_amount && invoice.correction_amount > 0 ? 'text-slate-500 line-through text-sm' : ''}>
-                            {Number(invoice.total).toFixed(2)} €
-                          </div>
-                          {invoice.correction_amount && invoice.correction_amount > 0 && (
+                        {invoice.correction_amount && invoice.correction_amount > 0 ? (
+                          <div className="flex flex-col items-end gap-1">
+                            <div className="text-slate-500 line-through text-sm">
+                              {Number(invoice.total).toFixed(2)} €
+                            </div>
                             <div className="text-green-600 font-bold">
                               {invoice.net_amount?.toFixed(2)} €
                             </div>
-                          )}
-                        </div>
+                          </div>
+                        ) : (
+                          <div>
+                            {Number(invoice.total).toFixed(2)} €
+                          </div>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -520,16 +524,20 @@ export default function InvoicesPage() {
                       <p className="text-xs text-slate-500 mb-2">
                         {new Date(invoice.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
-                      <div className="flex flex-col gap-1">
-                        <p className={`text-sm font-bold ${invoice.correction_amount && invoice.correction_amount > 0 ? 'text-slate-500 line-through' : 'text-slate-900'}`}>
-                          {Number(invoice.total).toFixed(2)} €
-                        </p>
-                        {invoice.correction_amount && invoice.correction_amount > 0 && (
+                      {invoice.correction_amount && invoice.correction_amount > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          <p className="text-sm font-bold text-slate-500 line-through">
+                            {Number(invoice.total).toFixed(2)} €
+                          </p>
                           <p className="text-sm font-bold text-green-600">
                             {invoice.net_amount?.toFixed(2)} €
                           </p>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm font-bold text-slate-900">
+                          {Number(invoice.total).toFixed(2)} €
+                        </p>
+                      )}
                     </div>
                   </div>
 
