@@ -359,6 +359,8 @@ export default function ProformasPage() {
     );
   };
 
+  const totalTTC = filteredProformas.reduce((sum, proforma) => sum + Number(proforma.total), 0);
+
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
@@ -391,7 +393,7 @@ export default function ProformasPage() {
 
       <div className="bg-white rounded-xl shadow-lg border border-slate-200/50 hover:shadow-xl transition-all duration-300 overflow-hidden">
         <div className="p-4 border-b border-slate-200">
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row gap-4 mb-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
@@ -412,6 +414,17 @@ export default function ProformasPage() {
               <option value="validated">Validé</option>
               <option value="invoiced">Facturé</option>
             </select>
+          </div>
+          <div className="bg-gradient-to-r from-primary-50 to-cyan-50 border border-primary-200 rounded-xl p-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-semibold text-slate-700">Total TTC</span>
+              <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">
+                {totalTTC.toFixed(2)} €
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 mt-1">
+              {filteredProformas.length} proforma{filteredProformas.length > 1 ? 's' : ''}
+            </p>
           </div>
         </div>
 
