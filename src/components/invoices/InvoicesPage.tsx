@@ -777,32 +777,6 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
     }
   };
 
-  const handleDeletePayment = async (paymentId: string) => {
-    if (!confirm('Voulez-vous vraiment supprimer ce paiement ?')) return;
-
-    try {
-      const { error } = await supabase.from('invoice_payments').delete().eq('id', paymentId);
-
-      if (error) throw error;
-
-      await loadPayments();
-
-      const remainingPayments = payments.filter(p => p.id !== paymentId);
-      const totalPaid = remainingPayments.reduce((sum, p) => sum + Number(p.amount), 0);
-      const invoiceTotal = Number(invoice.total);
-      const newStatus = totalPaid >= invoiceTotal ? 'paid' : totalPaid > 0 ? 'partial' : 'draft';
-
-      await supabase
-        .from('invoices')
-        .update({ status: newStatus })
-        .eq('id', invoice.id);
-
-      onSave();
-    } catch (error) {
-      console.error('Error deleting payment:', error);
-      alert('Erreur lors de la suppression du paiement');
-    }
-  };
 
   const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
   const remaining = Number(invoice.total) - totalPaid;
@@ -935,7 +909,6 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
                       <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase">Méthode</th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-slate-700 uppercase">Référence</th>
                       <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase">Montant</th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-slate-700 uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-slate-200">
@@ -950,15 +923,6 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
                         <td className="px-4 py-3 text-sm text-slate-600">{payment.notes || '-'}</td>
                         <td className="px-4 py-3 text-sm text-right font-medium text-slate-900">
                           {Number(payment.amount).toFixed(2)} €
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <button
-                            onClick={() => handleDeletePayment(payment.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
                         </td>
                       </tr>
                     ))}
