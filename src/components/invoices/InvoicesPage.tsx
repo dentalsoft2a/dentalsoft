@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, FileDown, CreditCard, Send } from 'lucide-react';
+import { Plus, Edit, Search, FileDown, CreditCard, Send } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -96,37 +96,6 @@ export default function InvoicesPage() {
     return matchesSearch;
   });
 
-  const handleDelete = async (id: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir supprimer cette facture ?')) return;
-
-    try {
-      const { data: invoiceProformas, error: fetchError } = await supabase
-        .from('invoice_proformas')
-        .select('proforma_id')
-        .eq('invoice_id', id);
-
-      if (fetchError) throw fetchError;
-
-      const proformaIds = invoiceProformas?.map((ip) => ip.proforma_id) || [];
-
-      const { error: deleteError } = await supabase.from('invoices').delete().eq('id', id);
-      if (deleteError) throw deleteError;
-
-      if (proformaIds.length > 0) {
-        const { error: updateError } = await supabase
-          .from('proformas')
-          .update({ status: 'validated' })
-          .in('id', proformaIds);
-
-        if (updateError) throw updateError;
-      }
-
-      await loadInvoices();
-    } catch (error) {
-      console.error('Error deleting invoice:', error);
-      alert('Erreur lors de la suppression');
-    }
-  };
 
   const handleGeneratePDF = async (invoice: Invoice, returnBase64 = false): Promise<string | undefined> => {
     try {
@@ -397,13 +366,6 @@ export default function InvoicesPage() {
                           >
                             <FileDown className="w-4 h-4" />
                           </button>
-                          <button
-                            onClick={() => handleDelete(invoice.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
                         </div>
                       </td>
                     </tr>
@@ -459,12 +421,6 @@ export default function InvoicesPage() {
                       className="p-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg transition-all active:scale-95"
                     >
                       <FileDown className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(invoice.id)}
-                      className="p-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg transition-all active:scale-95"
-                    >
-                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
