@@ -1044,15 +1044,21 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
     setLoading(true);
 
     try {
+      const amountValue = parseFloat(amount);
+      const taxRate = Number(invoice.tax_rate);
+      const subtotal = amountValue / (1 + taxRate / 100);
+      const taxAmount = amountValue - subtotal;
+
       const creditNoteData = {
         user_id: user.id,
-        invoice_id: invoice.id,
         dentist_id: invoice.dentist_id,
         credit_note_number: creditNoteNumber,
         reason,
-        amount: parseFloat(amount),
-        status: "draft",
-        date: new Date().toISOString(),
+        subtotal: subtotal,
+        tax_rate: taxRate,
+        tax_amount: taxAmount,
+        total: amountValue,
+        date: new Date().toISOString().split('T')[0],
       };
 
       const { error } = await supabase.from("credit_notes").insert([creditNoteData]);
