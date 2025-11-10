@@ -826,6 +826,8 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
   const [payments, setPayments] = useState<Database['public']['Tables']['invoice_payments']['Row'][]>([]);
   const [availableCreditNotes, setAvailableCreditNotes] = useState<CreditNote[]>([]);
   const [totalCreditNotes, setTotalCreditNotes] = useState(0);
+  const [totalCorrections, setTotalCorrections] = useState(0);
+  const [netAmount, setNetAmount] = useState(Number(invoice.total));
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank_transfer' | 'check' | 'credit_card'>('cash');
@@ -847,11 +849,27 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       if (error) throw error;
       setPayments(data || []);
 
-      // Load credit notes for this dentist
+      // Load correction credit notes for this invoice
+      const { data: correctionData } = await supabase
+        .from('credit_notes')
+        .select('*')
+        .eq('corrects_invoice_id', invoice.id)
+        .eq('type', 'correction')
+        .eq('is_correction', true);
+
+      const correctionsTotal = correctionData?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+      setTotalCorrections(correctionsTotal);
+
+      // Calculate net amount
+      const calculatedNetAmount = Number(invoice.total) - correctionsTotal;
+      setNetAmount(calculatedNetAmount);
+
+      // Load available refund credit notes for this dentist
       const { data: creditNotesData } = await supabase
         .from('credit_notes')
         .select('*')
         .eq('dentist_id', invoice.dentist_id)
+        .eq('type', 'refund')
         .eq('used', false)
         .order('created_at', { ascending: true });
 
@@ -860,7 +878,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       setTotalCreditNotes(creditNotesTotal);
 
       const totalPaid = data?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-      const remaining = Number(invoice.total) - totalPaid;
+      const remaining = calculatedNetAmount - totalPaid;
       setAmount(remaining > 0 ? remaining.toFixed(2) : '');
     } catch (error) {
       console.error('Error loading payments:', error);
@@ -915,10 +933,10 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       if (fetchError) throw fetchError;
       if (!creditNote) throw new Error("Avoir introuvable");
 
-      // Calculate amounts
+      // Calculate amounts (use net amount, not gross)
       const creditNoteAmount = Number(creditNote.total);
       const creditNoteSubtotal = Number(creditNote.subtotal);
-      const invoiceRemaining = Number(invoice.total) - totalPaid;
+      const invoiceRemaining = netAmount - totalPaid;
 
       // Determine how much to apply
       const amountToApply = Math.min(creditNoteAmount, invoiceRemaining);
@@ -1019,7 +1037,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
   };
 
   const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-  const remaining = Number(invoice.total) - totalPaid;
+  const remaining = netAmount - totalPaid;
 
   const getPaymentMethodLabel = (method: string) => {
     const labels: Record<string, string> = {
@@ -1040,25 +1058,44 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
           <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">
             Paiements - {invoice.invoice_number}
           </h2>
-          <div className="mt-4 flex flex-wrap gap-4 text-sm relative">
-            <div className="flex items-center gap-2">
-              <span className="text-slate-600 font-semibold">Total:</span>
-              <span className="font-bold text-slate-900 text-base">{Number(invoice.total).toFixed(2)} €</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-slate-600 font-semibold">Payé:</span>
-              <span className="font-bold text-green-600 text-base">{totalPaid.toFixed(2)} €</span>
-            </div>
-            {totalCreditNotes > 0 && (
+          <div className="mt-4 space-y-3 text-sm relative">
+            <div className="flex flex-wrap gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-slate-600 font-semibold">Avoirs disponibles:</span>
-                <span className="font-bold text-purple-600 text-base">{totalCreditNotes.toFixed(2)} €</span>
+                <span className="text-slate-600 font-semibold">Total brut:</span>
+                <span className="font-bold text-slate-900 text-base">{Number(invoice.total).toFixed(2)} €</span>
+              </div>
+              {totalCorrections > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 font-semibold">Corrections:</span>
+                  <span className="font-bold text-blue-600 text-base">- {totalCorrections.toFixed(2)} €</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600 font-semibold">Montant net:</span>
+                <span className="font-bold text-slate-900 text-base">{netAmount.toFixed(2)} €</span>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600 font-semibold">Payé:</span>
+                <span className="font-bold text-green-600 text-base">{totalPaid.toFixed(2)} €</span>
+              </div>
+              {totalCreditNotes > 0 && (
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-600 font-semibold">Avoirs disponibles:</span>
+                  <span className="font-bold text-purple-600 text-base">{totalCreditNotes.toFixed(2)} €</span>
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600 font-semibold">Restant:</span>
+                <span className="font-bold text-orange-600 text-base">{remaining.toFixed(2)} €</span>
+              </div>
+            </div>
+            {totalCorrections > 0 && (
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-800">
+                ℹ️ Cette facture a été corrigée. Le montant net à payer est de {netAmount.toFixed(2)} € au lieu de {Number(invoice.total).toFixed(2)} €.
               </div>
             )}
-            <div className="flex items-center gap-2">
-              <span className="text-slate-600 font-semibold">Restant:</span>
-              <span className="font-bold text-orange-600 text-base">{remaining.toFixed(2)} €</span>
-            </div>
           </div>
         </div>
 
@@ -1257,6 +1294,7 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
   const [amount, setAmount] = useState(invoice.total.toString());
   const [loading, setLoading] = useState(false);
   const [maxAvailableAmount, setMaxAvailableAmount] = useState(Number(invoice.total));
+  const [creditNoteType, setCreditNoteType] = useState<'correction' | 'refund'>('correction');
 
   useEffect(() => {
     generateCreditNoteNumber();
@@ -1350,6 +1388,7 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
         user_id: user.id,
         dentist_id: invoice.dentist_id,
         source_invoice_id: invoice.id,
+        corrects_invoice_id: creditNoteType === 'correction' ? invoice.id : null,
         credit_note_number: creditNoteNumber,
         reason,
         subtotal: subtotal,
@@ -1357,19 +1396,28 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
         tax_amount: taxAmount,
         total: amountValue,
         date: new Date().toISOString().split('T')[0],
+        type: creditNoteType,
+        is_correction: creditNoteType === 'correction',
+        reduces_net_amount: creditNoteType === 'correction',
       };
 
       const { error } = await supabase.from("credit_notes").insert([creditNoteData]);
 
       if (error) throw error;
 
-      // Update invoice status to 'credit_note'
-      await supabase
-        .from("invoices")
-        .update({ status: "credit_note" })
-        .eq("id", invoice.id);
+      // For correction type, the trigger will automatically update invoice status
+      // For refund type, manually update to credit_note status
+      if (creditNoteType === 'refund') {
+        await supabase
+          .from("invoices")
+          .update({ status: "credit_note" })
+          .eq("id", invoice.id);
+      }
 
-      alert("Avoir créé avec succès!");
+      const message = creditNoteType === 'correction'
+        ? "Avoir de correction créé avec succès! Le montant net à payer de la facture a été réduit."
+        : "Avoir de remboursement créé avec succès! Un crédit est maintenant disponible pour ce client.";
+      alert(message);
       onSave();
     } catch (error) {
       console.error("Error creating credit note:", error);
@@ -1392,6 +1440,51 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
 
         <div className="flex-1 overflow-y-auto p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Type d'avoir <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <button
+                  type="button"
+                  onClick={() => setCreditNoteType('correction')}
+                  className={`px-4 py-3 rounded-xl border-2 transition-all font-medium ${
+                    creditNoteType === 'correction'
+                      ? 'border-blue-500 bg-blue-50 text-blue-700'
+                      : 'border-slate-300 bg-white text-slate-700 hover:border-blue-300'
+                  }`}
+                >
+                  <div className="text-left">
+                    <div className="font-bold">Correction</div>
+                    <div className="text-xs mt-1">Corrige une erreur de facturation</div>
+                  </div>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCreditNoteType('refund')}
+                  className={`px-4 py-3 rounded-xl border-2 transition-all font-medium ${
+                    creditNoteType === 'refund'
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-slate-300 bg-white text-slate-700 hover:border-green-300'
+                  }`}
+                >
+                  <div className="text-left">
+                    <div className="font-bold">Remboursement</div>
+                    <div className="text-xs mt-1">Crée un crédit disponible</div>
+                  </div>
+                </button>
+              </div>
+              <div className={`p-3 rounded-lg text-sm ${
+                creditNoteType === 'correction' ? 'bg-blue-50 text-blue-800' : 'bg-green-50 text-green-800'
+              }`}>
+                {creditNoteType === 'correction' ? (
+                  <><strong>Correction:</strong> Le montant net à payer de cette facture sera réduit. Utilisez ce type quand vous avez facturé un montant incorrect (ex: 1000€ au lieu de 800€).</>
+                ) : (
+                  <><strong>Remboursement:</strong> Un crédit sera créé et pourra être appliqué aux paiements futurs. La facture originale reste inchangée.</>
+                )}
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 Numéro d'avoir
