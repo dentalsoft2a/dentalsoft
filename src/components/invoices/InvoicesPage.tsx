@@ -182,9 +182,30 @@ export default function InvoicesPage() {
     }
   };
 
-  const handleCreateCreditNote = (invoice: Invoice) => {
-    setSelectedInvoice(invoice);
-    setShowCreditNoteModal(true);
+  const handleCreateCreditNote = async (invoice: Invoice) => {
+    // Check if there's any available amount for credit note
+    try {
+      const { data: creditNotes, error } = await supabase
+        .from('credit_notes')
+        .select('total')
+        .eq('source_invoice_id', invoice.id);
+
+      if (error) throw error;
+
+      const totalCreditNotesCreated = creditNotes?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+      const availableAmount = Number(invoice.total) - totalCreditNotesCreated;
+
+      if (availableAmount <= 0) {
+        alert(`Impossible de créer un avoir : le montant total d'avoirs (${totalCreditNotesCreated.toFixed(2)} €) a déjà atteint ou dépassé le montant de la facture (${Number(invoice.total).toFixed(2)} €).`);
+        return;
+      }
+
+      setSelectedInvoice(invoice);
+      setShowCreditNoteModal(true);
+    } catch (error) {
+      console.error('Error checking credit notes:', error);
+      alert('Erreur lors de la vérification des avoirs');
+    }
   };
 
   const handleViewCreditNotes = async (invoice: Invoice) => {
@@ -1235,10 +1256,35 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
   const [reason, setReason] = useState("");
   const [amount, setAmount] = useState(invoice.total.toString());
   const [loading, setLoading] = useState(false);
+  const [maxAvailableAmount, setMaxAvailableAmount] = useState(Number(invoice.total));
 
   useEffect(() => {
     generateCreditNoteNumber();
+    calculateMaxAvailableAmount();
   }, []);
+
+  const calculateMaxAvailableAmount = async () => {
+    try {
+      // Get all credit notes created from this specific invoice
+      const { data: creditNotes, error } = await supabase
+        .from('credit_notes')
+        .select('total')
+        .eq('source_invoice_id', invoice.id);
+
+      if (error) throw error;
+
+      // Calculate total credit notes already created for this invoice
+      const totalCreditNotesCreated = creditNotes?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+
+      // Maximum available is invoice total minus credit notes already created
+      const available = Number(invoice.total) - totalCreditNotesCreated;
+      setMaxAvailableAmount(Math.max(0, available));
+      setAmount(available > 0 ? available.toFixed(2) : '0');
+    } catch (error) {
+      console.error('Error calculating max available amount:', error);
+      setMaxAvailableAmount(Number(invoice.total));
+    }
+  };
 
   const generateCreditNoteNumber = async () => {
     if (!user) return;
@@ -1280,10 +1326,22 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
     e.preventDefault();
     if (!user) return;
 
+    const amountValue = parseFloat(amount);
+
+    // Validate amount
+    if (amountValue <= 0) {
+      alert('Le montant doit être supérieur à 0');
+      return;
+    }
+
+    if (amountValue > maxAvailableAmount) {
+      alert(`Le montant ne peut pas dépasser ${maxAvailableAmount.toFixed(2)} €`);
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const amountValue = parseFloat(amount);
       const taxRate = Number(invoice.tax_rate);
       const subtotal = amountValue / (1 + taxRate / 100);
       const taxAmount = amountValue - subtotal;
@@ -1291,6 +1349,7 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
       const creditNoteData = {
         user_id: user.id,
         dentist_id: invoice.dentist_id,
+        source_invoice_id: invoice.id,
         credit_note_number: creditNoteNumber,
         reason,
         subtotal: subtotal,
@@ -1355,12 +1414,17 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
                 value={amount}
                 onChange={(e) => setAmount(e.target.value)}
                 required
-                max={invoice.total}
+                max={maxAvailableAmount}
                 className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
               <p className="text-xs text-slate-500 mt-1">
-                Montant maximum: {Number(invoice.total).toFixed(2)} €
+                Montant maximum disponible: {maxAvailableAmount.toFixed(2)} €
               </p>
+              {maxAvailableAmount === 0 && (
+                <p className="text-xs text-red-600 mt-1 font-semibold">
+                  ⚠️ Le montant total d'avoirs a déjà été atteint pour cette facture
+                </p>
+              )}
             </div>
 
             <div>
