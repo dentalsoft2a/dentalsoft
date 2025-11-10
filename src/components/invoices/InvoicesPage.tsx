@@ -274,16 +274,18 @@ export default function InvoicesPage() {
       sent: 'bg-blue-100 text-primary-700',
       paid: 'bg-green-100 text-green-700',
       partial: 'bg-orange-100 text-orange-700',
+      credit_note: 'bg-purple-100 text-purple-700',
     };
     const labels = {
       draft: 'Non payée',
       sent: 'Envoyée',
       paid: 'Payée',
       partial: 'Partiellement payée',
+      credit_note: 'Avoir',
     };
     return (
-      <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status as keyof typeof styles]}`}>
-        {labels[status as keyof typeof labels]}
+      <span className={`px-2 py-1 text-xs font-medium rounded-full ${styles[status as keyof typeof styles] || 'bg-slate-100 text-slate-700'}`}>
+        {labels[status as keyof typeof labels] || status}
       </span>
     );
   };
@@ -1143,6 +1145,12 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
       const { error } = await supabase.from("credit_notes").insert([creditNoteData]);
 
       if (error) throw error;
+
+      // Update invoice status to 'credit_note'
+      await supabase
+        .from("invoices")
+        .update({ status: "credit_note" })
+        .eq("id", invoice.id);
 
       alert("Avoir créé avec succès!");
       onSave();
