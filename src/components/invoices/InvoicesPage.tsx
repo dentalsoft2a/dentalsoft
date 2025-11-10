@@ -1446,6 +1446,7 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
         type: creditNoteType,
         is_correction: creditNoteType === 'correction',
         reduces_net_amount: creditNoteType === 'correction',
+        used: creditNoteType === 'correction', // Correction credit notes are automatically "used"
       };
 
       const { error } = await supabase.from("credit_notes").insert([creditNoteData]);
@@ -1618,29 +1619,6 @@ interface CreditNotesListModalProps {
 
 function CreditNotesListModal({ invoice, creditNotes, onClose, onRefresh }: CreditNotesListModalProps) {
   const { user } = useAuth();
-  const [deletingId, setDeletingId] = useState<string | null>(null);
-
-  const handleDelete = async (creditNoteId: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer cet avoir ?")) return;
-
-    setDeletingId(creditNoteId);
-    try {
-      const { error } = await supabase
-        .from("credit_notes")
-        .delete()
-        .eq("id", creditNoteId);
-
-      if (error) throw error;
-
-      alert("Avoir supprimé avec succès!");
-      onRefresh();
-    } catch (error) {
-      console.error("Error deleting credit note:", error);
-      alert("Erreur lors de la suppression de l'avoir");
-    } finally {
-      setDeletingId(null);
-    }
-  };
 
   const totalCreditNotes = creditNotes.reduce((sum, cn) => sum + Number(cn.total), 0);
 
@@ -1714,15 +1692,6 @@ function CreditNotesListModal({ invoice, creditNotes, onClose, onRefresh }: Cred
                         TVA ({Number(creditNote.tax_rate)}%): {Number(creditNote.tax_amount).toFixed(2)} €
                       </div>
                     </div>
-                  </div>
-                  <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
-                    <button
-                      onClick={() => handleDelete(creditNote.id)}
-                      disabled={deletingId === creditNote.id}
-                      className="px-4 py-2 text-sm bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all disabled:opacity-50"
-                    >
-                      {deletingId === creditNote.id ? "Suppression..." : "Supprimer"}
-                    </button>
                   </div>
                 </div>
               ))}
