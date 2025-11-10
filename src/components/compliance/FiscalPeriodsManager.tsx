@@ -93,6 +93,72 @@ export function FiscalPeriodsManager() {
     }
   };
 
+  const downloadReport = async (period: FiscalPeriod) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      // Récupérer le profil du laboratoire
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      // Récupérer toutes les factures de la période
+      const { data: invoices } = await supabase
+        .from('invoices')
+        .select('*, dentists(name)')
+        .eq('user_id', user.id)
+        .gte('date', period.period_start)
+        .lte('date', period.period_end)
+        .order('invoice_number');
+
+      // Récupérer tous les avoirs de la période
+      const { data: creditNotes } = await supabase
+        .from('credit_notes')
+        .select('*, dentists(name)')
+        .eq('laboratory_id', user.id)
+        .gte('issue_date', period.period_start)
+        .lte('issue_date', period.period_end)
+        .order('credit_note_number');
+
+      // Générer le rapport via l'edge function
+      const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate`;
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          period,
+          profile,
+          invoices,
+          creditNotes,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Erreur lors de la génération du rapport');
+      }
+
+      // Télécharger le PDF
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `rapport-fiscal-${formatPeriod(period.period_start, period.period_end, period.period_type).replace(/\s/g, '-')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error: any) {
+      console.error('Error downloading report:', error);
+      alert(`Erreur lors du téléchargement: ${error.message}`);
+    }
+  };
+
   const formatPeriod = (start: string, end: string, type: string) => {
     const startDate = new Date(start);
     const endDate = new Date(end);
@@ -300,6 +366,7 @@ export function FiscalPeriodsManager() {
                       )}
                       {period.status === 'closed' && period.seal_hash && (
                         <button
+                          onClick={() => downloadReport(period)}
                           className="px-3 py-1.5 bg-slate-100 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-200 transition-colors flex items-center gap-1"
                           title={`Hash: ${period.seal_hash}`}
                         >
