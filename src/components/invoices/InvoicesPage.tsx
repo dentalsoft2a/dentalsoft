@@ -354,6 +354,24 @@ export default function InvoicesPage() {
     );
   };
 
+  // Calculate totals for current month
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  const currentMonthInvoices = invoices.filter(invoice => {
+    const invoiceDate = new Date(invoice.date);
+    return invoiceDate.getMonth() === currentMonth && invoiceDate.getFullYear() === currentYear;
+  });
+
+  const totalPaidCurrentMonth = currentMonthInvoices
+    .filter(invoice => invoice.status === 'paid' || invoice.status === 'credit_note_paid')
+    .reduce((sum, invoice) => sum + Number(invoice.net_amount || invoice.total), 0);
+
+  const totalUnpaidCurrentMonth = currentMonthInvoices
+    .filter(invoice => invoice.status === 'draft' || invoice.status === 'sent' || invoice.status === 'partial')
+    .reduce((sum, invoice) => sum + Number(invoice.net_amount || invoice.total), 0);
+
   return (
     <div>
       <div className="mb-8 flex items-center justify-between flex-wrap gap-4">
@@ -373,7 +391,7 @@ export default function InvoicesPage() {
 
       <div className="bg-white rounded-xl shadow-lg border border-slate-200/50 hover:shadow-xl transition-all duration-300 overflow-hidden">
         <div className="p-4 border-b border-slate-200">
-          <div className="relative">
+          <div className="relative mb-4">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
             <input
               type="text"
@@ -382,6 +400,30 @@ export default function InvoicesPage() {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
             />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-700">Total TTC payé (mois en cours)</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  {totalPaidCurrentMonth.toFixed(2)} €
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 mt-1">
+                {currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid').length} facture{currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid').length > 1 ? 's' : ''} payée{currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid').length > 1 ? 's' : ''}
+              </p>
+            </div>
+            <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl p-4">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-slate-700">Total TTC non payé (mois en cours)</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
+                  {totalUnpaidCurrentMonth.toFixed(2)} €
+                </span>
+              </div>
+              <p className="text-xs text-slate-600 mt-1">
+                {currentMonthInvoices.filter(i => i.status === 'draft' || i.status === 'sent' || i.status === 'partial').length} facture{currentMonthInvoices.filter(i => i.status === 'draft' || i.status === 'sent' || i.status === 'partial').length > 1 ? 's' : ''} non payée{currentMonthInvoices.filter(i => i.status === 'draft' || i.status === 'sent' || i.status === 'partial').length > 1 ? 's' : ''}
+              </p>
+            </div>
           </div>
         </div>
 
