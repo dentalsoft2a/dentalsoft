@@ -801,6 +801,7 @@ interface PaymentModalProps {
 function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
   const { user } = useAuth();
   const [payments, setPayments] = useState<Database['public']['Tables']['invoice_payments']['Row'][]>([]);
+  const [availableCreditNotes, setAvailableCreditNotes] = useState<CreditNote[]>([]);
   const [totalCreditNotes, setTotalCreditNotes] = useState(0);
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
@@ -826,10 +827,12 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       // Load credit notes for this dentist
       const { data: creditNotesData } = await supabase
         .from('credit_notes')
-        .select('total')
+        .select('*')
         .eq('dentist_id', invoice.dentist_id)
-        .eq('used', false);
+        .eq('used', false)
+        .order('created_at', { ascending: true });
 
+      setAvailableCreditNotes(creditNotesData || []);
       const creditNotesTotal = creditNotesData?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
       setTotalCreditNotes(creditNotesTotal);
 
@@ -887,6 +890,61 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
     }
   };
 
+
+  const handleApplyCreditNote = async (creditNoteId: string) => {
+    if (!confirm("Voulez-vous appliquer cet avoir à cette facture ?")) return;
+
+    setLoading(true);
+    try {
+      // Mark credit note as used
+      const { error: updateError } = await supabase
+        .from('credit_notes')
+        .update({ used: true })
+        .eq('id', creditNoteId);
+
+      if (updateError) throw updateError;
+
+      // Reload payments and credit notes
+      await loadPayments();
+
+      // Calculate new status
+      const totalPaidNow = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+      // Get updated credit notes total (excluding the one we just used)
+      const { data: updatedCreditNotes } = await supabase
+        .from('credit_notes')
+        .select('total')
+        .eq('dentist_id', invoice.dentist_id)
+        .eq('used', false);
+
+      const creditNotesTotal = updatedCreditNotes?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+
+      // Get the credit note we just used
+      const { data: usedCreditNote } = await supabase
+        .from('credit_notes')
+        .select('total')
+        .eq('id', creditNoteId)
+        .single();
+
+      const usedAmount = usedCreditNote ? Number(usedCreditNote.total) : 0;
+      const invoiceTotal = Number(invoice.total);
+      const totalWithCreditNotes = totalPaidNow + creditNotesTotal + usedAmount;
+      const newStatus = totalWithCreditNotes >= invoiceTotal ? 'paid' : totalWithCreditNotes > 0 ? 'partial' : 'draft';
+
+      await supabase
+        .from('invoices')
+        .update({ status: newStatus })
+        .eq('id', invoice.id);
+
+      alert("Avoir appliqué avec succès!");
+      onSave();
+    } catch (error) {
+      console.error('Error applying credit note:', error);
+      alert('Erreur lors de l\'application de l\'avoir');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
   const remaining = Number(invoice.total) - totalPaid - totalCreditNotes;
@@ -1047,6 +1105,54 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
               </div>
             )}
           </div>
+
+          {availableCreditNotes.length > 0 && (
+            <div className="bg-gradient-to-br from-purple-50 to-white p-6 rounded-2xl border border-purple-200/50 shadow-sm">
+              <h3 className="text-lg font-bold text-slate-800 mb-5 flex items-center gap-2">
+                <div className="w-1.5 h-6 bg-gradient-to-b from-purple-500 to-pink-500 rounded-full"></div>
+                Avoirs disponibles ({availableCreditNotes.length})
+              </h3>
+              <div className="space-y-3">
+                {availableCreditNotes.map((creditNote) => (
+                  <div
+                    key={creditNote.id}
+                    className="bg-white border border-purple-200 rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex-1">
+                      <div className="font-bold text-slate-900 mb-1">
+                        {creditNote.credit_note_number}
+                      </div>
+                      <div className="text-sm text-slate-600">
+                        {new Date(creditNote.date).toLocaleDateString('fr-FR')}
+                      </div>
+                      {creditNote.reason && (
+                        <div className="text-xs text-slate-500 mt-1 italic">
+                          "{creditNote.reason}"
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <div className="text-xl font-bold text-purple-600">
+                          {Number(creditNote.total).toFixed(2)} €
+                        </div>
+                        <div className="text-xs text-slate-500">
+                          HT: {Number(creditNote.subtotal).toFixed(2)} €
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleApplyCreditNote(creditNote.id)}
+                        disabled={loading}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-all disabled:opacity-50 whitespace-nowrap"
+                      >
+                        Appliquer
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="relative p-8 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-cyan-50/20 rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
