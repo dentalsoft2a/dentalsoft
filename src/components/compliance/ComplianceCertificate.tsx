@@ -1,6 +1,11 @@
 import { useState, useEffect } from 'react';
-import { Download, FileText, Shield, CheckCircle } from 'lucide-react';
+import { Download, FileText, Shield, CheckCircle, BookOpen } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import {
+  generatePlanTechniquePDF,
+  generateConformiteLegalePDF,
+  generateGuideUtilisateurPDF
+} from '../../utils/documentationPdfGenerator';
 
 interface Profile {
   laboratory_name: string;
@@ -328,19 +333,63 @@ de l'article 286, I, 3° bis du Code Général des Impôts.
             <div className="text-green-600 group-hover:translate-x-1 transition-transform">→</div>
           </button>
 
-          <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <FileText className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-            <div className="text-sm">
-              <p className="font-medium text-blue-900 mb-1">Documentation complète disponible</p>
-              <p className="text-blue-700">
-                Pour plus d'informations, consultez la documentation complète dans le dossier du projet:
+          <div className="mt-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <BookOpen className="w-5 h-5 text-blue-600" />
+              <h5 className="font-semibold text-slate-900">Documentation complète en PDF</h5>
+            </div>
+            <p className="text-sm text-slate-600 mb-4">
+              Téléchargez la documentation technique et légale complète au format PDF
+            </p>
+
+            <div className="space-y-2">
+              <button
+                onClick={() => generatePlanTechniquePDF(profile?.laboratory_name)}
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="w-4 h-4 text-blue-600" />
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-slate-900">Plan Technique (PDF)</div>
+                    <div className="text-xs text-slate-600">Architecture et implémentation détaillée</div>
+                  </div>
+                </div>
+                <div className="text-blue-600 group-hover:translate-x-1 transition-transform text-sm">→</div>
+              </button>
+
+              <button
+                onClick={() => generateConformiteLegalePDF(profile?.laboratory_name)}
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="w-4 h-4 text-blue-600" />
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-slate-900">Conformité Légale (PDF)</div>
+                    <div className="text-xs text-slate-600">Justification juridique et réglementaire</div>
+                  </div>
+                </div>
+                <div className="text-blue-600 group-hover:translate-x-1 transition-transform text-sm">→</div>
+              </button>
+
+              <button
+                onClick={() => generateGuideUtilisateurPDF(profile?.laboratory_name)}
+                className="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <Download className="w-4 h-4 text-blue-600" />
+                  <div className="text-left">
+                    <div className="text-sm font-medium text-slate-900">Guide Utilisateur (PDF)</div>
+                    <div className="text-xs text-slate-600">Mode d'emploi et FAQ</div>
+                  </div>
+                </div>
+                <div className="text-blue-600 group-hover:translate-x-1 transition-transform text-sm">→</div>
+              </button>
+            </div>
+
+            <div className="mt-3 p-3 bg-white/60 rounded border border-blue-100">
+              <p className="text-xs text-slate-600">
+                <span className="font-medium text-slate-700">💡 Conseil :</span> Téléchargez et conservez ces documents avec vos archives comptables. Ils constituent la preuve de conformité en cas de contrôle fiscal.
               </p>
-              <ul className="mt-2 space-y-1 text-blue-700">
-                <li>• PLAN_TECHNIQUE_CONFORMITE_ANTIFRAUD.md</li>
-                <li>• DOCUMENT_CONFORMITE_LEGALE.md</li>
-                <li>• ATTESTATION_CONFORMITE_MODELE.md</li>
-                <li>• DOCUMENTATION_UTILISATEUR.md</li>
-              </ul>
             </div>
           </div>
         </div>
