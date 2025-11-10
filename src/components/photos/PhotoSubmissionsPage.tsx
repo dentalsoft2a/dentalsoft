@@ -287,81 +287,74 @@ export default function PhotoSubmissionsPage() {
 
   return (
     <div className="p-3 md:p-6 max-w-7xl mx-auto">
-      <div className="mb-4 md:mb-8">
-        <div className="flex flex-col gap-3 md:gap-4 mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 md:gap-3">
-              <div className="p-2 md:p-3 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg md:rounded-xl">
-                <Camera className="w-5 h-5 md:w-6 md:h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg md:text-2xl font-bold text-slate-900">Photos Reçues</h1>
-                <p className="text-xs md:text-sm text-slate-600 hidden sm:block">Photos envoyées par les dentistes</p>
-              </div>
-            </div>
+      <div className="mb-6 md:mb-8 animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Photos Reçues</h1>
+            <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Photos envoyées par les dentistes</p>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+          <div className="flex gap-2 md:gap-3">
             <button
               onClick={loadSubmissions}
               disabled={loading}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base whitespace-nowrap"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm md:text-base font-medium"
               title="Actualiser la liste"
             >
-              <RefreshCw className={`w-4 h-4 md:w-5 md:h-5 ${loading ? 'animate-spin' : ''}`} />
-              <span className="hidden sm:inline">Actualiser</span>
+              <RefreshCw className={`w-5 h-5 flex-shrink-0 ${loading ? 'animate-spin' : ''}`} />
+              <span>Actualiser</span>
             </button>
             <button
               onClick={() => setShowAddModal(true)}
-              className="flex items-center gap-2 px-3 md:px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition text-sm md:text-base whitespace-nowrap"
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
             >
-              <Plus className="w-4 h-4 md:w-5 md:h-5" />
-              Ajouter
+              <Plus className="w-5 h-5 flex-shrink-0" />
+              <span>Ajouter</span>
             </button>
           </div>
         </div>
+      </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 flex items-start gap-2 md:gap-3 mb-4 md:mb-6">
-          <Info className="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs md:text-sm text-blue-800">
-            <p className="font-medium mb-1">Conservation des photos</p>
-            <p>Les photos sont automatiquement supprimées après 1 mois pour optimiser le stockage. Pensez à télécharger ou sauvegarder les images importantes.</p>
-          </div>
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 flex items-start gap-2 md:gap-3 mb-4 md:mb-6">
+        <Info className="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+        <div className="text-xs md:text-sm text-blue-800">
+          <p className="font-medium mb-1">Conservation des photos</p>
+          <p>Les photos sont automatiquement supprimées après 1 mois pour optimiser le stockage. Pensez à télécharger ou sauvegarder les images importantes.</p>
+        </div>
+      </div>
+
+      <div className="flex flex-col gap-3 md:gap-4 mb-4 md:mb-6">
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Rechercher par dentiste ou patient..."
+            className="w-full pl-9 md:pl-10 pr-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
         </div>
 
-        <div className="flex flex-col gap-3 md:gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
-            <input
-              type="text"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Rechercher par dentiste ou patient..."
-              className="w-full pl-9 md:pl-10 pr-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+        <div className="grid grid-cols-2 gap-3">
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 md:px-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="all">Tous les statuts</option>
+            <option value="pending">En attente</option>
+            <option value="viewed">Vue</option>
+            <option value="completed">Terminé</option>
+            <option value="rejected">Rejeté</option>
+          </select>
 
-          <div className="grid grid-cols-2 gap-3">
-            <select
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 md:px-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">Tous les statuts</option>
-              <option value="pending">En attente</option>
-              <option value="viewed">Vue</option>
-              <option value="completed">Terminé</option>
-              <option value="rejected">Rejeté</option>
-            </select>
-
-            <select
-              value={groupBy}
-              onChange={(e) => setGroupBy(e.target.value as 'dentist' | 'patient')}
-              className="px-3 md:px-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="dentist">Grouper par dentiste</option>
-              <option value="patient">Grouper par patient</option>
-            </select>
-          </div>
+          <select
+            value={groupBy}
+            onChange={(e) => setGroupBy(e.target.value as 'dentist' | 'patient')}
+            className="px-3 md:px-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="dentist">Grouper par dentiste</option>
+            <option value="patient">Grouper par patient</option>
+          </select>
         </div>
       </div>
 

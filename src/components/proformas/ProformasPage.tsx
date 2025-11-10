@@ -366,33 +366,33 @@ export default function ProformasPage() {
 
   return (
     <div>
-      <div className="mb-6 md:mb-8">
-        <div className="flex items-center justify-between mb-4 md:mb-0">
-          <div>
+      <div className="mb-6 md:mb-8 animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex-1 min-w-0">
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Proformas</h1>
             <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez vos devis et proformas</p>
           </div>
-        </div>
-        <div className="flex gap-2 md:gap-3 mt-4 md:mt-0">
-          <button
-            onClick={() => setShowBulkCreateModal(true)}
-            disabled={!hasValidSubscription && !isSuperAdmin}
-            className="flex-1 md:flex-none flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:scale-102 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg text-sm md:text-base"
-          >
-            <Receipt className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
-            <span className="truncate">Création en lot</span>
-          </button>
-          <button
-            onClick={() => {
-              setEditingProforma(null);
-              setShowModal(true);
-            }}
-            disabled={!hasValidSubscription && !isSuperAdmin}
-            className="flex-1 md:flex-none flex items-center justify-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 md:py-2.5 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:scale-102 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg text-sm md:text-base"
-          >
-            <Plus className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
-            <span className="truncate">Nouveau</span>
-          </button>
+          <div className="flex gap-2 md:gap-3">
+            <button
+              onClick={() => setShowBulkCreateModal(true)}
+              disabled={!hasValidSubscription && !isSuperAdmin}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:scale-100 text-sm md:text-base font-medium"
+            >
+              <Receipt className="w-5 h-5 flex-shrink-0" />
+              <span>Création en lot</span>
+            </button>
+            <button
+              onClick={() => {
+                setEditingProforma(null);
+                setShowModal(true);
+              }}
+              disabled={!hasValidSubscription && !isSuperAdmin}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg disabled:hover:scale-100 text-sm md:text-base font-medium"
+            >
+              <Plus className="w-5 h-5 flex-shrink-0" />
+              <span>Nouveau</span>
+            </button>
+          </div>
         </div>
       </div>
 

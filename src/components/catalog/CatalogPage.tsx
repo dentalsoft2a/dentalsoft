@@ -341,51 +341,50 @@ export default function CatalogPage() {
 
   return (
     <div>
-      <div className="mb-4 md:mb-8">
-        <div className="flex items-center justify-between mb-3 md:mb-4">
-          <div>
-            <h1 className="text-xl md:text-3xl font-bold text-slate-900">Catalogue</h1>
-            <p className="text-xs md:text-base text-slate-600 mt-1 md:mt-2">Gérez vos articles et prestations</p>
+      <div className="mb-6 md:mb-8 animate-fade-in">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Catalogue</h1>
+            <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez vos articles et prestations</p>
           </div>
-        </div>
-        <div className="flex items-center gap-2 md:gap-3 overflow-x-auto pb-1">
-          <button
-            onClick={handleExport}
-            disabled={items.length === 0}
-            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base whitespace-nowrap"
-          >
-            <Download className="w-4 h-4 md:w-5 md:h-5" />
-            <span className="hidden sm:inline">Exporter</span>
-          </button>
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-lg transition text-sm md:text-base whitespace-nowrap"
-          >
-            <Upload className="w-4 h-4 md:w-5 md:h-5" />
-            <span className="hidden sm:inline">Importer</span>
-          </button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json"
-            onChange={handleImport}
-            className="hidden"
-          />
-          <button
-            onClick={() => setShowTutorial(true)}
-            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition text-sm md:text-base whitespace-nowrap"
-          >
-            <HelpCircle className="w-4 h-4 md:w-5 md:h-5" />
-            <span className="hidden sm:inline">Guide</span>
-          </button>
-          <button
-            onClick={() => handleOpenModal()}
-            className="flex items-center gap-1.5 md:gap-2 px-3 md:px-4 py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-primary-700 hover:to-cyan-700 transition text-sm md:text-base whitespace-nowrap"
-          >
-            <Plus className="w-4 h-4 md:w-5 md:h-5" />
-            <span className="hidden sm:inline">Nouvel article</span>
-            <span className="sm:hidden">Nouveau</span>
-          </button>
+          <div className="flex gap-2 md:gap-3">
+            <button
+              onClick={handleExport}
+              disabled={items.length === 0}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm md:text-base font-medium"
+            >
+              <Download className="w-5 h-5 flex-shrink-0" />
+              <span>Exporter</span>
+            </button>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
+            >
+              <Upload className="w-5 h-5 flex-shrink-0" />
+              <span>Importer</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json"
+              onChange={handleImport}
+              className="hidden"
+            />
+            <button
+              onClick={() => setShowTutorial(true)}
+              className="hidden md:flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
+            >
+              <HelpCircle className="w-5 h-5 flex-shrink-0" />
+              <span>Guide</span>
+            </button>
+            <button
+              onClick={() => handleOpenModal()}
+              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
+            >
+              <Plus className="w-5 h-5 flex-shrink-0" />
+              <span>Nouveau</span>
+            </button>
+          </div>
         </div>
       </div>
 
