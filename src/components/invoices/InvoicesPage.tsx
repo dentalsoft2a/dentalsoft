@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Search, FileDown, CreditCard, Send, FileText } from 'lucide-react';
+import { Plus, Edit, Search, FileDown, CreditCard, Send, FileText, Eye } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -13,6 +13,8 @@ type Invoice = Database['public']['Tables']['invoices']['Row'] & {
   dentists?: { name: string };
 };
 
+type CreditNote = Database['public']['Tables']['credit_notes']['Row'];
+
 export default function InvoicesPage() {
   const { user, profile } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -22,9 +24,11 @@ export default function InvoicesPage() {
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showCreditNoteModal, setShowCreditNoteModal] = useState(false);
+  const [showCreditNotesListModal, setShowCreditNotesListModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [creditNotes, setCreditNotes] = useState<CreditNote[]>([]);
 
-  useLockScroll(showModal || showGenerateModal || showPaymentModal || showCreditNoteModal);
+  useLockScroll(showModal || showGenerateModal || showPaymentModal || showCreditNoteModal || showCreditNotesListModal);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
@@ -181,6 +185,32 @@ export default function InvoicesPage() {
   const handleCreateCreditNote = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setShowCreditNoteModal(true);
+  };
+
+  const handleViewCreditNotes = async (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    await loadCreditNotes(invoice.dentist_id);
+    setShowCreditNotesListModal(true);
+  };
+
+  const loadCreditNotes = async (dentistId: string) => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('credit_notes')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('dentist_id', dentistId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setCreditNotes(data || []);
+    } catch (error) {
+      console.error('Error loading credit notes:', error);
+      setCreditNotes([]);
+    }
   };
 
   const handleSendEmail = async (invoice: Invoice) => {
@@ -359,6 +389,13 @@ export default function InvoicesPage() {
                             <CreditCard className="w-4 h-4" />
                           </button>
                           <button
+                            onClick={() => handleViewCreditNotes(invoice)}
+                            className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200"
+                            title="Voir les avoirs"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
                             onClick={() => handleCreateCreditNote(invoice)}
                             className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition-all duration-200"
                             title="Créer un avoir"
@@ -424,6 +461,13 @@ export default function InvoicesPage() {
                       Paiements
                     </button>
                     <button
+                      onClick={() => handleViewCreditNotes(invoice)}
+                      className="p-2 bg-purple-50 text-purple-700 hover:bg-purple-100 rounded-lg transition-all active:scale-95"
+                      title="Voir les avoirs"
+                    >
+                      <Eye className="w-4 h-4" />
+                    </button>
+                    <button
                       onClick={() => handleCreateCreditNote(invoice)}
                       className="p-2 bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-lg transition-all active:scale-95"
                       title="Créer un avoir"
@@ -486,6 +530,23 @@ export default function InvoicesPage() {
             setShowCreditNoteModal(false);
             setSelectedInvoice(null);
             loadInvoices();
+          }}
+        />
+      )}
+
+      {showCreditNotesListModal && selectedInvoice && (
+        <CreditNotesListModal
+          invoice={selectedInvoice}
+          creditNotes={creditNotes}
+          onClose={() => {
+            setShowCreditNotesListModal(false);
+            setSelectedInvoice(null);
+            setCreditNotes([]);
+          }}
+          onRefresh={() => {
+            if (selectedInvoice) {
+              loadCreditNotes(selectedInvoice.dentist_id);
+            }
           }}
         />
       )}
@@ -738,6 +799,7 @@ interface PaymentModalProps {
 function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
   const { user } = useAuth();
   const [payments, setPayments] = useState<Database['public']['Tables']['invoice_payments']['Row'][]>([]);
+  const [totalCreditNotes, setTotalCreditNotes] = useState(0);
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'cash' | 'bank_transfer' | 'check' | 'credit_card'>('cash');
@@ -759,8 +821,18 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       if (error) throw error;
       setPayments(data || []);
 
+      // Load credit notes for this dentist
+      const { data: creditNotesData } = await supabase
+        .from('credit_notes')
+        .select('total')
+        .eq('dentist_id', invoice.dentist_id)
+        .eq('used', false);
+
+      const creditNotesTotal = creditNotesData?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+      setTotalCreditNotes(creditNotesTotal);
+
       const totalPaid = data?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
-      const remaining = Number(invoice.total) - totalPaid;
+      const remaining = Number(invoice.total) - totalPaid - creditNotesTotal;
       setAmount(remaining > 0 ? remaining.toFixed(2) : '');
     } catch (error) {
       console.error('Error loading payments:', error);
@@ -796,7 +868,8 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
         0
       );
       const invoiceTotal = Number(invoice.total);
-      const newStatus = totalPaid >= invoiceTotal ? 'paid' : totalPaid > 0 ? 'partial' : 'draft';
+      const totalWithCreditNotes = totalPaid + totalCreditNotes;
+      const newStatus = totalWithCreditNotes >= invoiceTotal ? 'paid' : totalWithCreditNotes > 0 ? 'partial' : 'draft';
 
       await supabase
         .from('invoices')
@@ -814,7 +887,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
 
 
   const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-  const remaining = Number(invoice.total) - totalPaid;
+  const remaining = Number(invoice.total) - totalPaid - totalCreditNotes;
 
   const getPaymentMethodLabel = (method: string) => {
     const labels: Record<string, string> = {
@@ -834,7 +907,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
           <h2 className="text-3xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent relative">
             Paiements - {invoice.invoice_number}
           </h2>
-          <div className="mt-4 flex gap-6 text-sm relative">
+          <div className="mt-4 flex flex-wrap gap-4 text-sm relative">
             <div className="flex items-center gap-2">
               <span className="text-slate-600 font-semibold">Total:</span>
               <span className="font-bold text-slate-900 text-base">{Number(invoice.total).toFixed(2)} €</span>
@@ -843,6 +916,12 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
               <span className="text-slate-600 font-semibold">Payé:</span>
               <span className="font-bold text-green-600 text-base">{totalPaid.toFixed(2)} €</span>
             </div>
+            {totalCreditNotes > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-slate-600 font-semibold">Avoirs disponibles:</span>
+                <span className="font-bold text-purple-600 text-base">{totalCreditNotes.toFixed(2)} €</span>
+              </div>
+            )}
             <div className="flex items-center gap-2">
               <span className="text-slate-600 font-semibold">Restant:</span>
               <span className="font-bold text-orange-600 text-base">{remaining.toFixed(2)} €</span>
@@ -1153,6 +1232,143 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
               {loading ? "Création..." : "Créer l'avoir"}
             </button>
           </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+interface CreditNotesListModalProps {
+  invoice: Invoice;
+  creditNotes: CreditNote[];
+  onClose: () => void;
+  onRefresh: () => void;
+}
+
+function CreditNotesListModal({ invoice, creditNotes, onClose, onRefresh }: CreditNotesListModalProps) {
+  const { user } = useAuth();
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const handleDelete = async (creditNoteId: string) => {
+    if (!confirm("Êtes-vous sûr de vouloir supprimer cet avoir ?")) return;
+
+    setDeletingId(creditNoteId);
+    try {
+      const { error } = await supabase
+        .from("credit_notes")
+        .delete()
+        .eq("id", creditNoteId);
+
+      if (error) throw error;
+
+      alert("Avoir supprimé avec succès!");
+      onRefresh();
+    } catch (error) {
+      console.error("Error deleting credit note:", error);
+      alert("Erreur lors de la suppression de l'avoir");
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const totalCreditNotes = creditNotes.reduce((sum, cn) => sum + Number(cn.total), 0);
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-4xl w-full max-h-[calc(100vh-2rem)] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
+        <div className="relative p-8 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-purple-50/20 z-10 rounded-t-3xl backdrop-blur-xl flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-blue-500/5 rounded-t-3xl"></div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 via-blue-600 to-purple-600 bg-clip-text text-transparent relative">
+            Avoirs - Facture {invoice.invoice_number}
+          </h2>
+          <p className="text-slate-600 mt-2 relative">
+            Dentiste: {invoice.dentists?.name || "N/A"}
+          </p>
+          <div className="mt-4 flex items-center gap-4 relative">
+            <div className="bg-white rounded-lg px-4 py-2 border border-slate-200">
+              <span className="text-sm text-slate-600">Total des avoirs:</span>
+              <span className="ml-2 font-bold text-purple-600">{totalCreditNotes.toFixed(2)} €</span>
+            </div>
+            <div className="bg-white rounded-lg px-4 py-2 border border-slate-200">
+              <span className="text-sm text-slate-600">Montant facture:</span>
+              <span className="ml-2 font-bold text-slate-900">{Number(invoice.total).toFixed(2)} €</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-8">
+          {creditNotes.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="w-16 h-16 mx-auto text-slate-300 mb-4" />
+              <p className="text-slate-600">Aucun avoir pour ce dentiste</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {creditNotes.map((creditNote) => (
+                <div
+                  key={creditNote.id}
+                  className="border border-slate-200 rounded-xl p-6 hover:shadow-md transition-shadow bg-gradient-to-br from-white to-slate-50/30"
+                >
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-2">
+                        <h3 className="text-lg font-bold text-slate-900">
+                          {creditNote.credit_note_number}
+                        </h3>
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          creditNote.used
+                            ? "bg-gray-100 text-gray-700"
+                            : "bg-green-100 text-green-700"
+                        }`}>
+                          {creditNote.used ? "Utilisé" : "Disponible"}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-600">
+                        Date: {new Date(creditNote.date).toLocaleDateString("fr-FR")}
+                      </p>
+                      {creditNote.reason && (
+                        <p className="text-sm text-slate-700 mt-2 italic">
+                          "{creditNote.reason}"
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-right ml-4">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {Number(creditNote.total).toFixed(2)} €
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        HT: {Number(creditNote.subtotal).toFixed(2)} €
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        TVA ({Number(creditNote.tax_rate)}%): {Number(creditNote.tax_amount).toFixed(2)} €
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                    <button
+                      onClick={() => handleDelete(creditNote.id)}
+                      disabled={deletingId === creditNote.id}
+                      className="px-4 py-2 text-sm bg-red-50 text-red-600 hover:bg-red-100 rounded-lg transition-all disabled:opacity-50"
+                    >
+                      {deletingId === creditNote.id ? "Suppression..." : "Supprimer"}
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="relative p-8 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-purple-50/20 rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-purple-500/5 to-blue-500/5 rounded-b-3xl"></div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-full px-8 py-4 border-2 border-slate-300 text-slate-700 rounded-2xl hover:bg-white hover:border-slate-400 transition-all duration-300 font-bold hover:scale-[1.02] shadow-sm hover:shadow-md text-lg relative"
+          >
+            Fermer
+          </button>
         </div>
       </div>
     </div>
