@@ -664,10 +664,31 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
 
     setLoadingDeliveryNotes(true);
     try {
+      // First, get all delivery note IDs that are already used in proforma_items
+      const { data: usedDeliveryNotes, error: usedError } = await supabase
+        .from('proforma_items')
+        .select('delivery_note_id')
+        .not('delivery_note_id', 'is', null);
+
+      if (usedError) throw usedError;
+
+      // Extract unique delivery note IDs that are already used
+      const usedDeliveryNoteIds = [...new Set(
+        usedDeliveryNotes
+          ?.map(item => item.delivery_note_id)
+          .filter(id => id != null) || []
+      )];
+
+      // Build the query for available delivery notes
       let query = supabase
         .from('delivery_notes')
         .select('*, dentists(name)')
         .eq('user_id', user.id);
+
+      // Exclude delivery notes that are already used in proformas
+      if (usedDeliveryNoteIds.length > 0) {
+        query = query.not('id', 'in', `(${usedDeliveryNoteIds.join(',')})`);
+      }
 
       if (formData.dentist_id) {
         query = query.eq('dentist_id', formData.dentist_id);
