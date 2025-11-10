@@ -21,9 +21,10 @@ export default function InvoicesPage() {
   const [showModal, setShowModal] = useState(false);
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showCreditNoteModal, setShowCreditNoteModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
-  useLockScroll(showModal || showGenerateModal || showPaymentModal);
+  useLockScroll(showModal || showGenerateModal || showPaymentModal || showCreditNoteModal);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
 
@@ -178,7 +179,8 @@ export default function InvoicesPage() {
   };
 
   const handleCreateCreditNote = (invoice: Invoice) => {
-    window.location.href = `/credit-notes?invoice_id=${invoice.id}`;
+    setSelectedInvoice(invoice);
+    setShowCreditNoteModal(true);
   };
 
   const handleSendEmail = async (invoice: Invoice) => {
@@ -467,6 +469,21 @@ export default function InvoicesPage() {
           }}
           onSave={() => {
             setShowPaymentModal(false);
+            setSelectedInvoice(null);
+            loadInvoices();
+          }}
+        />
+      )}
+
+      {showCreditNoteModal && selectedInvoice && (
+        <CreditNoteModal
+          invoice={selectedInvoice}
+          onClose={() => {
+            setShowCreditNoteModal(false);
+            setSelectedInvoice(null);
+          }}
+          onSave={() => {
+            setShowCreditNoteModal(false);
             setSelectedInvoice(null);
             loadInvoices();
           }}
@@ -960,6 +977,176 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
           >
             Fermer
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+interface CreditNoteModalProps {
+  invoice: Invoice;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
+  const { user, profile } = useAuth();
+  const [creditNoteNumber, setCreditNoteNumber] = useState("");
+  const [reason, setReason] = useState("");
+  const [amount, setAmount] = useState(invoice.total.toString());
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    generateCreditNoteNumber();
+  }, []);
+
+  const generateCreditNoteNumber = async () => {
+    if (!user) return;
+
+    try {
+      const { data, error } = await supabase
+        .from("credit_notes")
+        .select("credit_note_number")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (error) throw error;
+
+      const year = new Date().getFullYear();
+      let nextNumber = 1;
+
+      if (data && data.length > 0) {
+        const lastNumber = data[0].credit_note_number;
+        const match = lastNumber.match(/AV-(\d{4})-(\d+)/);
+        if (match) {
+          const lastYear = parseInt(match[1]);
+          const lastNum = parseInt(match[2]);
+          if (lastYear === year) {
+            nextNumber = lastNum + 1;
+          }
+        }
+      }
+
+      setCreditNoteNumber(`AV-${year}-${nextNumber.toString().padStart(4, "0")}`);
+    } catch (error) {
+      console.error("Error generating credit note number:", error);
+      const year = new Date().getFullYear();
+      setCreditNoteNumber(`AV-${year}-0001`);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setLoading(true);
+
+    try {
+      const creditNoteData = {
+        user_id: user.id,
+        invoice_id: invoice.id,
+        dentist_id: invoice.dentist_id,
+        credit_note_number: creditNoteNumber,
+        reason,
+        amount: parseFloat(amount),
+        status: "draft",
+        date: new Date().toISOString(),
+      };
+
+      const { error } = await supabase.from("credit_notes").insert([creditNoteData]);
+
+      if (error) throw error;
+
+      alert("Avoir créé avec succès!");
+      onSave();
+    } catch (error) {
+      console.error("Error creating credit note:", error);
+      alert("Erreur lors de la création de l'avoir");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gradient-to-br from-slate-900/80 via-slate-800/80 to-slate-900/80 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in duration-300">
+      <div className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full max-h-[calc(100vh-2rem)] flex flex-col animate-in slide-in-from-bottom-8 duration-500 border border-slate-200/50">
+        <div className="relative p-8 border-b border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-orange-50/20 z-10 rounded-t-3xl backdrop-blur-xl flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-red-500/5 rounded-t-3xl"></div>
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 via-red-600 to-orange-600 bg-clip-text text-transparent relative">
+            Créer un avoir
+          </h2>
+          <p className="text-slate-600 mt-2 relative">Facture: {invoice.invoice_number}</p>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-8">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Numéro d'avoir
+              </label>
+              <input
+                type="text"
+                value={creditNoteNumber}
+                disabled
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent bg-slate-50"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Montant <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                required
+                max={invoice.total}
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              />
+              <p className="text-xs text-slate-500 mt-1">
+                Montant maximum: {Number(invoice.total).toFixed(2)} €
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Raison <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+                required
+                rows={4}
+                placeholder="Expliquez la raison de cet avoir..."
+                className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+              />
+            </div>
+          </form>
+        </div>
+
+        <div className="relative p-8 border-t border-slate-100 bg-gradient-to-br from-white via-slate-50/30 to-orange-50/20 rounded-b-3xl backdrop-blur-xl z-[100] flex-shrink-0">
+          <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-red-500/5 rounded-b-3xl"></div>
+          <div className="flex gap-4 relative">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-8 py-4 border-2 border-slate-300 text-slate-700 rounded-2xl hover:bg-white hover:border-slate-400 transition-all duration-300 font-bold hover:scale-[1.02] shadow-sm hover:shadow-md text-lg"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="flex-1 px-8 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-2xl hover:from-orange-700 hover:to-red-700 transition-all duration-300 font-bold hover:scale-[1.02] shadow-lg hover:shadow-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+            >
+              {loading ? "Création..." : "Créer l'avoir"}
+            </button>
+          </div>
         </div>
       </div>
     </div>
