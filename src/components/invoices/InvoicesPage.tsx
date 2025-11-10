@@ -896,6 +896,30 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
 
     setLoading(true);
     try {
+      // Get the credit note
+      const { data: creditNote, error: fetchError } = await supabase
+        .from('credit_notes')
+        .select('*')
+        .eq('id', creditNoteId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!creditNote) throw new Error("Avoir introuvable");
+
+      // Create a payment for this credit note (trigger will update invoice status automatically)
+      const { error: paymentError } = await supabase
+        .from('invoice_payments')
+        .insert({
+          invoice_id: invoice.id,
+          amount: Number(creditNote.total),
+          payment_method: 'credit_note',
+          payment_date: new Date().toISOString().split('T')[0],
+          notes: `Avoir appliqué: ${creditNote.credit_note_number}`,
+          user_id: user!.id,
+        });
+
+      if (paymentError) throw paymentError;
+
       // Mark credit note as used
       const { error: updateError } = await supabase
         .from('credit_notes')
@@ -903,38 +927,6 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
         .eq('id', creditNoteId);
 
       if (updateError) throw updateError;
-
-      // Reload payments and credit notes
-      await loadPayments();
-
-      // Calculate new status
-      const totalPaidNow = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-
-      // Get updated credit notes total (excluding the one we just used)
-      const { data: updatedCreditNotes } = await supabase
-        .from('credit_notes')
-        .select('total')
-        .eq('dentist_id', invoice.dentist_id)
-        .eq('used', false);
-
-      const creditNotesTotal = updatedCreditNotes?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
-
-      // Get the credit note we just used
-      const { data: usedCreditNote } = await supabase
-        .from('credit_notes')
-        .select('total')
-        .eq('id', creditNoteId)
-        .single();
-
-      const usedAmount = usedCreditNote ? Number(usedCreditNote.total) : 0;
-      const invoiceTotal = Number(invoice.total);
-      const totalWithCreditNotes = totalPaidNow + creditNotesTotal + usedAmount;
-      const newStatus = totalWithCreditNotes >= invoiceTotal ? 'paid' : totalWithCreditNotes > 0 ? 'partial' : 'draft';
-
-      await supabase
-        .from('invoices')
-        .update({ status: newStatus })
-        .eq('id', invoice.id);
 
       alert("Avoir appliqué avec succès!");
       onSave();
@@ -955,6 +947,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       bank_transfer: 'Virement',
       check: 'Chèque',
       credit_card: 'Carte bancaire',
+      credit_note: 'Avoir',
     };
     return labels[method] || method;
   };
