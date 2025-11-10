@@ -62,6 +62,37 @@ export const generateDocumentationPDF = (
     return false;
   };
 
+  // Fonction pour nettoyer et normaliser le texte
+  const cleanText = (text: string): string => {
+    return text
+      .replace(/✓/g, '[OK]')
+      .replace(/✅/g, '[OK]')
+      .replace(/❌/g, '[X]')
+      .replace(/•/g, '-')
+      .replace(/→/g, '->')
+      .replace(/'/g, "'")
+      .replace(/'/g, "'")
+      .replace(/"/g, '"')
+      .replace(/"/g, '"')
+      .replace(/…/g, '...')
+      .replace(/–/g, '-')
+      .replace(/—/g, '-')
+      .replace(/💡/g, '[INFO]')
+      .replace(/⚠️/g, '[ATTENTION]')
+      .replace(/📄/g, '')
+      .replace(/📘/g, '')
+      .replace(/📗/g, '')
+      .replace(/📙/g, '')
+      .replace(/🎉/g, '')
+      .replace(/🎊/g, '')
+      .replace(/🔒/g, '')
+      .replace(/🔐/g, '')
+      .replace(/🔧/g, '')
+      .replace(/📊/g, '')
+      .replace(/📋/g, '')
+      .replace(/🗄️/g, '');
+  };
+
   // Parcourir les sections
   sections.forEach((section, index) => {
     checkPageBreak(20);
@@ -71,7 +102,8 @@ export const generateDocumentationPDF = (
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 102, 204); // Bleu
 
-    const titleLines = doc.splitTextToSize(section.title, maxWidth);
+    const cleanTitle = cleanText(section.title);
+    const titleLines = doc.splitTextToSize(cleanTitle, maxWidth);
     titleLines.forEach((line: string) => {
       checkPageBreak(10);
       doc.text(line, margin, yPosition);
@@ -84,7 +116,8 @@ export const generateDocumentationPDF = (
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(0);
 
-    const contentLines = doc.splitTextToSize(section.content, maxWidth);
+    const cleanContent = cleanText(section.content);
+    const contentLines = doc.splitTextToSize(cleanContent, maxWidth);
     contentLines.forEach((line: string) => {
       checkPageBreak(7);
       doc.text(line, margin, yPosition);
