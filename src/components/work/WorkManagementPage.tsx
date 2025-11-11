@@ -38,7 +38,6 @@ interface WorkStage {
   name: string;
   description: string;
   order_index: number;
-  weight: number;
   color: string;
   is_active: boolean;
 }

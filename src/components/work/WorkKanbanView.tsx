@@ -31,7 +31,6 @@ interface WorkStage {
   name: string;
   description: string;
   order_index: number;
-  weight: number;
   color: string;
   is_active: boolean;
 }
@@ -217,27 +216,18 @@ export default function WorkKanbanView({
         }
       }
 
-      // Calculate progress based on completed stages weights
+      // Calculate progress based on completed stages
       const { data: completedStages } = await supabase
         .from('delivery_note_stages')
         .select('stage_id, is_completed')
         .eq('delivery_note_id', draggedNote)
         .eq('is_completed', true);
 
-      const totalWeight = workStages.reduce((sum, stage) => sum + stage.weight, 0);
-      let completedWeight = 0;
+      const totalStages = workStages.length;
+      const completedCount = completedStages?.length || 0;
 
-      if (completedStages) {
-        for (const completed of completedStages) {
-          const stage = workStages.find(s => s.id === completed.stage_id);
-          if (stage) {
-            completedWeight += stage.weight;
-          }
-        }
-      }
-
-      const progressPercentage = totalWeight > 0
-        ? Math.round((completedWeight / totalWeight) * 100)
+      const progressPercentage = totalStages > 0
+        ? Math.round((completedCount / totalStages) * 100)
         : 0;
 
       // Update delivery note with new stage and progress

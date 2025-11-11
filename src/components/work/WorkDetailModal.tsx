@@ -14,7 +14,6 @@ interface WorkStage {
   name: string;
   description: string;
   order_index: number;
-  weight: number;
   color: string;
   is_active: boolean;
 }
@@ -299,11 +298,9 @@ export default function WorkDetailModal({
   };
 
   const calculateProgress = () => {
-    const totalWeight = workStages.reduce((sum, stage) => sum + stage.weight, 0);
-    const completedWeight = workStages.reduce((sum, stage) => {
-      return sum + (stageProgress[stage.id]?.is_completed ? stage.weight : 0);
-    }, 0);
-    return totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
+    const totalStages = workStages.length;
+    const completedCount = workStages.filter(stage => stageProgress[stage.id]?.is_completed).length;
+    return totalStages > 0 ? Math.round((completedCount / totalStages) * 100) : 0;
   };
 
   const advanceToNextStage = () => {
@@ -487,7 +484,7 @@ export default function WorkDetailModal({
                           {index + 1}. {stage.name}
                         </h4>
                         <span className="text-xs text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                          {stage.weight} pts
+                          Étape {stage.order_index}
                         </span>
                       </div>
                       {stage.description && (
