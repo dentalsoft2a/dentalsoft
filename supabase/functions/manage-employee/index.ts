@@ -53,8 +53,6 @@ Deno.serve(async (req: Request) => {
       throw new Error("Unauthorized");
     }
 
-    console.log('Current user ID:', currentUser.id);
-
     // Check if user exists in profiles table (laboratory owner)
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
@@ -62,22 +60,11 @@ Deno.serve(async (req: Request) => {
       .eq("id", currentUser.id)
       .maybeSingle();
 
-    console.log('Profile lookup result:', { profile, profileError });
-
-    // If not found in profiles, user is not a laboratory owner
     if (profileError || !profile) {
-      console.error("User is not a laboratory owner");
       throw new Error("Only laboratory owners can manage employees");
     }
 
     const requestData: CreateEmployeeRequest = await req.json();
-    console.log('Request data:', { 
-      action: requestData.action,
-      email: requestData.email,
-      full_name: requestData.full_name,
-      role_name: requestData.role_name,
-      has_password: !!requestData.password 
-    });
 
     if (!requestData.email || !requestData.full_name || !requestData.role_name) {
       throw new Error("Missing required fields: email, full_name, or role_name");
@@ -85,13 +72,11 @@ Deno.serve(async (req: Request) => {
 
     // Handle different actions
     if (requestData.action === 'create') {
-      // Create new user account
       if (!requestData.password) {
         throw new Error("Password is required for creating new employee");
       }
 
       // Check if email already exists
-      console.log('Checking if email already exists...');
       const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
       const emailExists = existingUsers?.users.some(u => u.email === requestData.email);
       
@@ -99,8 +84,7 @@ Deno.serve(async (req: Request) => {
         throw new Error(`Email ${requestData.email} is already registered`);
       }
 
-      console.log('Creating new user account...');
-
+      // Create user account with employee flag
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: requestData.email,
         password: requestData.password,
@@ -112,40 +96,64 @@ Deno.serve(async (req: Request) => {
       });
 
       if (authError) {
-        console.error("Auth error details:", {
-          message: authError.message,
-          status: authError.status,
-          name: authError.name
-        });
-        throw new Error(`Failed to create user account: ${authError.message}`);
+        throw new Error(`Auth error: ${authError.message}`);
       }
 
       if (!authData.user) {
-        throw new Error("Failed to create user account - no user returned");
+        throw new Error("No user returned from auth");
       }
 
-      console.log('User account created:', authData.user.id);
+      const userId = authData.user.id;
 
-      // Wait a bit for triggers to complete
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Wait for triggers to complete (reduced wait time)
+      await new Promise(resolve => setTimeout(resolve, 500));
 
-      // Check if user_profile was created by trigger
-      console.log('Checking if user_profile was created...');
-      const { data: userProfile } = await supabaseAdmin
-        .from('user_profiles')
-        .select('id, email')
-        .eq('id', authData.user.id)
-        .maybeSingle();
+      // Verify user_profile was created
+      let retries = 0;
+      let userProfile = null;
+      
+      while (retries < 5) {
+        const { data } = await supabaseAdmin
+          .from('user_profiles')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
+        
+        if (data) {
+          userProfile = data;
+          break;
+        }
+        
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
 
-      console.log('User profile check:', userProfile);
+      if (!userProfile) {
+        // Manually create user_profile if trigger failed
+        const { error: upError } = await supabaseAdmin
+          .from('user_profiles')
+          .insert({
+            id: userId,
+            email: requestData.email,
+            role: 'user',
+            subscription_status: 'trial',
+            subscription_start_date: new Date().toISOString(),
+            subscription_end_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            trial_used: true
+          });
+        
+        if (upError) {
+          await supabaseAdmin.auth.admin.deleteUser(userId);
+          throw new Error(`Failed to create user_profile: ${upError.message}`);
+        }
+      }
 
       // Create employee record
-      console.log('Creating employee record...');
       const { error: employeeError } = await supabaseAdmin
         .from('laboratory_employees')
         .insert({
           laboratory_profile_id: currentUser.id,
-          user_profile_id: authData.user.id,
+          user_profile_id: userId,
           email: requestData.email,
           full_name: requestData.full_name,
           role_name: requestData.role_name,
@@ -153,20 +161,16 @@ Deno.serve(async (req: Request) => {
         });
 
       if (employeeError) {
-        console.error("Employee insert error:", employeeError);
-        // Rollback: delete the auth user
-        console.log('Rolling back - deleting auth user...');
-        await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-        throw new Error(`Failed to create employee record: ${employeeError.message}`);
+        // Rollback
+        await supabaseAdmin.auth.admin.deleteUser(userId);
+        throw new Error(`Failed to create employee: ${employeeError.message}`);
       }
-
-      console.log('Employee created successfully');
 
       return new Response(
         JSON.stringify({ 
           success: true, 
           message: "Employee created successfully",
-          user_id: authData.user.id
+          user_id: userId
         }),
         {
           headers: {
@@ -177,12 +181,9 @@ Deno.serve(async (req: Request) => {
       );
 
     } else if (requestData.action === 'updatePassword') {
-      // Update password only
       if (!requestData.user_profile_id || !requestData.password) {
         throw new Error("user_profile_id and password are required for password update");
       }
-
-      console.log('Updating password for user:', requestData.user_profile_id);
 
       const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(
         requestData.user_profile_id,
@@ -190,11 +191,8 @@ Deno.serve(async (req: Request) => {
       );
 
       if (pwError) {
-        console.error("Password update error:", pwError);
         throw new Error(`Failed to update password: ${pwError.message}`);
       }
-
-      console.log('Password updated successfully');
 
       return new Response(
         JSON.stringify({ 
