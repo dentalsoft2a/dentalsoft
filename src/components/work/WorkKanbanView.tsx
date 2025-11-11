@@ -316,7 +316,19 @@ export default function WorkKanbanView({
         if (!stageToComplete) continue;
 
         // Skip stages that employee cannot access
-        if (employeePerms.isEmployee && !employeePerms.canEditAllStages && !employeePerms.canAccessStage(stageToComplete.id)) {
+        const canAccessThisStage = !employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.canAccessStage(stageToComplete.id);
+
+        console.log('[WorkKanban] Stage completion access check:', {
+          stageName: stageToComplete.name,
+          stageId: stageToComplete.id,
+          canAccessThisStage,
+          isEmployee: employeePerms.isEmployee,
+          canEditAllStages: employeePerms.canEditAllStages,
+          allowedStages: employeePerms.allowedStages
+        });
+
+        if (!canAccessThisStage) {
+          console.log('[WorkKanban] Skipping stage - no access');
           continue;
         }
 
@@ -361,7 +373,18 @@ export default function WorkKanbanView({
 
       // Create or update next stage as current and incomplete
       // Skip if employee doesn't have access to this stage
-      if (!employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.canAccessStage(nextStage.id)) {
+      const canAccessNextStage = !employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.canAccessStage(nextStage.id);
+
+      console.log('[WorkKanban] Next stage access check:', {
+        nextStageName: nextStage.name,
+        nextStageId: nextStage.id,
+        isEmployee: employeePerms.isEmployee,
+        canEditAllStages: employeePerms.canEditAllStages,
+        canAccessNextStage,
+        allowedStages: employeePerms.allowedStages
+      });
+
+      if (canAccessNextStage) {
         try {
           const { data: nextStageData } = await supabase
             .from('delivery_note_stages')
