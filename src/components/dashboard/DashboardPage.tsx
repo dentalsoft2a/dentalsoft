@@ -127,8 +127,20 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     if (!user) return;
 
     try {
-      // catalog_items doesn't have stock tracking, skip it
-      setLowStockItems([]);
+      // Load low stock catalog items
+      const { data: catalogData, error: catalogError } = await supabase
+        .from('catalog_items')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('track_stock', true);
+
+      if (catalogError) throw catalogError;
+
+      const lowStockCatalog = (catalogData || []).filter(
+        item => item.stock_quantity <= item.low_stock_threshold
+      );
+
+      setLowStockItems(lowStockCatalog);
 
       // Load low stock resources
       const { data: resourcesData, error: resourcesError } = await supabase
