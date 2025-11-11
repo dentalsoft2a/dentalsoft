@@ -117,12 +117,15 @@ export function ReferralManagement() {
       // Update user subscription
       const { data: userProfile } = await supabase
         .from('user_profiles')
-        .select('subscription_ends_at, subscription_status')
+        .select('subscription_end_date, subscription_ends_at, subscription_status')
         .eq('id', reward.user_id)
         .single();
 
       let newEndDate: Date;
-      if (userProfile?.subscription_ends_at) {
+      // Use subscription_end_date as primary field (used in UI)
+      if (userProfile?.subscription_end_date) {
+        newEndDate = new Date(userProfile.subscription_end_date);
+      } else if (userProfile?.subscription_ends_at) {
         newEndDate = new Date(userProfile.subscription_ends_at);
       } else {
         newEndDate = new Date();
@@ -132,6 +135,7 @@ export function ReferralManagement() {
       const { error: updateError } = await supabase
         .from('user_profiles')
         .update({
+          subscription_end_date: newEndDate.toISOString(),
           subscription_ends_at: newEndDate.toISOString(),
           subscription_status: 'active'
         })
