@@ -106,7 +106,8 @@ Deno.serve(async (req: Request) => {
         password: requestData.password,
         email_confirm: true,
         user_metadata: {
-          full_name: requestData.full_name
+          full_name: requestData.full_name,
+          is_employee: true
         }
       });
 
