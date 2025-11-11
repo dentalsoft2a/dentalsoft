@@ -145,8 +145,20 @@ function AppContent() {
     if (!user) return;
 
     try {
-      // catalog_items doesn't have stock tracking - use resources instead
-      setLowStockCount(0);
+      const { data: catalogData, error: catalogError } = await supabase
+        .from('catalog_items')
+        .select('stock_quantity, low_stock_threshold')
+        .eq('user_id', user.id)
+        .eq('track_stock', true)
+        .eq('is_active', true);
+
+      if (catalogError) throw catalogError;
+
+      const lowStockItems = (catalogData || []).filter(
+        item => item.stock_quantity <= item.low_stock_threshold
+      );
+
+      setLowStockCount(lowStockItems.length);
     } catch (error) {
       console.error('Error loading low stock count:', error);
     }
