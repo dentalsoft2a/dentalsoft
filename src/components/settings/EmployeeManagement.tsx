@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
-import { Users, Plus, Edit, Trash2, Shield, Save, X } from 'lucide-react';
+import { Users, Plus, Edit, Trash2, Shield, Save, X, Briefcase, Eye, EyeOff, Lock } from 'lucide-react';
 
 interface Employee {
   id: string;
@@ -19,6 +19,20 @@ interface RolePermission {
   role_name: string;
   menu_access: Record<string, boolean>;
   permissions: Record<string, any>;
+}
+
+interface ProductionStage {
+  id: string;
+  name: string;
+  color: string;
+  order_index: number;
+}
+
+interface WorkManagementPermissions {
+  view_all_works: boolean;
+  view_assigned_only: boolean;
+  allowed_stages: string[];
+  can_edit_all_stages: boolean;
 }
 
 const AVAILABLE_MENUS = [
@@ -40,6 +54,7 @@ export default function EmployeeManagement() {
   const { user } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [roles, setRoles] = useState<RolePermission[]>([]);
+  const [productionStages, setProductionStages] = useState<ProductionStage[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
@@ -57,7 +72,13 @@ export default function EmployeeManagement() {
 
   const [roleForm, setRoleForm] = useState({
     role_name: '',
-    menu_access: {} as Record<string, boolean>
+    menu_access: {} as Record<string, boolean>,
+    work_permissions: {
+      view_all_works: true,
+      view_assigned_only: false,
+      allowed_stages: [] as string[],
+      can_edit_all_stages: true
+    } as WorkManagementPermissions
   });
 
   useEffect(() => {
@@ -68,7 +89,7 @@ export default function EmployeeManagement() {
     if (!user) return;
 
     try {
-      const [employeesRes, rolesRes] = await Promise.all([
+      const [employeesRes, rolesRes, stagesRes] = await Promise.all([
         supabase
           .from('laboratory_employees')
           .select('*')
@@ -78,14 +99,21 @@ export default function EmployeeManagement() {
           .from('laboratory_role_permissions')
           .select('*')
           .eq('laboratory_profile_id', user.id)
-          .order('role_name')
+          .order('role_name'),
+        supabase
+          .from('production_stages')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('order_index')
       ]);
 
       if (employeesRes.error) throw employeesRes.error;
       if (rolesRes.error) throw rolesRes.error;
+      if (stagesRes.error) throw stagesRes.error;
 
       setEmployees(employeesRes.data || []);
       setRoles(rolesRes.data || []);
+      setProductionStages(stagesRes.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Erreur lors du chargement des données');
@@ -113,15 +141,28 @@ export default function EmployeeManagement() {
   const openRoleModal = (role?: RolePermission) => {
     if (role) {
       setEditingRole(role);
+      const workPerms = (role.permissions as any)?.work_management as WorkManagementPermissions | undefined;
       setRoleForm({
         role_name: role.role_name,
-        menu_access: role.menu_access
+        menu_access: role.menu_access,
+        work_permissions: {
+          view_all_works: workPerms?.view_all_works ?? true,
+          view_assigned_only: workPerms?.view_assigned_only ?? false,
+          allowed_stages: workPerms?.allowed_stages ?? [],
+          can_edit_all_stages: workPerms?.can_edit_all_stages ?? true
+        }
       });
     } else {
       setEditingRole(null);
       setRoleForm({
         role_name: '',
-        menu_access: {}
+        menu_access: {},
+        work_permissions: {
+          view_all_works: true,
+          view_assigned_only: false,
+          allowed_stages: [],
+          can_edit_all_stages: true
+        }
       });
     }
     setShowRoleModal(true);
@@ -251,12 +292,20 @@ export default function EmployeeManagement() {
     }
 
     try {
+      const permissions = {
+        work_management: roleForm.work_permissions
+      };
+
       if (editingRole) {
         const { error } = await supabase
           .from('laboratory_role_permissions')
           .update({
             role_name: roleForm.role_name,
-            menu_access: roleForm.menu_access
+            menu_access: roleForm.menu_access,
+            permissions: {
+              ...editingRole.permissions,
+              ...permissions
+            }
           })
           .eq('id', editingRole.id);
 
@@ -268,7 +317,7 @@ export default function EmployeeManagement() {
             laboratory_profile_id: user.id,
             role_name: roleForm.role_name,
             menu_access: roleForm.menu_access,
-            permissions: {}
+            permissions
           });
 
         if (error) throw error;
@@ -307,6 +356,23 @@ export default function EmployeeManagement() {
         [menuKey]: !prev.menu_access[menuKey]
       }
     }));
+  };
+
+  const toggleStageAccess = (stageId: string) => {
+    setRoleForm(prev => {
+      const currentStages = prev.work_permissions.allowed_stages;
+      const newStages = currentStages.includes(stageId)
+        ? currentStages.filter(id => id !== stageId)
+        : [...currentStages, stageId];
+
+      return {
+        ...prev,
+        work_permissions: {
+          ...prev.work_permissions,
+          allowed_stages: newStages
+        }
+      };
+    });
   };
 
   if (loading) {
@@ -675,6 +741,120 @@ export default function EmployeeManagement() {
                       <span className="text-xs sm:text-sm text-slate-700 font-medium">{menu.label}</span>
                     </label>
                   ))}
+                </div>
+              </div>
+
+              {/* Work Management Permissions */}
+              <div className="border-t border-slate-200 pt-4 sm:pt-6">
+                <div className="flex items-center gap-2 mb-3 sm:mb-4">
+                  <Briefcase className="w-5 h-5 text-amber-600" />
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-700">
+                    Permissions de gestion des travaux
+                  </label>
+                </div>
+
+                <div className="space-y-3 sm:space-y-4">
+                  {/* View Permissions */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-slate-600 mb-2">Visibilité des bons de livraison:</p>
+                    <label className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                      <input
+                        type="radio"
+                        checked={roleForm.work_permissions.view_all_works}
+                        onChange={() => setRoleForm(prev => ({
+                          ...prev,
+                          work_permissions: {
+                            ...prev.work_permissions,
+                            view_all_works: true,
+                            view_assigned_only: false
+                          }
+                        }))}
+                        className="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500"
+                      />
+                      <div className="flex items-center gap-2 flex-1">
+                        <Eye className="w-4 h-4 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-medium">Voir tous les travaux du laboratoire</span>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                      <input
+                        type="radio"
+                        checked={roleForm.work_permissions.view_assigned_only}
+                        onChange={() => setRoleForm(prev => ({
+                          ...prev,
+                          work_permissions: {
+                            ...prev.work_permissions,
+                            view_all_works: false,
+                            view_assigned_only: true
+                          }
+                        }))}
+                        className="w-4 h-4 text-amber-600 border-slate-300 focus:ring-amber-500"
+                      />
+                      <div className="flex items-center gap-2 flex-1">
+                        <EyeOff className="w-4 h-4 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-medium">Voir uniquement les travaux assignés</span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {/* Stage Permissions */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-slate-600 mb-2">Accès aux étapes de production:</p>
+                    <label className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 border-2 border-amber-200 bg-amber-50 rounded-lg cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={roleForm.work_permissions.can_edit_all_stages}
+                        onChange={(e) => setRoleForm(prev => ({
+                          ...prev,
+                          work_permissions: {
+                            ...prev.work_permissions,
+                            can_edit_all_stages: e.target.checked,
+                            allowed_stages: e.target.checked ? [] : prev.work_permissions.allowed_stages
+                          }
+                        }))}
+                        className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                      />
+                      <div className="flex items-center gap-2 flex-1">
+                        <Shield className="w-4 h-4 text-amber-600" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-bold">Peut modifier toutes les étapes de production</span>
+                      </div>
+                    </label>
+
+                    {!roleForm.work_permissions.can_edit_all_stages && (
+                      <div className="mt-3 p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <p className="text-xs font-semibold text-slate-700 mb-2 flex items-center gap-2">
+                          <Lock className="w-3.5 h-3.5" />
+                          Sélectionnez les étapes accessibles pour ce rôle:
+                        </p>
+                        {productionStages.length === 0 ? (
+                          <p className="text-xs text-amber-600 italic">Aucune étape de production configurée</p>
+                        ) : (
+                          <div className="space-y-1.5">
+                            {productionStages.map(stage => (
+                              <label key={stage.id} className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-white cursor-pointer transition">
+                                <input
+                                  type="checkbox"
+                                  checked={roleForm.work_permissions.allowed_stages.includes(stage.id)}
+                                  onChange={() => toggleStageAccess(stage.id)}
+                                  className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                                />
+                                <div className="flex items-center gap-2 flex-1">
+                                  <div
+                                    className="w-3 h-3 rounded-full border border-slate-300"
+                                    style={{ backgroundColor: stage.color }}
+                                  />
+                                  <span className="text-xs text-slate-700 font-medium">{stage.name}</span>
+                                </div>
+                              </label>
+                            ))}
+                          </div>
+                        )}
+                        {!roleForm.work_permissions.can_edit_all_stages && roleForm.work_permissions.allowed_stages.length === 0 && productionStages.length > 0 && (
+                          <p className="text-xs text-red-600 mt-2 font-medium">Attention: Aucune étape sélectionnée. L'employé ne pourra pas modifier les travaux.</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

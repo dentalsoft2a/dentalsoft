@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import DatePicker from '../common/DatePicker';
 import CustomSelect from '../common/CustomSelect';
+import EmployeeAssignment from './EmployeeAssignment';
 
 interface WorkStage {
   id: string;
@@ -520,6 +521,22 @@ export default function WorkDetailModal({
               ))}
             </div>
           </div>
+
+          {noteId && noteId !== 'new' && (
+            <div>
+              <EmployeeAssignment
+                deliveryNoteId={noteId}
+                productionStages={workStages.map(ws => ({
+                  id: ws.id,
+                  name: ws.name,
+                  color: ws.color
+                }))}
+                onAssignmentChange={() => {
+                  // Reload data if needed
+                }}
+              />
+            </div>
+          )}
 
           {noteId && noteId !== 'new' && (
             <div>

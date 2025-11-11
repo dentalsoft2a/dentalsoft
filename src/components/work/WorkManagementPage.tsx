@@ -5,9 +5,10 @@ import {
   Search, Filter, Plus, Clock, AlertTriangle, CheckCircle2,
   TrendingUp, Users, Calendar, LayoutGrid, List, ChevronDown,
   MessageSquare, User, Tag, Layers, ArrowUpCircle, ArrowDownCircle,
-  MinusCircle, X, FileText, Edit2, Trash2
+  MinusCircle, X, FileText, Edit2, Trash2, Briefcase
 } from 'lucide-react';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import { useEmployeePermissions } from '../../hooks/useEmployeePermissions';
 import WorkDetailModal from './WorkDetailModal';
 import WorkKanbanView from './WorkKanbanView';
 
@@ -53,6 +54,7 @@ interface Stats {
 
 export default function WorkManagementPage() {
   const { user } = useAuth();
+  const employeePerms = useEmployeePermissions();
   const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<DeliveryNote[]>([]);
   const [workStages, setWorkStages] = useState<WorkStage[]>([]);
@@ -69,6 +71,7 @@ export default function WorkManagementPage() {
   const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
   const [showFilters, setShowFilters] = useState(false);
   const [selectedNote, setSelectedNote] = useState<string | null>(null);
+  const [showMyWorksOnly, setShowMyWorksOnly] = useState(false);
   const [filters, setFilters] = useState({
     status: 'all',
     priority: 'all',
@@ -86,22 +89,38 @@ export default function WorkManagementPage() {
   }, [user]);
 
   useEffect(() => {
+    if (user && !employeePerms.loading) {
+      loadWorkStages();
+      loadDeliveryNotes();
+    }
+  }, [employeePerms.loading]);
+
+  useEffect(() => {
     applyFilters();
-  }, [deliveryNotes, searchTerm, filters]);
+  }, [deliveryNotes, searchTerm, filters, showMyWorksOnly, employeePerms.isEmployee]);
 
   const loadWorkStages = async () => {
     if (!user) return;
 
     try {
+      const userId = employeePerms.isEmployee ? employeePerms.laboratoryId : user.id;
+      if (!userId) return;
+
       const { data, error } = await supabase
         .from('production_stages')
         .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
+        .eq('user_id', userId)
         .order('order_index');
 
       if (error) throw error;
-      setWorkStages(data || []);
+
+      // Filter stages based on employee permissions
+      let stages = data || [];
+      if (employeePerms.isEmployee && !employeePerms.canEditAllStages) {
+        stages = stages.filter(stage => employeePerms.allowedStages.includes(stage.id));
+      }
+
+      setWorkStages(stages);
     } catch (error) {
       console.error('Error loading work stages:', error);
     }
@@ -113,6 +132,9 @@ export default function WorkManagementPage() {
     try {
       setLoading(true);
 
+      const userId = employeePerms.isEmployee ? employeePerms.laboratoryId : user.id;
+      if (!userId) return;
+
       const { data, error } = await supabase
         .from('delivery_notes')
         .select(`
@@ -120,7 +142,7 @@ export default function WorkManagementPage() {
           dentists(name),
           current_stage:production_stages(name, color)
         `)
-        .eq('user_id', user.id)
+        .eq('user_id', userId)
         .neq('status', 'completed')
         .order('created_at', { ascending: false });
 
@@ -170,6 +192,13 @@ export default function WorkManagementPage() {
 
   const applyFilters = () => {
     let filtered = [...deliveryNotes];
+
+    // Employee filter: show only assigned works if needed
+    if (employeePerms.isEmployee && (employeePerms.canViewAssignedOnly || showMyWorksOnly)) {
+      filtered = filtered.filter(note =>
+        note.assignments && note.assignments.length > 0
+      );
+    }
 
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
@@ -356,6 +385,20 @@ export default function WorkManagementPage() {
             </div>
 
             <div className="flex gap-2">
+              {employeePerms.isEmployee && employeePerms.canViewAllWorks && (
+                <button
+                  onClick={() => setShowMyWorksOnly(!showMyWorksOnly)}
+                  className={`flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-lg border transition-all text-sm md:text-base ${
+                    showMyWorksOnly
+                      ? 'bg-blue-50 border-blue-300 text-blue-700'
+                      : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                  }`}
+                  title="Afficher uniquement mes travaux assignés"
+                >
+                  <Briefcase className="w-4 h-4 md:w-5 md:h-5" />
+                  <span className="hidden md:inline">Mes travaux</span>
+                </button>
+              )}
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-lg border transition-all text-sm md:text-base ${

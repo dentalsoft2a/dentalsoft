@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useEmployeePermissions } from '../../hooks/useEmployeePermissions';
 import {
   User, Calendar, MessageSquare, AlertTriangle, Clock, Tag,
-  ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package, CheckCircle
+  ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package, CheckCircle, Lock, Eye
 } from 'lucide-react';
 
 interface DeliveryNote {
@@ -49,8 +50,14 @@ export default function WorkKanbanView({
   onRefresh
 }: WorkKanbanViewProps) {
   const { user } = useAuth();
+  const employeePerms = useEmployeePermissions();
   const [draggedNote, setDraggedNote] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
+
+  // Filter stages based on employee permissions
+  const visibleStages = employeePerms.isEmployee && !employeePerms.canEditAllStages
+    ? workStages.filter(stage => employeePerms.canAccessStage(stage.id))
+    : workStages;
 
   const getNotesForStage = (stageId: string) => {
     return deliveryNotes.filter(note => note.current_stage_id === stageId);
@@ -547,7 +554,18 @@ export default function WorkKanbanView({
 
   return (
     <div className="w-full pb-4">
-      <div className="md:grid md:gap-3 lg:gap-4 space-y-4 md:space-y-0" style={{ gridTemplateColumns: workStages.length > 0 ? `repeat(${workStages.length + 1}, minmax(0, 1fr))` : '1fr' }}>
+      {employeePerms.isEmployee && !employeePerms.canEditAllStages && visibleStages.length < workStages.length && (
+        <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+          <Lock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-amber-900 mb-1">Vue limitée aux étapes autorisées</p>
+            <p className="text-xs text-amber-700">
+              Vous voyez {visibleStages.length} étape(s) sur {workStages.length} au total. Votre rôle limite l'accès à certaines étapes de production.
+            </p>
+          </div>
+        </div>
+      )}
+      <div className="md:grid md:gap-3 lg:gap-4 space-y-4 md:space-y-0" style={{ gridTemplateColumns: visibleStages.length > 0 ? `repeat(${visibleStages.length + 1}, minmax(0, 1fr))` : '1fr' }}>
         <div className="min-w-0">
           <div className="bg-slate-100 rounded-lg p-2.5 md:p-3 mb-2 md:mb-3 border-2 border-slate-200">
             <div className="flex items-center justify-between">
@@ -570,7 +588,7 @@ export default function WorkKanbanView({
           </div>
         </div>
 
-        {workStages.map((stage) => (
+        {visibleStages.map((stage) => (
           <div
             key={stage.id}
             className="min-w-0"
