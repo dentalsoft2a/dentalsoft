@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2, Plus, Upload, RefreshCw } from 'lucide-react';
+import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2, Plus, Upload, RefreshCw, Cloud, Link as LinkIcon, Activity } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import DScoreSyncDashboard from '../dscore/DScoreSyncDashboard';
+import DScoreDentistMapping from '../dscore/DScoreDentistMapping';
 
 interface PhotoSubmission {
   id: string;
@@ -28,11 +30,13 @@ interface DentistAccount {
 
 export default function PhotoSubmissionsPage() {
   const { laboratoryId } = useAuth();
+  const [activeTab, setActiveTab] = useState<'photos' | 'sync' | 'mapping'>('photos');
   const [submissions, setSubmissions] = useState<PhotoSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoSubmission | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [sourceFilter, setSourceFilter] = useState<string>('all');
   const [groupBy, setGroupBy] = useState<'dentist' | 'patient'>('dentist');
   const [showAddModal, setShowAddModal] = useState(false);
 
@@ -203,7 +207,8 @@ export default function PhotoSubmissionsPage() {
       sub.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       sub.dentist_accounts?.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || sub.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesSource = sourceFilter === 'all' || (sub as any).source === sourceFilter;
+    return matchesSearch && matchesStatus && matchesSource;
   });
 
   const groupedSubmissions = filteredSubmissions.reduce((acc, sub) => {
@@ -274,6 +279,14 @@ export default function PhotoSubmissionsPage() {
     }
   };
 
+  if (activeTab === 'sync') {
+    return <DScoreSyncDashboard />;
+  }
+
+  if (activeTab === 'mapping') {
+    return <DScoreDentistMapping />;
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -314,6 +327,44 @@ export default function PhotoSubmissionsPage() {
         </div>
       </div>
 
+      <div className="mb-6">
+        <div className="flex gap-2 border-b border-slate-200 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab('photos')}
+            className={`flex items-center gap-2 px-4 md:px-6 py-3 font-semibold transition-all whitespace-nowrap text-sm md:text-base ${
+              activeTab === 'photos'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Camera className="w-4 h-4 md:w-5 md:h-5" />
+            Photos
+          </button>
+          <button
+            onClick={() => setActiveTab('sync')}
+            className={`flex items-center gap-2 px-4 md:px-6 py-3 font-semibold transition-all whitespace-nowrap text-sm md:text-base ${
+              activeTab === 'sync'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Activity className="w-4 h-4 md:w-5 md:h-5" />
+            Syncs DS-Core
+          </button>
+          <button
+            onClick={() => setActiveTab('mapping')}
+            className={`flex items-center gap-2 px-4 md:px-6 py-3 font-semibold transition-all whitespace-nowrap text-sm md:text-base ${
+              activeTab === 'mapping'
+                ? 'text-blue-600 border-b-2 border-blue-600'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <LinkIcon className="w-4 h-4 md:w-5 md:h-5" />
+            Mapping
+          </button>
+        </div>
+      </div>
+
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 flex items-start gap-2 md:gap-3 mb-4 md:mb-6">
         <Info className="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0 mt-0.5" />
         <div className="text-xs md:text-sm text-blue-800">
@@ -334,7 +385,7 @@ export default function PhotoSubmissionsPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -345,6 +396,16 @@ export default function PhotoSubmissionsPage() {
             <option value="viewed">Vue</option>
             <option value="completed">Terminé</option>
             <option value="rejected">Rejeté</option>
+          </select>
+
+          <select
+            value={sourceFilter}
+            onChange={(e) => setSourceFilter(e.target.value)}
+            className="px-3 md:px-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          >
+            <option value="all">Toutes les sources</option>
+            <option value="dentist_app">App Mobile</option>
+            <option value="dscore">DS-Core</option>
           </select>
 
           <select
