@@ -58,7 +58,7 @@ Deno.serve(async (req: Request) => {
     // Check if user exists in profiles table (laboratory owner)
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
-      .select("id, role, company_name")
+      .select("id, laboratory_name")
       .eq("id", currentUser.id)
       .maybeSingle();
 
