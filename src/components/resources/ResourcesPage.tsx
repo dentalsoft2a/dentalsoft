@@ -696,21 +696,21 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
             </div>
           </div>
           <div className="p-3 md:p-4">
-            <div className="flex flex-wrap gap-1.5 md:gap-2">
+            <div className="flex flex-col md:flex-row md:flex-wrap gap-2">
               {lowStockResources.map((resource) => (
                 <div
                   key={resource.id}
-                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-2 md:px-3 py-1.5 md:py-2 border border-slate-200 text-xs md:text-sm transition-colors"
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-xs md:text-sm transition-colors"
                 >
-                  <div className="flex items-center gap-1.5 md:gap-2">
-                    <Box className="w-3 h-3 md:w-4 md:h-4 text-slate-600" />
-                    <span className="font-medium text-slate-900 text-xs md:text-sm">{resource.name}</span>
-                    <span className="text-red-600 font-bold text-xs md:text-sm">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Box className="w-4 h-4 text-slate-600 flex-shrink-0" />
+                    <span className="font-medium text-slate-900 truncate">{resource.name}</span>
+                    <span className="text-red-600 font-bold whitespace-nowrap">
                       {resource.has_variants && resource.total_variant_stock !== undefined
                         ? resource.total_variant_stock
                         : resource.stock_quantity}/{resource.low_stock_threshold}
                     </span>
-                    <span className="text-[10px] md:text-xs text-slate-500 hidden sm:inline">(Ressource)</span>
+                    <span className="text-xs text-slate-500 hidden sm:inline">(Ressource)</span>
                   </div>
                   <button
                     onClick={() => setShowQuickFill({
@@ -719,7 +719,7 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                       currentStock: resource.stock_quantity,
                       type: 'resource'
                     })}
-                    className="px-1.5 md:px-2 py-0.5 md:py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-[10px] md:text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm"
+                    className="px-2 py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm ml-2 flex-shrink-0"
                   >
                     Remplir
                   </button>
@@ -732,19 +732,19 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
               }).map((variant) => (
                 <div
                   key={variant.id}
-                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-2 md:px-3 py-1.5 md:py-2 border border-slate-200 text-xs md:text-sm transition-colors"
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-xs md:text-sm transition-colors"
                 >
-                  <div className="flex items-center gap-1.5 md:gap-2">
-                    <Box className="w-3 h-3 md:w-4 md:h-4 text-slate-600" />
-                    <span className="font-medium text-slate-900 text-xs md:text-sm">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Box className="w-4 h-4 text-slate-600 flex-shrink-0" />
+                    <span className="font-medium text-slate-900 truncate">
                       {variant.resource_name}
                       {variant.subcategory && ` - ${variant.subcategory}`}
                       {' - '}{variant.variant_name}
                     </span>
-                    <span className="text-red-600 font-bold text-xs md:text-sm">
+                    <span className="text-red-600 font-bold whitespace-nowrap">
                       {variant.stock_quantity}/{variant.low_stock_threshold}
                     </span>
-                    <span className="text-[10px] md:text-xs text-slate-500 hidden sm:inline">(Variante)</span>
+                    <span className="text-xs text-slate-500 hidden sm:inline">(Variante)</span>
                   </div>
                   <button
                     onClick={() => setShowQuickFill({
@@ -753,14 +753,14 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                       currentStock: variant.stock_quantity,
                       type: 'variant'
                     })}
-                    className="px-1.5 md:px-2 py-0.5 md:py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-[10px] md:text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm"
+                    className="px-2 py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm ml-2 flex-shrink-0"
                   >
                     Remplir
                   </button>
                 </div>
               ))}
               {(lowStockResources.length + lowStockVariants.length > 8) && (
-                <div className="flex items-center gap-1.5 md:gap-2 bg-slate-100 rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm font-medium text-slate-700 border border-slate-200">
+                <div className="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-2 text-xs md:text-sm font-medium text-slate-700 border border-slate-200">
                   +{lowStockResources.length + lowStockVariants.length - 8} autres
                 </div>
               )}

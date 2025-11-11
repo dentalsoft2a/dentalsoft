@@ -801,31 +801,31 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
 
       {(lowStockItems.length > 0 || lowStockResources.length > 0 || lowStockVariants.length > 0) && (
         <div className="mb-6 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/50 overflow-hidden">
-          <div className="bg-gradient-to-r from-red-50/80 to-orange-50/80 px-4 py-3 border-b border-red-200/50">
-            <div className="flex items-center justify-between">
+          <div className="bg-gradient-to-r from-red-50/80 to-orange-50/80 px-3 md:px-4 py-3 border-b border-red-200/50">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center shadow-md">
+                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
                   <AlertTriangle className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                <div className="flex-1">
+                  <h3 className="text-sm md:text-base font-bold text-slate-900 flex items-center gap-2">
                     Alerte stock faible
                     <span className="px-2 py-0.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full">
                       {lowStockItems.length + lowStockResources.length + lowStockVariants.length}
                     </span>
                   </h3>
-                  <p className="text-sm text-slate-600 mt-0.5">
+                  <p className="text-xs md:text-sm text-slate-600 mt-0.5">
                     {lowStockItems.length + lowStockResources.length + lowStockVariants.length === 1
                       ? 'Un article/ressource nécessite un réapprovisionnement'
                       : `${lowStockItems.length + lowStockResources.length + lowStockVariants.length} articles/ressources nécessitent un réapprovisionnement`}
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {lowStockItems.length > 0 && (
                   <button
                     onClick={() => onNavigate?.('catalog')}
-                    className="text-sm font-medium text-primary-600 hover:text-primary-700 underline"
+                    className="text-xs md:text-sm font-medium text-primary-600 hover:text-primary-700 underline"
                   >
                     Voir le catalogue
                   </button>
@@ -833,7 +833,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                 {lowStockResources.length > 0 && (
                   <button
                     onClick={() => onNavigate?.('resources')}
-                    className="text-sm font-medium text-primary-600 hover:text-primary-700 underline"
+                    className="text-xs md:text-sm font-medium text-primary-600 hover:text-primary-700 underline"
                   >
                     Voir les ressources
                   </button>
@@ -841,20 +841,20 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
               </div>
             </div>
           </div>
-          <div className="p-4">
-            <div className="flex flex-wrap gap-2">
+          <div className="p-3 md:p-4">
+            <div className="flex flex-col md:flex-row md:flex-wrap gap-2">
               {lowStockItems.slice(0, 8).map((item) => (
                 <div
                   key={item.id}
-                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-sm transition-colors"
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-xs md:text-sm transition-colors"
                 >
-                  <div className="flex items-center gap-2">
-                    <Archive className="w-4 h-4 text-slate-600" />
-                    <span className="font-medium text-slate-900">{item.name}</span>
-                    <span className="text-red-600 font-bold">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Archive className="w-4 h-4 text-slate-600 flex-shrink-0" />
+                    <span className="font-medium text-slate-900 truncate">{item.name}</span>
+                    <span className="text-red-600 font-bold whitespace-nowrap">
                       {item.stock_quantity}/{item.low_stock_threshold}
                     </span>
-                    <span className="text-xs text-slate-500">(Catalogue)</span>
+                    <span className="text-xs text-slate-500 hidden sm:inline">(Catalogue)</span>
                   </div>
                   <button
                     onClick={() => setShowQuickFill({
@@ -872,15 +872,15 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
               {lowStockResources.slice(0, 8).map((resource) => (
                 <div
                   key={resource.id}
-                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-sm transition-colors"
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-xs md:text-sm transition-colors"
                 >
-                  <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-slate-600" />
-                    <span className="font-medium text-slate-900">{resource.name}</span>
-                    <span className="text-red-600 font-bold">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Package className="w-4 h-4 text-slate-600 flex-shrink-0" />
+                    <span className="font-medium text-slate-900 truncate">{resource.name}</span>
+                    <span className="text-red-600 font-bold whitespace-nowrap">
                       {resource.stock_quantity}/{resource.low_stock_threshold}
                     </span>
-                    <span className="text-xs text-slate-500">(Ressource)</span>
+                    <span className="text-xs text-slate-500 hidden sm:inline">(Ressource)</span>
                   </div>
                   <button
                     onClick={() => setShowQuickFill({
@@ -898,19 +898,19 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
               {lowStockVariants.slice(0, 8).map((variant) => (
                 <div
                   key={variant.id}
-                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-sm transition-colors"
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-xs md:text-sm transition-colors"
                 >
-                  <div className="flex items-center gap-2">
-                    <Package className="w-4 h-4 text-slate-600" />
-                    <span className="font-medium text-slate-900">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <Package className="w-4 h-4 text-slate-600 flex-shrink-0" />
+                    <span className="font-medium text-slate-900 truncate">
                       {variant.resource.name}
                       {variant.subcategory && ` - ${variant.subcategory}`}
                       {' - '}{variant.variant_name}
                     </span>
-                    <span className="text-red-600 font-bold">
+                    <span className="text-red-600 font-bold whitespace-nowrap">
                       {variant.stock_quantity}/{variant.low_stock_threshold}
                     </span>
-                    <span className="text-xs text-slate-500">(Variante)</span>
+                    <span className="text-xs text-slate-500 hidden sm:inline">(Variante)</span>
                   </div>
                   <button
                     onClick={() => setShowQuickFill({
@@ -926,7 +926,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                 </div>
               ))}
               {(lowStockItems.length + lowStockResources.length + lowStockVariants.length > 7) && (
-                <div className="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 border border-slate-200">
+                <div className="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-2 text-xs md:text-sm font-medium text-slate-700 border border-slate-200">
                   +{lowStockItems.length + lowStockResources.length + lowStockVariants.length - 7} autres
                 </div>
               )}
