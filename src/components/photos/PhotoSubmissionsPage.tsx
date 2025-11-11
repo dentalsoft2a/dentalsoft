@@ -5,6 +5,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
 import DScoreSyncDashboard from '../dscore/DScoreSyncDashboard';
 import DScoreDentistMapping from '../dscore/DScoreDentistMapping';
+import ThreeShapeSyncDashboard from '../threeshape/ThreeShapeSyncDashboard';
+import ThreeShapeDentistMapping from '../threeshape/ThreeShapeDentistMapping';
 
 interface PhotoSubmission {
   id: string;
@@ -30,7 +32,7 @@ interface DentistAccount {
 
 export default function PhotoSubmissionsPage() {
   const { laboratoryId } = useAuth();
-  const [activeTab, setActiveTab] = useState<'photos' | 'sync' | 'mapping'>('photos');
+  const [activeTab, setActiveTab] = useState<'photos' | 'sync-dscore' | 'mapping-dscore' | 'sync-3shape' | 'mapping-3shape'>('photos');
   const [submissions, setSubmissions] = useState<PhotoSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoSubmission | null>(null);
@@ -324,9 +326,9 @@ export default function PhotoSubmissionsPage() {
             Photos
           </button>
           <button
-            onClick={() => setActiveTab('sync')}
+            onClick={() => setActiveTab('sync-dscore')}
             className={`flex items-center gap-2 px-4 md:px-6 py-3 font-semibold transition-all whitespace-nowrap text-sm md:text-base ${
-              activeTab === 'sync'
+              activeTab === 'sync-dscore'
                 ? 'text-blue-600 border-b-2 border-blue-600'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
@@ -335,22 +337,48 @@ export default function PhotoSubmissionsPage() {
             Syncs DS-Core
           </button>
           <button
-            onClick={() => setActiveTab('mapping')}
+            onClick={() => setActiveTab('mapping-dscore')}
             className={`flex items-center gap-2 px-4 md:px-6 py-3 font-semibold transition-all whitespace-nowrap text-sm md:text-base ${
-              activeTab === 'mapping'
+              activeTab === 'mapping-dscore'
                 ? 'text-blue-600 border-b-2 border-blue-600'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
             <LinkIcon className="w-4 h-4 md:w-5 md:h-5" />
-            Mapping
+            Mapping DS-Core
+          </button>
+          <button
+            onClick={() => setActiveTab('sync-3shape')}
+            className={`flex items-center gap-2 px-4 md:px-6 py-3 font-semibold transition-all whitespace-nowrap text-sm md:text-base ${
+              activeTab === 'sync-3shape'
+                ? 'text-green-600 border-b-2 border-green-600'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Activity className="w-4 h-4 md:w-5 md:h-5" />
+            Syncs 3Shape
+          </button>
+          <button
+            onClick={() => setActiveTab('mapping-3shape')}
+            className={`flex items-center gap-2 px-4 md:px-6 py-3 font-semibold transition-all whitespace-nowrap text-sm md:text-base ${
+              activeTab === 'mapping-3shape'
+                ? 'text-green-600 border-b-2 border-green-600'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <LinkIcon className="w-4 h-4 md:w-5 md:h-5" />
+            Mapping 3Shape
           </button>
         </div>
       </div>
 
-      {activeTab === 'sync' && <DScoreSyncDashboard />}
+      {activeTab === 'sync-dscore' && <DScoreSyncDashboard />}
 
-      {activeTab === 'mapping' && <DScoreDentistMapping />}
+      {activeTab === 'mapping-dscore' && <DScoreDentistMapping />}
+
+      {activeTab === 'sync-3shape' && <ThreeShapeSyncDashboard />}
+
+      {activeTab === 'mapping-3shape' && <ThreeShapeDentistMapping />}
 
       {activeTab === 'photos' && (
         <>
@@ -405,6 +433,7 @@ export default function PhotoSubmissionsPage() {
             <option value="all">Toutes les sources</option>
             <option value="dentist_app">App Mobile</option>
             <option value="dscore">DS-Core</option>
+            <option value="3shape">3Shape Communicate</option>
           </select>
 
           <select
@@ -535,6 +564,18 @@ export default function PhotoSubmissionsPage() {
                   <div>
                     <p className="font-bold">Photo synchronisée depuis DS-Core</p>
                     <p className="text-sm text-white/90">Cette photo a été récupérée automatiquement depuis Dentsply Sirona</p>
+                  </div>
+                </div>
+              )}
+
+              {(selectedPhoto as any).source === '3shape' && (
+                <div className="mb-4 bg-gradient-to-r from-green-600 to-teal-600 rounded-xl p-4 flex items-center gap-3 text-white shadow-lg">
+                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                    <Cloud className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <p className="font-bold">Photo synchronisée depuis 3Shape Communicate</p>
+                    <p className="text-sm text-white/90">Cette photo a été récupérée automatiquement depuis 3Shape</p>
                   </div>
                 </div>
               )}

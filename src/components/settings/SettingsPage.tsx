@@ -3,12 +3,13 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users, Shield, Cloud } from 'lucide-react';
 import EmployeeManagement from './EmployeeManagement';
 import DScoreConnection from './DScoreConnection';
+import ThreeShapeConnection from './ThreeShapeConnection';
 import { FiscalPeriodsManager } from '../compliance/FiscalPeriodsManager';
 import { AuditLogViewer } from '../compliance/AuditLogViewer';
 import { ComplianceCertificate } from '../compliance/ComplianceCertificate';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'employees' | 'dscore' | 'compliance'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'employees' | 'dscore' | '3shape' | 'compliance'>('profile');
   const [complianceSubTab, setComplianceSubTab] = useState<'certificate' | 'periods' | 'audit'>('certificate');
   const { profile, updateProfile, userEmail } = useAuth();
   const [formData, setFormData] = useState({
@@ -130,6 +131,17 @@ export default function SettingsPage() {
               DS-Core
             </button>
             <button
+              onClick={() => setActiveTab('3shape')}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3 font-semibold transition-all whitespace-nowrap text-sm sm:text-base ${
+                activeTab === '3shape'
+                  ? 'text-green-600 border-b-2 border-green-600'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Cloud className="w-4 h-4 sm:w-5 sm:h-5" />
+              3Shape
+            </button>
+            <button
               onClick={() => setActiveTab('compliance')}
               className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3 font-semibold transition-all whitespace-nowrap text-sm sm:text-base ${
                 activeTab === 'compliance'
@@ -145,6 +157,8 @@ export default function SettingsPage() {
 
         {activeTab === 'dscore' ? (
           <DScoreConnection />
+        ) : activeTab === '3shape' ? (
+          <ThreeShapeConnection />
         ) : activeTab === 'compliance' ? (
           <div className="space-y-6">
             {/* Sous-onglets de conformité */}
