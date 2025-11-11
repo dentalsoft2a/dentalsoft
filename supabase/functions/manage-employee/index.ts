@@ -71,7 +71,13 @@ Deno.serve(async (req: Request) => {
     }
 
     const requestData: CreateEmployeeRequest = await req.json();
-    console.log('Request data:', { ...requestData, password: requestData.password ? '[REDACTED]' : undefined });
+    console.log('Request data:', { 
+      action: requestData.action,
+      email: requestData.email,
+      full_name: requestData.full_name,
+      role_name: requestData.role_name,
+      has_password: !!requestData.password 
+    });
 
     if (!requestData.email || !requestData.full_name || !requestData.role_name) {
       throw new Error("Missing required fields: email, full_name, or role_name");
@@ -82,6 +88,15 @@ Deno.serve(async (req: Request) => {
       // Create new user account
       if (!requestData.password) {
         throw new Error("Password is required for creating new employee");
+      }
+
+      // Check if email already exists
+      console.log('Checking if email already exists...');
+      const { data: existingUsers } = await supabaseAdmin.auth.admin.listUsers();
+      const emailExists = existingUsers?.users.some(u => u.email === requestData.email);
+      
+      if (emailExists) {
+        throw new Error(`Email ${requestData.email} is already registered`);
       }
 
       console.log('Creating new user account...');
@@ -96,7 +111,11 @@ Deno.serve(async (req: Request) => {
       });
 
       if (authError) {
-        console.error("Auth error:", authError);
+        console.error("Auth error details:", {
+          message: authError.message,
+          status: authError.status,
+          name: authError.name
+        });
         throw new Error(`Failed to create user account: ${authError.message}`);
       }
 
@@ -106,9 +125,22 @@ Deno.serve(async (req: Request) => {
 
       console.log('User account created:', authData.user.id);
 
+      // Wait a bit for triggers to complete
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Check if user_profile was created by trigger
+      console.log('Checking if user_profile was created...');
+      const { data: userProfile } = await supabaseAdmin
+        .from('user_profiles')
+        .select('id, email')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+
+      console.log('User profile check:', userProfile);
+
       // Create employee record
       console.log('Creating employee record...');
-      const { error: employeeError } = await supabaseClient
+      const { error: employeeError } = await supabaseAdmin
         .from('laboratory_employees')
         .insert({
           laboratory_profile_id: currentUser.id,
