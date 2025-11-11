@@ -19,11 +19,12 @@ import DentistRegisterPage from './components/dentist/DentistRegisterPage';
 import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
+import { ImpersonationBanner } from './components/common/ImpersonationBanner';
 import { supabase } from './lib/supabase';
 import { usePermissions } from './hooks/usePermissions';
 
 function AppContent() {
-  const { user, loading, isEmployee } = useAuth();
+  const { user, loading, isEmployee, isImpersonating } = useAuth();
   const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
   const [currentPage, setCurrentPage] = useState('dashboard');
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -200,13 +201,19 @@ function AppContent() {
   }
 
   if (!user) {
-    return <LandingPage />;
+    return (
+      <>
+        {isImpersonating && <ImpersonationBanner />}
+        <LandingPage />
+      </>
+    );
   }
 
   if (isDentist) {
     return (
       <>
         {showServerMonitor && <ServerStatusMonitor />}
+        {isImpersonating && <ImpersonationBanner />}
         <DentistPhotoPanel />
       </>
     );
@@ -217,6 +224,7 @@ function AppContent() {
       return (
         <>
           {showServerMonitor && <ServerStatusMonitor />}
+          {isImpersonating && <ImpersonationBanner />}
           <SuperAdminPanel onNavigate={setCurrentPage} />
         </>
       );
@@ -274,6 +282,7 @@ function AppContent() {
   return (
     <>
       {showServerMonitor && <ServerStatusMonitor />}
+      {isImpersonating && <ImpersonationBanner />}
       <DashboardLayout
         currentPage={currentPage}
         onNavigate={(page) => {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Search, Filter, MoreVertical, Ban, Check, Trash2, Mail, Users, Stethoscope } from 'lucide-react';
+import { Search, Filter, MoreVertical, Ban, Check, Trash2, Mail, Users, Stethoscope, UserCog } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface UserProfile {
   id: string;
@@ -28,12 +29,16 @@ interface UsersManagementProps {
 }
 
 export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
+  const { impersonateUser } = useAuth();
   const [userType, setUserType] = useState<UserType>('laboratories');
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [dentists, setDentists] = useState<DentistAccount[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [impersonating, setImpersonating] = useState<string | null>(null);
+  const [showImpersonateModal, setShowImpersonateModal] = useState(false);
+  const [selectedUserForImpersonation, setSelectedUserForImpersonation] = useState<{ id: string; email: string } | null>(null);
 
   useEffect(() => {
     loadBothLists();
@@ -173,6 +178,25 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
       onStatsUpdate();
     } catch (error: any) {
       alert('Erreur lors de la suppression: ' + error.message);
+    }
+  };
+
+  const handleImpersonateClick = (userId: string, userEmail: string) => {
+    setSelectedUserForImpersonation({ id: userId, email: userEmail });
+    setShowImpersonateModal(true);
+  };
+
+  const confirmImpersonate = async () => {
+    if (!selectedUserForImpersonation) return;
+
+    setImpersonating(selectedUserForImpersonation.id);
+    setShowImpersonateModal(false);
+
+    const { error } = await impersonateUser(selectedUserForImpersonation.id);
+
+    if (error) {
+      alert('Erreur lors de la connexion: ' + error.message);
+      setImpersonating(null);
     }
   };
 
@@ -337,6 +361,14 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
                   </td>
                   <td className="px-4 py-4">
                     <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleImpersonateClick(user.id, user.email)}
+                        disabled={impersonating === user.id}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Se connecter comme cet utilisateur"
+                      >
+                        <UserCog className="w-4 h-4" />
+                      </button>
                       {user.subscription_status !== 'active' && (
                         <button
                           onClick={() => updateUserStatus(user.id, 'active')}
@@ -424,6 +456,57 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
               Aucun dentiste trouvé
             </div>
           )}
+        </div>
+      )}
+
+      {showImpersonateModal && selectedUserForImpersonation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-in">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                <UserCog className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Connexion en tant qu'utilisateur</h3>
+                <p className="text-sm text-slate-600">Mode impersonnement</p>
+              </div>
+            </div>
+
+            <div className="bg-amber-50 border-2 border-amber-200 rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-white font-bold text-lg">!</span>
+                </div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-amber-900 mb-2">Avertissement Important</h4>
+                  <ul className="text-sm text-amber-800 space-y-1">
+                    <li>• Vous allez vous connecter au compte de <strong>{selectedUserForImpersonation.email}</strong></li>
+                    <li>• Toutes vos actions seront auditées et enregistrées</li>
+                    <li>• La session expirera automatiquement après 2 heures</li>
+                    <li>• Une bannière sera visible en permanence pendant la session</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowImpersonateModal(false);
+                  setSelectedUserForImpersonation(null);
+                }}
+                className="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-medium transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={confirmImpersonate}
+                className="flex-1 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-medium transition-all shadow-lg shadow-amber-500/30"
+              >
+                Confirmer la connexion
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

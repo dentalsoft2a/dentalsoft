@@ -12,6 +12,15 @@ interface EmployeeInfo {
   is_active: boolean;
 }
 
+interface ImpersonationSession {
+  sessionId: string;
+  adminUserId: string;
+  adminEmail: string;
+  targetUserId: string;
+  targetEmail: string;
+  expiresAt: string;
+}
+
 interface AuthContextType {
   user: User | null;
   profile: Profile | null;
@@ -22,10 +31,14 @@ interface AuthContextType {
   employeeInfo: EmployeeInfo | null;
   laboratoryId: string | null;
   userEmail: string | null;
+  isImpersonating: boolean;
+  impersonationSession: ImpersonationSession | null;
   signUp: (email: string, password: string, firstName: string, lastName: string, laboratoryName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
+  impersonateUser: (targetUserId: string) => Promise<{ error: Error | null }>;
+  endImpersonation: () => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -37,6 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [employeeInfo, setEmployeeInfo] = useState<EmployeeInfo | null>(null);
   const [laboratoryUserProfile, setLaboratoryUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [impersonationSession, setImpersonationSession] = useState<ImpersonationSession | null>(null);
+  const [isImpersonating, setIsImpersonating] = useState(false);
 
   useEffect(() => {
     if (employeeInfo) {
@@ -47,6 +62,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [employeeInfo, laboratoryUserProfile, userProfile]);
 
   useEffect(() => {
+    const storedSession = sessionStorage.getItem('impersonation_session');
+    if (storedSession) {
+      try {
+        const session = JSON.parse(storedSession);
+        setImpersonationSession(session);
+        setIsImpersonating(true);
+      } catch (e) {
+        console.error('Failed to parse impersonation session:', e);
+      }
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -184,20 +210,145 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
+      if (isImpersonating) {
+        await endImpersonation();
+        return;
+      }
+
       await supabase.auth.signOut({ scope: 'local' });
       setUser(null);
       setProfile(null);
       setUserProfile(null);
       setEmployeeInfo(null);
       setLaboratoryUserProfile(null);
+      setImpersonationSession(null);
+      setIsImpersonating(false);
+      sessionStorage.removeItem('impersonation_session');
+      sessionStorage.removeItem('admin_session');
     } catch (error) {
       console.error('Error signing out:', error);
-      // Force local cleanup even if server fails
       setUser(null);
       setProfile(null);
       setUserProfile(null);
       setEmployeeInfo(null);
       setLaboratoryUserProfile(null);
+      setImpersonationSession(null);
+      setIsImpersonating(false);
+      sessionStorage.removeItem('impersonation_session');
+      sessionStorage.removeItem('admin_session');
+    }
+  };
+
+  const impersonateUser = async (targetUserId: string) => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session');
+      }
+
+      sessionStorage.setItem('admin_session', JSON.stringify({
+        access_token: session.access_token,
+        refresh_token: session.refresh_token,
+        user: session.user,
+      }));
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/impersonate-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ targetUserId }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to impersonate user');
+      }
+
+      const impSession: ImpersonationSession = {
+        sessionId: result.sessionId,
+        adminUserId: result.adminUser.id,
+        adminEmail: result.adminUser.email,
+        targetUserId: result.targetUser.id,
+        targetEmail: result.targetUser.email,
+        expiresAt: result.expiresAt,
+      };
+
+      sessionStorage.setItem('impersonation_session', JSON.stringify(impSession));
+      setImpersonationSession(impSession);
+      setIsImpersonating(true);
+
+      const { error } = await supabase.auth.setSession({
+        access_token: result.accessToken,
+        refresh_token: result.refreshToken,
+      });
+
+      if (error) throw error;
+
+      window.location.reload();
+
+      return { error: null };
+    } catch (error) {
+      console.error('Impersonation error:', error);
+      sessionStorage.removeItem('admin_session');
+      return { error: error as Error };
+    }
+  };
+
+  const endImpersonation = async () => {
+    try {
+      if (!impersonationSession) {
+        throw new Error('No active impersonation session');
+      }
+
+      const adminSession = sessionStorage.getItem('admin_session');
+      if (!adminSession) {
+        throw new Error('Admin session not found');
+      }
+
+      const { access_token } = JSON.parse(adminSession);
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/end-impersonation`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ sessionId: impersonationSession.sessionId }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to end impersonation');
+      }
+
+      sessionStorage.removeItem('impersonation_session');
+      setImpersonationSession(null);
+      setIsImpersonating(false);
+
+      const { access_token: adminAccessToken, refresh_token: adminRefreshToken } = JSON.parse(adminSession);
+      await supabase.auth.setSession({
+        access_token: adminAccessToken,
+        refresh_token: adminRefreshToken,
+      });
+
+      sessionStorage.removeItem('admin_session');
+
+      window.location.reload();
+
+      return { error: null };
+    } catch (error) {
+      console.error('End impersonation error:', error);
+      return { error: error as Error };
     }
   };
 
@@ -242,10 +393,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       employeeInfo,
       laboratoryId,
       userEmail,
+      isImpersonating,
+      impersonationSession,
       signUp,
       signIn,
       signOut,
-      updateProfile
+      updateProfile,
+      impersonateUser,
+      endImpersonation
     }}>
       {children}
     </AuthContext.Provider>
