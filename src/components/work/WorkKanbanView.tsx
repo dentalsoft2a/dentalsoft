@@ -547,23 +547,23 @@ export default function WorkKanbanView({
 
   return (
     <div className="w-full pb-4">
-      <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${workStages.length + 1}, minmax(0, 1fr))` }}>
+      <div className="md:grid md:gap-3 lg:gap-4 space-y-4 md:space-y-0" style={{ gridTemplateColumns: workStages.length > 0 ? `repeat(${workStages.length + 1}, minmax(0, 1fr))` : '1fr' }}>
         <div className="min-w-0">
-          <div className="bg-slate-100 rounded-lg p-3 mb-3 border-2 border-slate-200">
+          <div className="bg-slate-100 rounded-lg p-2.5 md:p-3 mb-2 md:mb-3 border-2 border-slate-200">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-700 flex items-center gap-2 text-sm">
-                <div className="w-2 h-2 rounded-full bg-slate-400"></div>
+              <h3 className="font-bold text-slate-700 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
+                <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-slate-400"></div>
                 <span className="truncate">Non assigné</span>
               </h3>
-              <span className="text-sm font-semibold text-slate-600 bg-slate-200 px-2 py-0.5 rounded-full flex-shrink-0">
+              <span className="text-xs md:text-sm font-semibold text-slate-600 bg-slate-200 px-1.5 md:px-2 py-0.5 rounded-full flex-shrink-0">
                 {getNotesWithoutStage().length}
               </span>
             </div>
           </div>
-          <div className="space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto pr-2">
+          <div className="space-y-2 max-h-[400px] md:max-h-[calc(100vh-400px)] overflow-y-auto pr-1 md:pr-2">
             {getNotesWithoutStage().map(renderNoteCard)}
             {getNotesWithoutStage().length === 0 && (
-              <div className="text-center py-8 text-slate-400 text-xs">
+              <div className="text-center py-6 md:py-8 text-slate-400 text-xs">
                 Aucun travail non assigné
               </div>
             )}
@@ -579,7 +579,7 @@ export default function WorkKanbanView({
             onDrop={(e) => handleDrop(e, stage.id)}
           >
             <div
-              className={`rounded-lg p-3 mb-3 border-2 transition-all ${
+              className={`rounded-lg p-2.5 md:p-3 mb-2 md:mb-3 border-2 transition-all ${
                 dragOverStage === stage.id
                   ? 'bg-primary-50 border-primary-400 shadow-lg scale-105'
                   : 'border-slate-200'
@@ -587,25 +587,25 @@ export default function WorkKanbanView({
               style={{ backgroundColor: dragOverStage === stage.id ? undefined : `${stage.color}20` }}
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm min-w-0">
+                <h3 className="font-bold text-slate-800 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm min-w-0">
                   <div
-                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full flex-shrink-0"
                     style={{ backgroundColor: stage.color }}
                   ></div>
                   <span className="truncate">{stage.name}</span>
                 </h3>
-                <span className="text-sm font-semibold text-slate-600 bg-white/80 px-2 py-0.5 rounded-full flex-shrink-0">
+                <span className="text-xs md:text-sm font-semibold text-slate-600 bg-white/80 px-1.5 md:px-2 py-0.5 rounded-full flex-shrink-0">
                   {getNotesForStage(stage.id).length}
                 </span>
               </div>
               {stage.description && (
-                <p className="text-xs text-slate-600 mt-1 truncate" title={stage.description}>{stage.description}</p>
+                <p className="text-xs text-slate-600 mt-1 truncate hidden md:block" title={stage.description}>{stage.description}</p>
               )}
             </div>
-            <div className="space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto pr-2">
+            <div className="space-y-2 max-h-[400px] md:max-h-[calc(100vh-400px)] overflow-y-auto pr-1 md:pr-2">
               {getNotesForStage(stage.id).map(renderNoteCard)}
               {getNotesForStage(stage.id).length === 0 && (
-                <div className="text-center py-8 text-slate-400 text-xs border-2 border-dashed border-slate-200 rounded-lg">
+                <div className="text-center py-6 md:py-8 text-slate-400 text-xs border-2 border-dashed border-slate-200 rounded-lg">
                   Glissez un travail ici
                 </div>
               )}

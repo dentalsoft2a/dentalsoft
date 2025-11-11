@@ -252,158 +252,158 @@ export default function WorkManagementPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="space-y-4 md:space-y-6">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 md:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Gestion des Travaux</h1>
-          <p className="text-slate-600 mt-1">Suivez l'avancement de vos bons de livraison en temps réel</p>
+          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Gestion des Travaux</h1>
+          <p className="text-sm md:text-base text-slate-600 mt-1">Suivez l'avancement de vos bons de livraison en temps réel</p>
         </div>
         <button
           onClick={() => setSelectedNote('new')}
-          className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl"
+          className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl text-sm md:text-base"
         >
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4 md:w-5 md:h-5" />
           Nouveau travail
         </button>
       </div>
 
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
-        <div className="bg-white rounded-xl p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 md:gap-4">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-slate-600 font-medium">Total</p>
-              <p className="text-2xl font-bold text-slate-900 mt-1">{stats.total}</p>
+              <p className="text-xs md:text-sm text-slate-600 font-medium">Total</p>
+              <p className="text-xl md:text-2xl font-bold text-slate-900 mt-0.5 md:mt-1">{stats.total}</p>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-slate-100 flex items-center justify-center">
-              <Layers className="w-6 h-6 text-slate-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-slate-100 flex items-center justify-center">
+              <Layers className="w-4 h-4 md:w-6 md:h-6 text-slate-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 border border-orange-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-orange-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-orange-600 font-medium">En cours</p>
-              <p className="text-2xl font-bold text-orange-900 mt-1">{stats.inProgress}</p>
+              <p className="text-xs md:text-sm text-orange-600 font-medium">En cours</p>
+              <p className="text-xl md:text-2xl font-bold text-orange-900 mt-0.5 md:mt-1">{stats.inProgress}</p>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-orange-100 flex items-center justify-center">
-              <Clock className="w-6 h-6 text-orange-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-orange-100 flex items-center justify-center">
+              <Clock className="w-4 h-4 md:w-6 md:h-6 text-orange-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-green-600 font-medium">Terminés</p>
-              <p className="text-2xl font-bold text-green-900 mt-1">{stats.completed}</p>
+              <p className="text-xs md:text-sm text-green-600 font-medium">Terminés</p>
+              <p className="text-xl md:text-2xl font-bold text-green-900 mt-0.5 md:mt-1">{stats.completed}</p>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="w-6 h-6 text-green-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-green-100 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 border border-red-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-red-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-red-600 font-medium">En retard</p>
-              <p className="text-2xl font-bold text-red-900 mt-1">{stats.overdue}</p>
+              <p className="text-xs md:text-sm text-red-600 font-medium">En retard</p>
+              <p className="text-xl md:text-2xl font-bold text-red-900 mt-0.5 md:mt-1">{stats.overdue}</p>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-red-100 flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-red-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-red-100 flex items-center justify-center">
+              <Calendar className="w-4 h-4 md:w-6 md:h-6 text-red-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 border border-amber-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-amber-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-amber-600 font-medium">Bloqués</p>
-              <p className="text-2xl font-bold text-amber-900 mt-1">{stats.blocked}</p>
+              <p className="text-xs md:text-sm text-amber-600 font-medium">Bloqués</p>
+              <p className="text-xl md:text-2xl font-bold text-amber-900 mt-0.5 md:mt-1">{stats.blocked}</p>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-              <AlertTriangle className="w-6 h-6 text-amber-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-amber-100 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 md:w-6 md:h-6 text-amber-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-4 border border-rose-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-rose-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-rose-600 font-medium">Urgents</p>
-              <p className="text-2xl font-bold text-rose-900 mt-1">{stats.urgent}</p>
+              <p className="text-xs md:text-sm text-rose-600 font-medium">Urgents</p>
+              <p className="text-xl md:text-2xl font-bold text-rose-900 mt-0.5 md:mt-1">{stats.urgent}</p>
             </div>
-            <div className="w-12 h-12 rounded-lg bg-rose-100 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-rose-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-rose-100 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-rose-600" />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-xl shadow-lg border border-slate-200">
-        <div className="p-4 border-b border-slate-200">
-          <div className="flex flex-col lg:flex-row gap-4">
+      <div className="bg-white rounded-lg md:rounded-xl shadow-lg border border-slate-200">
+        <div className="p-3 md:p-4 border-b border-slate-200">
+          <div className="flex flex-col lg:flex-row gap-3 md:gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Rechercher par numéro, patient, dentiste..."
+                placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                className="w-full pl-9 md:pl-10 pr-3 md:pr-4 py-2 md:py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm md:text-base"
               />
             </div>
 
             <div className="flex gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border transition-all ${
+                className={`flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-lg border transition-all text-sm md:text-base ${
                   showFilters
                     ? 'bg-primary-50 border-primary-300 text-primary-700'
                     : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                <Filter className="w-5 h-5" />
+                <Filter className="w-4 h-4 md:w-5 md:h-5" />
                 <span className="hidden sm:inline">Filtres</span>
-                <ChevronDown className={`w-4 h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-3.5 h-3.5 md:w-4 md:h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
               </button>
 
-              <div className="flex bg-slate-100 rounded-lg p-1">
+              <div className="flex bg-slate-100 rounded-lg p-0.5 md:p-1">
                 <button
                   onClick={() => setViewMode('kanban')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${
+                  className={`flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 rounded-md transition-all ${
                     viewMode === 'kanban'
                       ? 'bg-white text-primary-700 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <LayoutGrid className="w-4 h-4" />
-                  <span className="hidden sm:inline text-sm font-medium">Kanban</span>
+                  <LayoutGrid className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline text-xs md:text-sm font-medium">Kanban</span>
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all ${
+                  className={`flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 rounded-md transition-all ${
                     viewMode === 'list'
                       ? 'bg-white text-primary-700 shadow-sm'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
-                  <List className="w-4 h-4" />
-                  <span className="hidden sm:inline text-sm font-medium">Liste</span>
+                  <List className="w-3.5 h-3.5 md:w-4 md:h-4" />
+                  <span className="hidden sm:inline text-xs md:text-sm font-medium">Liste</span>
                 </button>
               </div>
             </div>
           </div>
 
           {showFilters && (
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <div className="mt-3 md:mt-4 grid grid-cols-1 md:grid-cols-4 gap-3 p-3 md:p-4 bg-slate-50 rounded-lg border border-slate-200">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Statut</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">Statut</label>
                 <select
                   value={filters.status}
                   onChange={(e) => setFilters({ ...filters, status: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  className="w-full px-2.5 md:px-3 py-1.5 md:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm md:text-base"
                 >
                   <option value="all">Tous</option>
                   <option value="pending">En attente</option>
@@ -413,11 +413,11 @@ export default function WorkManagementPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Priorité</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">Priorité</label>
                 <select
                   value={filters.priority}
                   onChange={(e) => setFilters({ ...filters, priority: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  className="w-full px-2.5 md:px-3 py-1.5 md:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm md:text-base"
                 >
                   <option value="all">Toutes</option>
                   <option value="urgent">Urgent</option>
@@ -428,11 +428,11 @@ export default function WorkManagementPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Échéance</label>
+                <label className="block text-xs md:text-sm font-medium text-slate-700 mb-1">Échéance</label>
                 <select
                   value={filters.dueDate}
                   onChange={(e) => setFilters({ ...filters, dueDate: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                  className="w-full px-2.5 md:px-3 py-1.5 md:py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none text-sm md:text-base"
                 >
                   <option value="all">Toutes</option>
                   <option value="overdue">En retard</option>
@@ -444,9 +444,9 @@ export default function WorkManagementPage() {
               <div className="flex items-end">
                 <button
                   onClick={() => setFilters({ status: 'all', priority: 'all', assignee: 'all', dueDate: 'all' })}
-                  className="w-full px-4 py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-medium"
+                  className="w-full px-3 md:px-4 py-1.5 md:py-2 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors font-medium text-sm md:text-base"
                 >
-                  <X className="w-4 h-4 inline mr-2" />
+                  <X className="w-3.5 h-3.5 md:w-4 md:h-4 inline mr-1.5 md:mr-2" />
                   Réinitialiser
                 </button>
               </div>
