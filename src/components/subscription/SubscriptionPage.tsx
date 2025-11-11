@@ -3,6 +3,7 @@ import { CreditCard, CheckCircle, Clock, AlertCircle, DollarSign, Key, FileText,
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import { generateSubscriptionInvoicePDF } from '../../utils/subscriptionInvoicePdfGenerator';
 
 interface UserProfile {
   subscription_status: string;
@@ -119,6 +120,15 @@ export function SubscriptionPage() {
 
   const handleSubscribe = () => {
     alert('L\'intégration Stripe sera disponible prochainement. Contactez le support pour activer votre abonnement.');
+  };
+
+  const handleDownloadInvoice = async (invoiceId: string) => {
+    try {
+      await generateSubscriptionInvoicePDF(invoiceId);
+    } catch (error) {
+      console.error('Error downloading invoice:', error);
+      alert('Erreur lors de la génération de la facture');
+    }
   };
 
   const handleRedeemCode = async () => {
@@ -501,7 +511,7 @@ export function SubscriptionPage() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         <button
-                          onClick={() => {/* TODO: Generate PDF */}}
+                          onClick={() => handleDownloadInvoice(invoice.id)}
                           className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
                           title="Télécharger la facture"
                         >

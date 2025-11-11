@@ -17,6 +17,7 @@ interface CompanySettings {
   company_bic: string;
   company_logo_url: string;
   invoice_prefix: string;
+  tax_rate: number;
 }
 
 export function CompanySettings() {
@@ -34,7 +35,8 @@ export function CompanySettings() {
     company_iban: '',
     company_bic: '',
     company_logo_url: '',
-    invoice_prefix: 'SUB'
+    invoice_prefix: 'SUB',
+    tax_rate: 20.00
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -69,7 +71,8 @@ export function CompanySettings() {
           company_iban: data.company_iban || '',
           company_bic: data.company_bic || '',
           company_logo_url: data.company_logo_url || '',
-          invoice_prefix: data.invoice_prefix || 'SUB'
+          invoice_prefix: data.invoice_prefix || 'SUB',
+          tax_rate: data.tax_rate || 20.00
         });
       }
     } catch (error) {
@@ -162,6 +165,22 @@ export function CompanySettings() {
                 placeholder="SUB"
               />
               <p className="text-xs text-slate-500 mt-1">Format: {settings.invoice_prefix}-2025-000001</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">
+                Taux de TVA (%)
+              </label>
+              <input
+                type="number"
+                step="0.01"
+                min="0"
+                max="100"
+                value={settings.tax_rate}
+                onChange={(e) => setSettings({ ...settings, tax_rate: parseFloat(e.target.value) || 0 })}
+                className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                placeholder="20.00"
+              />
+              <p className="text-xs text-slate-500 mt-1">Utilisé pour calculer le HT depuis le prix TTC de l'abonnement</p>
             </div>
           </div>
         </div>
