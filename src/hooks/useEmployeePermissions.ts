@@ -52,8 +52,21 @@ export function useEmployeePermissions(): EmployeePermissions {
 
   const loadEmployeePermissions = async () => {
     try {
-      // Check if user is a laboratory owner (has a profile in profiles table)
-      if (profile?.id === user?.id) {
+      // FIRST check if user is an employee (higher priority)
+      const { data: employeeData, error: employeeError } = await supabase
+        .from('laboratory_employees')
+        .select('id, laboratory_profile_id, role_name, is_active')
+        .eq('user_profile_id', user!.id)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (employeeError) throw employeeError;
+
+      // If user is an employee, load employee permissions
+      if (employeeData) {
+        // Continue with employee logic below
+      } else if (profile?.id === user?.id) {
+        // Only if NOT an employee, check if user is a laboratory owner
         setPermissions({
           isEmployee: false,
           isLaboratoryOwner: true,
@@ -69,22 +82,13 @@ export function useEmployeePermissions(): EmployeePermissions {
           canEditStage: () => true,
         });
         return;
-      }
-
-      // Check if user is an employee
-      const { data: employeeData, error: employeeError } = await supabase
-        .from('laboratory_employees')
-        .select('id, laboratory_profile_id, role_name, is_active')
-        .eq('user_profile_id', user!.id)
-        .eq('is_active', true)
-        .maybeSingle();
-
-      if (employeeError) throw employeeError;
-
-      if (!employeeData) {
+      } else {
+        // Not an employee and not a laboratory owner
         setPermissions(prev => ({ ...prev, loading: false }));
         return;
       }
+
+      // If we reach here, user is an employee - continue with employee logic
 
       // Get role permissions
       const { data: roleData, error: roleError } = await supabase
