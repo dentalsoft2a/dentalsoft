@@ -119,23 +119,26 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="bg-white border-b border-slate-200">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-primary-50/20 to-slate-100">
+      <div className="bg-white/95 backdrop-blur-md border-b border-slate-200/50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
           <div className="flex items-center justify-between mb-4 sm:mb-6">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-900 rounded-lg flex items-center justify-center">
-                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-xl blur-md opacity-30"></div>
+                <div className="relative w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
               </div>
               <div>
-                <h1 className="text-lg sm:text-2xl font-bold text-slate-900">Super Admin</h1>
+                <h1 className="text-lg sm:text-2xl font-bold bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">Super Admin</h1>
                 <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Panneau d'administration</p>
               </div>
             </div>
             {onNavigate && (
               <button
                 onClick={() => onNavigate('dashboard')}
-                className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all text-sm font-medium"
+                className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-gradient-to-r from-slate-100 to-slate-50 hover:from-slate-200 hover:to-slate-100 text-slate-700 rounded-xl transition-all text-sm font-medium shadow-sm hover:shadow-md active:scale-95"
               >
                 <ArrowLeft className="w-4 h-4" />
                 <span className="hidden sm:inline">Retour</span>
@@ -146,11 +149,27 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {statCards.map((stat, index) => {
               const Icon = stat.icon;
+              const getIconColor = (color: string) => {
+                if (color.includes('blue')) return 'text-primary-600';
+                if (color.includes('emerald')) return 'text-emerald-600';
+                if (color.includes('orange')) return 'text-orange-600';
+                if (color.includes('violet')) return 'text-violet-600';
+                return 'text-slate-600';
+              };
+              const getBgColor = (color: string) => {
+                if (color.includes('blue')) return 'bg-gradient-to-br from-primary-50 to-cyan-50';
+                if (color.includes('emerald')) return 'bg-gradient-to-br from-emerald-50 to-green-50';
+                if (color.includes('orange')) return 'bg-gradient-to-br from-orange-50 to-amber-50';
+                if (color.includes('violet')) return 'bg-gradient-to-br from-violet-50 to-purple-50';
+                return 'bg-slate-50';
+              };
               return (
-                <div key={index} className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200">
+                <div key={index} className="group bg-white rounded-xl p-3 sm:p-4 border border-slate-200/50 hover:border-slate-300 hover:shadow-md transition-all duration-200">
                   <div className="flex items-center justify-between mb-2">
-                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
-                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                    <div className={`${getBgColor(stat.color)} p-2 rounded-lg`}>
+                      <Icon className={`w-4 h-4 sm:w-5 sm:h-5 ${getIconColor(stat.color)}`} />
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       stat.trend.includes('+') ? 'bg-emerald-100 text-emerald-700' :
                       stat.trend === 'Urgent' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'
                     }`}>
@@ -169,21 +188,21 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         <div className="flex flex-col lg:flex-row gap-6">
           <div className="lg:w-64 flex-shrink-0">
-            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+            <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200/50 shadow-sm overflow-hidden">
               {menuCategories.map((category) => {
                 const CategoryIcon = category.icon;
                 const isOpen = openCategory === category.id;
                 return (
-                  <div key={category.id} className="border-b border-slate-200 last:border-b-0">
+                  <div key={category.id} className="border-b border-slate-200/50 last:border-b-0">
                     <button
                       onClick={() => toggleCategory(category.id)}
-                      className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+                      className="w-full flex items-center justify-between p-4 hover:bg-gradient-to-r hover:from-primary-50/50 hover:to-cyan-50/50 transition-all duration-200"
                     >
                       <div className="flex items-center gap-3">
                         <CategoryIcon className="w-5 h-5 text-slate-600" />
-                        <span className="font-medium text-slate-900">{category.label}</span>
+                        <span className="font-semibold text-slate-900">{category.label}</span>
                       </div>
-                      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
                     </button>
                     {isOpen && (
                       <div className="bg-slate-50/50">
@@ -194,10 +213,10 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
                             <button
                               key={item.id}
                               onClick={() => setActiveTab(item.id)}
-                              className={`w-full flex items-center gap-3 px-4 py-3 pl-12 transition-colors ${
+                              className={`w-full flex items-center gap-3 px-4 py-3 pl-12 transition-all duration-200 ${
                                 isActive
-                                  ? 'bg-slate-900 text-white'
-                                  : 'text-slate-700 hover:bg-white'
+                                  ? 'bg-gradient-to-r from-primary-600 to-cyan-600 text-white shadow-md'
+                                  : 'text-slate-700 hover:bg-white/80'
                               }`}
                             >
                               <ItemIcon className="w-4 h-4" />
@@ -214,7 +233,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
           </div>
 
           <div className="flex-1">
-            <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6">
+            <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200/50 shadow-sm p-4 sm:p-6">
               {activeTab === 'users' && <UsersManagement onStatsUpdate={loadStats} />}
               {activeTab === 'subscriptions' && <SubscriptionSettings />}
               {activeTab === 'alerts' && <AlertsManagement />}
