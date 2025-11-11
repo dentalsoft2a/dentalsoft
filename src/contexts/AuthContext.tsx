@@ -66,10 +66,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (storedSession) {
       try {
         const session = JSON.parse(storedSession);
-        setImpersonationSession(session);
-        setIsImpersonating(true);
+        const expiresAt = new Date(session.expiresAt).getTime();
+        const now = new Date().getTime();
+
+        if (expiresAt > now) {
+          setImpersonationSession(session);
+          setIsImpersonating(true);
+        } else {
+          sessionStorage.removeItem('impersonation_session');
+          sessionStorage.removeItem('admin_session');
+        }
       } catch (e) {
         console.error('Failed to parse impersonation session:', e);
+        sessionStorage.removeItem('impersonation_session');
+        sessionStorage.removeItem('admin_session');
       }
     }
 
@@ -267,6 +277,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
+        if (result.error && result.error.includes('already have an active impersonation session')) {
+          sessionStorage.removeItem('impersonation_session');
+          sessionStorage.removeItem('admin_session');
+          setImpersonationSession(null);
+          setIsImpersonating(false);
+
+          throw new Error('Session expirée détectée. Veuillez réessayer.');
+        }
         throw new Error(result.error || 'Failed to impersonate user');
       }
 
