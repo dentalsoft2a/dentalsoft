@@ -283,31 +283,41 @@ export default function WorkKanbanView({
 
       const nextStage = workStages[nextStageIndex];
 
-      // Mark previous stage as completed if exists
-      if (note.current_stage_id) {
+      // Mark ALL previous stages as completed (up to and including current stage)
+      // This ensures that if a BL jumps stages, all intermediary stages are marked as completed
+      for (let i = 0; i <= currentStageIndex || (currentStageIndex === -1 && i < nextStageIndex); i++) {
+        if (currentStageIndex === -1 && i >= nextStageIndex) break;
+
+        const stageToComplete = workStages[i];
+        if (!stageToComplete) continue;
+
         const { data: existingStage } = await supabase
           .from('delivery_note_stages')
           .select('*')
           .eq('delivery_note_id', noteId)
-          .eq('stage_id', note.current_stage_id)
+          .eq('stage_id', stageToComplete.id)
           .maybeSingle();
 
         if (existingStage) {
-          await supabase
-            .from('delivery_note_stages')
-            .update({
-              is_completed: true,
-              completed_at: new Date().toISOString(),
-              completed_by: user.id,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', existingStage.id);
+          // Only update if not already completed
+          if (!existingStage.is_completed) {
+            await supabase
+              .from('delivery_note_stages')
+              .update({
+                is_completed: true,
+                completed_at: new Date().toISOString(),
+                completed_by: user.id,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', existingStage.id);
+          }
         } else {
+          // Create new completed stage entry
           await supabase
             .from('delivery_note_stages')
             .insert({
               delivery_note_id: noteId,
-              stage_id: note.current_stage_id,
+              stage_id: stageToComplete.id,
               is_completed: true,
               completed_at: new Date().toISOString(),
               completed_by: user.id
