@@ -1253,18 +1253,35 @@ function BulkCreateProformasModal({ onClose, onSave }: BulkCreateProformasModalP
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0);
 
-      // Get all delivery notes for the selected month that are not completed
+      // Get all delivery notes for the selected month
       const { data: deliveryNotes, error: notesError } = await supabase
         .from('delivery_notes')
         .select('*, dentists(id, name)')
         .eq('user_id', user.id)
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
-        .neq('status', 'completed')
         .order('dentist_id')
         .order('date');
 
       if (notesError) throw notesError;
+
+      // Get all delivery note IDs that are already in proforma_items
+      const { data: usedDeliveryNotes, error: usedError } = await supabase
+        .from('proforma_items')
+        .select('delivery_note_id')
+        .not('delivery_note_id', 'is', null);
+
+      if (usedError) throw usedError;
+
+      // Create a Set of used delivery note IDs for fast lookup
+      const usedDeliveryNoteIds = new Set(
+        usedDeliveryNotes?.map(item => item.delivery_note_id).filter(Boolean) || []
+      );
+
+      // Filter out delivery notes that are already used in proformas
+      const availableDeliveryNotes = deliveryNotes?.filter(
+        note => !usedDeliveryNoteIds.has(note.id)
+      ) || [];
 
       // Group by dentist
       const groupedByDentist = new Map<string, {
@@ -1273,7 +1290,7 @@ function BulkCreateProformasModal({ onClose, onSave }: BulkCreateProformasModalP
         totalAmount: number;
       }>();
 
-      deliveryNotes?.forEach(note => {
+      availableDeliveryNotes.forEach(note => {
         if (!note.dentists) return;
 
         const dentistId = note.dentist_id;
