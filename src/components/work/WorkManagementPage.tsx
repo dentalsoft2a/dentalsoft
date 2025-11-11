@@ -88,10 +88,16 @@ export default function WorkManagementPage() {
 
   useEffect(() => {
     if (user && !employeePerms.loading) {
+      console.log('[WorkManagement] Loading data with permissions:', {
+        isEmployee: employeePerms.isEmployee,
+        canEditAllStages: employeePerms.canEditAllStages,
+        allowedStagesCount: employeePerms.allowedStages.length,
+        allowedStages: employeePerms.allowedStages
+      });
       loadWorkStages();
       loadDeliveryNotes();
     }
-  }, [employeePerms.loading]);
+  }, [employeePerms.loading, employeePerms.allowedStages.join(','), employeePerms.canEditAllStages]);
 
   useEffect(() => {
     applyFilters();
@@ -114,9 +120,30 @@ export default function WorkManagementPage() {
 
       // Filter stages based on employee permissions
       let stages = data || [];
+      console.log('[WorkManagement] Before filtering:', {
+        totalStages: stages.length,
+        stageNames: stages.map(s => s.name),
+        isEmployee: employeePerms.isEmployee,
+        canEditAllStages: employeePerms.canEditAllStages,
+        allowedStages: employeePerms.allowedStages
+      });
+
       if (employeePerms.isEmployee && !employeePerms.canEditAllStages) {
-        stages = stages.filter(stage => employeePerms.allowedStages.includes(stage.id));
+        stages = stages.filter(stage => {
+          const isAllowed = employeePerms.allowedStages.includes(stage.id);
+          console.log('[WorkManagement] Stage filter:', {
+            stageName: stage.name,
+            stageId: stage.id,
+            isAllowed
+          });
+          return isAllowed;
+        });
       }
+
+      console.log('[WorkManagement] After filtering:', {
+        filteredStagesCount: stages.length,
+        filteredStageNames: stages.map(s => s.name)
+      });
 
       setWorkStages(stages);
     } catch (error) {
