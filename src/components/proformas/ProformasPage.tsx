@@ -826,13 +826,6 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
   };
 
   const importDeliveryNote = (note: any) => {
-    // Check if this delivery note has already been imported
-    const alreadyImported = items.some(item => item.delivery_note_id === note.id);
-    if (alreadyImported) {
-      alert('Ce bon de livraison a déjà été importé');
-      return;
-    }
-
     const noteItems = Array.isArray(note.items) ? note.items : [];
     const newItems = noteItems.map((item: any) => ({
       description: item.description || '',
@@ -1147,27 +1140,36 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
                   <div className="p-4 text-center text-slate-600">Chargement...</div>
                 ) : (
                   <div className="divide-y divide-slate-200">
-                    {deliveryNotes.map((note) => (
-                      <div
-                        key={note.id}
-                        className="p-3 hover:bg-gradient-to-r hover:from-primary-50/50 hover:to-cyan-50/50 flex justify-between items-center gap-2 transition-all duration-200 group"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="font-bold text-sm text-slate-900 group-hover:text-primary-600 transition-colors truncate">{note.delivery_number}</div>
-                          <div className="text-xs text-slate-600 mt-0.5 truncate">
-                            {note.dentists?.name} - {new Date(note.date).toLocaleDateString('fr-FR')}
-                            {note.patient_name && ` - ${note.patient_name}`}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => importDeliveryNote(note)}
-                          className="flex-shrink-0 px-3 py-1.5 text-xs md:text-sm bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-lg md:rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-300 font-semibold shadow-md"
+                    {deliveryNotes.map((note) => {
+                      const isImported = items.some(item => item.delivery_note_id === note.id);
+                      return (
+                        <div
+                          key={note.id}
+                          className="p-3 hover:bg-gradient-to-r hover:from-primary-50/50 hover:to-cyan-50/50 flex justify-between items-center gap-2 transition-all duration-200 group"
                         >
-                          Importer
-                        </button>
-                      </div>
-                    ))}
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-sm text-slate-900 group-hover:text-primary-600 transition-colors truncate">{note.delivery_number}</div>
+                            <div className="text-xs text-slate-600 mt-0.5 truncate">
+                              {note.dentists?.name} - {new Date(note.date).toLocaleDateString('fr-FR')}
+                              {note.patient_name && ` - ${note.patient_name}`}
+                            </div>
+                          </div>
+                          {isImported ? (
+                            <div className="flex-shrink-0 px-3 py-1.5 text-xs md:text-sm bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg md:rounded-xl font-semibold border border-green-200">
+                              ✓ Importé
+                            </div>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => importDeliveryNote(note)}
+                              className="flex-shrink-0 px-3 py-1.5 text-xs md:text-sm bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-lg md:rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all duration-300 font-semibold shadow-md"
+                            >
+                              Importer
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </div>
