@@ -1,5 +1,4 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
-import { SignJWT } from 'npm:jose@5.2.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,13 +21,12 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET');
-    
-    if (!jwtSecret) {
-      throw new Error('JWT secret not configured');
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
@@ -91,6 +89,63 @@ Deno.serve(async (req: Request) => {
       throw new Error('You already have an active impersonation session. Please end it first.');
     }
 
+    const { data: authUser, error: authUserError } = await supabase.auth.admin.getUserById(targetUserId);
+
+    if (authUserError || !authUser || !authUser.user) {
+      throw new Error('Failed to get target user authentication data');
+    }
+
+    const targetEmail = authUser.user.email;
+    if (!targetEmail) {
+      throw new Error('Target user has no email');
+    }
+
+    const updatePasswordUrl = `${supabaseUrl}/auth/v1/admin/users/${targetUserId}`;
+    const tempPassword = crypto.randomUUID();
+
+    const updateResponse = await fetch(updatePasswordUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `Bearer ${supabaseServiceKey}`,
+        'Content-Type': 'application/json',
+        'apikey': supabaseServiceKey,
+      },
+      body: JSON.stringify({
+        password: tempPassword,
+      }),
+    });
+
+    if (!updateResponse.ok) {
+      const errorData = await updateResponse.text();
+      console.error('Failed to update password:', errorData);
+      throw new Error('Failed to prepare impersonation');
+    }
+
+    const signInUrl = `${supabaseUrl}/auth/v1/token?grant_type=password`;
+    const signInResponse = await fetch(signInUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': supabaseServiceKey,
+      },
+      body: JSON.stringify({
+        email: targetEmail,
+        password: tempPassword,
+      }),
+    });
+
+    if (!signInResponse.ok) {
+      const errorData = await signInResponse.text();
+      console.error('Failed to sign in:', errorData);
+      throw new Error('Failed to create impersonation session');
+    }
+
+    const signInData = await signInResponse.json();
+
+    if (!signInData.access_token || !signInData.refresh_token) {
+      throw new Error('Failed to extract authentication tokens');
+    }
+
     const { data: tokenData } = await supabase.rpc('generate_impersonation_token');
 
     if (!tokenData) {
@@ -121,59 +176,6 @@ Deno.serve(async (req: Request) => {
       .update({ impersonated_by: user.id })
       .eq('id', targetUserId);
 
-    const { data: authUser, error: authUserError } = await supabase.auth.admin.getUserById(targetUserId);
-
-    if (authUserError || !authUser || !authUser.user) {
-      throw new Error('Failed to get target user authentication data');
-    }
-
-    const targetEmail = authUser.user.email;
-    const targetPhone = authUser.user.phone;
-    const targetRole = authUser.user.role;
-    const targetAppMetadata = authUser.user.app_metadata || {};
-    const targetUserMetadata = authUser.user.user_metadata || {};
-
-    if (!targetEmail) {
-      throw new Error('Target user has no email');
-    }
-
-    const now = Math.floor(Date.now() / 1000);
-    const exp = now + (2 * 60 * 60);
-
-    const secret = new TextEncoder().encode(jwtSecret);
-
-    const accessToken = await new SignJWT({
-      aud: 'authenticated',
-      exp: exp,
-      iat: now,
-      iss: supabaseUrl,
-      sub: targetUserId,
-      email: targetEmail,
-      phone: targetPhone || '',
-      app_metadata: {
-        ...targetAppMetadata,
-        provider: 'email',
-        providers: ['email'],
-      },
-      user_metadata: targetUserMetadata,
-      role: targetRole || 'authenticated',
-      aal: 'aal1',
-      amr: [{ method: 'password', timestamp: now }],
-      session_id: session.id,
-    })
-      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-      .sign(secret);
-
-    const refreshToken = await new SignJWT({
-      sub: targetUserId,
-      exp: exp + (7 * 24 * 60 * 60),
-      iat: now,
-      iss: supabaseUrl,
-      session_id: session.id,
-    })
-      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
-      .sign(secret);
-
     await supabase.from('admin_audit_log').insert({
       admin_id: user.id,
       action: 'impersonate_user',
@@ -191,8 +193,8 @@ Deno.serve(async (req: Request) => {
         success: true,
         sessionId: session.id,
         sessionToken: tokenData,
-        accessToken: accessToken,
-        refreshToken: refreshToken,
+        accessToken: signInData.access_token,
+        refreshToken: signInData.refresh_token,
         expiresAt: expiresAt.toISOString(),
         targetUser: {
           id: targetUserId,
