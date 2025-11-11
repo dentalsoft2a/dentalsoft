@@ -53,26 +53,28 @@ Deno.serve(async (req: Request) => {
       throw new Error("Unauthorized");
     }
 
-    // Check if user is a laboratory owner (profiles table)
+    console.log('Current user ID:', currentUser.id);
+
+    // Check if user exists in profiles table (laboratory owner)
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
-      .select("id, role")
+      .select("id, role, company_name")
       .eq("id", currentUser.id)
       .maybeSingle();
 
-    if (profileError) {
-      console.error("Error fetching profile:", profileError);
-      throw new Error("Failed to verify user permissions");
-    }
+    console.log('Profile lookup result:', { profile, profileError });
 
-    if (!profile) {
+    // If not found in profiles, user is not a laboratory owner
+    if (profileError || !profile) {
+      console.error("User is not a laboratory owner");
       throw new Error("Only laboratory owners can manage employees");
     }
 
     const requestData: CreateEmployeeRequest = await req.json();
+    console.log('Request data:', { ...requestData, password: requestData.password ? '[REDACTED]' : undefined });
 
     if (!requestData.email || !requestData.full_name || !requestData.role_name) {
-      throw new Error("Missing required fields");
+      throw new Error("Missing required fields: email, full_name, or role_name");
     }
 
     // Handle different actions
@@ -81,6 +83,8 @@ Deno.serve(async (req: Request) => {
       if (!requestData.password) {
         throw new Error("Password is required for creating new employee");
       }
+
+      console.log('Creating new user account...');
 
       const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
         email: requestData.email,
@@ -93,14 +97,17 @@ Deno.serve(async (req: Request) => {
 
       if (authError) {
         console.error("Auth error:", authError);
-        throw authError;
+        throw new Error(`Failed to create user account: ${authError.message}`);
       }
 
       if (!authData.user) {
-        throw new Error("Failed to create user account");
+        throw new Error("Failed to create user account - no user returned");
       }
 
+      console.log('User account created:', authData.user.id);
+
       // Create employee record
+      console.log('Creating employee record...');
       const { error: employeeError } = await supabaseClient
         .from('laboratory_employees')
         .insert({
@@ -115,9 +122,12 @@ Deno.serve(async (req: Request) => {
       if (employeeError) {
         console.error("Employee insert error:", employeeError);
         // Rollback: delete the auth user
+        console.log('Rolling back - deleting auth user...');
         await supabaseAdmin.auth.admin.deleteUser(authData.user.id);
-        throw employeeError;
+        throw new Error(`Failed to create employee record: ${employeeError.message}`);
       }
+
+      console.log('Employee created successfully');
 
       return new Response(
         JSON.stringify({ 
@@ -136,8 +146,10 @@ Deno.serve(async (req: Request) => {
     } else if (requestData.action === 'updatePassword') {
       // Update password only
       if (!requestData.user_profile_id || !requestData.password) {
-        throw new Error("user_profile_id and password are required");
+        throw new Error("user_profile_id and password are required for password update");
       }
+
+      console.log('Updating password for user:', requestData.user_profile_id);
 
       const { error: pwError } = await supabaseAdmin.auth.admin.updateUserById(
         requestData.user_profile_id,
@@ -146,8 +158,10 @@ Deno.serve(async (req: Request) => {
 
       if (pwError) {
         console.error("Password update error:", pwError);
-        throw pwError;
+        throw new Error(`Failed to update password: ${pwError.message}`);
       }
+
+      console.log('Password updated successfully');
 
       return new Response(
         JSON.stringify({ 
@@ -163,7 +177,7 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    throw new Error("Invalid action");
+    throw new Error("Invalid action. Supported actions: create, updatePassword");
 
   } catch (error: any) {
     console.error("Error managing employee:", error);
