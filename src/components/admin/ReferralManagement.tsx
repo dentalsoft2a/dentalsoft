@@ -56,8 +56,7 @@ export function ReferralManagement() {
         .from('referral_rewards')
         .select(`
           *,
-          user_profiles!inner(email),
-          profiles(first_name, last_name, laboratory_name)
+          user_profiles!inner(email)
         `)
         .order('created_at', { ascending: false });
 
@@ -69,13 +68,31 @@ export function ReferralManagement() {
 
       if (rewardsError) throw rewardsError;
 
+      // Load profiles data for each reward
+      if (rewardsData && rewardsData.length > 0) {
+        const userIds = rewardsData.map(r => r.user_id);
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, laboratory_name')
+          .in('id', userIds);
+
+        // Merge profiles data into rewards
+        const enrichedRewards = rewardsData.map(reward => ({
+          ...reward,
+          profiles: profilesData?.find(p => p.id === reward.user_id)
+        }));
+
+        setRewards(enrichedRewards);
+      } else {
+        setRewards([]);
+      }
+
       // Calculate stats
       const pending = rewardsData?.filter(r => r.status === 'pending').length || 0;
       const applied = rewardsData?.filter(r => r.status === 'applied').length || 0;
       const totalDays = rewardsData?.filter(r => r.status === 'applied')
         .reduce((sum, r) => sum + r.days_added, 0) || 0;
 
-      setRewards(rewardsData || []);
       setStats({
         totalReferrals: totalReferrals || 0,
         pendingRewards: pending,
