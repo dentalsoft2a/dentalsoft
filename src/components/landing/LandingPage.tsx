@@ -337,7 +337,7 @@ export function LandingPage() {
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12 lg:mb-16">
+            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4 sm:gap-6 mb-8 sm:mb-12 lg:mb-16">
               <div className="relative">
                 <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 shadow-lg border-2 border-primary-200 hover:border-primary-400 transition-all group">
                   <div className="absolute -top-3 -left-3 sm:-top-4 sm:-left-4 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg lg:text-xl shadow-lg">
@@ -357,9 +357,27 @@ export function LandingPage() {
               </div>
 
               <div className="relative">
+                <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 shadow-lg border-2 border-blue-200 hover:border-blue-400 transition-all group">
+                  <div className="absolute -top-3 -left-3 sm:-top-4 sm:-left-4 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-500 to-sky-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg lg:text-xl shadow-lg">
+                    2
+                  </div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-blue-500 to-sky-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 mx-auto group-hover:scale-110 transition-transform">
+                    <Layers className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
+                  </div>
+                  <h3 className="text-sm sm:text-base lg:text-lg font-bold text-slate-900 mb-1.5 sm:mb-2 text-center">Suivi Kanban</h3>
+                  <p className="text-xs sm:text-sm text-slate-600 text-center leading-relaxed">
+                    Organisez les travaux par étapes de production
+                  </p>
+                </div>
+                <div className="hidden lg:block absolute top-1/2 -right-3 w-6 h-6">
+                  <ArrowRight className="w-6 h-6 text-blue-400" />
+                </div>
+              </div>
+
+              <div className="relative">
                 <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 shadow-lg border-2 border-emerald-200 hover:border-emerald-400 transition-all group">
                   <div className="absolute -top-3 -left-3 sm:-top-4 sm:-left-4 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg lg:text-xl shadow-lg">
-                    2
+                    3
                   </div>
                   <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 mx-auto group-hover:scale-110 transition-transform">
                     <FileText className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
@@ -377,7 +395,7 @@ export function LandingPage() {
               <div className="relative">
                 <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 shadow-lg border-2 border-orange-200 hover:border-orange-400 transition-all group">
                   <div className="absolute -top-3 -left-3 sm:-top-4 sm:-left-4 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg lg:text-xl shadow-lg">
-                    3
+                    4
                   </div>
                   <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-orange-500 to-amber-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 mx-auto group-hover:scale-110 transition-transform">
                     <Receipt className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
@@ -393,11 +411,11 @@ export function LandingPage() {
               </div>
 
               <div className="relative">
-                <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 shadow-lg border-2 border-violet-200 hover:border-violet-400 transition-all group">
-                  <div className="absolute -top-3 -left-3 sm:-top-4 sm:-left-4 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-violet-500 to-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg lg:text-xl shadow-lg">
-                    4
+                <div className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-5 lg:p-6 shadow-lg border-2 border-rose-200 hover:border-rose-400 transition-all group">
+                  <div className="absolute -top-3 -left-3 sm:-top-4 sm:-left-4 w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-rose-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center text-white font-bold text-base sm:text-lg lg:text-xl shadow-lg">
+                    5
                   </div>
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-violet-500 to-purple-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 mx-auto group-hover:scale-110 transition-transform">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-rose-500 to-pink-500 rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4 mx-auto group-hover:scale-110 transition-transform">
                     <BarChart3 className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7 text-white" />
                   </div>
                   <h3 className="text-sm sm:text-base lg:text-lg font-bold text-slate-900 mb-1.5 sm:mb-2 text-center">Suivi & Analytics</h3>
@@ -422,12 +440,12 @@ export function LandingPage() {
                 </div>
 
                 <div className="flex gap-4 items-start bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <Users className="w-5 h-5 text-white" />
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-sky-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <Layers className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h4 className="font-bold text-slate-900 mb-1">Base dentistes complète</h4>
-                    <p className="text-sm text-slate-600">Gérez tous vos clients dentistes avec leurs coordonnées, historique des travaux et statistiques de CA</p>
+                    <h4 className="font-bold text-slate-900 mb-1">Gestion de production Kanban</h4>
+                    <p className="text-sm text-slate-600">Suivez l'avancement de chaque travail en temps réel avec un tableau Kanban intuitif. Déplacez les travaux entre les étapes par simple glisser-déposer</p>
                   </div>
                 </div>
 
