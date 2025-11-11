@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CreditCard, CheckCircle, Clock, AlertCircle, DollarSign, Key } from 'lucide-react';
+import { CreditCard, CheckCircle, Clock, AlertCircle, DollarSign, Key, FileText, Download } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -23,10 +23,24 @@ interface SubscriptionPlan {
   features: string[];
 }
 
+interface SubscriptionInvoice {
+  id: string;
+  invoice_number: string;
+  amount_ht: number;
+  tax_rate: number;
+  amount_ttc: number;
+  period_start: string;
+  period_end: string;
+  payment_status: string;
+  issued_at: string;
+  paid_at: string | null;
+}
+
 export function SubscriptionPage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
+  const [invoices, setInvoices] = useState<SubscriptionInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [accessCode, setAccessCode] = useState('');
@@ -60,13 +74,15 @@ export function SubscriptionPage() {
   const loadData = async () => {
     if (!user) return;
 
-    const [profileRes, planRes] = await Promise.all([
+    const [profileRes, planRes, invoicesRes] = await Promise.all([
       supabase.from('user_profiles').select('*').eq('id', user.id).single(),
-      supabase.from('subscription_plans').select('*').eq('is_active', true).single()
+      supabase.from('subscription_plans').select('*').eq('is_active', true).single(),
+      supabase.from('subscription_invoices').select('*').eq('user_id', user.id).order('issued_at', { ascending: false })
     ]);
 
     if (profileRes.data) setProfile(profileRes.data);
     if (planRes.data) setPlan(planRes.data);
+    if (invoicesRes.data) setInvoices(invoicesRes.data);
 
     setLoading(false);
   };
@@ -416,6 +432,87 @@ export function SubscriptionPage() {
                   {redeeming ? 'Activation...' : 'Activer'}
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Section des factures */}
+        {invoices.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden">
+            <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100">
+              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <FileText className="w-6 h-6 text-blue-600" />
+                Mes factures d'abonnement
+              </h3>
+              <p className="text-sm text-slate-600 mt-1">
+                Historique de vos paiements d'abonnement
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-slate-50 border-b border-slate-200">
+                  <tr>
+                    <th className="text-left py-3 px-4 text-sm font-bold text-slate-700">N° Facture</th>
+                    <th className="text-left py-3 px-4 text-sm font-bold text-slate-700">Date</th>
+                    <th className="text-left py-3 px-4 text-sm font-bold text-slate-700">Période</th>
+                    <th className="text-right py-3 px-4 text-sm font-bold text-slate-700">Montant HT</th>
+                    <th className="text-right py-3 px-4 text-sm font-bold text-slate-700">TVA</th>
+                    <th className="text-right py-3 px-4 text-sm font-bold text-slate-700">Montant TTC</th>
+                    <th className="text-center py-3 px-4 text-sm font-bold text-slate-700">Statut</th>
+                    <th className="text-center py-3 px-4 text-sm font-bold text-slate-700">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {invoices.map((invoice) => (
+                    <tr key={invoice.id} className="border-b border-slate-100 hover:bg-slate-50">
+                      <td className="py-3 px-4 font-mono text-sm font-medium text-slate-900">
+                        {invoice.invoice_number}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-slate-600">
+                        {new Date(invoice.issued_at).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-slate-600">
+                        {new Date(invoice.period_start).toLocaleDateString('fr-FR')} au{' '}
+                        {new Date(invoice.period_end).toLocaleDateString('fr-FR')}
+                      </td>
+                      <td className="py-3 px-4 text-right text-sm font-medium text-slate-900">
+                        {invoice.amount_ht.toFixed(2)} €
+                      </td>
+                      <td className="py-3 px-4 text-right text-sm text-slate-600">
+                        {invoice.tax_rate}%
+                      </td>
+                      <td className="py-3 px-4 text-right text-sm font-bold text-slate-900">
+                        {invoice.amount_ttc.toFixed(2)} €
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                          invoice.payment_status === 'paid'
+                            ? 'bg-green-100 text-green-700'
+                            : invoice.payment_status === 'pending'
+                            ? 'bg-orange-100 text-orange-700'
+                            : 'bg-red-100 text-red-700'
+                        }`}>
+                          {invoice.payment_status === 'paid' && <CheckCircle className="w-3 h-3" />}
+                          {invoice.payment_status === 'paid' && 'Payée'}
+                          {invoice.payment_status === 'pending' && 'En attente'}
+                          {invoice.payment_status === 'failed' && 'Échouée'}
+                          {invoice.payment_status === 'cancelled' && 'Annulée'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        <button
+                          onClick={() => {/* TODO: Generate PDF */}}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                          title="Télécharger la facture"
+                        >
+                          <Download className="w-4 h-4" />
+                          <span className="hidden sm:inline">Télécharger</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}

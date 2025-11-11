@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell, Settings, ChevronDown, Gift } from 'lucide-react';
+import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell, Settings, ChevronDown, Gift, Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { UsersManagement } from './UsersManagement';
 import { SubscriptionSettings } from './SubscriptionSettings';
@@ -9,8 +9,9 @@ import { AccessCodesManagement } from './AccessCodesManagement';
 import { SmtpSettings } from './SmtpSettings';
 import AlertsManagement from './AlertsManagement';
 import { ReferralManagement } from './ReferralManagement';
+import { CompanySettings } from './CompanySettings';
 
-type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit' | 'alerts' | 'referrals';
+type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit' | 'alerts' | 'referrals' | 'company';
 type CategoryType = 'gestion' | 'configuration' | 'suivi';
 
 interface SuperAdminPanelProps {
@@ -66,6 +67,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
       label: 'Configuration',
       icon: Settings,
       items: [
+        { id: 'company' as TabType, label: 'Entreprise', icon: Building2 },
         { id: 'smtp' as TabType, label: 'Email', icon: Mail },
         { id: 'alerts' as TabType, label: 'Alertes', icon: Bell }
       ]
@@ -239,6 +241,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
               {activeTab === 'users' && <UsersManagement onStatsUpdate={loadStats} />}
               {activeTab === 'subscriptions' && <SubscriptionSettings />}
               {activeTab === 'referrals' && <ReferralManagement />}
+              {activeTab === 'company' && <CompanySettings />}
               {activeTab === 'alerts' && <AlertsManagement />}
               {activeTab === 'codes' && <AccessCodesManagement />}
               {activeTab === 'smtp' && <SmtpSettings />}
