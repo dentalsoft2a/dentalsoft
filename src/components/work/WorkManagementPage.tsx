@@ -511,6 +511,12 @@ export default function WorkManagementPage() {
                               <span>{note.patient_name}</span>
                             </div>
                           )}
+                          {note.items && note.items.length > 0 && note.items[0].category && (
+                            <div className="flex items-center gap-1.5">
+                              <Tag className="w-4 h-4 text-primary-600" />
+                              <span className="text-primary-700 font-medium">{note.items[0].category}</span>
+                            </div>
+                          )}
                           {note.due_date && (
                             <div className="flex items-center gap-1.5">
                               <Calendar className="w-4 h-4" />

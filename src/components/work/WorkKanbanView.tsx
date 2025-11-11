@@ -475,14 +475,22 @@ export default function WorkKanbanView({
         )}
 
         {note.items && note.items.length > 0 && (
-          <div className="flex items-center gap-1.5 truncate">
-            <Package className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="truncate">
-              {note.items[0].description}
-              {note.items[0].quantity > 1 && ` (x${note.items[0].quantity})`}
-              {note.items.length > 1 && ` +${note.items.length - 1}`}
-            </span>
-          </div>
+          <>
+            {note.items[0].category && (
+              <div className="flex items-center gap-1.5 truncate">
+                <Tag className="w-3.5 h-3.5 flex-shrink-0 text-primary-600" />
+                <span className="truncate text-primary-700 font-medium">{note.items[0].category}</span>
+              </div>
+            )}
+            <div className="flex items-center gap-1.5 truncate">
+              <Package className="w-3.5 h-3.5 flex-shrink-0" />
+              <span className="truncate">
+                {note.items[0].description}
+                {note.items[0].quantity > 1 && ` (x${note.items[0].quantity})`}
+                {note.items.length > 1 && ` +${note.items.length - 1}`}
+              </span>
+            </div>
+          </>
         )}
 
         {note.due_date && (
