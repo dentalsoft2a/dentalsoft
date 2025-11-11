@@ -32,7 +32,6 @@ interface WorkStage {
   description: string;
   order_index: number;
   color: string;
-  is_active: boolean;
 }
 
 interface WorkKanbanViewProps {
