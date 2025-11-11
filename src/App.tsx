@@ -9,6 +9,7 @@ import InvoicesPage from './components/invoices/InvoicesPage';
 import DeliveryNotesPage from './components/delivery-notes/DeliveryNotesPage';
 import DentistsPage from './components/dentists/DentistsPage';
 import CatalogPage from './components/catalog/CatalogPage';
+import WorkManagementPage from './components/work/WorkManagementPage';
 import ResourcesPage from './components/resources/ResourcesPage';
 import SettingsPage from './components/settings/SettingsPage';
 import { SuperAdminPanel } from './components/admin/SuperAdminPanel';
@@ -72,6 +73,7 @@ function AppContent() {
         'proformas': 'proformas',
         'invoices': 'invoices',
         'delivery-notes': 'delivery-notes',
+        'work-management': 'work-management',
         'photos': 'photos',
         'dentists': 'dentists',
         'catalog': 'catalog',
@@ -236,7 +238,7 @@ function AppContent() {
 
   // If subscription is expired or cancelled, redirect to subscription page
   const hasValidSubscription = subscriptionStatus === 'active' || subscriptionStatus === 'trial';
-  const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'settings', 'subscription', 'support', 'help-center'];
+  const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'work-management', 'settings', 'subscription', 'support', 'help-center'];
   if (!hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(currentPage)) {
     setCurrentPage('subscription');
   }
@@ -258,6 +260,8 @@ function AppContent() {
         return <InvoicesPage />;
       case 'delivery-notes':
         return <DeliveryNotesPage />;
+      case 'work-management':
+        return <WorkManagementPage />;
       case 'dentists':
         return <DentistsPage />;
       case 'catalog':
@@ -292,7 +296,7 @@ function AppContent() {
           }
 
           // Allow navigation to specific pages even with invalid subscription
-          const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'settings', 'subscription', 'support', 'help-center', 'photos'];
+          const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'work-management', 'settings', 'subscription', 'support', 'help-center', 'photos'];
           if (!hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(page)) {
             return;
           }

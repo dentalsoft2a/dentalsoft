@@ -79,6 +79,7 @@ export function usePermissions() {
       'proformas',
       'invoices',
       'delivery-notes',
+      'work-management',
       'photos',
       'dentists',
       'catalog',

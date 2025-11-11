@@ -19,7 +19,8 @@ import {
   AlertTriangle,
   Camera,
   Cloud,
-  Link as LinkIcon
+  Link as LinkIcon,
+  ClipboardCheck
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -97,6 +98,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     { name: 'Proformas', icon: FileText, page: 'proformas', allowedForCancelled: true, menuKey: 'proformas' },
     { name: 'Factures', icon: Receipt, page: 'invoices', allowedForCancelled: true, menuKey: 'invoices' },
     { name: 'Bons de livraison', icon: Truck, page: 'delivery-notes', allowedForCancelled: true, menuKey: 'delivery-notes' },
+    { name: 'Gestion des travaux', icon: ClipboardCheck, page: 'work-management', allowedForCancelled: true, menuKey: 'work-management' },
     { name: 'Photos reçues', icon: Camera, page: 'photos', allowedForCancelled: false, menuKey: 'photos' },
     { name: 'Dentistes', icon: Users, page: 'dentists', allowedForCancelled: false, menuKey: 'dentists' },
     { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog' },
