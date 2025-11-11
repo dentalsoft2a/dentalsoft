@@ -78,11 +78,20 @@ Deno.serve(async (req: Request) => {
       throw new Error('Cannot impersonate other super admins');
     }
 
+    // Clean up expired sessions first
+    await supabase
+      .from('admin_impersonation_sessions')
+      .update({ is_active: false })
+      .eq('admin_user_id', user.id)
+      .lt('expires_at', new Date().toISOString());
+
+    // Check for active non-expired sessions
     const { data: existingSession } = await supabase
       .from('admin_impersonation_sessions')
-      .select('id')
+      .select('id, expires_at')
       .eq('admin_user_id', user.id)
       .eq('is_active', true)
+      .gt('expires_at', new Date().toISOString())
       .maybeSingle();
 
     if (existingSession) {
