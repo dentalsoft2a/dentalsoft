@@ -113,7 +113,7 @@ export function LandingPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
         {!isPWA && (
           <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-16">
                 <DentalCloudLogo size={32} showText={true} />
                 <button
@@ -138,7 +138,7 @@ export function LandingPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
         {!isPWA && (
           <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex justify-between items-center h-16">
                 <DentalCloudLogo size={32} showText={true} />
                 <button
@@ -161,7 +161,7 @@ export function LandingPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <DentalCloudLogo size={32} showText={true} />
             <button
@@ -175,7 +175,7 @@ export function LandingPage() {
       </nav>
 
       <>
-          <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20 relative overflow-hidden">
+          <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-8 sm:py-12 lg:py-20 relative overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 sm:w-96 sm:h-96 bg-primary-200/30 rounded-full blur-3xl animate-pulse" />
             <div className="absolute bottom-0 left-0 w-64 h-64 sm:w-96 sm:h-96 bg-cyan-200/30 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1s'}} />
 
@@ -212,7 +212,7 @@ export function LandingPage() {
                   className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-gradient-to-r from-primary-500 to-cyan-500 text-white text-sm sm:text-base font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 group relative overflow-hidden"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-primary-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <span className="relative z-10">Commencer</span>
+                  <span className="relative z-10">Commencer - 1 mois offert</span>
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform relative z-10" />
                 </button>
 
@@ -233,6 +233,10 @@ export function LandingPage() {
               <div className="mt-4 sm:mt-6 md:mt-8 flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm text-slate-600 px-4">
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
+                  <span className="font-semibold text-primary-600">1 mois offert</span>
+                </div>
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
                   <span>Sans engagement</span>
                 </div>
                 <div className="flex items-center gap-1.5 sm:gap-2">
@@ -249,7 +253,7 @@ export function LandingPage() {
             </div>
           </section>
 
-          <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
+          <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
             <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 mb-8 sm:mb-12 lg:mb-16 shadow-lg">
               <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 max-w-4xl mx-auto">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0 shadow-lg">
@@ -314,7 +318,7 @@ export function LandingPage() {
             </div>
           </section>
 
-          <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16 bg-gradient-to-br from-slate-50 to-white rounded-2xl sm:rounded-3xl">
+          <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16 bg-gradient-to-br from-slate-50 to-white rounded-2xl sm:rounded-3xl">
             <div className="text-center mb-6 sm:mb-10 lg:mb-16 px-4">
               <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-primary-100 text-primary-700 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
                 <MousePointerClick className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -445,7 +449,7 @@ export function LandingPage() {
             </div>
           </section>
 
-          <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
+          <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
             <div className="text-center mb-6 sm:mb-8 lg:mb-12 px-4">
               <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
                 <Box className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -531,7 +535,7 @@ export function LandingPage() {
             </div>
           </section>
 
-          <section className="hidden lg:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-gradient-to-br from-slate-50 to-white rounded-3xl">
+          <section className="hidden lg:block max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 py-16 bg-gradient-to-br from-slate-50 to-white rounded-3xl">
             <div className="text-center mb-12">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200 text-emerald-700 text-sm font-medium mb-6">
                 <Headphones className="w-4 h-4" />
@@ -679,7 +683,7 @@ export function LandingPage() {
             </div>
           </section>
 
-          <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
+          <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
             <div className="text-center mb-6 sm:mb-8 lg:mb-12 px-4">
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 bg-gradient-to-r from-slate-900 to-primary-900 bg-clip-text text-transparent">
                 Pourquoi DentalCloud ?
@@ -726,7 +730,7 @@ export function LandingPage() {
             </div>
           </section>
 
-          <section className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
+          <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
             <div className="text-center mb-6 sm:mb-8 lg:mb-12 px-4">
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 text-slate-900">
                 Tarif unique
@@ -791,7 +795,7 @@ export function LandingPage() {
           </section>
 
           <footer className="bg-slate-900 text-white py-8 sm:py-12 mt-10 sm:mt-16 lg:mt-20">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8">
               <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-6 sm:gap-8">
                 <div>
                   <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
