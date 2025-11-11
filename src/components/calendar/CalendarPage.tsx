@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Package, User, Clock, MapPin, X, FileText, Palette, AlertTriangle, Trash2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, Package, User, Clock, MapPin, X, FileText, Palette, AlertTriangle, Trash2, LayoutGrid, CalendarDays, CalendarRange } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
 import type { Database } from '../../lib/database.types';
+import ProductionBoard from './ProductionBoard';
+import TaskAssignmentPanel from './TaskAssignmentPanel';
+import WeekView from './WeekView';
 
 type DeliveryNote = Database['public']['Tables']['delivery_notes']['Row'];
 type Dentist = Database['public']['Tables']['dentists']['Row'];
@@ -38,6 +41,7 @@ export default function CalendarPage() {
     return today;
   });
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryWithDentist | null>(null);
+  const [viewMode, setViewMode] = useState<'calendar' | 'week' | 'board'>('calendar');
 
   useLockScroll(!!selectedDelivery);
 
@@ -211,15 +215,68 @@ export default function CalendarPage() {
   return (
     <div>
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <CalendarIcon className="w-8 h-8 text-primary-600" />
-          <h1 className="text-3xl font-bold text-slate-900">Calendrier des Livraisons</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <CalendarIcon className="w-8 h-8 text-primary-600" />
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">Calendrier des Livraisons</h1>
+              <p className="text-slate-600">Gérez et suivez vos livraisons prévues</p>
+            </div>
+          </div>
+
+          {/* Boutons de changement de vue */}
+          <div className="flex gap-2 bg-slate-100 rounded-lg p-1">
+            <button
+              onClick={() => setViewMode('calendar')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                viewMode === 'calendar'
+                  ? 'bg-white text-primary-600 shadow-sm font-medium'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <CalendarDays className="w-4 h-4" />
+              <span className="hidden sm:inline">Mois</span>
+            </button>
+            <button
+              onClick={() => setViewMode('week')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                viewMode === 'week'
+                  ? 'bg-white text-primary-600 shadow-sm font-medium'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <CalendarRange className="w-4 h-4" />
+              <span className="hidden sm:inline">Semaine</span>
+            </button>
+            <button
+              onClick={() => setViewMode('board')}
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200 ${
+                viewMode === 'board'
+                  ? 'bg-white text-primary-600 shadow-sm font-medium'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <LayoutGrid className="w-4 h-4" />
+              <span className="hidden sm:inline">Tableau</span>
+            </button>
+          </div>
         </div>
-        <p className="text-slate-600">Gérez et suivez vos livraisons prévues</p>
       </div>
 
-      {urgentDeliveries.length > 0 && (
-        <div className="mb-4 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-400 rounded-xl p-4 shadow-lg">
+      {/* Afficher le mode sélectionné */}
+      {viewMode === 'board' ? (
+        <ProductionBoard
+          onDeliveryClick={setSelectedDelivery}
+          selectedDate={selectedDate}
+        />
+      ) : viewMode === 'week' ? (
+        <WeekView
+          onDeliveryClick={setSelectedDelivery}
+        />
+      ) : (
+        <>
+          {urgentDeliveries.length > 0 && (
+            <div className="mb-4 bg-gradient-to-br from-red-50 to-orange-50 border-2 border-red-400 rounded-xl p-4 shadow-lg">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-10 h-10 bg-red-500 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
               <AlertTriangle className="w-5 h-5 text-white" />
@@ -533,6 +590,8 @@ export default function CalendarPage() {
           </div>
         </div>
       </div>
+        </>
+      )}
 
       {selectedDelivery && (
         <DeliveryDetailModal
@@ -814,6 +873,14 @@ function DeliveryDetailModal({ delivery, onClose }: DeliveryDetailModalProps) {
               </div>
             </div>
           </div>
+
+          {/* Panneau de gestion de production */}
+          <TaskAssignmentPanel
+            deliveryNoteId={delivery.id}
+            currentPriority={delivery.priority}
+            currentEmployeeId={delivery.assigned_employee_id}
+            onUpdate={onClose}
+          />
 
           <div className="bg-gradient-to-br from-slate-50 to-white rounded-xl p-6 border border-slate-200">
             <h3 className="text-sm font-bold text-slate-700 uppercase tracking-wide mb-4 flex items-center gap-2">
