@@ -826,6 +826,13 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
   };
 
   const importDeliveryNote = (note: any) => {
+    // Check if this delivery note has already been imported
+    const alreadyImported = items.some(item => item.delivery_note_id === note.id);
+    if (alreadyImported) {
+      alert('Ce bon de livraison a déjà été importé');
+      return;
+    }
+
     const noteItems = Array.isArray(note.items) ? note.items : [];
     const newItems = noteItems.map((item: any) => ({
       description: item.description || '',
@@ -840,6 +847,11 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
   };
 
   const importAllDeliveryNotes = () => {
+    // Get IDs of already imported delivery notes
+    const importedDeliveryNoteIds = new Set(
+      items.map(item => item.delivery_note_id).filter(id => id != null)
+    );
+
     const allItems: Array<{
       description: string;
       quantity: number;
@@ -848,6 +860,11 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
     }> = [];
 
     deliveryNotes.forEach((note) => {
+      // Skip if already imported
+      if (importedDeliveryNoteIds.has(note.id)) {
+        return;
+      }
+
       const noteItems = Array.isArray(note.items) ? note.items : [];
       noteItems.forEach((item: any) => {
         allItems.push({
@@ -861,6 +878,8 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
 
     if (allItems.length > 0) {
       setItems(prevItems => [...prevItems, ...allItems]);
+    } else {
+      alert('Tous les bons de livraison disponibles ont déjà été importés');
     }
   };
 
@@ -1108,7 +1127,7 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
             </div>
           </div>
 
-          {deliveryNotes.length > 0 && (
+          {formData.dentist_id && deliveryNotes.length > 0 && (
             <div className="bg-gradient-to-br from-slate-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
               <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:justify-between mb-3">
                 <h3 className="text-sm md:text-base font-bold text-slate-800 flex items-center gap-2">
