@@ -922,19 +922,22 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       )}
 
       {urgentDeliveries.length > 0 && (
-        <div className="mb-6 bg-white rounded-xl shadow-lg border border-red-200 overflow-hidden animate-slide-in">
-          <div className="bg-gradient-to-r from-red-50 to-orange-50 px-4 py-3 border-b border-red-200">
+        <div className="mb-6 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/50 overflow-hidden animate-slide-in">
+          <div className="bg-gradient-to-r from-red-50/80 to-orange-50/80 px-4 py-3 border-b border-red-200/50">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-red-500 flex items-center justify-center">
-                  <AlertCircle className="w-4 h-4 text-white" />
+                <div className="relative">
+                  <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl blur-md opacity-30"></div>
+                  <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center shadow-lg">
+                    <AlertCircle className="w-4 h-4 text-white" />
+                  </div>
                 </div>
                 <div>
-                  <h2 className="text-base font-bold text-slate-900">Travaux Urgents</h2>
+                  <h2 className="text-base font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">Travaux Urgents</h2>
                   <p className="text-xs text-slate-600">Livraisons dans les 48h</p>
                 </div>
               </div>
-              <span className="px-2.5 py-1 bg-red-500 text-white rounded-lg text-xs font-bold">
+              <span className="px-2.5 py-1 bg-gradient-to-br from-red-500 to-orange-500 text-white rounded-lg text-xs font-bold shadow-md">
                 {urgentDeliveries.length}
               </span>
             </div>
@@ -947,18 +950,18 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                 return (
                   <div
                     key={delivery.id}
-                    className="p-2 bg-slate-50 rounded-lg border border-slate-200 hover:border-red-400 transition-colors"
+                    className="p-2 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-lg border border-slate-200/50 hover:border-red-400 hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex items-center justify-between mb-1.5">
                       <h4 className="font-medium text-slate-900 text-xs truncate flex-1 mr-1">
                         {delivery.dentist.name}
                       </h4>
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold flex-shrink-0 ${
+                      <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0 shadow-sm ${
                         daysUntil === 0
-                          ? 'bg-red-500 text-white'
+                          ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
                           : daysUntil === 1
-                          ? 'bg-orange-500 text-white'
-                          : 'bg-amber-500 text-white'
+                          ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white'
+                          : 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
                       }`}>
                         {daysUntil === 0 ? "Auj." : daysUntil === 1 ? 'Demain' : `${daysUntil}j`}
                       </span>
@@ -977,7 +980,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     {delivery.status === 'pending' ? (
                       <button
                         onClick={() => handleStartDelivery(delivery.id)}
-                        className="w-full py-1 px-2 bg-blue-500 hover:bg-blue-600 text-white rounded text-[10px] font-semibold transition-all duration-200 flex items-center justify-center gap-1"
+                        className="w-full py-1 px-2 bg-gradient-to-r from-primary-500 to-cyan-500 hover:from-primary-600 hover:to-cyan-600 text-white rounded-lg text-[10px] font-semibold transition-all duration-200 flex items-center justify-center gap-1 shadow-sm hover:shadow-md active:scale-95"
                         title="Démarrer le travail"
                       >
                         <Play className="w-3 h-3" />
@@ -986,7 +989,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     ) : (
                       <button
                         onClick={() => handleCompleteDelivery(delivery.id)}
-                        className="w-full py-1 px-2 bg-green-500 hover:bg-green-600 text-white rounded text-[10px] font-semibold transition-all duration-200 flex items-center justify-center gap-1"
+                        className="w-full py-1 px-2 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-lg text-[10px] font-semibold transition-all duration-200 flex items-center justify-center gap-1 shadow-sm hover:shadow-md active:scale-95"
                         title="Marquer comme terminé"
                       >
                         <CheckCircle className="w-3 h-3" />
@@ -1005,19 +1008,19 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                   return (
                     <div
                       key={delivery.id}
-                      className="flex-shrink-0 w-[280px] p-3 bg-slate-50 rounded-lg border border-slate-200 hover:border-red-400 transition-colors"
+                      className="flex-shrink-0 w-[280px] p-3 bg-gradient-to-br from-slate-50 to-slate-100/50 rounded-lg border border-slate-200/50 hover:border-red-400 hover:shadow-md transition-all duration-200"
                       style={{ scrollSnapAlign: 'start' }}
                     >
                       <div className="flex items-center justify-between mb-2">
                         <h4 className="font-medium text-slate-900 text-sm truncate flex-1 mr-2">
                           {delivery.dentist.name}
                         </h4>
-                        <span className={`px-2 py-1 rounded text-xs font-semibold flex-shrink-0 ${
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold flex-shrink-0 shadow-sm ${
                           daysUntil === 0
-                            ? 'bg-red-500 text-white'
+                            ? 'bg-gradient-to-r from-red-500 to-red-600 text-white'
                             : daysUntil === 1
-                            ? 'bg-orange-500 text-white'
-                            : 'bg-amber-500 text-white'
+                            ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white'
+                            : 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
                         }`}>
                           {daysUntil === 0 ? "Aujourd'hui" : daysUntil === 1 ? 'Demain' : `${daysUntil} jours`}
                         </span>
@@ -1036,7 +1039,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                       {delivery.status === 'pending' ? (
                         <button
                           onClick={() => handleStartDelivery(delivery.id)}
-                          className="w-full py-2 px-3 bg-blue-500 hover:bg-blue-600 active:bg-blue-700 text-white rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5"
+                          className="w-full py-2 px-3 bg-gradient-to-r from-primary-500 to-cyan-500 hover:from-primary-600 hover:to-cyan-600 text-white rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md active:scale-95"
                           title="Démarrer le travail"
                         >
                           <Play className="w-4 h-4" />
@@ -1045,7 +1048,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                       ) : (
                         <button
                           onClick={() => handleCompleteDelivery(delivery.id)}
-                          className="w-full py-2 px-3 bg-green-500 hover:bg-green-600 active:bg-green-700 text-white rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5"
+                          className="w-full py-2 px-3 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white rounded-lg text-xs font-semibold transition-all duration-200 flex items-center justify-center gap-1.5 shadow-sm hover:shadow-md active:scale-95"
                           title="Marquer comme terminé"
                         >
                           <CheckCircle className="w-4 h-4" />
