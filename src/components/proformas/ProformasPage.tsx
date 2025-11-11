@@ -420,14 +420,15 @@ export default function ProformasPage() {
               <option value="invoiced">Facturé</option>
             </select>
           </div>
-          <div className="bg-gradient-to-r from-orange-50 to-amber-50 border border-orange-200 rounded-xl p-4">
-            <div className="flex items-center justify-between">
+          <div className="relative bg-gradient-to-br from-orange-50/80 to-amber-50/80 border border-orange-200/50 rounded-xl p-4 overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-orange-500/5 to-amber-500/5"></div>
+            <div className="relative flex items-center justify-between">
               <span className="text-sm font-semibold text-slate-700">Total TTC en attente</span>
               <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                 {totalPendingTTC.toFixed(2)} €
               </span>
             </div>
-            <p className="text-xs text-slate-600 mt-1">
+            <p className="text-xs text-slate-600 mt-1 relative">
               {proformas.filter(p => p.status === 'pending').length} proforma{proformas.filter(p => p.status === 'pending').length > 1 ? 's' : ''} en attente
             </p>
           </div>

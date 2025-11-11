@@ -404,25 +404,27 @@ export default function InvoicesPage() {
             />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-4">
-              <div className="flex items-center justify-between">
+            <div className="relative bg-gradient-to-br from-emerald-50/80 to-green-50/80 border border-emerald-200/50 rounded-xl p-4 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-green-500/5"></div>
+              <div className="relative flex items-center justify-between">
                 <span className="text-sm font-semibold text-slate-700">Total TTC payé (mois en cours)</span>
-                <span className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                <span className="text-xl font-bold bg-gradient-to-r from-emerald-600 to-green-600 bg-clip-text text-transparent">
                   {totalPaidCurrentMonth.toFixed(2)} €
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-1">
+              <p className="text-xs text-slate-600 mt-1 relative">
                 {currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid').length} facture{currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid').length > 1 ? 's' : ''} payée{currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid').length > 1 ? 's' : ''}
               </p>
             </div>
-            <div className="bg-gradient-to-r from-red-50 to-orange-50 border border-red-200 rounded-xl p-4">
-              <div className="flex items-center justify-between">
+            <div className="relative bg-gradient-to-br from-red-50/80 to-orange-50/80 border border-red-200/50 rounded-xl p-4 overflow-hidden">
+              <div className="absolute inset-0 bg-gradient-to-r from-red-500/5 to-orange-500/5"></div>
+              <div className="relative flex items-center justify-between">
                 <span className="text-sm font-semibold text-slate-700">Total TTC non payé (mois en cours)</span>
                 <span className="text-xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
                   {totalUnpaidCurrentMonth.toFixed(2)} €
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-1">
+              <p className="text-xs text-slate-600 mt-1 relative">
                 {currentMonthInvoices.filter(i => i.status === 'draft' || i.status === 'sent' || i.status === 'partial').length} facture{currentMonthInvoices.filter(i => i.status === 'draft' || i.status === 'sent' || i.status === 'partial').length > 1 ? 's' : ''} non payée{currentMonthInvoices.filter(i => i.status === 'draft' || i.status === 'sent' || i.status === 'partial').length > 1 ? 's' : ''}
               </p>
             </div>
