@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell } from 'lucide-react';
+import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell, Settings, ChevronDown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { UsersManagement } from './UsersManagement';
 import { SubscriptionSettings } from './SubscriptionSettings';
@@ -10,6 +10,7 @@ import { SmtpSettings } from './SmtpSettings';
 import AlertsManagement from './AlertsManagement';
 
 type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit' | 'alerts';
+type CategoryType = 'gestion' | 'configuration' | 'suivi';
 
 interface SuperAdminPanelProps {
   onNavigate?: (page: string) => void;
@@ -17,6 +18,7 @@ interface SuperAdminPanelProps {
 
 export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
   const [activeTab, setActiveTab] = useState<TabType>('users');
+  const [openCategory, setOpenCategory] = useState<CategoryType | null>('gestion');
   const [stats, setStats] = useState({
     totalUsers: 0,
     activeSubscriptions: 0,
@@ -46,14 +48,35 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
     });
   };
 
-  const tabs = [
-    { id: 'users' as TabType, label: 'Utilisateurs', icon: Users, color: 'from-blue-500 to-blue-600' },
-    { id: 'subscriptions' as TabType, label: 'Abonnements', icon: DollarSign, color: 'from-emerald-500 to-emerald-600' },
-    { id: 'alerts' as TabType, label: 'Alertes', icon: Bell, color: 'from-red-500 to-red-600' },
-    { id: 'codes' as TabType, label: 'Codes d\'accès', icon: Key, color: 'from-amber-500 to-amber-600' },
-    { id: 'smtp' as TabType, label: 'Configuration Email', icon: Mail, color: 'from-pink-500 to-pink-600' },
-    { id: 'support' as TabType, label: 'Support', icon: MessageSquare, color: 'from-orange-500 to-orange-600' },
-    { id: 'audit' as TabType, label: 'Audit', icon: Activity, color: 'from-slate-500 to-slate-600' }
+  const menuCategories = [
+    {
+      id: 'gestion' as CategoryType,
+      label: 'Gestion',
+      icon: Users,
+      items: [
+        { id: 'users' as TabType, label: 'Utilisateurs', icon: Users },
+        { id: 'subscriptions' as TabType, label: 'Abonnements', icon: DollarSign },
+        { id: 'codes' as TabType, label: 'Codes d\'accès', icon: Key }
+      ]
+    },
+    {
+      id: 'configuration' as CategoryType,
+      label: 'Configuration',
+      icon: Settings,
+      items: [
+        { id: 'smtp' as TabType, label: 'Email', icon: Mail },
+        { id: 'alerts' as TabType, label: 'Alertes', icon: Bell }
+      ]
+    },
+    {
+      id: 'suivi' as CategoryType,
+      label: 'Suivi',
+      icon: Activity,
+      items: [
+        { id: 'support' as TabType, label: 'Support', icon: MessageSquare },
+        { id: 'audit' as TabType, label: 'Audit', icon: Activity }
+      ]
+    }
   ];
 
   const statCards = [
@@ -91,69 +114,51 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
     }
   ];
 
+  const toggleCategory = (categoryId: CategoryType) => {
+    setOpenCategory(openCategory === categoryId ? null : categoryId);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100">
-      <div className="bg-white border-b border-slate-200 shadow-sm">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl blur-lg opacity-30 animate-pulse"></div>
-                <div className="relative w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Shield className="w-8 h-8 text-white" />
-                </div>
+    <div className="min-h-screen bg-slate-50">
+      <div className="bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+          <div className="flex items-center justify-between mb-4 sm:mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-900 rounded-lg flex items-center justify-center">
+                <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
-                  Panneau Super Admin
-                </h1>
-                <p className="text-slate-600 mt-1">Gestion et supervision complète de la plateforme</p>
+                <h1 className="text-lg sm:text-2xl font-bold text-slate-900">Super Admin</h1>
+                <p className="text-xs sm:text-sm text-slate-600 hidden sm:block">Panneau d'administration</p>
               </div>
             </div>
             {onNavigate && (
               <button
                 onClick={() => onNavigate('dashboard')}
-                className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition-all font-medium shadow-sm hover:shadow-md"
+                className="flex items-center gap-2 px-3 py-2 sm:px-4 sm:py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-all text-sm font-medium"
               >
-                <ArrowLeft className="w-5 h-5" />
-                Retour au Dashboard
+                <ArrowLeft className="w-4 h-4" />
+                <span className="hidden sm:inline">Retour</span>
               </button>
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
             {statCards.map((stat, index) => {
               const Icon = stat.icon;
-              const getIconColor = (color: string) => {
-                if (color.includes('blue')) return 'text-blue-600';
-                if (color.includes('emerald')) return 'text-emerald-600';
-                if (color.includes('orange')) return 'text-orange-600';
-                if (color.includes('violet')) return 'text-violet-600';
-                return 'text-slate-600';
-              };
               return (
-                <div
-                  key={index}
-                  className="group relative bg-white rounded-2xl p-6 border border-slate-200 hover:border-slate-300 transition-all duration-300 hover:shadow-lg hover:-translate-y-1"
-                >
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`${stat.bgColor} p-3 rounded-xl shadow-sm group-hover:shadow-md transition-shadow`}>
-                      <Icon className={`w-6 h-6 ${getIconColor(stat.color)}`} />
-                    </div>
-                    <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                      stat.trend.includes('+')
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : stat.trend === 'Urgent'
-                        ? 'bg-red-100 text-red-700'
-                        : 'bg-slate-100 text-slate-700'
+                <div key={index} className="bg-white rounded-lg p-3 sm:p-4 border border-slate-200">
+                  <div className="flex items-center justify-between mb-2">
+                    <Icon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-600" />
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${
+                      stat.trend.includes('+') ? 'bg-emerald-100 text-emerald-700' :
+                      stat.trend === 'Urgent' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'
                     }`}>
                       {stat.trend}
                     </span>
                   </div>
-                  <div>
-                    <p className="text-slate-600 text-sm font-medium mb-1">{stat.label}</p>
-                    <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
-                  </div>
+                  <p className="text-xs text-slate-600 mb-1">{stat.label}</p>
+                  <p className="text-lg sm:text-xl font-bold text-slate-900">{stat.value}</p>
                 </div>
               );
             })}
@@ -161,52 +166,63 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-          <div className="border-b border-slate-200 bg-slate-50/50 p-6">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-              {tabs.map((tab) => {
-                const Icon = tab.icon;
-                const isActive = activeTab === tab.id;
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+        <div className="flex flex-col lg:flex-row gap-6">
+          <div className="lg:w-64 flex-shrink-0">
+            <div className="bg-white rounded-lg border border-slate-200 overflow-hidden">
+              {menuCategories.map((category) => {
+                const CategoryIcon = category.icon;
+                const isOpen = openCategory === category.id;
                 return (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`
-                      relative flex flex-col items-center gap-2.5 p-4 rounded-xl font-medium transition-all group
-                      ${isActive
-                        ? 'bg-white shadow-md border border-slate-200 text-slate-900 scale-105'
-                        : 'text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
-                      }
-                    `}
-                  >
-                    <div className={`
-                      p-3 rounded-xl transition-all
-                      ${isActive
-                        ? `bg-gradient-to-br ${tab.color} shadow-lg`
-                        : 'bg-slate-100 group-hover:bg-slate-200'
-                      }
-                    `}>
-                      <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-600'}`} />
-                    </div>
-                    <span className="text-sm text-center leading-tight">{tab.label}</span>
-                    {isActive && (
-                      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${tab.color} rounded-t-xl`}></div>
+                  <div key={category.id} className="border-b border-slate-200 last:border-b-0">
+                    <button
+                      onClick={() => toggleCategory(category.id)}
+                      className="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <CategoryIcon className="w-5 h-5 text-slate-600" />
+                        <span className="font-medium text-slate-900">{category.label}</span>
+                      </div>
+                      <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    </button>
+                    {isOpen && (
+                      <div className="bg-slate-50/50">
+                        {category.items.map((item) => {
+                          const ItemIcon = item.icon;
+                          const isActive = activeTab === item.id;
+                          return (
+                            <button
+                              key={item.id}
+                              onClick={() => setActiveTab(item.id)}
+                              className={`w-full flex items-center gap-3 px-4 py-3 pl-12 transition-colors ${
+                                isActive
+                                  ? 'bg-slate-900 text-white'
+                                  : 'text-slate-700 hover:bg-white'
+                              }`}
+                            >
+                              <ItemIcon className="w-4 h-4" />
+                              <span className="text-sm font-medium">{item.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>
           </div>
 
-          <div className="p-8">
-            {activeTab === 'users' && <UsersManagement onStatsUpdate={loadStats} />}
-            {activeTab === 'subscriptions' && <SubscriptionSettings />}
-            {activeTab === 'alerts' && <AlertsManagement />}
-            {activeTab === 'codes' && <AccessCodesManagement />}
-            {activeTab === 'smtp' && <SmtpSettings />}
-            {activeTab === 'support' && <SupportTickets />}
-            {activeTab === 'audit' && <AdminAuditLog />}
+          <div className="flex-1">
+            <div className="bg-white rounded-lg border border-slate-200 p-4 sm:p-6">
+              {activeTab === 'users' && <UsersManagement onStatsUpdate={loadStats} />}
+              {activeTab === 'subscriptions' && <SubscriptionSettings />}
+              {activeTab === 'alerts' && <AlertsManagement />}
+              {activeTab === 'codes' && <AccessCodesManagement />}
+              {activeTab === 'smtp' && <SmtpSettings />}
+              {activeTab === 'support' && <SupportTickets />}
+              {activeTab === 'audit' && <AdminAuditLog />}
+            </div>
           </div>
         </div>
       </div>
