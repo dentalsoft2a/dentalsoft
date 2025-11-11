@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.57.4';
+import { SignJWT } from 'npm:jose@5.2.0';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,6 +22,12 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const jwtSecret = Deno.env.get('SUPABASE_JWT_SECRET');
+    
+    if (!jwtSecret) {
+      throw new Error('JWT secret not configured');
+    }
+
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const authHeader = req.headers.get('Authorization');
@@ -121,20 +128,51 @@ Deno.serve(async (req: Request) => {
     }
 
     const targetEmail = authUser.user.email;
+    const targetPhone = authUser.user.phone;
+    const targetRole = authUser.user.role;
+    const targetAppMetadata = authUser.user.app_metadata || {};
+    const targetUserMetadata = authUser.user.user_metadata || {};
+
     if (!targetEmail) {
       throw new Error('Target user has no email');
     }
 
-    const { data: { user: impersonatedUser, session: impersonatedSession }, error: signInError } = 
-      await supabase.auth.admin.generateLink({
-        type: 'magiclink',
-        email: targetEmail,
-      });
+    const now = Math.floor(Date.now() / 1000);
+    const exp = now + (2 * 60 * 60);
 
-    if (signInError || !impersonatedSession) {
-      console.error('Sign in error:', signInError);
-      throw new Error('Failed to generate impersonation session');
-    }
+    const secret = new TextEncoder().encode(jwtSecret);
+
+    const accessToken = await new SignJWT({
+      aud: 'authenticated',
+      exp: exp,
+      iat: now,
+      iss: supabaseUrl,
+      sub: targetUserId,
+      email: targetEmail,
+      phone: targetPhone || '',
+      app_metadata: {
+        ...targetAppMetadata,
+        provider: 'email',
+        providers: ['email'],
+      },
+      user_metadata: targetUserMetadata,
+      role: targetRole || 'authenticated',
+      aal: 'aal1',
+      amr: [{ method: 'password', timestamp: now }],
+      session_id: session.id,
+    })
+      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+      .sign(secret);
+
+    const refreshToken = await new SignJWT({
+      sub: targetUserId,
+      exp: exp + (7 * 24 * 60 * 60),
+      iat: now,
+      iss: supabaseUrl,
+      session_id: session.id,
+    })
+      .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
+      .sign(secret);
 
     await supabase.from('admin_audit_log').insert({
       admin_id: user.id,
@@ -153,8 +191,8 @@ Deno.serve(async (req: Request) => {
         success: true,
         sessionId: session.id,
         sessionToken: tokenData,
-        accessToken: impersonatedSession.access_token,
-        refreshToken: impersonatedSession.refresh_token,
+        accessToken: accessToken,
+        refreshToken: refreshToken,
         expiresAt: expiresAt.toISOString(),
         targetUser: {
           id: targetUserId,
