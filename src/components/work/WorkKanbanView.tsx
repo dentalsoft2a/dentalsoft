@@ -358,16 +358,16 @@ export default function WorkKanbanView({
   );
 
   return (
-    <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 hover:scrollbar-thumb-slate-400">
-      <div className="inline-flex gap-4 min-w-full px-1">
-        <div className="w-80 flex-shrink-0">
+    <div className="w-full pb-4">
+      <div className="grid gap-4" style={{ gridTemplateColumns: `repeat(${workStages.length + 1}, minmax(0, 1fr))` }}>
+        <div className="min-w-0">
           <div className="bg-slate-100 rounded-lg p-3 mb-3 border-2 border-slate-200">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-700 flex items-center gap-2">
+              <h3 className="font-bold text-slate-700 flex items-center gap-2 text-sm">
                 <div className="w-2 h-2 rounded-full bg-slate-400"></div>
-                Non assigné
+                <span className="truncate">Non assigné</span>
               </h3>
-              <span className="text-sm font-semibold text-slate-600 bg-slate-200 px-2 py-0.5 rounded-full">
+              <span className="text-sm font-semibold text-slate-600 bg-slate-200 px-2 py-0.5 rounded-full flex-shrink-0">
                 {getNotesWithoutStage().length}
               </span>
             </div>
@@ -375,7 +375,7 @@ export default function WorkKanbanView({
           <div className="space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto pr-2">
             {getNotesWithoutStage().map(renderNoteCard)}
             {getNotesWithoutStage().length === 0 && (
-              <div className="text-center py-8 text-slate-400 text-sm">
+              <div className="text-center py-8 text-slate-400 text-xs">
                 Aucun travail non assigné
               </div>
             )}
@@ -385,7 +385,7 @@ export default function WorkKanbanView({
         {workStages.map((stage) => (
           <div
             key={stage.id}
-            className="w-80 flex-shrink-0"
+            className="min-w-0"
             onDragOver={(e) => handleDragOver(e, stage.id)}
             onDragLeave={handleDragLeave}
             onDrop={(e) => handleDrop(e, stage.id)}
@@ -399,25 +399,25 @@ export default function WorkKanbanView({
               style={{ backgroundColor: dragOverStage === stage.id ? undefined : `${stage.color}20` }}
             >
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-slate-800 flex items-center gap-2">
+                <h3 className="font-bold text-slate-800 flex items-center gap-2 text-sm min-w-0">
                   <div
-                    className="w-2 h-2 rounded-full"
+                    className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ backgroundColor: stage.color }}
                   ></div>
-                  {stage.name}
+                  <span className="truncate">{stage.name}</span>
                 </h3>
-                <span className="text-sm font-semibold text-slate-600 bg-white/80 px-2 py-0.5 rounded-full">
+                <span className="text-sm font-semibold text-slate-600 bg-white/80 px-2 py-0.5 rounded-full flex-shrink-0">
                   {getNotesForStage(stage.id).length}
                 </span>
               </div>
               {stage.description && (
-                <p className="text-xs text-slate-600 mt-1">{stage.description}</p>
+                <p className="text-xs text-slate-600 mt-1 truncate" title={stage.description}>{stage.description}</p>
               )}
             </div>
             <div className="space-y-2 max-h-[calc(100vh-400px)] overflow-y-auto pr-2">
               {getNotesForStage(stage.id).map(renderNoteCard)}
               {getNotesForStage(stage.id).length === 0 && (
-                <div className="text-center py-8 text-slate-400 text-sm border-2 border-dashed border-slate-200 rounded-lg">
+                <div className="text-center py-8 text-slate-400 text-xs border-2 border-dashed border-slate-200 rounded-lg">
                   Glissez un travail ici
                 </div>
               )}
