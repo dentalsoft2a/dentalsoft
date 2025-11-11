@@ -279,25 +279,6 @@ export default function PhotoSubmissionsPage() {
     }
   };
 
-  if (activeTab === 'sync') {
-    return <DScoreSyncDashboard />;
-  }
-
-  if (activeTab === 'mapping') {
-    return <DScoreDentistMapping />;
-  }
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-slate-600">Chargement des photos...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="p-3 md:p-6 max-w-7xl mx-auto">
       <div className="mb-6 md:mb-8 animate-fade-in">
@@ -306,24 +287,26 @@ export default function PhotoSubmissionsPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Photos Reçues</h1>
             <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Photos envoyées par les dentistes</p>
           </div>
-          <div className="flex gap-2 md:gap-3">
-            <button
-              onClick={loadSubmissions}
-              disabled={loading}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm md:text-base font-medium"
-              title="Actualiser la liste"
-            >
-              <RefreshCw className={`w-5 h-5 flex-shrink-0 ${loading ? 'animate-spin' : ''}`} />
-              <span>Actualiser</span>
-            </button>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
-            >
-              <Plus className="w-5 h-5 flex-shrink-0" />
-              <span>Ajouter</span>
-            </button>
-          </div>
+          {activeTab === 'photos' && (
+            <div className="flex gap-2 md:gap-3">
+              <button
+                onClick={loadSubmissions}
+                disabled={loading}
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm md:text-base font-medium"
+                title="Actualiser la liste"
+              >
+                <RefreshCw className={`w-5 h-5 flex-shrink-0 ${loading ? 'animate-spin' : ''}`} />
+                <span>Actualiser</span>
+              </button>
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg hover:shadow-xl rounded-lg md:rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
+              >
+                <Plus className="w-5 h-5 flex-shrink-0" />
+                <span>Ajouter</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -364,6 +347,22 @@ export default function PhotoSubmissionsPage() {
           </button>
         </div>
       </div>
+
+      {activeTab === 'sync' && <DScoreSyncDashboard />}
+
+      {activeTab === 'mapping' && <DScoreDentistMapping />}
+
+      {activeTab === 'photos' && (
+        <>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-slate-600">Chargement des photos...</p>
+              </div>
+            </div>
+          ) : (
+            <>
 
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 md:p-4 flex items-start gap-2 md:gap-3 mb-4 md:mb-6">
         <Info className="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0 mt-0.5" />
@@ -885,6 +884,10 @@ export default function PhotoSubmissionsPage() {
           </div>
         </div>
       )}
+          </>
+        )}
+      </>
+    )}
     </div>
   );
 }
