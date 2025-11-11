@@ -36,20 +36,21 @@ interface InvoiceData {
 
 export async function generateSubscriptionInvoicePDF(invoiceId: string) {
   try {
-    const [invoiceRes, companyRes] = await Promise.all([
+    const invoiceRes = await supabase
+      .from('subscription_invoices')
+      .select('*')
+      .eq('id', invoiceId)
+      .single();
+
+    if (invoiceRes.error || !invoiceRes.data) {
+      throw new Error('Facture introuvable');
+    }
+
+    const [profileRes, companyRes] = await Promise.all([
       supabase
-        .from('subscription_invoices')
-        .select(`
-          *,
-          user_profiles!inner(
-            laboratory_name,
-            laboratory_address,
-            laboratory_email,
-            laboratory_phone,
-            laboratory_rcs
-          )
-        `)
-        .eq('id', invoiceId)
+        .from('profiles')
+        .select('laboratory_name, laboratory_address, laboratory_email, laboratory_phone, laboratory_rcs')
+        .eq('id', invoiceRes.data.user_id)
         .single(),
       supabase
         .from('company_settings')
@@ -57,10 +58,6 @@ export async function generateSubscriptionInvoicePDF(invoiceId: string) {
         .eq('id', '00000000-0000-0000-0000-000000000001')
         .single()
     ]);
-
-    if (invoiceRes.error || !invoiceRes.data) {
-      throw new Error('Facture introuvable');
-    }
 
     if (companyRes.error || !companyRes.data) {
       throw new Error('Informations entreprise introuvables');
@@ -77,7 +74,13 @@ export async function generateSubscriptionInvoicePDF(invoiceId: string) {
     };
 
     const company: CompanyInfo = companyRes.data;
-    const customer: CustomerInfo = invoiceRes.data.user_profiles;
+    const customer: CustomerInfo = profileRes.data || {
+      laboratory_name: 'N/A',
+      laboratory_address: 'N/A',
+      laboratory_email: 'N/A',
+      laboratory_phone: 'N/A',
+      laboratory_rcs: 'N/A'
+    };
 
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
