@@ -557,8 +557,9 @@ export default function SettingsPage() {
 }
 
 function ReferralSection() {
-  const { profile, user } = useAuth();
+  const { profile, user, userProfile } = useAuth();
   const [copied, setCopied] = useState(false);
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralStats, setReferralStats] = useState<{
     totalReferrals: number;
     pendingRewards: number;
@@ -575,6 +576,15 @@ function ReferralSection() {
 
     try {
       const { supabase } = await import('../../lib/supabase');
+
+      // Load referral code from user_profiles
+      const { data: userProfileData } = await supabase
+        .from('user_profiles')
+        .select('referral_code')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      setReferralCode(userProfileData?.referral_code || null);
 
       // Load referrals count
       const { count: referralsCount } = await supabase
@@ -605,15 +615,15 @@ function ReferralSection() {
   };
 
   const handleCopyCode = () => {
-    if (profile?.referral_code) {
-      navigator.clipboard.writeText(profile.referral_code);
+    if (referralCode) {
+      navigator.clipboard.writeText(referralCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  const referralUrl = profile?.referral_code
-    ? `${window.location.origin}/register?ref=${profile.referral_code}`
+  const referralUrl = referralCode
+    ? `${window.location.origin}/register?ref=${referralCode}`
     : '';
 
   const handleCopyUrl = () => {
@@ -622,7 +632,7 @@ function ReferralSection() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  if (!profile?.referral_code) return null;
+  if (!referralCode) return null;
 
   return (
     <div className="border-t border-slate-200 pt-6">
@@ -663,7 +673,7 @@ function ReferralSection() {
           <div className="flex gap-2">
             <input
               type="text"
-              value={profile.referral_code}
+              value={referralCode}
               readOnly
               className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3.5 text-sm sm:text-base border border-purple-200 rounded-xl bg-gradient-to-br from-white to-slate-50/30 shadow-sm font-mono font-bold text-purple-700 text-center tracking-wider"
             />
