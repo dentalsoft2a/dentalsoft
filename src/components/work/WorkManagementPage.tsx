@@ -270,15 +270,15 @@ export default function WorkManagementPage() {
     switch (priority) {
       case 'urgent': return 'bg-red-100 text-red-800 border-red-200';
       case 'high': return 'bg-orange-100 text-orange-800 border-orange-200';
-      case 'low': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'low': return 'bg-cyan-100 text-cyan-800 border-cyan-200';
       default: return 'bg-slate-100 text-slate-800 border-slate-200';
     }
   };
 
   const getProgressColor = (percentage: number) => {
-    if (percentage >= 75) return 'from-green-500 to-emerald-500';
-    if (percentage >= 40) return 'from-orange-500 to-amber-500';
-    return 'from-red-500 to-rose-500';
+    if (percentage >= 75) return 'from-emerald-500 to-teal-500';
+    if (percentage >= 40) return 'from-primary-500 to-cyan-500';
+    return 'from-red-500 to-orange-500';
   };
 
   const isOverdue = (dueDate: string | null) => {
@@ -326,26 +326,26 @@ export default function WorkManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-orange-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-primary-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs md:text-sm text-orange-600 font-medium">En cours</p>
-              <p className="text-xl md:text-2xl font-bold text-orange-900 mt-0.5 md:mt-1">{stats.inProgress}</p>
+              <p className="text-xs md:text-sm text-primary-600 font-medium">En cours</p>
+              <p className="text-xl md:text-2xl font-bold text-primary-900 mt-0.5 md:mt-1">{stats.inProgress}</p>
             </div>
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-orange-100 flex items-center justify-center">
-              <Clock className="w-4 h-4 md:w-6 md:h-6 text-orange-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-primary-100 flex items-center justify-center">
+              <Clock className="w-4 h-4 md:w-6 md:h-6 text-primary-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-green-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-emerald-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs md:text-sm text-green-600 font-medium">Terminés</p>
-              <p className="text-xl md:text-2xl font-bold text-green-900 mt-0.5 md:mt-1">{stats.completed}</p>
+              <p className="text-xs md:text-sm text-emerald-600 font-medium">Terminés</p>
+              <p className="text-xl md:text-2xl font-bold text-emerald-900 mt-0.5 md:mt-1">{stats.completed}</p>
             </div>
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-green-100 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-green-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-emerald-600" />
             </div>
           </div>
         </div>
@@ -362,26 +362,26 @@ export default function WorkManagementPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-amber-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-orange-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs md:text-sm text-amber-600 font-medium">Bloqués</p>
-              <p className="text-xl md:text-2xl font-bold text-amber-900 mt-0.5 md:mt-1">{stats.blocked}</p>
+              <p className="text-xs md:text-sm text-orange-600 font-medium">Bloqués</p>
+              <p className="text-xl md:text-2xl font-bold text-orange-900 mt-0.5 md:mt-1">{stats.blocked}</p>
             </div>
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-amber-100 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4 md:w-6 md:h-6 text-amber-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-orange-100 flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 md:w-6 md:h-6 text-orange-600" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-rose-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-red-200 shadow-sm hover:shadow-md transition-shadow">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs md:text-sm text-rose-600 font-medium">Urgents</p>
-              <p className="text-xl md:text-2xl font-bold text-rose-900 mt-0.5 md:mt-1">{stats.urgent}</p>
+              <p className="text-xs md:text-sm text-red-600 font-medium">Urgents</p>
+              <p className="text-xl md:text-2xl font-bold text-red-900 mt-0.5 md:mt-1">{stats.urgent}</p>
             </div>
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-rose-100 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-rose-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-red-100 flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-red-600" />
             </div>
           </div>
         </div>
@@ -407,7 +407,7 @@ export default function WorkManagementPage() {
                   onClick={() => setShowMyWorksOnly(!showMyWorksOnly)}
                   className={`flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-lg border transition-all text-sm md:text-base ${
                     showMyWorksOnly
-                      ? 'bg-blue-50 border-blue-300 text-blue-700'
+                      ? 'bg-primary-50 border-primary-300 text-primary-700'
                       : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
                   }`}
                   title="Afficher uniquement mes travaux assignés"
@@ -547,7 +547,7 @@ export default function WorkManagementPage() {
                             {note.priority === 'urgent' ? 'Urgent' : note.priority === 'high' ? 'Haute' : note.priority === 'low' ? 'Basse' : 'Normale'}
                           </span>
                           {note.is_blocked && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
                               <AlertTriangle className="w-3 h-3" />
                               Bloqué
                             </span>

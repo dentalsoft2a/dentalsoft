@@ -267,16 +267,16 @@ export default function WorkKanbanView({
       case 'high':
         return <ArrowUpCircle className="w-3.5 h-3.5 text-orange-500" />;
       case 'low':
-        return <ArrowDownCircle className="w-3.5 h-3.5 text-blue-500" />;
+        return <ArrowDownCircle className="w-3.5 h-3.5 text-cyan-500" />;
       default:
         return <MinusCircle className="w-3.5 h-3.5 text-slate-500" />;
     }
   };
 
   const getProgressColor = (percentage: number) => {
-    if (percentage >= 75) return 'from-green-500 to-emerald-500';
-    if (percentage >= 40) return 'from-orange-500 to-amber-500';
-    return 'from-red-500 to-rose-500';
+    if (percentage >= 75) return 'from-emerald-500 to-teal-500';
+    if (percentage >= 40) return 'from-primary-500 to-cyan-500';
+    return 'from-red-500 to-orange-500';
   };
 
   const isOverdue = (dueDate: string | null) => {
