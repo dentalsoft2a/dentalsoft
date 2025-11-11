@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
-import { DEFAULT_WORK_STAGES } from '../../utils/workStages';
 import { Users, Plus, Edit, Trash2, Shield, Save, X, Briefcase, Eye, EyeOff, Lock } from 'lucide-react';
 
 interface Employee {
@@ -55,7 +54,7 @@ export default function EmployeeManagement() {
   const { user } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [roles, setRoles] = useState<RolePermission[]>([]);
-  const productionStages: ProductionStage[] = DEFAULT_WORK_STAGES;
+  const [productionStages, setProductionStages] = useState<ProductionStage[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
   const [showRoleModal, setShowRoleModal] = useState(false);
@@ -90,7 +89,7 @@ export default function EmployeeManagement() {
     if (!user) return;
 
     try {
-      const [employeesRes, rolesRes] = await Promise.all([
+      const [employeesRes, rolesRes, stagesRes] = await Promise.all([
         supabase
           .from('laboratory_employees')
           .select('*')
@@ -100,14 +99,21 @@ export default function EmployeeManagement() {
           .from('laboratory_role_permissions')
           .select('*')
           .eq('laboratory_profile_id', user.id)
-          .order('role_name')
+          .order('role_name'),
+        supabase
+          .from('production_stages')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('order_index')
       ]);
 
       if (employeesRes.error) throw employeesRes.error;
       if (rolesRes.error) throw rolesRes.error;
+      if (stagesRes.error) throw stagesRes.error;
 
       setEmployees(employeesRes.data || []);
       setRoles(rolesRes.data || []);
+      setProductionStages(stagesRes.data || []);
     } catch (error) {
       console.error('Error loading data:', error);
       alert('Erreur lors du chargement des données');

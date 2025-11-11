@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useEmployeePermissions } from '../../hooks/useEmployeePermissions';
-import { type WorkStage } from '../../utils/workStages';
 import {
   User, Calendar, MessageSquare, AlertTriangle, Clock, Tag,
   ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package, CheckCircle, Lock, Eye
@@ -27,6 +26,16 @@ interface DeliveryNote {
   comments_count?: number;
 }
 
+interface WorkStage {
+  id: string;
+  name: string;
+  description: string;
+  order_index: number;
+  weight: number;
+  color: string;
+  is_active: boolean;
+}
+
 interface WorkKanbanViewProps {
   deliveryNotes: DeliveryNote[];
   workStages: WorkStage[];
@@ -46,8 +55,19 @@ export default function WorkKanbanView({
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
 
   // Filter stages based on employee permissions
-  const visibleStages = employeePerms.isEmployee && !employeePerms.canEditAllStages && employeePerms.allowedStageNames.length > 0
-    ? workStages.filter(stage => employeePerms.allowedStageNames.includes(stage.id))
+  const visibleStages = employeePerms.isEmployee && !employeePerms.canEditAllStages
+    ? workStages.filter(stage => {
+        const canAccess = employeePerms.canAccessStage(stage.id);
+        console.log('[WorkKanban] Stage filter:', {
+          stageName: stage.name,
+          stageId: stage.id,
+          canAccess,
+          allowedStages: employeePerms.allowedStages,
+          isEmployee: employeePerms.isEmployee,
+          canEditAllStages: employeePerms.canEditAllStages
+        });
+        return canAccess;
+      })
     : workStages;
 
   const getNotesForStage = (stageId: string) => {
@@ -78,7 +98,7 @@ export default function WorkKanbanView({
     if (!draggedNote || !user) return;
 
     // Check if employee has permission to move to this stage
-    if (employeePerms.isEmployee && !employeePerms.canEditAllStages && !employeePerms.allowedStageNames.includes(targetStageId)) {
+    if (employeePerms.isEmployee && !employeePerms.canEditStage(targetStageId)) {
       alert('Vous n\'avez pas la permission de déplacer ce travail vers cette étape.');
       return;
     }
@@ -296,9 +316,19 @@ export default function WorkKanbanView({
         if (!stageToComplete) continue;
 
         // Skip stages that employee cannot access
-        const canAccessThisStage = !employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.allowedStageNames.includes(stageToComplete.id);
+        const canAccessThisStage = !employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.canAccessStage(stageToComplete.id);
+
+        console.log('[WorkKanban] Stage completion access check:', {
+          stageName: stageToComplete.name,
+          stageId: stageToComplete.id,
+          canAccessThisStage,
+          isEmployee: employeePerms.isEmployee,
+          canEditAllStages: employeePerms.canEditAllStages,
+          allowedStages: employeePerms.allowedStages
+        });
 
         if (!canAccessThisStage) {
+          console.log('[WorkKanban] Skipping stage - no access');
           continue;
         }
 
@@ -343,7 +373,16 @@ export default function WorkKanbanView({
 
       // Create or update next stage as current and incomplete
       // Skip if employee doesn't have access to this stage
-      const canAccessNextStage = !employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.allowedStageNames.includes(nextStage.id);
+      const canAccessNextStage = !employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.canAccessStage(nextStage.id);
+
+      console.log('[WorkKanban] Next stage access check:', {
+        nextStageName: nextStage.name,
+        nextStageId: nextStage.id,
+        isEmployee: employeePerms.isEmployee,
+        canEditAllStages: employeePerms.canEditAllStages,
+        canAccessNextStage,
+        allowedStages: employeePerms.allowedStages
+      });
 
       if (canAccessNextStage) {
         try {
