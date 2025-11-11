@@ -320,68 +320,78 @@ export default function WorkKanbanView({
           continue;
         }
 
-        const { data: existingStage } = await supabase
-          .from('delivery_note_stages')
-          .select('*')
-          .eq('delivery_note_id', noteId)
-          .eq('stage_id', stageToComplete.id)
-          .maybeSingle();
+        try {
+          const { data: existingStage } = await supabase
+            .from('delivery_note_stages')
+            .select('*')
+            .eq('delivery_note_id', noteId)
+            .eq('stage_id', stageToComplete.id)
+            .maybeSingle();
 
-        if (existingStage) {
-          // Only update if not already completed
-          if (!existingStage.is_completed) {
+          if (existingStage) {
+            // Only update if not already completed
+            if (!existingStage.is_completed) {
+              await supabase
+                .from('delivery_note_stages')
+                .update({
+                  is_completed: true,
+                  completed_at: new Date().toISOString(),
+                  completed_by: user.id,
+                  updated_at: new Date().toISOString()
+                })
+                .eq('id', existingStage.id);
+            }
+          } else {
+            // Create new completed stage entry
             await supabase
               .from('delivery_note_stages')
-              .update({
+              .insert({
+                delivery_note_id: noteId,
+                stage_id: stageToComplete.id,
                 is_completed: true,
                 completed_at: new Date().toISOString(),
-                completed_by: user.id,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', existingStage.id);
+                completed_by: user.id
+              });
           }
-        } else {
-          // Create new completed stage entry
-          await supabase
-            .from('delivery_note_stages')
-            .insert({
-              delivery_note_id: noteId,
-              stage_id: stageToComplete.id,
-              is_completed: true,
-              completed_at: new Date().toISOString(),
-              completed_by: user.id
-            });
+        } catch (error: any) {
+          // Silently ignore permission errors - employee might not have access to this stage
+          console.log('[WorkKanban] Skipping stage completion due to permissions:', stageToComplete.name);
         }
       }
 
       // Create or update next stage as current and incomplete
-      // Only if employee has access to this stage
+      // Skip if employee doesn't have access to this stage
       if (!employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.canAccessStage(nextStage.id)) {
-        const { data: nextStageData } = await supabase
-          .from('delivery_note_stages')
-          .select('*')
-          .eq('delivery_note_id', noteId)
-          .eq('stage_id', nextStage.id)
-          .maybeSingle();
+        try {
+          const { data: nextStageData } = await supabase
+            .from('delivery_note_stages')
+            .select('*')
+            .eq('delivery_note_id', noteId)
+            .eq('stage_id', nextStage.id)
+            .maybeSingle();
 
-        if (nextStageData) {
-          await supabase
-            .from('delivery_note_stages')
-            .update({
-              is_completed: false,
-              completed_at: null,
-              completed_by: null,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', nextStageData.id);
-        } else {
-          await supabase
-            .from('delivery_note_stages')
-            .insert({
-              delivery_note_id: noteId,
-              stage_id: nextStage.id,
-              is_completed: false
-            });
+          if (nextStageData) {
+            await supabase
+              .from('delivery_note_stages')
+              .update({
+                is_completed: false,
+                completed_at: null,
+                completed_by: null,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', nextStageData.id);
+          } else {
+            await supabase
+              .from('delivery_note_stages')
+              .insert({
+                delivery_note_id: noteId,
+                stage_id: nextStage.id,
+                is_completed: false
+              });
+          }
+        } catch (error: any) {
+          // Silently ignore permission errors - employee might not have access to this stage
+          console.log('[WorkKanban] Skipping next stage creation due to permissions:', nextStage.name);
         }
       }
 
