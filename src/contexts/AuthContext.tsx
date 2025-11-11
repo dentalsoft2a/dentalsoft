@@ -188,12 +188,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (dentistError) throw dentistError;
         } else {
-          const { error: profileError } = await supabase.from('profiles').insert({
-            id: data.user.id,
-            first_name: firstName,
-            last_name: lastName,
-            laboratory_name: laboratoryName,
-          });
+          const { error: profileError } = await supabase.from('profiles')
+            .upsert({
+              id: data.user.id,
+              first_name: firstName,
+              last_name: lastName,
+              laboratory_name: laboratoryName,
+            }, {
+              onConflict: 'id'
+            });
 
           if (profileError) throw profileError;
 
