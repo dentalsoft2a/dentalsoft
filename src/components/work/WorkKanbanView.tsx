@@ -140,9 +140,16 @@ export default function WorkKanbanView({
               completed_by: user.id
             });
 
-          // Ignore permission errors (403) - employee may not have access to this stage
-          if (insertError && insertError.code !== '42501') {
-            throw insertError;
+          // Ignore permission errors (403/42501) - employee may not have access to this stage
+          if (insertError) {
+            const isPermissionError =
+              insertError.code === '42501' ||
+              insertError.message?.includes('row-level security') ||
+              insertError.message?.includes('permission denied');
+
+            if (!isPermissionError) {
+              throw insertError;
+            }
           }
         }
       }
@@ -174,9 +181,16 @@ export default function WorkKanbanView({
             is_completed: false
           });
 
-        // Ignore permission errors (403) - employee may not have access to this stage
-        if (insertError && insertError.code !== '42501') {
-          throw insertError;
+        // Ignore permission errors (403/42501) - employee may not have access to this stage
+        if (insertError) {
+          const isPermissionError =
+            insertError.code === '42501' ||
+            insertError.message?.includes('row-level security') ||
+            insertError.message?.includes('permission denied');
+
+          if (!isPermissionError) {
+            throw insertError;
+          }
         }
       }
 
@@ -301,6 +315,11 @@ export default function WorkKanbanView({
         const stageToComplete = workStages[i];
         if (!stageToComplete) continue;
 
+        // Skip stages that employee cannot access
+        if (employeePerms.isEmployee && !employeePerms.canEditAllStages && !employeePerms.canAccessStage(stageToComplete.id)) {
+          continue;
+        }
+
         const { data: existingStage } = await supabase
           .from('delivery_note_stages')
           .select('*')
@@ -323,7 +342,7 @@ export default function WorkKanbanView({
           }
         } else {
           // Create new completed stage entry
-          const { error: insertError } = await supabase
+          await supabase
             .from('delivery_note_stages')
             .insert({
               delivery_note_id: noteId,
@@ -332,44 +351,37 @@ export default function WorkKanbanView({
               completed_at: new Date().toISOString(),
               completed_by: user.id
             });
-
-          // Ignore permission errors (403) - employee may not have access to this stage
-          if (insertError && insertError.code !== '42501') {
-            throw insertError;
-          }
         }
       }
 
       // Create or update next stage as current and incomplete
-      const { data: nextStageData } = await supabase
-        .from('delivery_note_stages')
-        .select('*')
-        .eq('delivery_note_id', noteId)
-        .eq('stage_id', nextStage.id)
-        .maybeSingle();
-
-      if (nextStageData) {
-        await supabase
+      // Only if employee has access to this stage
+      if (!employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.canAccessStage(nextStage.id)) {
+        const { data: nextStageData } = await supabase
           .from('delivery_note_stages')
-          .update({
-            is_completed: false,
-            completed_at: null,
-            completed_by: null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', nextStageData.id);
-      } else {
-        const { error: insertError } = await supabase
-          .from('delivery_note_stages')
-          .insert({
-            delivery_note_id: noteId,
-            stage_id: nextStage.id,
-            is_completed: false
-          });
+          .select('*')
+          .eq('delivery_note_id', noteId)
+          .eq('stage_id', nextStage.id)
+          .maybeSingle();
 
-        // Ignore permission errors (403) - employee may not have access to this stage
-        if (insertError && insertError.code !== '42501') {
-          throw insertError;
+        if (nextStageData) {
+          await supabase
+            .from('delivery_note_stages')
+            .update({
+              is_completed: false,
+              completed_at: null,
+              completed_by: null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', nextStageData.id);
+        } else {
+          await supabase
+            .from('delivery_note_stages')
+            .insert({
+              delivery_note_id: noteId,
+              stage_id: nextStage.id,
+              is_completed: false
+            });
         }
       }
 
