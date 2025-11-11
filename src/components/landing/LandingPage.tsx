@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus, Camera, Phone } from 'lucide-react';
+import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus, Camera, Phone, Layers } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import { supabase } from '../../lib/supabase';
@@ -67,6 +67,11 @@ export function LandingPage() {
       icon: Package,
       title: 'Bons de livraison',
       description: 'Créez et gérez vos bons de livraison en quelques clics. Suivi complet de chaque livraison avec historique détaillé.',
+    },
+    {
+      icon: Layers,
+      title: 'Gestion de travaux Kanban',
+      description: 'Visualisez et suivez l\'avancement de vos travaux en temps réel. Organisez par étapes de production avec drag & drop intuitif.',
     },
     {
       icon: FileText,
