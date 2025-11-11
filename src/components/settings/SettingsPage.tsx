@@ -22,6 +22,8 @@ export default function SettingsPage() {
     laboratory_address: profile?.laboratory_address || '',
     laboratory_logo_url: profile?.laboratory_logo_url || '',
     laboratory_rcs: profile?.laboratory_rcs || '',
+    bank_iban: profile?.bank_iban || '',
+    bank_bic: profile?.bank_bic || '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -38,6 +40,8 @@ export default function SettingsPage() {
         laboratory_address: profile.laboratory_address || '',
         laboratory_logo_url: profile.laboratory_logo_url || '',
         laboratory_rcs: profile.laboratory_rcs || '',
+        bank_iban: profile.bank_iban || '',
+        bank_bic: profile.bank_bic || '',
       });
       setLogoPreview(profile.laboratory_logo_url || '');
     }
@@ -408,6 +412,60 @@ export default function SettingsPage() {
                         <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
                         Cette information sera affichée sur vos proformas PDF
                       </p>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-6">
+                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md">
+                        <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <span className="bg-gradient-to-r from-emerald-700 to-green-600 bg-clip-text text-transparent">Informations bancaires</span>
+                    </h3>
+
+                    <div className="space-y-4 sm:space-y-5">
+                      <div>
+                        <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                          <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                          IBAN (International Bank Account Number)
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.bank_iban}
+                          onChange={(e) => setFormData({ ...formData, bank_iban: e.target.value })}
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3.5 text-sm sm:text-base border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-emerald-300 font-mono"
+                          placeholder="FR76 1234 5678 9012 3456 7890 123"
+                        />
+                        <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+                          Votre numéro de compte bancaire international
+                        </p>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                          <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-600" />
+                          BIC / SWIFT
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.bank_bic}
+                          onChange={(e) => setFormData({ ...formData, bank_bic: e.target.value })}
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3.5 text-sm sm:text-base border border-emerald-200 rounded-xl focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-emerald-300 font-mono"
+                          placeholder="ABCDEFGH123"
+                        />
+                        <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+                          Code d'identification de votre banque (8 ou 11 caractères)
+                        </p>
+                      </div>
+
+                      <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-3 sm:p-4">
+                        <p className="text-xs sm:text-sm text-blue-800 flex items-start gap-2">
+                          <FileText className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                          <span>Ces informations seront affichées sur vos factures PDF pour faciliter les paiements par virement bancaire.</span>
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>

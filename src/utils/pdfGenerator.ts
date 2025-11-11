@@ -1010,18 +1010,28 @@ export async function generateInvoicePDF(data: InvoiceData, returnBase64 = false
 
   yPos = Math.max(yPos, boxY + boxHeight) + 15;
 
-  if (data.laboratory_iban) {
-    doc.text(`IBAN : ${data.laboratory_iban}`, 15, yPos);
-    yPos += 5;
-  }
-  if (data.laboratory_bic) {
-    doc.text(`BIC : ${data.laboratory_bic}`, 15, yPos);
-    yPos += 5;
-  }
+  doc.setFontSize(10);
   doc.setFont('helvetica', 'bold');
   doc.text(`Date de facture : ${new Date(data.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })}`, 15, yPos);
+  yPos += 8;
 
-  yPos = Math.max(yPos, boxY + boxHeight) + 15;
+  if (data.laboratory_iban || data.laboratory_bic) {
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Coordonnées bancaires :', 15, yPos);
+    yPos += 5;
+
+    doc.setFont('helvetica', 'normal');
+    if (data.laboratory_iban) {
+      doc.text(`IBAN : ${data.laboratory_iban}`, 15, yPos);
+      yPos += 5;
+    }
+    if (data.laboratory_bic) {
+      doc.text(`BIC : ${data.laboratory_bic}`, 15, yPos);
+      yPos += 5;
+    }
+    yPos += 3;
+  }
 
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
