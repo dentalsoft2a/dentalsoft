@@ -18,6 +18,7 @@ interface EmployeePermissions {
   canViewAllWorks: boolean;
   canViewAssignedOnly: boolean;
   allowedStages: string[];
+  allowedStageNames: string[]; // Stage names from default stages (e.g., 'reception', 'modelisation')
   canEditAllStages: boolean;
   loading: boolean;
   canAccessStage: (stageId: string) => boolean;
@@ -35,6 +36,7 @@ export function useEmployeePermissions(): EmployeePermissions {
     canViewAllWorks: false,
     canViewAssignedOnly: false,
     allowedStages: [],
+    allowedStageNames: [],
     canEditAllStages: false,
     loading: true,
     canAccessStage: () => false,
@@ -76,6 +78,7 @@ export function useEmployeePermissions(): EmployeePermissions {
           canViewAllWorks: true,
           canViewAssignedOnly: false,
           allowedStages: [],
+          allowedStageNames: [],
           canEditAllStages: true,
           loading: false,
           canAccessStage: () => true,
@@ -102,17 +105,24 @@ export function useEmployeePermissions(): EmployeePermissions {
 
       const workManagement = (roleData?.permissions as any)?.work_management as WorkManagementPermissions | undefined;
 
+      // allowed_stages from DB still contains stage IDs from production_stages
+      // We keep them for backward compatibility but add allowedStageNames for the new system
       const allowedStages = workManagement?.allowed_stages || [];
+
+      // For now, allowedStageNames will be the same as allowedStages
+      // In the future, we can map stage IDs to stage names if needed
+      const allowedStageNames = allowedStages;
+
       const canEditAllStages = workManagement?.can_edit_all_stages ?? true;
 
       const canAccessStage = (stageId: string): boolean => {
         if (canEditAllStages) return true;
-        return allowedStages.includes(stageId);
+        return allowedStageNames.includes(stageId);
       };
 
       const canEditStage = (stageId: string): boolean => {
         if (canEditAllStages) return true;
-        return allowedStages.includes(stageId);
+        return allowedStageNames.includes(stageId);
       };
 
       setPermissions({
@@ -124,6 +134,7 @@ export function useEmployeePermissions(): EmployeePermissions {
         canViewAllWorks: workManagement?.view_all_works ?? false,
         canViewAssignedOnly: workManagement?.view_assigned_only ?? false,
         allowedStages,
+        allowedStageNames,
         canEditAllStages,
         loading: false,
         canAccessStage,

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { DEFAULT_WORK_STAGES, type WorkStage } from '../../utils/workStages';
 import {
   Search, Filter, Plus, Clock, AlertTriangle, CheckCircle2,
   TrendingUp, Users, Calendar, LayoutGrid, List, ChevronDown,
@@ -33,15 +34,6 @@ interface DeliveryNote {
   comments_count?: number;
 }
 
-interface WorkStage {
-  id: string;
-  name: string;
-  description: string;
-  order_index: number;
-  weight: number;
-  color: string;
-  is_active: boolean;
-}
 
 interface Stats {
   total: number;
@@ -57,7 +49,7 @@ export default function WorkManagementPage() {
   const employeePerms = useEmployeePermissions();
   const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<DeliveryNote[]>([]);
-  const [workStages, setWorkStages] = useState<WorkStage[]>([]);
+  const [workStages] = useState<WorkStage[]>(DEFAULT_WORK_STAGES);
   const [stats, setStats] = useState<Stats>({
     total: 0,
     inProgress: 0,
@@ -82,49 +74,15 @@ export default function WorkManagementPage() {
   useLockScroll(!!selectedNote);
 
   useEffect(() => {
-    if (user) {
-      loadWorkStages();
-      loadDeliveryNotes();
-    }
-  }, [user]);
-
-  useEffect(() => {
     if (user && !employeePerms.loading) {
-      loadWorkStages();
       loadDeliveryNotes();
     }
-  }, [employeePerms.loading]);
+  }, [user, employeePerms.loading]);
 
   useEffect(() => {
     applyFilters();
   }, [deliveryNotes, searchTerm, filters, showMyWorksOnly, employeePerms.isEmployee]);
 
-  const loadWorkStages = async () => {
-    if (!user) return;
-
-    try {
-      const userId = employeePerms.isEmployee ? employeePerms.laboratoryId : user.id;
-      if (!userId) return;
-
-      const { data, error } = await supabase
-        .from('production_stages')
-        .select('*')
-        .eq('user_id', userId)
-        .order('order_index');
-
-      if (error) throw error;
-
-      // Filter stages based on employee permissions
-      let stages = data || [];
-      if (employeePerms.isEmployee && !employeePerms.canEditAllStages) {
-        stages = stages.filter(stage => employeePerms.allowedStages.includes(stage.id));
-      }
-
-      setWorkStages(stages);
-    } catch (error) {
-      console.error('Error loading work stages:', error);
-    }
-  };
 
   const loadDeliveryNotes = async () => {
     if (!user) return;
@@ -139,8 +97,7 @@ export default function WorkManagementPage() {
         .from('delivery_notes')
         .select(`
           *,
-          dentists(name),
-          current_stage:production_stages(name, color)
+          dentists(name)
         `)
         .eq('user_id', userId)
         .neq('status', 'completed')
@@ -160,8 +117,17 @@ export default function WorkManagementPage() {
             .select('*', { count: 'exact', head: true })
             .eq('delivery_note_id', note.id);
 
+          // Map stage ID to stage from default stages
+          const currentStage = note.current_stage_id
+            ? DEFAULT_WORK_STAGES.find(s => s.id === note.current_stage_id)
+            : undefined;
+
           return {
             ...note,
+            current_stage: currentStage ? {
+              name: currentStage.name,
+              color: currentStage.color
+            } : undefined,
             assignments: assignments || [],
             comments_count: count || 0
           };
@@ -201,18 +167,12 @@ export default function WorkManagementPage() {
     }
 
     // Employee filter: show only works in allowed stages
-    if (employeePerms.isEmployee && !employeePerms.canEditAllStages && employeePerms.allowedStages.length > 0) {
+    if (employeePerms.isEmployee && !employeePerms.canEditAllStages && employeePerms.allowedStageNames.length > 0) {
       filtered = filtered.filter(note => {
         // If no stage assigned yet, show it
         if (!note.current_stage_id) return true;
         // Otherwise, only show if stage is in allowed list
-        const isAllowed = employeePerms.allowedStages.includes(note.current_stage_id);
-        console.log('[WorkManagement] Note filter:', {
-          deliveryNumber: note.delivery_number,
-          currentStageId: note.current_stage_id,
-          isAllowed,
-          allowedStages: employeePerms.allowedStages
-        });
+        const isAllowed = employeePerms.allowedStageNames.includes(note.current_stage_id);
         return isAllowed;
       });
     }
