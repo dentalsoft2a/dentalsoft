@@ -33,7 +33,10 @@ export default function DentistsPage() {
     try {
       const { data: dentistsData, error: dentistsError } = await supabase
         .from('dentists')
-        .select('*')
+        .select(`
+          *,
+          dentist_account:dentist_accounts!linked_dentist_account_id(id, email, created_at)
+        `)
         .eq('user_id', user.id)
         .order('name');
 
@@ -224,10 +227,22 @@ export default function DentistsPage() {
                       <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
                         {dentist.name.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-slate-900 group-hover:text-primary-700 transition-colors">
-                          {dentist.name}
-                        </h3>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-lg text-slate-900 group-hover:text-primary-700 transition-colors">
+                            {dentist.name}
+                          </h3>
+                          {(dentist as any).dentist_account ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded-full border border-green-200">
+                              <CheckCircle2 className="w-3 h-3" />
+                              Compte lié
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-600 text-xs font-medium rounded-full border border-slate-200">
+                              Pas de compte
+                            </span>
+                          )}
+                        </div>
                         {dentist.active_delivery_notes !== undefined && dentist.active_delivery_notes > 0 ? (
                           <div className="flex items-center gap-1.5 mt-1">
                             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></div>

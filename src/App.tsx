@@ -17,7 +17,7 @@ import { SupportPage } from './components/support/SupportPage';
 import { SubscriptionPage } from './components/subscription/SubscriptionPage';
 import HelpCenterPage from './components/help-center/HelpCenterPage';
 import DentistRegisterPage from './components/dentist/DentistRegisterPage';
-import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
+import DentistPortal from './components/dentist/DentistPortal';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { ImpersonationBanner } from './components/common/ImpersonationBanner';
@@ -228,7 +228,7 @@ function AppContent() {
       <>
         {showServerMonitor && <ServerStatusMonitor />}
         {isImpersonating && <ImpersonationBanner />}
-        <DentistPhotoPanel />
+        <DentistPortal />
       </>
     );
   }
