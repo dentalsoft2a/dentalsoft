@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users, Shield, Cloud, Link as LinkIcon } from 'lucide-react';
+import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users, Shield, Cloud, Link as LinkIcon, Copy, Check, Gift, UserPlus } from 'lucide-react';
 import EmployeeManagement from './EmployeeManagement';
 import DScoreConnection from './DScoreConnection';
 import ThreeShapeConnection from './ThreeShapeConnection';
@@ -468,6 +468,8 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
+
+                  <ReferralSection />
                 </div>
 
                 {success && (
@@ -548,6 +550,176 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ReferralSection() {
+  const { profile, user } = useAuth();
+  const [copied, setCopied] = useState(false);
+  const [referralStats, setReferralStats] = useState<{
+    totalReferrals: number;
+    pendingRewards: number;
+    appliedRewards: number;
+  }>({ totalReferrals: 0, pendingRewards: 0, appliedRewards: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadReferralStats();
+  }, [user]);
+
+  const loadReferralStats = async () => {
+    if (!user) return;
+
+    try {
+      const { supabase } = await import('../../lib/supabase');
+
+      // Load referrals count
+      const { count: referralsCount } = await supabase
+        .from('referrals')
+        .select('*', { count: 'exact', head: true })
+        .eq('referrer_id', user.id);
+
+      // Load rewards
+      const { data: rewards } = await supabase
+        .from('referral_rewards')
+        .select('status, days_added')
+        .eq('user_id', user.id)
+        .eq('reward_type', 'referrer_bonus');
+
+      const pending = rewards?.filter(r => r.status === 'pending').reduce((sum, r) => sum + r.days_added, 0) || 0;
+      const applied = rewards?.filter(r => r.status === 'applied').reduce((sum, r) => sum + r.days_added, 0) || 0;
+
+      setReferralStats({
+        totalReferrals: referralsCount || 0,
+        pendingRewards: pending,
+        appliedRewards: applied
+      });
+    } catch (error) {
+      console.error('Error loading referral stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCopyCode = () => {
+    if (profile?.referral_code) {
+      navigator.clipboard.writeText(profile.referral_code);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const referralUrl = profile?.referral_code
+    ? `${window.location.origin}/register?ref=${profile.referral_code}`
+    : '';
+
+  const handleCopyUrl = () => {
+    navigator.clipboard.writeText(referralUrl);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  if (!profile?.referral_code) return null;
+
+  return (
+    <div className="border-t border-slate-200 pt-6">
+      <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md">
+          <Gift className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+        </div>
+        <span className="bg-gradient-to-r from-purple-700 to-pink-600 bg-clip-text text-transparent">Programme d'affiliation</span>
+      </h3>
+
+      <div className="space-y-4 sm:space-y-5">
+        <div className="bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 rounded-xl p-4 sm:p-5">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-lg flex items-center justify-center flex-shrink-0">
+              <UserPlus className="w-5 h-5 text-white" />
+            </div>
+            <div className="flex-1">
+              <h4 className="font-bold text-slate-900 mb-2">Parrainez vos amis et gagnez des mois gratuits</h4>
+              <ul className="space-y-1.5 text-sm text-slate-700">
+                <li className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                  <span>Vous recevez <strong>1 mois gratuit</strong> pour chaque filleul qui s'inscrit</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="w-1.5 h-1.5 bg-purple-500 rounded-full mt-1.5 flex-shrink-0"></span>
+                  <span>Votre filleul reçoit <strong>15 jours supplémentaires</strong> sur sa période d'essai</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+            <LinkIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
+            Votre code de parrainage
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={profile.referral_code}
+              readOnly
+              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3.5 text-sm sm:text-base border border-purple-200 rounded-xl bg-gradient-to-br from-white to-slate-50/30 shadow-sm font-mono font-bold text-purple-700 text-center tracking-wider"
+            />
+            <button
+              onClick={handleCopyCode}
+              className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              <span className="hidden sm:inline">{copied ? 'Copié' : 'Copier'}</span>
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-xs sm:text-sm font-bold text-slate-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+            <LinkIcon className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-purple-600" />
+            Lien de parrainage
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={referralUrl}
+              readOnly
+              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3.5 text-sm sm:text-base border border-purple-200 rounded-xl bg-gradient-to-br from-white to-slate-50/30 shadow-sm font-mono text-purple-700"
+            />
+            <button
+              onClick={handleCopyUrl}
+              className="px-4 py-2.5 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 flex items-center gap-2 shadow-md hover:shadow-lg"
+            >
+              {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+              <span className="hidden sm:inline">{copied ? 'Copié' : 'Copier'}</span>
+            </button>
+          </div>
+        </div>
+
+        {!loading && (
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+            <div className="bg-white border border-purple-200 rounded-xl p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-purple-600 mb-1">
+                {referralStats.totalReferrals}
+              </div>
+              <div className="text-xs sm:text-sm text-slate-600">Parrainages</div>
+            </div>
+            <div className="bg-white border border-purple-200 rounded-xl p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-orange-600 mb-1">
+                {referralStats.pendingRewards}
+              </div>
+              <div className="text-xs sm:text-sm text-slate-600">Jours en attente</div>
+            </div>
+            <div className="bg-white border border-purple-200 rounded-xl p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-green-600 mb-1">
+                {referralStats.appliedRewards}
+              </div>
+              <div className="text-xs sm:text-sm text-slate-600">Jours gagnés</div>
+            </div>
+          </div>
         )}
       </div>
     </div>

@@ -166,7 +166,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     firstName: string,
     lastName: string,
     laboratoryName: string,
-    isDentist: boolean = false
+    isDentist: boolean = false,
+    referralCode?: string
   ) => {
     try {
       const { data, error } = await supabase.auth.signUp({
@@ -195,6 +196,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
 
           if (profileError) throw profileError;
+
+          // Process referral if a code was provided
+          if (referralCode && referralCode.trim()) {
+            const { error: referralError } = await supabase.rpc('process_referral_rewards', {
+              p_referee_id: data.user.id,
+              p_referral_code: referralCode.trim().toUpperCase()
+            });
+
+            // Don't throw error if referral processing fails (invalid code, etc.)
+            // Just log it silently so user can still sign up
+            if (referralError) {
+              console.warn('Referral processing failed:', referralError);
+            }
+          }
         }
       }
 

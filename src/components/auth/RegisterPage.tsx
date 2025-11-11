@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import DentalCloudLogo from '../common/DentalCloudLogo';
-import { Package, Camera } from 'lucide-react';
+import { Package, Camera, Gift } from 'lucide-react';
 
 interface RegisterPageProps {
   onToggleLogin: () => void;
@@ -13,17 +13,27 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [laboratoryName, setLaboratoryName] = useState('');
+  const [referralCode, setReferralCode] = useState('');
   const [isDentistMode, setIsDentistMode] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { signUp } = useAuth();
+
+  // Check for referral code in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const refCode = urlParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode);
+    }
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    const { error } = await signUp(email, password, firstName, lastName, laboratoryName, isDentistMode);
+    const { error } = await signUp(email, password, firstName, lastName, laboratoryName, isDentistMode, referralCode);
 
     if (error) {
       setError(error.message);
@@ -168,6 +178,25 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
                 placeholder="••••••••"
               />
               <p className="text-xs text-slate-500 mt-1">Minimum 6 caractères</p>
+            </div>
+
+            <div>
+              <label htmlFor="referralCode" className="block text-sm font-medium text-slate-700 mb-2 flex items-center gap-2">
+                <Gift className="w-4 h-4 text-purple-600" />
+                Code de parrainage (optionnel)
+              </label>
+              <input
+                id="referralCode"
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                className="w-full px-4 py-3 rounded-lg border border-purple-300 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition font-mono"
+                placeholder="CODE123"
+              />
+              <p className="text-xs text-purple-600 mt-1 flex items-center gap-1.5">
+                <Gift className="w-3 h-3" />
+                Gagnez 15 jours supplémentaires sur votre période d'essai
+              </p>
             </div>
 
             {error && (
