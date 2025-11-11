@@ -61,7 +61,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     console.log('DashboardLayout - permissionsLoading:', permissionsLoading);
   }, [isEmployee, employeeInfo, rolePermissions, permissionsLoading]);
 
-  const isSubscriptionInactive = userProfile?.subscription_status !== 'active' && userProfile?.subscription_status !== 'trialing';
+  const isSubscriptionInactive = userProfile?.subscription_status !== 'active' && userProfile?.subscription_status !== 'trial';
   const showSubscriptionWarning = isSubscriptionInactive && !isSuperAdmin;
 
   useEffect(() => {

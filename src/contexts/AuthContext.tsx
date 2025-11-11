@@ -393,7 +393,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isEmployee = !!employeeInfo && !profile?.laboratory_name;
   const laboratoryId = isEmployee ? employeeInfo.laboratory_profile_id : (profile?.id || null);
   const effectiveUserProfile = isEmployee ? laboratoryUserProfile : userProfile;
-  const hasActiveSubscription = effectiveUserProfile?.subscription_status === 'active' || effectiveUserProfile?.subscription_status === 'trialing';
+  const hasActiveSubscription = effectiveUserProfile?.subscription_status === 'active' || effectiveUserProfile?.subscription_status === 'trial';
 
   const effectiveUser = user ? {
     ...user,
