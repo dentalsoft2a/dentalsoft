@@ -117,7 +117,7 @@ export default function WorkManagementPage() {
         .select(`
           *,
           dentists(name),
-          current_stage:work_stages!delivery_notes_current_stage_id_fkey(name, color)
+          current_stage:work_stages(name, color)
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
