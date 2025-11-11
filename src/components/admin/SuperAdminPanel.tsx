@@ -163,8 +163,8 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
-          <div className="border-b border-slate-200 bg-slate-50/50">
-            <div className="flex overflow-x-auto hide-scrollbar">
+          <div className="border-b border-slate-200 bg-slate-50/50 p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
               {tabs.map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -173,25 +173,25 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
                     className={`
-                      relative flex items-center gap-3 px-8 py-5 font-semibold transition-all whitespace-nowrap group
+                      relative flex flex-col items-center gap-2.5 p-4 rounded-xl font-medium transition-all group
                       ${isActive
-                        ? 'text-slate-900'
-                        : 'text-slate-600 hover:text-slate-900'
+                        ? 'bg-white shadow-md border border-slate-200 text-slate-900 scale-105'
+                        : 'text-slate-600 hover:bg-white hover:shadow-sm border border-transparent hover:border-slate-200'
                       }
                     `}
                   >
                     <div className={`
-                      p-2 rounded-lg transition-all
+                      p-3 rounded-xl transition-all
                       ${isActive
                         ? `bg-gradient-to-br ${tab.color} shadow-lg`
-                        : 'bg-slate-200 group-hover:bg-slate-300'
+                        : 'bg-slate-100 group-hover:bg-slate-200'
                       }
                     `}>
                       <Icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-600'}`} />
                     </div>
-                    <span>{tab.label}</span>
+                    <span className="text-sm text-center leading-tight">{tab.label}</span>
                     {isActive && (
-                      <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${tab.color} rounded-t-full`}></div>
+                      <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${tab.color} rounded-t-xl`}></div>
                     )}
                   </button>
                 );
