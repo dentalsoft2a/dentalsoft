@@ -314,80 +314,80 @@ export default function WorkManagementPage() {
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 md:gap-4">
-        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-slate-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs md:text-sm text-slate-600 font-medium">Total</p>
-              <p className="text-xl md:text-2xl font-bold text-slate-900 mt-0.5 md:mt-1">{stats.total}</p>
+              <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent mt-0.5 md:mt-1">{stats.total}</p>
             </div>
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-slate-100 flex items-center justify-center">
-              <Layers className="w-4 h-4 md:w-6 md:h-6 text-slate-600" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-primary-200 shadow-sm hover:shadow-md transition-shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs md:text-sm text-primary-600 font-medium">En cours</p>
-              <p className="text-xl md:text-2xl font-bold text-primary-900 mt-0.5 md:mt-1">{stats.inProgress}</p>
-            </div>
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-primary-100 flex items-center justify-center">
-              <Clock className="w-4 h-4 md:w-6 md:h-6 text-primary-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-slate-500 to-slate-600 shadow-lg flex items-center justify-center">
+              <Layers className="w-4 h-4 md:w-6 md:h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-emerald-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-slate-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs md:text-sm text-emerald-600 font-medium">Terminés</p>
-              <p className="text-xl md:text-2xl font-bold text-emerald-900 mt-0.5 md:mt-1">{stats.completed}</p>
+              <p className="text-xs md:text-sm text-slate-600 font-medium">En cours</p>
+              <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-primary-900 to-primary-700 bg-clip-text text-transparent mt-0.5 md:mt-1">{stats.inProgress}</p>
             </div>
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-emerald-100 flex items-center justify-center">
-              <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-emerald-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-primary-500 to-cyan-500 shadow-lg flex items-center justify-center">
+              <Clock className="w-4 h-4 md:w-6 md:h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-red-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-slate-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs md:text-sm text-red-600 font-medium">En retard</p>
-              <p className="text-xl md:text-2xl font-bold text-red-900 mt-0.5 md:mt-1">{stats.overdue}</p>
+              <p className="text-xs md:text-sm text-slate-600 font-medium">Terminés</p>
+              <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-900 to-emerald-700 bg-clip-text text-transparent mt-0.5 md:mt-1">{stats.completed}</p>
             </div>
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-red-100 flex items-center justify-center">
-              <Calendar className="w-4 h-4 md:w-6 md:h-6 text-red-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-500 shadow-lg flex items-center justify-center">
+              <CheckCircle2 className="w-4 h-4 md:w-6 md:h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-orange-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-slate-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs md:text-sm text-orange-600 font-medium">Bloqués</p>
-              <p className="text-xl md:text-2xl font-bold text-orange-900 mt-0.5 md:mt-1">{stats.blocked}</p>
+              <p className="text-xs md:text-sm text-slate-600 font-medium">En retard</p>
+              <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-red-900 to-red-700 bg-clip-text text-transparent mt-0.5 md:mt-1">{stats.overdue}</p>
             </div>
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-orange-100 flex items-center justify-center">
-              <AlertTriangle className="w-4 h-4 md:w-6 md:h-6 text-orange-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 shadow-lg flex items-center justify-center">
+              <Calendar className="w-4 h-4 md:w-6 md:h-6 text-white" />
             </div>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-red-200 shadow-sm hover:shadow-md transition-shadow">
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-slate-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-xs md:text-sm text-red-600 font-medium">Urgents</p>
-              <p className="text-xl md:text-2xl font-bold text-red-900 mt-0.5 md:mt-1">{stats.urgent}</p>
+              <p className="text-xs md:text-sm text-slate-600 font-medium">Bloqués</p>
+              <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-orange-900 to-orange-700 bg-clip-text text-transparent mt-0.5 md:mt-1">{stats.blocked}</p>
             </div>
-            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-red-100 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-red-600" />
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-orange-500 to-amber-500 shadow-lg flex items-center justify-center">
+              <AlertTriangle className="w-4 h-4 md:w-6 md:h-6 text-white" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-slate-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs md:text-sm text-slate-600 font-medium">Urgents</p>
+              <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-red-900 to-red-700 bg-clip-text text-transparent mt-0.5 md:mt-1">{stats.urgent}</p>
+            </div>
+            <div className="w-8 h-8 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-red-500 to-rose-500 shadow-lg flex items-center justify-center">
+              <TrendingUp className="w-4 h-4 md:w-6 md:h-6 text-white" />
             </div>
           </div>
         </div>
       </div>
 
-      <div className="bg-white rounded-lg md:rounded-xl shadow-lg border border-slate-200">
+      <div className="bg-white rounded-lg md:rounded-xl shadow-lg border border-slate-200/50 hover:shadow-xl transition-all duration-300">
         <div className="p-3 md:p-4 border-b border-slate-200">
           <div className="flex flex-col lg:flex-row gap-3 md:gap-4">
             <div className="flex-1 relative">
