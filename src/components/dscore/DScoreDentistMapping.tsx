@@ -107,7 +107,7 @@ export default function DScoreDentistMapping() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-600">Chargement des mappings...</p>
@@ -117,10 +117,10 @@ export default function DScoreDentistMapping() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900">Mapping Dentistes DS-Core</h1>
-        <p className="text-slate-600 mt-2">Associez les dentistes DS-Core à vos comptes locaux</p>
+    <div>
+      <div className="mb-6">
+        <h2 className="text-xl md:text-2xl font-bold text-slate-900">Mapping Dentistes DS-Core</h2>
+        <p className="text-slate-600 mt-1 text-sm md:text-base">Associez les dentistes DS-Core à vos comptes locaux</p>
       </div>
 
       {unmappedCount > 0 && (

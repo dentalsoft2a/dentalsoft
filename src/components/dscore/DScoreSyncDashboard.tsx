@@ -120,7 +120,7 @@ export default function DScoreSyncDashboard() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center py-12">
         <div className="text-center">
           <div className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-slate-600">Chargement des synchronisations...</p>
@@ -130,21 +130,19 @@ export default function DScoreSyncDashboard() {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Synchronisations DS-Core</h1>
-            <p className="text-slate-600 mt-2">Historique et statistiques des synchronisations</p>
-          </div>
-          <button
-            onClick={loadSyncLogs}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            <RefreshCw className="w-5 h-5" />
-            Actualiser
-          </button>
+    <div>
+      <div className="mb-6 flex items-center justify-between">
+        <div>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900">Synchronisations DS-Core</h2>
+          <p className="text-slate-600 mt-1 text-sm md:text-base">Historique et statistiques des synchronisations</p>
         </div>
+        <button
+          onClick={loadSyncLogs}
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+        >
+          <RefreshCw className="w-5 h-5" />
+          Actualiser
+        </button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
