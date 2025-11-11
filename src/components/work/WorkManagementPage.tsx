@@ -201,10 +201,20 @@ export default function WorkManagementPage() {
     }
 
     // Employee filter: show only works in allowed stages
-    if (employeePerms.isEmployee && !employeePerms.canEditAllStages) {
-      filtered = filtered.filter(note =>
-        !note.current_stage_id || employeePerms.allowedStages.includes(note.current_stage_id)
-      );
+    if (employeePerms.isEmployee && !employeePerms.canEditAllStages && employeePerms.allowedStages.length > 0) {
+      filtered = filtered.filter(note => {
+        // If no stage assigned yet, show it
+        if (!note.current_stage_id) return true;
+        // Otherwise, only show if stage is in allowed list
+        const isAllowed = employeePerms.allowedStages.includes(note.current_stage_id);
+        console.log('[WorkManagement] Note filter:', {
+          deliveryNumber: note.delivery_number,
+          currentStageId: note.current_stage_id,
+          isAllowed,
+          allowedStages: employeePerms.allowedStages
+        });
+        return isAllowed;
+      });
     }
 
     if (searchTerm) {

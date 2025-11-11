@@ -56,7 +56,18 @@ export default function WorkKanbanView({
 
   // Filter stages based on employee permissions
   const visibleStages = employeePerms.isEmployee && !employeePerms.canEditAllStages
-    ? workStages.filter(stage => employeePerms.canAccessStage(stage.id))
+    ? workStages.filter(stage => {
+        const canAccess = employeePerms.canAccessStage(stage.id);
+        console.log('[WorkKanban] Stage filter:', {
+          stageName: stage.name,
+          stageId: stage.id,
+          canAccess,
+          allowedStages: employeePerms.allowedStages,
+          isEmployee: employeePerms.isEmployee,
+          canEditAllStages: employeePerms.canEditAllStages
+        });
+        return canAccess;
+      })
     : workStages;
 
   const getNotesForStage = (stageId: string) => {
