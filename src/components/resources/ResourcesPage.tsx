@@ -674,96 +674,96 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
       )}
 
       {(lowStockResources.length > 0 || lowStockVariants.length > 0) && (
-        <div className="mb-4 md:mb-6 bg-gradient-to-br from-orange-50 to-red-50 border-l-4 border-orange-500 rounded-xl p-3 md:p-5 shadow-lg animate-pulse-slow">
-          <div className="flex items-start gap-3 md:gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+        <div className="mb-4 md:mb-6 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/50 overflow-hidden">
+          <div className="bg-gradient-to-r from-red-50/80 to-orange-50/80 px-3 md:px-4 py-3 border-b border-red-200/50">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
                 <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </div>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-sm md:text-base font-bold text-orange-900 flex items-center gap-1.5 md:gap-2">
+              <div className="flex-1">
+                <h3 className="text-sm md:text-base font-bold text-slate-900 flex items-center gap-1.5 md:gap-2">
                   Alerte stock faible
-                  <span className="px-1.5 md:px-2 py-0.5 bg-orange-500 text-white text-[10px] md:text-xs font-bold rounded-full">
+                  <span className="px-1.5 md:px-2 py-0.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] md:text-xs font-bold rounded-full">
                     {lowStockResources.length + lowStockVariants.length}
                   </span>
                 </h3>
+                <p className="text-xs md:text-sm text-slate-600 mt-0.5">
+                  {lowStockResources.length + lowStockVariants.length === 1
+                    ? 'Une ressource/variante nécessite un réapprovisionnement'
+                    : `${lowStockResources.length + lowStockVariants.length} ressources/variantes nécessitent un réapprovisionnement`}
+                </p>
               </div>
-              <p className="text-xs md:text-sm text-orange-800 mb-3">
-                {lowStockResources.length + lowStockVariants.length === 1
-                  ? 'Une ressource/variante nécessite un réapprovisionnement'
-                  : `${lowStockResources.length + lowStockVariants.length} ressources/variantes nécessitent un réapprovisionnement`}
-              </p>
-              <div className="flex flex-wrap gap-1.5 md:gap-2">
-                {lowStockResources.map((resource) => (
-                  <div
-                    key={resource.id}
-                    className="flex items-center justify-between bg-white rounded-lg px-2 md:px-3 py-1.5 md:py-2 border border-orange-200 text-xs md:text-sm"
+            </div>
+          </div>
+          <div className="p-3 md:p-4">
+            <div className="flex flex-wrap gap-1.5 md:gap-2">
+              {lowStockResources.map((resource) => (
+                <div
+                  key={resource.id}
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-2 md:px-3 py-1.5 md:py-2 border border-slate-200 text-xs md:text-sm transition-colors"
+                >
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <Box className="w-3 h-3 md:w-4 md:h-4 text-slate-600" />
+                    <span className="font-medium text-slate-900 text-xs md:text-sm">{resource.name}</span>
+                    <span className="text-red-600 font-bold text-xs md:text-sm">
+                      {resource.has_variants && resource.total_variant_stock !== undefined
+                        ? resource.total_variant_stock
+                        : resource.stock_quantity}/{resource.low_stock_threshold}
+                    </span>
+                    <span className="text-[10px] md:text-xs text-slate-500 hidden sm:inline">(Ressource)</span>
+                  </div>
+                  <button
+                    onClick={() => setShowQuickFill({
+                      id: resource.id,
+                      name: resource.name,
+                      currentStock: resource.stock_quantity,
+                      type: 'resource'
+                    })}
+                    className="px-1.5 md:px-2 py-0.5 md:py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-[10px] md:text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm"
                   >
-                    <div className="flex items-center gap-1.5 md:gap-2">
-                      <Box className="w-3 h-3 md:w-4 md:h-4 text-orange-600" />
-                      <span className="font-medium text-slate-900 text-xs md:text-sm">{resource.name}</span>
-                      <span className="text-orange-600 font-bold text-xs md:text-sm">
-                        {resource.has_variants && resource.total_variant_stock !== undefined
-                          ? resource.total_variant_stock
-                          : resource.stock_quantity}/{resource.low_stock_threshold}
-                      </span>
-                      <span className="text-[10px] md:text-xs text-slate-500 hidden sm:inline">(Ressource)</span>
-                    </div>
-                    <button
-                      onClick={() => setShowQuickFill({
-                        id: resource.id,
-                        name: resource.name,
-                        currentStock: resource.stock_quantity,
-                        type: 'resource'
-                      })}
-                      className="px-1.5 md:px-2 py-0.5 md:py-1 bg-orange-500 text-white rounded text-[10px] md:text-xs hover:bg-orange-600 transition-colors font-medium"
-                    >
-                      Remplir
-                    </button>
+                    Remplir
+                  </button>
+                </div>
+              ))}
+              {lowStockVariants.sort((a, b) => {
+                const aName = `${a.resource_name}${a.subcategory ? ` - ${a.subcategory}` : ''} - ${a.variant_name}`;
+                const bName = `${b.resource_name}${b.subcategory ? ` - ${b.subcategory}` : ''} - ${b.variant_name}`;
+                return aName.localeCompare(bName);
+              }).map((variant) => (
+                <div
+                  key={variant.id}
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-2 md:px-3 py-1.5 md:py-2 border border-slate-200 text-xs md:text-sm transition-colors"
+                >
+                  <div className="flex items-center gap-1.5 md:gap-2">
+                    <Box className="w-3 h-3 md:w-4 md:h-4 text-slate-600" />
+                    <span className="font-medium text-slate-900 text-xs md:text-sm">
+                      {variant.resource_name}
+                      {variant.subcategory && ` - ${variant.subcategory}`}
+                      {' - '}{variant.variant_name}
+                    </span>
+                    <span className="text-red-600 font-bold text-xs md:text-sm">
+                      {variant.stock_quantity}/{variant.low_stock_threshold}
+                    </span>
+                    <span className="text-[10px] md:text-xs text-slate-500 hidden sm:inline">(Variante)</span>
                   </div>
-                ))}
-                {lowStockVariants.sort((a, b) => {
-                  const aName = `${a.resource_name}${a.subcategory ? ` - ${a.subcategory}` : ''} - ${a.variant_name}`;
-                  const bName = `${b.resource_name}${b.subcategory ? ` - ${b.subcategory}` : ''} - ${b.variant_name}`;
-                  return aName.localeCompare(bName);
-                }).map((variant) => (
-                  <div
-                    key={variant.id}
-                    className="flex items-center justify-between bg-white rounded-lg px-2 md:px-3 py-1.5 md:py-2 border border-orange-200 text-xs md:text-sm"
+                  <button
+                    onClick={() => setShowQuickFill({
+                      id: variant.id,
+                      name: `${variant.resource_name}${variant.subcategory ? ` - ${variant.subcategory}` : ''} - ${variant.variant_name}`,
+                      currentStock: variant.stock_quantity,
+                      type: 'variant'
+                    })}
+                    className="px-1.5 md:px-2 py-0.5 md:py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-[10px] md:text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm"
                   >
-                    <div className="flex items-center gap-1.5 md:gap-2">
-                      <Box className="w-3 h-3 md:w-4 md:h-4 text-orange-600" />
-                      <span className="font-medium text-slate-900 text-xs md:text-sm">
-                        {variant.resource_name}
-                        {variant.subcategory && ` - ${variant.subcategory}`}
-                        {' - '}{variant.variant_name}
-                      </span>
-                      <span className="text-orange-600 font-bold text-xs md:text-sm">
-                        {variant.stock_quantity}/{variant.low_stock_threshold}
-                      </span>
-                      <span className="text-[10px] md:text-xs text-slate-500 hidden sm:inline">(Variante)</span>
-                    </div>
-                    <button
-                      onClick={() => setShowQuickFill({
-                        id: variant.id,
-                        name: `${variant.resource_name}${variant.subcategory ? ` - ${variant.subcategory}` : ''} - ${variant.variant_name}`,
-                        currentStock: variant.stock_quantity,
-                        type: 'variant'
-                      })}
-                      className="px-1.5 md:px-2 py-0.5 md:py-1 bg-orange-500 text-white rounded text-[10px] md:text-xs hover:bg-orange-600 transition-colors font-medium"
-                    >
-                      Remplir
-                    </button>
-                  </div>
-                ))}
-                {(lowStockResources.length + lowStockVariants.length > 8) && (
-                  <div className="flex items-center gap-1.5 md:gap-2 bg-orange-100 rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm font-medium text-orange-700">
-                    +{lowStockResources.length + lowStockVariants.length - 8} autres
-                  </div>
-                )}
-              </div>
+                    Remplir
+                  </button>
+                </div>
+              ))}
+              {(lowStockResources.length + lowStockVariants.length > 8) && (
+                <div className="flex items-center gap-1.5 md:gap-2 bg-slate-100 rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm font-medium text-slate-700 border border-slate-200">
+                  +{lowStockResources.length + lowStockVariants.length - 8} autres
+                </div>
+              )}
             </div>
           </div>
         </div>

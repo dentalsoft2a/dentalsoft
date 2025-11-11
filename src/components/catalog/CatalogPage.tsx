@@ -392,64 +392,66 @@ export default function CatalogPage() {
       </div>
 
       {lowStockItems.length > 0 && (
-        <div className="mb-4 md:mb-6 bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-500 rounded-lg p-3 md:p-5 shadow-lg">
-          <div className="flex items-start gap-3 md:gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
+        <div className="mb-4 md:mb-6 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/50 overflow-hidden">
+          <div className="bg-gradient-to-r from-red-50/80 to-orange-50/80 px-3 md:px-4 py-3 border-b border-red-200/50">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
                 <AlertTriangle className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
+              <div className="flex-1">
+                <h3 className="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2">
+                  Alerte stock faible
+                  <span className="px-2 md:px-3 py-0.5 md:py-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs md:text-sm font-bold rounded-full">
+                    {lowStockItems.length}
+                  </span>
+                </h3>
+                <p className="text-xs md:text-sm text-slate-600 mt-0.5">
+                  {lowStockItems.length === 1
+                    ? 'Un article a atteint le seuil d\'alerte de stock'
+                    : `${lowStockItems.length} articles ont atteint leur seuil d'alerte de stock`}
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-base md:text-lg font-bold text-orange-900 mb-2 flex items-center gap-2">
-                Alerte stock faible
-                <span className="px-2 md:px-3 py-0.5 md:py-1 bg-orange-500 text-white text-xs md:text-sm font-bold rounded-full shadow">
-                  {lowStockItems.length}
-                </span>
-              </h3>
-              <p className="text-xs md:text-base text-orange-800 mb-3">
-                {lowStockItems.length === 1
-                  ? 'Un article a atteint le seuil d\'alerte de stock :'
-                  : `${lowStockItems.length} articles ont atteint leur seuil d'alerte de stock :`}
-              </p>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {lowStockItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between bg-white rounded-lg p-2 md:p-3 border border-orange-200 hover:border-orange-300 transition-colors"
-                  >
-                    <div className="flex items-center gap-2 md:gap-3">
-                      <Package className="w-4 h-4 md:w-5 md:h-5 text-orange-600" />
-                      <div>
-                        <p className="font-semibold text-slate-900 text-xs md:text-base">{item.name}</p>
-                        {item.category && (
-                          <p className="text-[10px] md:text-xs text-slate-600">{item.category}</p>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 md:gap-4">
-                      <div className="text-right">
-                        <p className="text-[10px] md:text-sm text-slate-600">Stock actuel</p>
-                        <p className="font-bold text-orange-600 text-xs md:text-base">
-                          {item.stock_quantity} {item.stock_unit}
-                        </p>
-                      </div>
-                      <div className="text-right hidden sm:block">
-                        <p className="text-[10px] md:text-sm text-slate-600">Seuil</p>
-                        <p className="font-medium text-slate-700 text-xs md:text-base">
-                          {item.low_stock_threshold} {item.stock_unit}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleOpenModal(item)}
-                        className="px-2 md:px-3 py-1.5 md:py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-xs md:text-sm font-medium whitespace-nowrap"
-                      >
-                        <span className="hidden sm:inline">Réapprovisionner</span>
-                        <span className="sm:hidden">Stock</span>
-                      </button>
+          </div>
+          <div className="p-3 md:p-4">
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {lowStockItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg p-2 md:p-3 border border-slate-200 transition-colors"
+                >
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <Package className="w-4 h-4 md:w-5 md:h-5 text-slate-600" />
+                    <div>
+                      <p className="font-semibold text-slate-900 text-xs md:text-base">{item.name}</p>
+                      {item.category && (
+                        <p className="text-[10px] md:text-xs text-slate-600">{item.category}</p>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="flex items-center gap-2 md:gap-4">
+                    <div className="text-right">
+                      <p className="text-[10px] md:text-sm text-slate-600">Stock actuel</p>
+                      <p className="font-bold text-red-600 text-xs md:text-base">
+                        {item.stock_quantity} {item.stock_unit}
+                      </p>
+                    </div>
+                    <div className="text-right hidden sm:block">
+                      <p className="text-[10px] md:text-sm text-slate-600">Seuil</p>
+                      <p className="font-medium text-slate-700 text-xs md:text-base">
+                        {item.low_stock_threshold} {item.stock_unit}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleOpenModal(item)}
+                      className="px-2 md:px-3 py-1.5 md:py-2 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-lg hover:from-primary-700 hover:to-cyan-700 transition-all text-xs md:text-sm font-medium whitespace-nowrap shadow-sm"
+                    >
+                      <span className="hidden sm:inline">Réapprovisionner</span>
+                      <span className="sm:hidden">Stock</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
