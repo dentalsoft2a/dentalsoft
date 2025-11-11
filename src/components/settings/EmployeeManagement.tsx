@@ -26,6 +26,7 @@ const AVAILABLE_MENUS = [
   { key: 'calendar', label: 'Calendrier' },
   { key: 'proformas', label: 'Devis' },
   { key: 'delivery-notes', label: 'Bons de livraison' },
+  { key: 'work-management', label: 'Gestion des travaux' },
   { key: 'invoices', label: 'Factures' },
   { key: 'photos', label: 'Photos reçues' },
   { key: 'dentists', label: 'Dentistes' },
