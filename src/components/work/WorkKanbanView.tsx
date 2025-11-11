@@ -86,6 +86,12 @@ export default function WorkKanbanView({
 
     if (!draggedNote || !user) return;
 
+    // Check if employee has permission to move to this stage
+    if (employeePerms.isEmployee && !employeePerms.canEditStage(targetStageId)) {
+      alert('Vous n\'avez pas la permission de déplacer ce travail vers cette étape.');
+      return;
+    }
+
     try {
       const note = deliveryNotes.find(n => n.id === draggedNote);
       if (!note) return;

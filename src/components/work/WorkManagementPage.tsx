@@ -200,6 +200,13 @@ export default function WorkManagementPage() {
       );
     }
 
+    // Employee filter: show only works in allowed stages
+    if (employeePerms.isEmployee && !employeePerms.canEditAllStages) {
+      filtered = filtered.filter(note =>
+        !note.current_stage_id || employeePerms.allowedStages.includes(note.current_stage_id)
+      );
+    }
+
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(note =>
