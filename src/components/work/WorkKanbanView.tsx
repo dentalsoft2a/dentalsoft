@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   User, Calendar, MessageSquare, AlertTriangle, Clock, Tag,
-  ArrowUpCircle, ArrowDownCircle, MinusCircle
+  ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package
 } from 'lucide-react';
 
 interface DeliveryNote {
@@ -11,6 +11,7 @@ interface DeliveryNote {
   delivery_number: string;
   date: string;
   patient_name: string | null;
+  items?: Array<{ description: string; quantity: number }>;
   status: 'pending' | 'in_progress' | 'completed';
   priority: 'urgent' | 'high' | 'normal' | 'low';
   progress_percentage: number;
@@ -146,6 +147,110 @@ export default function WorkKanbanView({
     return new Date(dueDate) < new Date();
   };
 
+  const advanceToNextStage = async (e: React.MouseEvent, noteId: string) => {
+    e.stopPropagation();
+
+    if (!user) return;
+
+    try {
+      const note = deliveryNotes.find(n => n.id === noteId);
+      if (!note) return;
+
+      // Find current stage index
+      const currentStageIndex = workStages.findIndex(s => s.id === note.current_stage_id);
+
+      // If no current stage, move to first stage
+      const nextStageIndex = currentStageIndex === -1 ? 0 : currentStageIndex + 1;
+
+      // Check if there's a next stage
+      if (nextStageIndex >= workStages.length) {
+        alert('Déjà à la dernière étape!');
+        return;
+      }
+
+      const nextStage = workStages[nextStageIndex];
+
+      // Mark previous stage as completed if exists
+      if (note.current_stage_id) {
+        const { data: existingStage } = await supabase
+          .from('delivery_note_stages')
+          .select('*')
+          .eq('delivery_note_id', noteId)
+          .eq('stage_id', note.current_stage_id)
+          .maybeSingle();
+
+        if (existingStage) {
+          await supabase
+            .from('delivery_note_stages')
+            .update({
+              is_completed: true,
+              completed_at: new Date().toISOString(),
+              completed_by: user.id,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingStage.id);
+        } else {
+          await supabase
+            .from('delivery_note_stages')
+            .insert({
+              delivery_note_id: noteId,
+              stage_id: note.current_stage_id,
+              is_completed: true,
+              completed_at: new Date().toISOString(),
+              completed_by: user.id
+            });
+        }
+      }
+
+      // Create or update next stage as current and incomplete
+      const { data: nextStageData } = await supabase
+        .from('delivery_note_stages')
+        .select('*')
+        .eq('delivery_note_id', noteId)
+        .eq('stage_id', nextStage.id)
+        .maybeSingle();
+
+      if (nextStageData) {
+        await supabase
+          .from('delivery_note_stages')
+          .update({
+            is_completed: false,
+            completed_at: null,
+            completed_by: null,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', nextStageData.id);
+      } else {
+        await supabase
+          .from('delivery_note_stages')
+          .insert({
+            delivery_note_id: noteId,
+            stage_id: nextStage.id,
+            is_completed: false
+          });
+      }
+
+      // Update delivery note current stage
+      await supabase
+        .from('delivery_notes')
+        .update({
+          current_stage_id: nextStage.id,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', noteId);
+
+      onRefresh();
+    } catch (error) {
+      console.error('Error advancing stage:', error);
+      alert('Erreur lors du passage à l\'étape suivante');
+    }
+  };
+
+  const canAdvanceStage = (note: DeliveryNote) => {
+    const currentStageIndex = workStages.findIndex(s => s.id === note.current_stage_id);
+    return currentStageIndex < workStages.length - 1 || currentStageIndex === -1;
+  };
+
   const renderNoteCard = (note: DeliveryNote) => (
     <div
       key={note.id}
@@ -190,6 +295,17 @@ export default function WorkKanbanView({
           </div>
         )}
 
+        {note.items && note.items.length > 0 && (
+          <div className="flex items-center gap-1.5 truncate">
+            <Package className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="truncate">
+              {note.items[0].description}
+              {note.items[0].quantity > 1 && ` (x${note.items[0].quantity})`}
+              {note.items.length > 1 && ` +${note.items.length - 1}`}
+            </span>
+          </div>
+        )}
+
         {note.due_date && (
           <div className={`flex items-center gap-1.5 ${
             isOverdue(note.due_date) && note.status !== 'completed' ? 'text-red-600 font-medium' : ''
@@ -214,17 +330,29 @@ export default function WorkKanbanView({
         )}
       </div>
 
-      <div className="mt-3 space-y-1">
-        <div className="flex items-center justify-between text-xs">
-          <span className="text-slate-600 font-medium">Progression</span>
-          <span className="text-slate-900 font-bold">{note.progress_percentage}%</span>
+      <div className="mt-3 space-y-2">
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-slate-600 font-medium">Progression</span>
+            <span className="text-slate-900 font-bold">{note.progress_percentage}%</span>
+          </div>
+          <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+            <div
+              className={`h-full bg-gradient-to-r ${getProgressColor(note.progress_percentage)} transition-all duration-500`}
+              style={{ width: `${note.progress_percentage}%` }}
+            />
+          </div>
         </div>
-        <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-          <div
-            className={`h-full bg-gradient-to-r ${getProgressColor(note.progress_percentage)} transition-all duration-500`}
-            style={{ width: `${note.progress_percentage}%` }}
-          />
-        </div>
+        {canAdvanceStage(note) && (
+          <button
+            onClick={(e) => advanceToNextStage(e, note.id)}
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-md hover:from-green-700 hover:to-emerald-700 transition-all text-xs font-medium shadow-sm hover:shadow-md"
+            title="Passer à l'étape suivante"
+          >
+            <ChevronsRight className="w-3.5 h-3.5" />
+            Étape suivante
+          </button>
+        )}
       </div>
     </div>
   );

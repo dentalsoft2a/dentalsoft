@@ -16,6 +16,7 @@ interface DeliveryNote {
   delivery_number: string;
   date: string;
   patient_name: string | null;
+  items?: Array<{ description: string; quantity: number }>;
   status: 'pending' | 'in_progress' | 'completed';
   priority: 'urgent' | 'high' | 'normal' | 'low';
   progress_percentage: number;
