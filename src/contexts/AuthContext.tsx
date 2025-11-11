@@ -277,6 +277,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
+        console.error('Impersonation failed:', result);
+
         if (result.error && result.error.includes('already have an active impersonation session')) {
           sessionStorage.removeItem('impersonation_session');
           sessionStorage.removeItem('admin_session');
