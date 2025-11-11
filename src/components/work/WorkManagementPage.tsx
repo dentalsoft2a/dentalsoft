@@ -93,7 +93,7 @@ export default function WorkManagementPage() {
 
     try {
       const { data, error } = await supabase
-        .from('work_stages')
+        .from('production_stages')
         .select('*')
         .eq('user_id', user.id)
         .eq('is_active', true)
@@ -117,7 +117,7 @@ export default function WorkManagementPage() {
         .select(`
           *,
           dentists(name),
-          current_stage:work_stages(name, color)
+          current_stage:production_stages(name, color)
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
