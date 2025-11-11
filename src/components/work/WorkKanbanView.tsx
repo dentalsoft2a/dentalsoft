@@ -83,6 +83,42 @@ export default function WorkKanbanView({
       const note = deliveryNotes.find(n => n.id === draggedNote);
       if (!note) return;
 
+      const targetStageIndex = workStages.findIndex(s => s.id === targetStageId);
+
+      // Mark all previous stages as completed
+      for (let i = 0; i < targetStageIndex; i++) {
+        const stage = workStages[i];
+        const { data: existingStageData } = await supabase
+          .from('delivery_note_stages')
+          .select('*')
+          .eq('delivery_note_id', draggedNote)
+          .eq('stage_id', stage.id)
+          .maybeSingle();
+
+        if (existingStageData) {
+          await supabase
+            .from('delivery_note_stages')
+            .update({
+              is_completed: true,
+              completed_at: new Date().toISOString(),
+              completed_by: user.id,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingStageData.id);
+        } else {
+          await supabase
+            .from('delivery_note_stages')
+            .insert({
+              delivery_note_id: draggedNote,
+              stage_id: stage.id,
+              is_completed: true,
+              completed_at: new Date().toISOString(),
+              completed_by: user.id
+            });
+        }
+      }
+
+      // Create or update target stage as current and incomplete
       const { data: existingStage } = await supabase
         .from('delivery_note_stages')
         .select('*')
@@ -91,7 +127,7 @@ export default function WorkKanbanView({
         .maybeSingle();
 
       if (existingStage) {
-        const { error } = await supabase
+        await supabase
           .from('delivery_note_stages')
           .update({
             is_completed: false,
@@ -100,19 +136,72 @@ export default function WorkKanbanView({
             updated_at: new Date().toISOString()
           })
           .eq('id', existingStage.id);
-
-        if (error) throw error;
       } else {
-        const { error } = await supabase
+        await supabase
           .from('delivery_note_stages')
           .insert({
             delivery_note_id: draggedNote,
             stage_id: targetStageId,
             is_completed: false
           });
-
-        if (error) throw error;
       }
+
+      // Mark all stages after target as incomplete
+      for (let i = targetStageIndex + 1; i < workStages.length; i++) {
+        const stage = workStages[i];
+        const { data: futureStageData } = await supabase
+          .from('delivery_note_stages')
+          .select('*')
+          .eq('delivery_note_id', draggedNote)
+          .eq('stage_id', stage.id)
+          .maybeSingle();
+
+        if (futureStageData) {
+          await supabase
+            .from('delivery_note_stages')
+            .update({
+              is_completed: false,
+              completed_at: null,
+              completed_by: null,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', futureStageData.id);
+        }
+      }
+
+      // Calculate progress based on completed stages weights
+      const { data: completedStages } = await supabase
+        .from('delivery_note_stages')
+        .select('stage_id, is_completed')
+        .eq('delivery_note_id', draggedNote)
+        .eq('is_completed', true);
+
+      const totalWeight = workStages.reduce((sum, stage) => sum + stage.weight, 0);
+      let completedWeight = 0;
+
+      if (completedStages) {
+        for (const completed of completedStages) {
+          const stage = workStages.find(s => s.id === completed.stage_id);
+          if (stage) {
+            completedWeight += stage.weight;
+          }
+        }
+      }
+
+      const progressPercentage = totalWeight > 0
+        ? Math.round((completedWeight / totalWeight) * 100)
+        : 0;
+
+      // Update delivery note with new stage and progress
+      await supabase
+        .from('delivery_notes')
+        .update({
+          current_stage_id: targetStageId,
+          progress_percentage: progressPercentage,
+          status: progressPercentage === 100 ? 'completed' : 'in_progress',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', draggedNote);
 
       onRefresh();
     } catch (error) {
@@ -230,11 +319,36 @@ export default function WorkKanbanView({
           });
       }
 
-      // Update delivery note current stage
+      // Calculate progress based on completed stages weights
+      const { data: completedStages } = await supabase
+        .from('delivery_note_stages')
+        .select('stage_id, is_completed')
+        .eq('delivery_note_id', noteId)
+        .eq('is_completed', true);
+
+      const totalWeight = workStages.reduce((sum, stage) => sum + stage.weight, 0);
+      let completedWeight = 0;
+
+      if (completedStages) {
+        for (const completed of completedStages) {
+          const stage = workStages.find(s => s.id === completed.stage_id);
+          if (stage) {
+            completedWeight += stage.weight;
+          }
+        }
+      }
+
+      const progressPercentage = totalWeight > 0
+        ? Math.round((completedWeight / totalWeight) * 100)
+        : 0;
+
+      // Update delivery note current stage and progress
       await supabase
         .from('delivery_notes')
         .update({
           current_stage_id: nextStage.id,
+          progress_percentage: progressPercentage,
+          status: progressPercentage === 100 ? 'completed' : 'in_progress',
           updated_at: new Date().toISOString()
         })
         .eq('id', noteId);
