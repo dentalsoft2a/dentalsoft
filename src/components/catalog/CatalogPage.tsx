@@ -18,6 +18,8 @@ export default function CatalogPage() {
   const [showModal, setShowModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(false);
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
+  const [showQuickFill, setShowQuickFill] = useState<{ id: string; name: string; currentStock: number } | null>(null);
+  const [quickFillQuantity, setQuickFillQuantity] = useState<number>(0);
 
   useLockScroll(showModal || showTutorial);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -276,6 +278,31 @@ export default function CatalogPage() {
     }
   };
 
+  const handleQuickFill = async () => {
+    if (!showQuickFill || quickFillQuantity <= 0) return;
+
+    try {
+      const newStock = showQuickFill.currentStock + quickFillQuantity;
+
+      const { error } = await supabase
+        .from('catalog_items')
+        .update({
+          stock_quantity: newStock,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', showQuickFill.id);
+
+      if (error) throw error;
+
+      await loadItems();
+      setShowQuickFill(null);
+      setQuickFillQuantity(0);
+    } catch (error) {
+      console.error('Error updating stock:', error);
+      alert('Erreur lors de la mise à jour du stock');
+    }
+  };
+
   const handleExport = () => {
     const exportData = items.map(({ id, user_id, created_at, updated_at, ...rest }) => rest);
     const dataStr = JSON.stringify(exportData, null, 2);
@@ -429,8 +456,12 @@ export default function CatalogPage() {
                     <span className="text-xs text-slate-500 hidden sm:inline">{item.stock_unit}</span>
                   </div>
                   <button
-                    onClick={() => handleOpenModal(item)}
-                    className="px-2 py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm ml-2 flex-shrink-0"
+                    onClick={() => setShowQuickFill({
+                      id: item.id,
+                      name: item.name,
+                      currentStock: item.stock_quantity
+                    })}
+                    className="px-1.5 md:px-2 py-0.5 md:py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-[10px] md:text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm whitespace-nowrap ml-2"
                   >
                     Remplir
                   </button>
@@ -1113,6 +1144,80 @@ export default function CatalogPage() {
               >
                 J'ai compris
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showQuickFill && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <h2 className="text-xl font-bold text-slate-900">Remplir le stock</h2>
+              <button
+                onClick={() => {
+                  setShowQuickFill(null);
+                  setQuickFillQuantity(0);
+                }}
+                className="p-2 hover:bg-slate-100 rounded-lg transition-all duration-200"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div>
+                <p className="text-sm text-slate-600 mb-2">Article</p>
+                <p className="font-bold text-slate-900">{showQuickFill.name}</p>
+              </div>
+
+              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-slate-600">Stock actuel</span>
+                  <span className="text-2xl font-bold text-slate-900">{showQuickFill.currentStock}</span>
+                </div>
+                <div className="flex items-center justify-center my-3">
+                  <span className="text-3xl text-slate-400">+</span>
+                </div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-slate-600">Quantité à ajouter</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={quickFillQuantity}
+                    onChange={(e) => setQuickFillQuantity(parseInt(e.target.value) || 0)}
+                    className="w-24 px-3 py-2 border border-slate-300 rounded-lg text-right font-bold text-xl focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    autoFocus
+                  />
+                </div>
+                <div className="border-t border-slate-300 my-3"></div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-slate-700">Nouveau stock</span>
+                  <span className="text-3xl font-bold text-emerald-600">{showQuickFill.currentStock + quickFillQuantity}</span>
+                </div>
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowQuickFill(null);
+                    setQuickFillQuantity(0);
+                  }}
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={handleQuickFill}
+                  disabled={quickFillQuantity <= 0}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg hover:shadow-xl rounded-lg hover:from-emerald-700 hover:to-teal-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save className="w-4 h-4" />
+                  Valider
+                </button>
+              </div>
             </div>
           </div>
         </div>
