@@ -11,10 +11,12 @@ interface ReferralReward {
   status: 'pending' | 'applied' | 'expired';
   created_at: string;
   applied_at: string | null;
-  user_profiles: {
+  profiles?: {
     first_name: string;
     last_name: string;
     laboratory_name: string;
+  };
+  user_profiles: {
     email: string;
   };
 }
@@ -54,7 +56,8 @@ export function ReferralManagement() {
         .from('referral_rewards')
         .select(`
           *,
-          user_profiles!inner(first_name, last_name, laboratory_name, email)
+          user_profiles!inner(email),
+          profiles(first_name, last_name, laboratory_name)
         `)
         .order('created_at', { ascending: false });
 
@@ -87,7 +90,9 @@ export function ReferralManagement() {
   };
 
   const handleApplyReward = async (reward: ReferralReward) => {
-    if (!confirm(`Appliquer la récompense de ${reward.days_added} jours pour ${reward.user_profiles.first_name} ${reward.user_profiles.last_name} ?`)) {
+    const firstName = reward.profiles?.first_name || 'Utilisateur';
+    const lastName = reward.profiles?.last_name || '';
+    if (!confirm(`Appliquer la récompense de ${reward.days_added} jours pour ${firstName} ${lastName} ?`)) {
       return;
     }
 
@@ -256,9 +261,9 @@ export function ReferralManagement() {
                     <td className="py-3 px-4">
                       <div>
                         <div className="font-medium text-slate-900">
-                          {reward.user_profiles.first_name} {reward.user_profiles.last_name}
+                          {reward.profiles?.first_name || 'N/A'} {reward.profiles?.last_name || ''}
                         </div>
-                        <div className="text-sm text-slate-500">{reward.user_profiles.laboratory_name}</div>
+                        <div className="text-sm text-slate-500">{reward.profiles?.laboratory_name || 'N/A'}</div>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-sm text-slate-600">{reward.user_profiles.email}</td>
