@@ -659,13 +659,13 @@ export default function WorkKanbanView({
       )}
       <div className="md:grid md:gap-3 lg:gap-4 space-y-4 md:space-y-0" style={{ gridTemplateColumns: visibleStages.length > 0 ? `repeat(${visibleStages.length + 1}, minmax(0, 1fr))` : '1fr' }}>
         <div className="min-w-0">
-          <div className="bg-slate-100 rounded-lg p-2.5 md:p-3 mb-2 md:mb-3 border-2 border-slate-200">
+          <div className="bg-gradient-to-br from-slate-100 to-slate-200/80 rounded-lg p-2.5 md:p-3 mb-2 md:mb-3 border border-slate-200/50 shadow-md hover:shadow-lg transition-all duration-200">
             <div className="flex items-center justify-between">
-              <h3 className="font-bold text-slate-700 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
-                <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-slate-400"></div>
+              <h3 className="font-bold bg-gradient-to-r from-slate-700 to-slate-600 bg-clip-text text-transparent flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
+                <div className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full bg-slate-400 shadow-sm"></div>
                 <span className="truncate">Non assigné</span>
               </h3>
-              <span className="text-xs md:text-sm font-semibold text-slate-600 bg-slate-200 px-1.5 md:px-2 py-0.5 rounded-full flex-shrink-0">
+              <span className="text-xs md:text-sm font-bold text-slate-700 bg-white/90 px-1.5 md:px-2 py-0.5 rounded-full flex-shrink-0 shadow-sm">
                 {getNotesWithoutStage().length}
               </span>
             </div>
@@ -689,22 +689,26 @@ export default function WorkKanbanView({
             onDrop={(e) => handleDrop(e, stage.id)}
           >
             <div
-              className={`rounded-lg p-2.5 md:p-3 mb-2 md:mb-3 border-2 transition-all ${
+              className={`rounded-lg p-2.5 md:p-3 mb-2 md:mb-3 border transition-all duration-200 ${
                 dragOverStage === stage.id
                   ? 'bg-primary-50 border-primary-400 shadow-lg scale-105'
-                  : 'border-slate-200'
+                  : 'border-slate-200/50 shadow-md hover:shadow-lg'
               }`}
-              style={{ backgroundColor: dragOverStage === stage.id ? undefined : `${stage.color}20` }}
+              style={{
+                background: dragOverStage === stage.id
+                  ? undefined
+                  : `linear-gradient(135deg, ${stage.color}15 0%, ${stage.color}25 100%)`
+              }}
             >
               <div className="flex items-center justify-between">
                 <h3 className="font-bold text-slate-800 flex items-center gap-1.5 md:gap-2 text-xs md:text-sm min-w-0">
                   <div
-                    className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full flex-shrink-0"
+                    className="w-1.5 h-1.5 md:w-2 md:h-2 rounded-full flex-shrink-0 shadow-sm"
                     style={{ backgroundColor: stage.color }}
                   ></div>
                   <span className="truncate">{stage.name}</span>
                 </h3>
-                <span className="text-xs md:text-sm font-semibold text-slate-600 bg-white/80 px-1.5 md:px-2 py-0.5 rounded-full flex-shrink-0">
+                <span className="text-xs md:text-sm font-bold text-slate-700 bg-white/90 px-1.5 md:px-2 py-0.5 rounded-full flex-shrink-0 shadow-sm">
                   {getNotesForStage(stage.id).length}
                 </span>
               </div>
