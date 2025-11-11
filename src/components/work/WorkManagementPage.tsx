@@ -121,6 +121,7 @@ export default function WorkManagementPage() {
           current_stage:production_stages(name, color)
         `)
         .eq('user_id', user.id)
+        .neq('status', 'completed')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
