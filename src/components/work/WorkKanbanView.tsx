@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   User, Calendar, MessageSquare, AlertTriangle, Clock, Tag,
-  ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package
+  ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package, CheckCircle
 } from 'lucide-react';
 
 interface DeliveryNote {
@@ -365,6 +365,71 @@ export default function WorkKanbanView({
     return currentStageIndex < workStages.length - 1 || currentStageIndex === -1;
   };
 
+  const isReadyToDeliver = (note: DeliveryNote) => {
+    if (!note.current_stage_id) return false;
+    const currentStage = workStages.find(s => s.id === note.current_stage_id);
+    return currentStage?.name.toLowerCase().includes('prêt à livrer') ||
+           currentStage?.name.toLowerCase().includes('pret a livrer');
+  };
+
+  const markAsDelivered = async (e: React.MouseEvent, noteId: string) => {
+    e.stopPropagation();
+
+    if (!user) return;
+
+    try {
+      const note = deliveryNotes.find(n => n.id === noteId);
+      if (!note) return;
+
+      // Mark current stage as completed
+      if (note.current_stage_id) {
+        const { data: currentStageData } = await supabase
+          .from('delivery_note_stages')
+          .select('*')
+          .eq('delivery_note_id', noteId)
+          .eq('stage_id', note.current_stage_id)
+          .maybeSingle();
+
+        if (currentStageData) {
+          await supabase
+            .from('delivery_note_stages')
+            .update({
+              is_completed: true,
+              completed_at: new Date().toISOString(),
+              completed_by: user.id,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', currentStageData.id);
+        } else {
+          await supabase
+            .from('delivery_note_stages')
+            .insert({
+              delivery_note_id: noteId,
+              stage_id: note.current_stage_id,
+              is_completed: true,
+              completed_at: new Date().toISOString(),
+              completed_by: user.id
+            });
+        }
+      }
+
+      // Update delivery note to completed status with 100% progress
+      await supabase
+        .from('delivery_notes')
+        .update({
+          status: 'completed',
+          progress_percentage: 100,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', noteId);
+
+      onRefresh();
+    } catch (error) {
+      console.error('Error marking as delivered:', error);
+      alert('Erreur lors du marquage comme livré');
+    }
+  };
+
   const renderNoteCard = (note: DeliveryNote) => (
     <div
       key={note.id}
@@ -457,7 +522,16 @@ export default function WorkKanbanView({
             />
           </div>
         </div>
-        {canAdvanceStage(note) && (
+        {isReadyToDeliver(note) ? (
+          <button
+            onClick={(e) => markAsDelivered(e, note.id)}
+            className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-md hover:from-blue-700 hover:to-cyan-700 transition-all text-xs font-medium shadow-sm hover:shadow-md animate-pulse"
+            title="Marquer comme livré"
+          >
+            <CheckCircle className="w-3.5 h-3.5" />
+            Livrer
+          </button>
+        ) : canAdvanceStage(note) && (
           <button
             onClick={(e) => advanceToNextStage(e, note.id)}
             className="w-full flex items-center justify-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-md hover:from-green-700 hover:to-emerald-700 transition-all text-xs font-medium shadow-sm hover:shadow-md"
