@@ -210,6 +210,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               console.warn('Referral processing failed:', referralError);
             }
           }
+
+          // Load the profile immediately after creation
+          await loadProfile(data.user.id);
         }
       }
 
