@@ -200,44 +200,75 @@ export default function EmployeeManagement() {
         if (error) throw error;
 
         if (employeeForm.password && editingEmployee.user_profile_id) {
-          const { error: pwError } = await supabase.auth.admin.updateUserById(
-            editingEmployee.user_profile_id,
-            { password: employeeForm.password }
-          );
-          if (pwError) {
+          try {
+            // Call Edge Function to update password
+            const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-employee`;
+            const { data: { session } } = await supabase.auth.getSession();
+
+            if (!session) {
+              throw new Error('No active session');
+            }
+
+            const response = await fetch(apiUrl, {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${session.access_token}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                action: 'updatePassword',
+                user_profile_id: editingEmployee.user_profile_id,
+                password: employeeForm.password,
+                email: employeeForm.email,
+                full_name: employeeForm.full_name,
+                role_name: employeeForm.role_name
+              })
+            });
+
+            const result = await response.json();
+
+            if (!response.ok) {
+              throw new Error(result.error || 'Failed to update password');
+            }
+
+            console.log('Password updated successfully:', result);
+          } catch (pwError: any) {
             console.error('Error updating password:', pwError);
-            alert('Employé mis à jour mais erreur lors de la mise à jour du mot de passe');
+            alert('Employé mis à jour mais erreur lors de la mise à jour du mot de passe: ' + pwError.message);
           }
         }
       } else {
         try {
-          const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-            email: employeeForm.email,
-            password: employeeForm.password,
-            email_confirm: true,
-            user_metadata: {
-              full_name: employeeForm.full_name
-            }
-          });
+          // Call Edge Function to create employee
+          const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/manage-employee`;
+          const { data: { session } } = await supabase.auth.getSession();
 
-          if (authError) throw authError;
-
-          if (!authData.user) {
-            throw new Error('Échec de la création du compte utilisateur');
+          if (!session) {
+            throw new Error('No active session');
           }
 
-          const { error: employeeError } = await supabase
-            .from('laboratory_employees')
-            .insert({
-              laboratory_profile_id: user.id,
-              user_profile_id: authData.user.id,
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              action: 'create',
               email: employeeForm.email,
+              password: employeeForm.password,
               full_name: employeeForm.full_name,
-              role_name: employeeForm.role_name,
-              created_by: user.id
-            });
+              role_name: employeeForm.role_name
+            })
+          });
 
-          if (employeeError) throw employeeError;
+          const result = await response.json();
+
+          if (!response.ok) {
+            throw new Error(result.error || 'Failed to create employee');
+          }
+
+          console.log('Employee created successfully:', result);
         } catch (createError: any) {
           console.error('Error creating employee:', createError);
           alert(`Erreur lors de la création de l'employé: ${createError.message}`);
