@@ -800,134 +800,136 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       <AlertBanner />
 
       {(lowStockItems.length > 0 || lowStockResources.length > 0 || lowStockVariants.length > 0) && (
-        <div className="mb-6 bg-gradient-to-br from-orange-50 to-red-50 border-l-4 border-orange-500 rounded-xl p-5 shadow-lg animate-pulse-slow">
-          <div className="flex items-start gap-4">
-            <div className="flex-shrink-0">
-              <div className="w-10 h-10 bg-orange-500 rounded-full flex items-center justify-center shadow-lg animate-pulse">
-                <AlertTriangle className="w-5 h-5 text-white" />
-              </div>
-            </div>
-            <div className="flex-1">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-base font-bold text-orange-900 flex items-center gap-2">
-                  Alerte stock faible
-                  <span className="px-2 py-0.5 bg-orange-500 text-white text-xs font-bold rounded-full">
-                    {lowStockItems.length + lowStockResources.length + lowStockVariants.length}
-                  </span>
-                </h3>
-                <div className="flex gap-2">
-                  {lowStockItems.length > 0 && (
-                    <button
-                      onClick={() => onNavigate?.('catalog')}
-                      className="text-sm font-medium text-orange-700 hover:text-orange-900 underline"
-                    >
-                      Voir le catalogue
-                    </button>
-                  )}
-                  {lowStockResources.length > 0 && (
-                    <button
-                      onClick={() => onNavigate?.('resources')}
-                      className="text-sm font-medium text-orange-700 hover:text-orange-900 underline"
-                    >
-                      Voir les ressources
-                    </button>
-                  )}
+        <div className="mb-6 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/50 overflow-hidden">
+          <div className="bg-gradient-to-r from-red-50/80 to-orange-50/80 px-4 py-3 border-b border-red-200/50">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center shadow-md">
+                  <AlertTriangle className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+                    Alerte stock faible
+                    <span className="px-2 py-0.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold rounded-full">
+                      {lowStockItems.length + lowStockResources.length + lowStockVariants.length}
+                    </span>
+                  </h3>
+                  <p className="text-sm text-slate-600 mt-0.5">
+                    {lowStockItems.length + lowStockResources.length + lowStockVariants.length === 1
+                      ? 'Un article/ressource nécessite un réapprovisionnement'
+                      : `${lowStockItems.length + lowStockResources.length + lowStockVariants.length} articles/ressources nécessitent un réapprovisionnement`}
+                  </p>
                 </div>
               </div>
-              <p className="text-sm text-orange-800 mb-3">
-                {lowStockItems.length + lowStockResources.length + lowStockVariants.length === 1
-                  ? 'Un article/ressource nécessite un réapprovisionnement'
-                  : `${lowStockItems.length + lowStockResources.length + lowStockVariants.length} articles/ressources nécessitent un réapprovisionnement`}
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {lowStockItems.slice(0, 8).map((item) => (
-                  <div
-                    key={item.id}
-                    className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-orange-200 text-sm"
+              <div className="flex gap-2">
+                {lowStockItems.length > 0 && (
+                  <button
+                    onClick={() => onNavigate?.('catalog')}
+                    className="text-sm font-medium text-primary-600 hover:text-primary-700 underline"
                   >
-                    <div className="flex items-center gap-2">
-                      <Archive className="w-4 h-4 text-orange-600" />
-                      <span className="font-medium text-slate-900">{item.name}</span>
-                      <span className="text-orange-600 font-bold">
-                        {item.stock_quantity}/{item.low_stock_threshold}
-                      </span>
-                      <span className="text-xs text-slate-500">(Catalogue)</span>
-                    </div>
-                    <button
-                      onClick={() => setShowQuickFill({
-                        id: item.id,
-                        name: item.name,
-                        currentStock: item.stock_quantity,
-                        type: 'catalog'
-                      })}
-                      className="px-2 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600 transition-colors font-medium"
-                    >
-                      Remplir
-                    </button>
-                  </div>
-                ))}
-                {lowStockResources.slice(0, 8).map((resource) => (
-                  <div
-                    key={resource.id}
-                    className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-orange-200 text-sm"
+                    Voir le catalogue
+                  </button>
+                )}
+                {lowStockResources.length > 0 && (
+                  <button
+                    onClick={() => onNavigate?.('resources')}
+                    className="text-sm font-medium text-primary-600 hover:text-primary-700 underline"
                   >
-                    <div className="flex items-center gap-2">
-                      <Package className="w-4 h-4 text-orange-600" />
-                      <span className="font-medium text-slate-900">{resource.name}</span>
-                      <span className="text-orange-600 font-bold">
-                        {resource.stock_quantity}/{resource.low_stock_threshold}
-                      </span>
-                      <span className="text-xs text-slate-500">(Ressource)</span>
-                    </div>
-                    <button
-                      onClick={() => setShowQuickFill({
-                        id: resource.id,
-                        name: resource.name,
-                        currentStock: resource.stock_quantity,
-                        type: 'resource'
-                      })}
-                      className="px-2 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600 transition-colors font-medium"
-                    >
-                      Remplir
-                    </button>
-                  </div>
-                ))}
-                {lowStockVariants.slice(0, 8).map((variant) => (
-                  <div
-                    key={variant.id}
-                    className="flex items-center justify-between bg-white rounded-lg px-3 py-2 border border-orange-200 text-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Package className="w-4 h-4 text-orange-600" />
-                      <span className="font-medium text-slate-900">
-                        {variant.resource.name}
-                        {variant.subcategory && ` - ${variant.subcategory}`}
-                        {' - '}{variant.variant_name}
-                      </span>
-                      <span className="text-orange-600 font-bold">
-                        {variant.stock_quantity}/{variant.low_stock_threshold}
-                      </span>
-                      <span className="text-xs text-slate-500">(Variante)</span>
-                    </div>
-                    <button
-                      onClick={() => setShowQuickFill({
-                        id: variant.id,
-                        name: `${variant.resource.name}${variant.subcategory ? ` - ${variant.subcategory}` : ''} - ${variant.variant_name}`,
-                        currentStock: variant.stock_quantity,
-                        type: 'variant'
-                      })}
-                      className="px-2 py-1 bg-orange-500 text-white rounded text-xs hover:bg-orange-600 transition-colors font-medium"
-                    >
-                      Remplir
-                    </button>
-                  </div>
-                ))}
-                {(lowStockItems.length + lowStockResources.length + lowStockVariants.length > 7) && (
-                  <div className="flex items-center gap-2 bg-orange-100 rounded-lg px-3 py-2 text-sm font-medium text-orange-700">
-                    +{lowStockItems.length + lowStockResources.length + lowStockVariants.length - 7} autres
-                  </div>
+                    Voir les ressources
+                  </button>
                 )}
               </div>
+            </div>
+          </div>
+          <div className="p-4">
+            <div className="flex flex-wrap gap-2">
+              {lowStockItems.slice(0, 8).map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-sm transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Archive className="w-4 h-4 text-slate-600" />
+                    <span className="font-medium text-slate-900">{item.name}</span>
+                    <span className="text-red-600 font-bold">
+                      {item.stock_quantity}/{item.low_stock_threshold}
+                    </span>
+                    <span className="text-xs text-slate-500">(Catalogue)</span>
+                  </div>
+                  <button
+                    onClick={() => setShowQuickFill({
+                      id: item.id,
+                      name: item.name,
+                      currentStock: item.stock_quantity,
+                      type: 'catalog'
+                    })}
+                    className="px-2 py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm"
+                  >
+                    Remplir
+                  </button>
+                </div>
+              ))}
+              {lowStockResources.slice(0, 8).map((resource) => (
+                <div
+                  key={resource.id}
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-sm transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-slate-600" />
+                    <span className="font-medium text-slate-900">{resource.name}</span>
+                    <span className="text-red-600 font-bold">
+                      {resource.stock_quantity}/{resource.low_stock_threshold}
+                    </span>
+                    <span className="text-xs text-slate-500">(Ressource)</span>
+                  </div>
+                  <button
+                    onClick={() => setShowQuickFill({
+                      id: resource.id,
+                      name: resource.name,
+                      currentStock: resource.stock_quantity,
+                      type: 'resource'
+                    })}
+                    className="px-2 py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm"
+                  >
+                    Remplir
+                  </button>
+                </div>
+              ))}
+              {lowStockVariants.slice(0, 8).map((variant) => (
+                <div
+                  key={variant.id}
+                  className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-sm transition-colors"
+                >
+                  <div className="flex items-center gap-2">
+                    <Package className="w-4 h-4 text-slate-600" />
+                    <span className="font-medium text-slate-900">
+                      {variant.resource.name}
+                      {variant.subcategory && ` - ${variant.subcategory}`}
+                      {' - '}{variant.variant_name}
+                    </span>
+                    <span className="text-red-600 font-bold">
+                      {variant.stock_quantity}/{variant.low_stock_threshold}
+                    </span>
+                    <span className="text-xs text-slate-500">(Variante)</span>
+                  </div>
+                  <button
+                    onClick={() => setShowQuickFill({
+                      id: variant.id,
+                      name: `${variant.resource.name}${variant.subcategory ? ` - ${variant.subcategory}` : ''} - ${variant.variant_name}`,
+                      currentStock: variant.stock_quantity,
+                      type: 'variant'
+                    })}
+                    className="px-2 py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm"
+                  >
+                    Remplir
+                  </button>
+                </div>
+              ))}
+              {(lowStockItems.length + lowStockResources.length + lowStockVariants.length > 7) && (
+                <div className="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-2 text-sm font-medium text-slate-700 border border-slate-200">
+                  +{lowStockItems.length + lowStockResources.length + lowStockVariants.length - 7} autres
+                </div>
+              )}
             </div>
           </div>
         </div>
