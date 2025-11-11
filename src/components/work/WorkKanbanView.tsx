@@ -130,7 +130,7 @@ export default function WorkKanbanView({
             })
             .eq('id', existingStageData.id);
         } else {
-          await supabase
+          const { error: insertError } = await supabase
             .from('delivery_note_stages')
             .insert({
               delivery_note_id: draggedNote,
@@ -139,6 +139,11 @@ export default function WorkKanbanView({
               completed_at: new Date().toISOString(),
               completed_by: user.id
             });
+
+          // Ignore permission errors (403) - employee may not have access to this stage
+          if (insertError && insertError.code !== '42501') {
+            throw insertError;
+          }
         }
       }
 
@@ -161,13 +166,18 @@ export default function WorkKanbanView({
           })
           .eq('id', existingStage.id);
       } else {
-        await supabase
+        const { error: insertError } = await supabase
           .from('delivery_note_stages')
           .insert({
             delivery_note_id: draggedNote,
             stage_id: targetStageId,
             is_completed: false
           });
+
+        // Ignore permission errors (403) - employee may not have access to this stage
+        if (insertError && insertError.code !== '42501') {
+          throw insertError;
+        }
       }
 
       // Mark all stages after target as incomplete
@@ -313,7 +323,7 @@ export default function WorkKanbanView({
           }
         } else {
           // Create new completed stage entry
-          await supabase
+          const { error: insertError } = await supabase
             .from('delivery_note_stages')
             .insert({
               delivery_note_id: noteId,
@@ -322,6 +332,11 @@ export default function WorkKanbanView({
               completed_at: new Date().toISOString(),
               completed_by: user.id
             });
+
+          // Ignore permission errors (403) - employee may not have access to this stage
+          if (insertError && insertError.code !== '42501') {
+            throw insertError;
+          }
         }
       }
 
@@ -344,13 +359,18 @@ export default function WorkKanbanView({
           })
           .eq('id', nextStageData.id);
       } else {
-        await supabase
+        const { error: insertError } = await supabase
           .from('delivery_note_stages')
           .insert({
             delivery_note_id: noteId,
             stage_id: nextStage.id,
             is_completed: false
           });
+
+        // Ignore permission errors (403) - employee may not have access to this stage
+        if (insertError && insertError.code !== '42501') {
+          throw insertError;
+        }
       }
 
       // Calculate progress based on completed stages weights
