@@ -303,12 +303,26 @@ export default function WorkDetailModal({
   };
 
   const advanceToNextStage = () => {
-    const firstIncompleteStage = workStages.find(
+    const firstIncompleteIndex = workStages.findIndex(
       stage => !stageProgress[stage.id]?.is_completed
     );
 
-    if (firstIncompleteStage) {
-      toggleStageCompletion(firstIncompleteStage.id);
+    if (firstIncompleteIndex !== -1) {
+      const newProgress = { ...stageProgress };
+
+      for (let i = 0; i <= firstIncompleteIndex; i++) {
+        const stage = workStages[i];
+        if (!newProgress[stage.id]?.is_completed) {
+          newProgress[stage.id] = {
+            ...newProgress[stage.id],
+            is_completed: true,
+            completed_at: new Date().toISOString(),
+            completed_by: user?.id || null
+          };
+        }
+      }
+
+      setStageProgress(newProgress);
     }
   };
 
