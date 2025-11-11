@@ -358,8 +358,8 @@ export default function WorkKanbanView({
   );
 
   return (
-    <div className="overflow-x-auto pb-4">
-      <div className="inline-flex gap-4 min-w-full">
+    <div className="overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-slate-100 hover:scrollbar-thumb-slate-400">
+      <div className="inline-flex gap-4 min-w-full px-1">
         <div className="w-80 flex-shrink-0">
           <div className="bg-slate-100 rounded-lg p-3 mb-3 border-2 border-slate-200">
             <div className="flex items-center justify-between">
