@@ -3,7 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import {
   X, Save, Check, Clock, User, Calendar, AlertTriangle,
-  MessageSquare, Send, Trash2, CheckCircle, Circle, Play, Pause
+  MessageSquare, Send, Trash2, CheckCircle, Circle, Play, Pause, ChevronsRight
 } from 'lucide-react';
 import DatePicker from '../common/DatePicker';
 import CustomSelect from '../common/CustomSelect';
@@ -305,6 +305,27 @@ export default function WorkDetailModal({
     return totalWeight > 0 ? Math.round((completedWeight / totalWeight) * 100) : 0;
   };
 
+  const advanceToNextStage = () => {
+    const firstIncompleteStage = workStages.find(
+      stage => !stageProgress[stage.id]?.is_completed
+    );
+
+    if (firstIncompleteStage) {
+      toggleStageCompletion(firstIncompleteStage.id);
+    }
+  };
+
+  const getNextStageName = () => {
+    const firstIncompleteStage = workStages.find(
+      stage => !stageProgress[stage.id]?.is_completed
+    );
+    return firstIncompleteStage?.name || 'Terminé';
+  };
+
+  const hasNextStage = () => {
+    return workStages.some(stage => !stageProgress[stage.id]?.is_completed);
+  };
+
   const getProgressColor = (percentage: number) => {
     if (percentage >= 75) return 'from-green-500 to-emerald-500';
     if (percentage >= 40) return 'from-orange-500 to-amber-500';
@@ -337,15 +358,29 @@ export default function WorkDetailModal({
           </div>
 
           <div className="mt-4">
-            <div className="flex items-center justify-between text-sm mb-2">
-              <span className="font-medium text-slate-700">Progression globale</span>
-              <span className="font-bold text-slate-900">{progress}%</span>
-            </div>
-            <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
-              <div
-                className={`h-full bg-gradient-to-r ${getProgressColor(progress)} transition-all duration-500`}
-                style={{ width: `${progress}%` }}
-              />
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex-1">
+                <div className="flex items-center justify-between text-sm mb-2">
+                  <span className="font-medium text-slate-700">Progression globale</span>
+                  <span className="font-bold text-slate-900">{progress}%</span>
+                </div>
+                <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full bg-gradient-to-r ${getProgressColor(progress)} transition-all duration-500`}
+                    style={{ width: `${progress}%` }}
+                  />
+                </div>
+              </div>
+              {hasNextStage() && (
+                <button
+                  onClick={advanceToNextStage}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl font-medium text-sm whitespace-nowrap"
+                  title="Passer à l'étape suivante"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                  <span className="hidden sm:inline">Étape suivante</span>
+                </button>
+              )}
             </div>
           </div>
         </div>
