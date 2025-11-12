@@ -791,12 +791,12 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
       )];
 
       // Build the query for available delivery notes
-      // Exclude pending_approval as they need to be approved first (converted to BL-)
+      // Include pending_approval for dentist-created BL that need to be converted to proforma
       let query = supabase
         .from('delivery_notes')
         .select('*, dentists(name)')
         .eq('user_id', user.id)
-        .in('status', ['pending', 'in_progress', 'completed']);
+        .in('status', ['pending', 'in_progress', 'completed', 'pending_approval']);
 
       // Exclude delivery notes that are already used in proformas
       if (usedDeliveryNoteIds.length > 0) {
@@ -1265,12 +1265,12 @@ function BulkCreateProformasModal({ onClose, onSave }: BulkCreateProformasModalP
       const endDate = new Date(year, month, 0);
 
       // Get all delivery notes for the selected month
-      // Exclude pending_approval as they need to be approved first (converted to BL-)
+      // Include pending_approval for dentist-created BL that need to be converted to proforma
       const { data: deliveryNotes, error: notesError } = await supabase
         .from('delivery_notes')
         .select('*, dentists(id, name)')
         .eq('user_id', user.id)
-        .in('status', ['pending', 'in_progress', 'completed'])
+        .in('status', ['pending', 'in_progress', 'completed', 'pending_approval'])
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
         .order('dentist_id')
