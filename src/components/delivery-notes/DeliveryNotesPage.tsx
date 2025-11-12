@@ -572,6 +572,9 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
     date: new Date().toISOString().split('T')[0],
     prescription_date: new Date().toISOString().split('T')[0],
     compliance_text: 'Je soussigné certifie que les prothèses dentaires ci-dessus ont été réalisées conformément aux normes en vigueur et aux spécifications du praticien.',
+    work_description: '',
+    tooth_numbers: '',
+    shade: '',
   });
   const [items, setItems] = useState<Array<{
     description: string;
@@ -662,6 +665,9 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
         date: data.date,
         prescription_date: data.prescription_date || '',
         compliance_text: data.compliance_text || '',
+        work_description: (data as any).work_description || '',
+        tooth_numbers: (data as any).tooth_numbers || '',
+        shade: (data as any).shade || '',
       });
 
       const itemsData = Array.isArray(data.items) ? data.items : [];
@@ -706,6 +712,9 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
             prescription_date: formData.prescription_date || null,
             items: items as any,
             compliance_text: formData.compliance_text,
+            work_description: formData.work_description || null,
+            tooth_numbers: formData.tooth_numbers || null,
+            shade: formData.shade || null,
             updated_at: new Date().toISOString(),
           })
           .eq('id', noteId);
@@ -807,6 +816,66 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                 </div>
               </div>
             </div>
+
+            {(formData.work_description || formData.tooth_numbers || formData.shade) && (
+              <div className="bg-gradient-to-br from-blue-50/50 to-cyan-50/50 p-3 md:p-5 rounded-xl md:rounded-2xl border border-blue-200/50 shadow-sm">
+                <h3 className="text-sm md:text-base font-bold text-slate-800 mb-3 md:mb-4 flex items-center gap-2">
+                  <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-blue-500 to-cyan-500 rounded-full"></div>
+                  Informations de la demande du dentiste
+                </h3>
+                <div className="grid grid-cols-1 gap-3 md:gap-4">
+                  {formData.work_description && (
+                    <div className="group">
+                      <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors group-focus-within:text-blue-600 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 group-focus-within:scale-150 transition-transform"></span>
+                        Description du travail
+                      </label>
+                      <textarea
+                        value={formData.work_description}
+                        onChange={(e) => setFormData({ ...formData, work_description: e.target.value })}
+                        placeholder="Description du travail demandé"
+                        rows={3}
+                        className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-slate-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 outline-none transition-all duration-300 hover:border-blue-300 placeholder:text-slate-400 bg-white shadow-sm"
+                      />
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                    {formData.tooth_numbers && (
+                      <div className="group">
+                        <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors group-focus-within:text-cyan-600 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 group-focus-within:scale-150 transition-transform"></span>
+                          Numéros de dents
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.tooth_numbers}
+                          onChange={(e) => setFormData({ ...formData, tooth_numbers: e.target.value })}
+                          placeholder="Ex: 11, 12, 13"
+                          className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-slate-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all duration-300 hover:border-cyan-300 placeholder:text-slate-400 bg-white shadow-sm"
+                        />
+                      </div>
+                    )}
+
+                    {formData.shade && (
+                      <div className="group">
+                        <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors group-focus-within:text-blue-600 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 group-focus-within:scale-150 transition-transform"></span>
+                          Teinte
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.shade}
+                          onChange={(e) => setFormData({ ...formData, shade: e.target.value })}
+                          placeholder="Ex: A2"
+                          className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-slate-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 outline-none transition-all duration-300 hover:border-blue-300 placeholder:text-slate-400 bg-white shadow-sm"
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="bg-gradient-to-br from-cyan-50/50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
               <h3 className="text-sm md:text-base font-bold text-slate-800 mb-3 md:mb-4 flex items-center gap-2">
