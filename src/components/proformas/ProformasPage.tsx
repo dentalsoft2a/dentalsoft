@@ -687,37 +687,15 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
     if (!user) return;
 
     try {
-      const year = new Date().getFullYear();
-
-      // Get all proforma numbers for this year (GLOBALLY, not per user)
-      // The constraint is global, so numbers must be unique across all users
-      const { data, error } = await supabase
-        .from('proformas')
-        .select('proforma_number')
-        .like('proforma_number', `PRO-${year}-%`)
-        .order('proforma_number', { ascending: false });
+      // Use PostgreSQL function to generate next number (bypasses RLS)
+      const { data: nextNumber, error } = await supabase
+        .rpc('generate_next_proforma_number');
 
       if (error) throw error;
 
-      let nextNumber = 1;
-
-      if (data && data.length > 0) {
-        // Extract all numbers for current year and find the highest
-        const numbers = data
-          .map(p => {
-            const match = p.proforma_number.match(/PRO-(\d{4})-(\d+)/);
-            return match ? parseInt(match[2]) : 0;
-          })
-          .filter(n => n > 0);
-
-        if (numbers.length > 0) {
-          nextNumber = Math.max(...numbers) + 1;
-        }
-      }
-
       setFormData((prev) => ({
         ...prev,
-        proforma_number: `PRO-${year}-${String(nextNumber).padStart(4, '0')}`,
+        proforma_number: nextNumber as string,
       }));
     } catch (error) {
       console.error('Error generating proforma number:', error);
@@ -973,7 +951,6 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
         }
       } else {
         // Re-generate proforma number just before insert to avoid duplicates with retry logic
-        const year = new Date().getFullYear();
         let proformaData = null;
         let attempts = 0;
         const maxAttempts = 5;
@@ -986,44 +963,17 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
             await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
           }
 
-          // Get all proforma numbers for this year (GLOBALLY, not per user)
-          // The constraint is global, so numbers must be unique across all users
-          const { data: yearProformas } = await supabase
-            .from('proformas')
-            .select('proforma_number')
-            .like('proforma_number', `PRO-${year}-%`)
-            .order('proforma_number', { ascending: false });
+          // Use PostgreSQL function to generate next number (bypasses RLS)
+          const { data: nextNumberData, error: rpcError } = await supabase
+            .rpc('generate_next_proforma_number');
 
-          let nextNumber = 1;
-
-          if (yearProformas && yearProformas.length > 0) {
-            // Extract all numbers for current year and find the highest
-            const numbers = yearProformas
-              .map(p => {
-                const match = p.proforma_number.match(/PRO-(\d{4})-(\d+)/);
-                return match ? parseInt(match[2]) : 0;
-              })
-              .filter(n => n > 0);
-
-            if (numbers.length > 0) {
-              nextNumber = Math.max(...numbers) + 1;
-            }
+          if (rpcError) {
+            console.error('Error generating proforma number:', rpcError);
+            throw rpcError;
           }
 
-          const finalProformaNumber = `PRO-${year}-${String(nextNumber).padStart(4, '0')}`;
-
-          // Double-check this number doesn't exist globally (race condition protection)
-          const { data: existingProforma } = await supabase
-            .from('proformas')
-            .select('id')
-            .eq('proforma_number', finalProformaNumber)
-            .maybeSingle();
-
-          if (existingProforma) {
-            // Number already exists globally, retry
-            console.log(`Proforma number ${finalProformaNumber} already exists, retrying...`);
-            continue;
-          }
+          const finalProformaNumber = nextNumberData as string;
+          console.log(`[Attempt ${attempts}] Generated proforma number: ${finalProformaNumber}`);
 
           // Try to insert
           const { data: insertedProforma, error: proformaError } = await supabase
