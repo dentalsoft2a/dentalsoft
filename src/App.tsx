@@ -255,9 +255,12 @@ function AppContent() {
   }
 
   // If subscription is expired or cancelled, redirect to subscription page
+  // Only redirect if subscription status has been loaded (not null)
   const hasValidSubscription = subscriptionStatus === 'active' || subscriptionStatus === 'trial';
-  const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'work-management', 'settings', 'subscription', 'support', 'help-center'];
-  if (!hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(currentPath)) {
+  const allowedPagesForCancelled = ['', 'dashboard', 'proformas', 'invoices', 'delivery-notes', 'work-management', 'settings', 'subscription', 'support', 'help-center'];
+
+  // Don't redirect if subscription status hasn't been loaded yet
+  if (!checkingUserType && subscriptionStatus !== null && !hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(currentPath)) {
     return <Navigate to="/subscription" replace />;
   }
 
