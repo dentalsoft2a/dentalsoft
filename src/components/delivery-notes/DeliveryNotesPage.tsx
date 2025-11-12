@@ -94,9 +94,43 @@ export default function DeliveryNotesPage() {
     if (!confirm('Approuver cette demande et commencer le travail ?')) return;
 
     try {
+      const { data: note, error: fetchError } = await supabase
+        .from('delivery_notes')
+        .select('*')
+        .eq('id', noteId)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      if (!note) throw new Error('Bon de livraison introuvable');
+
+      const noteData = note as any;
+      let items = noteData.items || [];
+
+      if (items.length === 0 && noteData.work_description) {
+        items = [{
+          description: noteData.work_description,
+          tooth_number: noteData.tooth_numbers || '',
+          shade: noteData.shade || '',
+          quantity: 1,
+          unit: 'unité',
+          unit_price: 0,
+          catalog_item_id: null,
+          resource_variants: {}
+        }];
+      } else if (items.length > 0) {
+        items = items.map((item: any, index: number) => ({
+          ...item,
+          description: index === 0 && noteData.work_description ? noteData.work_description : item.description,
+          tooth_number: index === 0 && noteData.tooth_numbers ? noteData.tooth_numbers : item.tooth_number
+        }));
+      }
+
       const { error } = await supabase
         .from('delivery_notes')
-        .update({ status: 'pending' })
+        .update({
+          status: 'pending',
+          items: items
+        })
         .eq('id', noteId);
 
       if (error) throw error;
