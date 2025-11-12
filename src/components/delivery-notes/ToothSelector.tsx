@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Check } from 'lucide-react';
 
 interface ToothSelectorProps {
@@ -63,6 +64,32 @@ const TEETH_DATA = [
 
 export default function ToothSelector({ selectedTeeth, onChange }: ToothSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (isOpen) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      window.addEventListener('scroll', handleScroll, true);
+      return () => window.removeEventListener('scroll', handleScroll, true);
+    }
+  }, [isOpen]);
 
   const toggleTooth = (toothValue: string) => {
     if (selectedTeeth.includes(toothValue)) {
@@ -80,40 +107,20 @@ export default function ToothSelector({ selectedTeeth, onChange }: ToothSelector
     ? 'Sélectionner des dents'
     : selectedTeeth.join(', ');
 
-  return (
-    <div className="relative">
-      <button
-        type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white shadow-sm text-left flex items-center justify-between"
+  const dropdown = isOpen ? createPortal(
+    <>
+      <div
+        className="fixed inset-0 z-[99998]"
+        onClick={() => setIsOpen(false)}
+      />
+      <div
+        className="fixed z-[99999] bg-white border border-slate-200 rounded-lg shadow-2xl max-h-96 overflow-y-auto"
+        style={{
+          top: `${dropdownPosition.top}px`,
+          left: `${dropdownPosition.left}px`,
+          width: `${dropdownPosition.width}px`
+        }}
       >
-        <span className={selectedTeeth.length === 0 ? 'text-slate-400' : 'text-slate-900'}>
-          {displayText}
-        </span>
-        <div className="flex items-center gap-2">
-          {selectedTeeth.length > 0 && (
-            <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-bold rounded-full">
-              {selectedTeeth.length}
-            </span>
-          )}
-          <svg
-            className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </div>
-      </button>
-
-      {isOpen && (
-        <>
-          <div
-            className="fixed inset-0 z-[9998]"
-            onClick={() => setIsOpen(false)}
-          />
-          <div className="absolute left-0 right-0 z-[9999] mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-96 overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-slate-200 p-3 flex items-center justify-between z-10">
               <span className="text-sm font-bold text-slate-700">
                 {selectedTeeth.length} dent{selectedTeeth.length !== 1 ? 's' : ''} sélectionnée{selectedTeeth.length !== 1 ? 's' : ''}
@@ -172,9 +179,39 @@ export default function ToothSelector({ selectedTeeth, onChange }: ToothSelector
                 </div>
               </div>
             ))}
-          </div>
-        </>
-      )}
+      </div>
+    </>,
+    document.body
+  ) : null;
+
+  return (
+    <div className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white shadow-sm text-left flex items-center justify-between"
+      >
+        <span className={selectedTeeth.length === 0 ? 'text-slate-400' : 'text-slate-900'}>
+          {displayText}
+        </span>
+        <div className="flex items-center gap-2">
+          {selectedTeeth.length > 0 && (
+            <span className="px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-bold rounded-full">
+              {selectedTeeth.length}
+            </span>
+          )}
+          <svg
+            className={`w-4 h-4 text-slate-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+      {dropdown}
     </div>
   );
 }
