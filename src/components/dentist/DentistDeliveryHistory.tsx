@@ -72,11 +72,10 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
       const dentistIds = dentistProfiles.map(d => d.id);
       console.log('🎯 Dentist IDs to filter:', dentistIds);
 
-      // Load delivery notes (DENT- prefixed and created by this dentist)
+      // Load ALL delivery notes for this dentist (both DENT- requests and approved BL-)
       const { data: deliveryData, error: deliveryError } = await supabase
         .from('delivery_notes')
         .select('*, dentists(name, user_id)')
-        .like('delivery_number', 'DENT-%')
         .in('dentist_id', dentistIds)
         .order('created_at', { ascending: false });
 
@@ -418,8 +417,17 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
                           <h3 className="font-bold text-slate-900 text-base md:text-lg">
                             {request.delivery_number}
                           </h3>
-                          <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full">
-                            {request.type === 'quote' ? 'Devis' : 'Commande'}
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            request.delivery_number.startsWith('DENT-')
+                              ? 'bg-amber-100 text-amber-700'
+                              : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {request.type === 'quote'
+                              ? 'Devis'
+                              : request.delivery_number.startsWith('DENT-')
+                                ? 'Demande'
+                                : 'Commande'
+                            }
                           </span>
                         </div>
                         <p className="text-xs md:text-sm text-slate-600 mb-1">
@@ -485,7 +493,12 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
                   )}
                   <div className="min-w-0 flex-1">
                     <h3 className="font-bold text-slate-900 text-base md:text-xl">
-                      {selectedRequest.type === 'quote' ? 'Demande de devis' : 'Commande directe'}
+                      {selectedRequest.type === 'quote'
+                        ? 'Demande de devis'
+                        : selectedRequest.delivery_number.startsWith('DENT-')
+                          ? 'Demande en attente d\'approbation'
+                          : 'Commande approuvée'
+                      }
                     </h3>
                     <p className="text-slate-600 text-xs md:text-sm">Statut de votre demande</p>
                   </div>
