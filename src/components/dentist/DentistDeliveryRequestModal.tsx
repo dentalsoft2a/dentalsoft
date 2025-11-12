@@ -106,26 +106,26 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
 
       const deliveryNumber = `DENT-${nextNumber.toString().padStart(6, '0')}`;
 
-      const deliveryNoteData = {
-        user_id: selectedLab,
-        dentist_id: dentistData.id,
-        delivery_number: deliveryNumber,
-        patient_name: patientName,
-        date: requestedDeliveryDate || new Date().toISOString().split('T')[0],
-        status: 'pending_approval',
-        created_by_dentist: true,
-        notes: `Description: ${workDescription}${toothNumbers ? `\nDents: ${toothNumbers}` : ''}${shade ? `\nTeinte: ${shade}` : ''}${notes ? `\n\nNotes: ${notes}` : ''}`
-      };
+      const notesText = `Description: ${workDescription}${toothNumbers ? `\nDents: ${toothNumbers}` : ''}${shade ? `\nTeinte: ${shade}` : ''}${notes ? `\n\nNotes: ${notes}` : ''}`;
 
       const { data: deliveryNote, error: insertError } = await supabase
-        .from('delivery_notes')
-        .insert(deliveryNoteData)
-        .select()
-        .single();
+        .rpc('insert_delivery_note_for_dentist', {
+          p_user_id: selectedLab,
+          p_dentist_id: dentistData.id,
+          p_delivery_number: deliveryNumber,
+          p_patient_name: patientName,
+          p_date: requestedDeliveryDate || new Date().toISOString().split('T')[0],
+          p_status: 'pending_approval',
+          p_notes: notesText
+        });
 
       if (insertError) {
         console.error('Insert error:', insertError);
         throw insertError;
+      }
+
+      if (!deliveryNote) {
+        throw new Error('Failed to create delivery note');
       }
 
       const { data: dentistAccount } = await supabase
