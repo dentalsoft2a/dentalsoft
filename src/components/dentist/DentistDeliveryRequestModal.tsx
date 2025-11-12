@@ -178,30 +178,54 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
         return;
       }
 
-      // Handle direct order
-      const deliveryNumber = `DENT-${nextNumber.toString().padStart(6, '0')}`;
+      // Handle direct order with retry logic for duplicate numbers
+      let deliveryNumber = `DENT-${nextNumber.toString().padStart(6, '0')}`;
+      let deliveryNote: any = null;
+      let insertError: any = null;
+      let retryCount = 0;
+      const maxRetries = 5;
 
-      const { data: deliveryNote, error: insertError } = await supabase
-        .rpc('insert_delivery_note_for_dentist', {
-          p_user_id: selectedLab,
-          p_dentist_id: dentistData.id,
-          p_delivery_number: deliveryNumber,
-          p_patient_name: patientName,
-          p_date: requestedDeliveryDate || new Date().toISOString().split('T')[0],
-          p_status: 'pending_approval',
-          p_notes: notes || null,
-          p_work_description: workDescription,
-          p_tooth_numbers: toothNumbers || null,
-          p_shade: shade || null
-        });
+      // Try to insert with retry logic in case of duplicate
+      while (retryCount < maxRetries && !deliveryNote) {
+        const result = await supabase
+          .rpc('insert_delivery_note_for_dentist', {
+            p_user_id: selectedLab,
+            p_dentist_id: dentistData.id,
+            p_delivery_number: deliveryNumber,
+            p_patient_name: patientName,
+            p_date: requestedDeliveryDate || new Date().toISOString().split('T')[0],
+            p_status: 'pending_approval',
+            p_notes: notes || null,
+            p_work_description: workDescription,
+            p_tooth_numbers: toothNumbers || null,
+            p_shade: shade || null
+          });
+
+        if (result.error) {
+          insertError = result.error;
+          // If duplicate key error, increment the number and retry
+          if (result.error.code === '23505' && retryCount < maxRetries - 1) {
+            nextNumber++;
+            deliveryNumber = `DENT-${nextNumber.toString().padStart(6, '0')}`;
+            retryCount++;
+            console.log(`Duplicate detected, retrying with ${deliveryNumber} (attempt ${retryCount + 1}/${maxRetries})`);
+          } else {
+            break;
+          }
+        } else {
+          deliveryNote = result.data;
+          insertError = null;
+          break;
+        }
+      }
 
       if (insertError) {
-        console.error('Insert error:', insertError);
+        console.error('Insert error after retries:', insertError);
         throw insertError;
       }
 
       if (!deliveryNote) {
-        throw new Error('Failed to create delivery note');
+        throw new Error('Failed to create delivery note after multiple attempts');
       }
 
       const { data: dentistAccount } = await supabase
