@@ -110,18 +110,21 @@ export default function ToothSelector({ selectedTeeth, onChange }: ToothSelector
       {isOpen && (
         <>
           <div
-            className="fixed inset-0 z-10"
+            className="fixed inset-0 z-[9998]"
             onClick={() => setIsOpen(false)}
           />
-          <div className="absolute z-20 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-96 overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-slate-200 p-3 flex items-center justify-between">
+          <div className="absolute left-0 right-0 z-[9999] mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-96 overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-slate-200 p-3 flex items-center justify-between z-10">
               <span className="text-sm font-bold text-slate-700">
                 {selectedTeeth.length} dent{selectedTeeth.length !== 1 ? 's' : ''} sélectionnée{selectedTeeth.length !== 1 ? 's' : ''}
               </span>
               {selectedTeeth.length > 0 && (
                 <button
                   type="button"
-                  onClick={clearAll}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    clearAll();
+                  }}
                   className="text-xs text-red-600 hover:text-red-700 font-semibold"
                 >
                   Tout effacer
@@ -143,7 +146,10 @@ export default function ToothSelector({ selectedTeeth, onChange }: ToothSelector
                       <button
                         key={tooth.value}
                         type="button"
-                        onClick={() => toggleTooth(tooth.value)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleTooth(tooth.value);
+                        }}
                         className={`w-full text-left px-3 py-2 rounded-lg mb-1 transition-all flex items-center gap-2 ${
                           isSelected
                             ? 'bg-primary-100 text-primary-900 font-semibold'
@@ -151,7 +157,7 @@ export default function ToothSelector({ selectedTeeth, onChange }: ToothSelector
                         }`}
                       >
                         <div
-                          className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                          className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
                             isSelected
                               ? 'border-primary-500 bg-primary-500'
                               : 'border-slate-300'
