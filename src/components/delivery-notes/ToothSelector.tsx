@@ -88,9 +88,13 @@ export default function ToothSelector({ selectedTeeth, onChange }: ToothSelector
   }, [isOpen]);
 
   useEffect(() => {
-    const handleScroll = () => {
-      if (isOpen) {
-        setIsOpen(false);
+    const handleScroll = (e: Event) => {
+      // Ne fermer que si le scroll ne provient pas du dropdown lui-même
+      if (isOpen && e.target !== e.currentTarget) {
+        const dropdown = document.querySelector('[data-tooth-dropdown]');
+        if (dropdown && !dropdown.contains(e.target as Node)) {
+          setIsOpen(false);
+        }
       }
     };
 
@@ -123,6 +127,7 @@ export default function ToothSelector({ selectedTeeth, onChange }: ToothSelector
         onClick={() => setIsOpen(false)}
       />
       <div
+        data-tooth-dropdown
         className="fixed z-[99999] bg-white border border-slate-200 rounded-lg shadow-2xl max-h-96 overflow-y-auto"
         style={{
           top: `${dropdownPosition.top}px`,
