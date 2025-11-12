@@ -92,8 +92,6 @@ export default function DeliveryNotesPage() {
   };
 
   const handleApproveRequest = async (noteId: string) => {
-    if (!confirm('Approuver cette demande et commencer le travail ?')) return;
-
     try {
       const { data: note, error: fetchError } = await supabase
         .from('delivery_notes')
@@ -105,6 +103,20 @@ export default function DeliveryNotesPage() {
       if (!note) throw new Error('Bon de livraison introuvable');
 
       const noteData = note as any;
+
+      // Validate that all items have prices
+      const noteItems = noteData.items || [];
+      const hasInvalidPrices = noteItems.some((item: any) => {
+        const price = parseFloat(item.unit_price);
+        return isNaN(price) || price <= 0;
+      });
+
+      if (hasInvalidPrices) {
+        alert('Impossible d\'approuver cette demande : tous les articles doivent avoir un prix supérieur à 0. Veuillez d\'abord modifier le BL pour ajouter les prix.');
+        return;
+      }
+
+      if (!confirm('Approuver cette demande et commencer le travail ?')) return;
 
       // Generate a classic BL number
       const { data: lastDeliveryNote } = await supabase
