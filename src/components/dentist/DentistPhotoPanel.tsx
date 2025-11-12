@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, X, Send, CheckCircle, LogOut, History, ClipboardList } from 'lucide-react';
+import { Camera, X, Send, CheckCircle, LogOut, History, ClipboardList, Package } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
 import DentistPhotoHistory from './DentistPhotoHistory';
 import DentistDeliveryRequestModal from './DentistDeliveryRequestModal';
+import DentistDeliveryHistory from './DentistDeliveryHistory';
 import LaboratorySelector from './LaboratorySelector';
 
 export default function DentistPhotoPanel() {
@@ -21,8 +22,9 @@ export default function DentistPhotoPanel() {
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [showHistory, setShowHistory] = useState(false);
   const [showDeliveryRequest, setShowDeliveryRequest] = useState(false);
+  const [showDeliveryHistory, setShowDeliveryHistory] = useState(false);
 
-  useLockScroll(showModal || showHistory || showDeliveryRequest);
+  useLockScroll(showModal || showHistory || showDeliveryRequest || showDeliveryHistory);
 
   useEffect(() => {
     loadDentistId();
@@ -193,9 +195,16 @@ export default function DentistPhotoPanel() {
               <ClipboardList className="w-6 h-6 text-white drop-shadow-lg" />
             </button>
             <button
+              onClick={() => setShowDeliveryHistory(true)}
+              className="p-3 bg-white/30 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all shadow-lg"
+              title="Mes commandes"
+            >
+              <Package className="w-6 h-6 text-white drop-shadow-lg" />
+            </button>
+            <button
               onClick={() => setShowHistory(true)}
               className="p-3 bg-white/30 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all shadow-lg"
-              title="Voir l'historique"
+              title="Historique des photos"
             >
               <History className="w-6 h-6 text-white drop-shadow-lg" />
             </button>
@@ -316,6 +325,7 @@ export default function DentistPhotoPanel() {
       )}
 
       {showHistory && <DentistPhotoHistory onClose={() => setShowHistory(false)} />}
+      {showDeliveryHistory && <DentistDeliveryHistory onClose={() => setShowDeliveryHistory(false)} />}
       {showDeliveryRequest && (
         dentistId ? (
           <DentistDeliveryRequestModal
