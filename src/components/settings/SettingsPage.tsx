@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users, Shield, Cloud, Link as LinkIcon, Copy, Check, Gift, UserPlus } from 'lucide-react';
+import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users, Shield, Cloud, Link as LinkIcon, Copy, Check, Gift, UserPlus, UserCheck, MessageSquare, ShoppingCart, FileQuestion } from 'lucide-react';
 import EmployeeManagement from './EmployeeManagement';
 import DScoreConnection from './DScoreConnection';
 import ThreeShapeConnection from './ThreeShapeConnection';
@@ -12,7 +12,7 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<'profile' | 'employees' | 'integrations' | 'referral' | 'compliance'>('profile');
   const [integrationsSubTab, setIntegrationsSubTab] = useState<'dscore' | '3shape'>('dscore');
   const [complianceSubTab, setComplianceSubTab] = useState<'certificate' | 'periods' | 'audit'>('certificate');
-  const { profile, updateProfile, userEmail } = useAuth();
+  const { profile, updateProfile, userEmail, user } = useAuth();
   const [formData, setFormData] = useState({
     first_name: profile?.first_name || '',
     last_name: profile?.last_name || '',
@@ -24,6 +24,11 @@ export default function SettingsPage() {
     laboratory_rcs: profile?.laboratory_rcs || '',
     bank_iban: profile?.bank_iban || '',
     bank_bic: profile?.bank_bic || '',
+  });
+  const [dentistSettings, setDentistSettings] = useState({
+    allow_dentist_orders: false,
+    allow_dentist_quote_requests: false,
+    dentist_portal_message: '',
   });
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -45,7 +50,33 @@ export default function SettingsPage() {
       });
       setLogoPreview(profile.laboratory_logo_url || '');
     }
+    loadDentistSettings();
   }, [profile]);
+
+  const loadDentistSettings = async () => {
+    if (!user) return;
+
+    try {
+      const { supabase } = await import('../../lib/supabase');
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('allow_dentist_orders, allow_dentist_quote_requests, dentist_portal_message')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data) {
+        setDentistSettings({
+          allow_dentist_orders: data.allow_dentist_orders || false,
+          allow_dentist_quote_requests: data.allow_dentist_quote_requests || false,
+          dentist_portal_message: data.dentist_portal_message || '',
+        });
+      }
+    } catch (error) {
+      console.error('Error loading dentist settings:', error);
+    }
+  };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -90,6 +121,36 @@ export default function SettingsPage() {
     }
 
     setLoading(false);
+  };
+
+  const handleDentistSettingsSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setLoading(true);
+    setSuccess(false);
+
+    try {
+      const { supabase } = await import('../../lib/supabase');
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({
+          allow_dentist_orders: dentistSettings.allow_dentist_orders,
+          allow_dentist_quote_requests: dentistSettings.allow_dentist_quote_requests,
+          dentist_portal_message: dentistSettings.dentist_portal_message,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (error) {
+      console.error('Error updating dentist settings:', error);
+      alert('Erreur lors de la mise à jour des paramètres dentistes');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -478,6 +539,89 @@ export default function SettingsPage() {
                           <FileText className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                           <span>Ces informations seront affichées sur vos factures PDF pour faciliter les paiements par virement bancaire.</span>
                         </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-slate-200 pt-6">
+                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-slate-800 mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md">
+                        <UserCheck className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <span className="bg-gradient-to-r from-blue-700 to-cyan-600 bg-clip-text text-transparent">Portail Dentiste</span>
+                    </h3>
+
+                    <div className="bg-gradient-to-br from-blue-50/50 to-cyan-50/50 border border-blue-200 rounded-xl p-3 sm:p-4 mb-4">
+                      <p className="text-xs sm:text-sm text-blue-800 flex items-start gap-2">
+                        <UserCheck className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                        <span>Activez ces options pour permettre à vos dentistes de passer des commandes directement depuis leur portail.</span>
+                      </p>
+                    </div>
+
+                    <div className="space-y-4 sm:space-y-5">
+                      <div className="flex items-start gap-3 sm:gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-blue-300 transition-all">
+                        <input
+                          type="checkbox"
+                          id="allow_dentist_orders"
+                          checked={dentistSettings.allow_dentist_orders}
+                          onChange={(e) => setDentistSettings({ ...dentistSettings, allow_dentist_orders: e.target.checked })}
+                          className="w-5 h-5 text-blue-600 border-slate-300 rounded focus:ring-2 focus:ring-blue-500 mt-0.5"
+                        />
+                        <label htmlFor="allow_dentist_orders" className="flex-1 cursor-pointer">
+                          <div className="flex items-center gap-2 mb-1">
+                            <ShoppingCart className="w-4 h-4 text-blue-600" />
+                            <span className="text-sm sm:text-base font-bold text-slate-900">Autoriser les commandes directes</span>
+                          </div>
+                          <p className="text-xs sm:text-sm text-slate-600">Les dentistes pourront créer des bons de livraison directement depuis leur portail</p>
+                        </label>
+                      </div>
+
+                      <div className="flex items-start gap-3 sm:gap-4 p-4 bg-white border border-slate-200 rounded-xl hover:border-cyan-300 transition-all">
+                        <input
+                          type="checkbox"
+                          id="allow_dentist_quote_requests"
+                          checked={dentistSettings.allow_dentist_quote_requests}
+                          onChange={(e) => setDentistSettings({ ...dentistSettings, allow_dentist_quote_requests: e.target.checked })}
+                          className="w-5 h-5 text-cyan-600 border-slate-300 rounded focus:ring-2 focus:ring-cyan-500 mt-0.5"
+                        />
+                        <label htmlFor="allow_dentist_quote_requests" className="flex-1 cursor-pointer">
+                          <div className="flex items-center gap-2 mb-1">
+                            <FileQuestion className="w-4 h-4 text-cyan-600" />
+                            <span className="text-sm sm:text-base font-bold text-slate-900">Autoriser les demandes de devis</span>
+                          </div>
+                          <p className="text-xs sm:text-sm text-slate-600">Les dentistes pourront demander des devis avant de passer commande</p>
+                        </label>
+                      </div>
+
+                      <div>
+                        <label htmlFor="dentist_portal_message" className="block text-xs sm:text-sm font-bold text-slate-700 mb-2 sm:mb-3 flex items-center gap-1.5 sm:gap-2">
+                          <MessageSquare className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600" />
+                          Message d'accueil pour les dentistes
+                        </label>
+                        <textarea
+                          id="dentist_portal_message"
+                          rows={3}
+                          value={dentistSettings.dentist_portal_message}
+                          onChange={(e) => setDentistSettings({ ...dentistSettings, dentist_portal_message: e.target.value })}
+                          className="w-full px-3 sm:px-4 py-2.5 sm:py-3.5 text-sm sm:text-base border border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 outline-none transition-all duration-300 bg-gradient-to-br from-white to-slate-50/30 shadow-sm hover:shadow-md hover:border-blue-300 resize-none"
+                          placeholder="Bienvenue sur notre portail ! N'hésitez pas à nous contacter pour toute question."
+                        />
+                        <p className="text-xs text-slate-500 mt-2 flex items-center gap-1.5">
+                          <span className="w-1.5 h-1.5 bg-slate-400 rounded-full"></span>
+                          Ce message sera affiché aux dentistes lorsqu'ils accèdent à votre portail
+                        </p>
+                      </div>
+
+                      <div className="flex justify-end pt-3 border-t border-slate-200">
+                        <button
+                          type="button"
+                          onClick={handleDentistSettingsSubmit}
+                          disabled={loading}
+                          className="group relative flex items-center gap-2 px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 text-white shadow-lg hover:shadow-xl rounded-lg sm:rounded-xl hover:from-blue-700 hover:via-cyan-700 hover:to-blue-700 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-bold bg-[length:200%_100%] hover:bg-[position:100%_0]"
+                        >
+                          <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+                          {loading ? 'Enregistrement...' : 'Enregistrer'}
+                        </button>
                       </div>
                     </div>
                   </div>
