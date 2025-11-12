@@ -64,30 +64,37 @@ export default function DatabaseOptimization() {
   };
 
   const loadTableMetrics = async () => {
-    const { data, error } = await supabase.rpc('get_table_sizes', {});
+    try {
+      const { data, error } = await supabase.rpc('get_table_sizes');
 
-    if (error) {
-      const { data: fallbackData } = await supabase
-        .from('database_optimization_log')
-        .select('table_name, size_before_bytes')
-        .order('executed_at', { ascending: false })
-        .limit(30);
+      if (error) {
+        console.error('Error loading table sizes:', error);
+        // Fallback: charger depuis les logs d'optimisation
+        const { data: fallbackData } = await supabase
+          .from('database_optimization_log')
+          .select('table_name, size_before_bytes')
+          .order('executed_at', { ascending: false })
+          .limit(30);
 
-      if (fallbackData) {
-        const uniqueTables = Array.from(new Set(fallbackData.map(d => d.table_name)))
-          .map(tableName => {
-            const latest = fallbackData.find(d => d.table_name === tableName);
-            return {
-              table_name: tableName,
-              row_count: 0,
-              size: formatBytes(latest?.size_before_bytes || 0),
-              size_bytes: latest?.size_before_bytes || 0
-            };
-          });
-        setTableMetrics(uniqueTables);
+        if (fallbackData) {
+          const uniqueTables = Array.from(new Set(fallbackData.map(d => d.table_name)))
+            .map(tableName => {
+              const latest = fallbackData.find(d => d.table_name === tableName);
+              return {
+                table_name: tableName,
+                row_count: 0,
+                size: formatBytes(latest?.size_before_bytes || 0),
+                size_bytes: latest?.size_before_bytes || 0
+              };
+            });
+          setTableMetrics(uniqueTables);
+        }
+      } else {
+        setTableMetrics(data || []);
       }
-    } else {
-      setTableMetrics(data || []);
+    } catch (err) {
+      console.error('Failed to load table metrics:', err);
+      setTableMetrics([]);
     }
   };
 
