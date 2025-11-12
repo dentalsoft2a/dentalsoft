@@ -689,11 +689,11 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
     try {
       const year = new Date().getFullYear();
 
-      // Get all proforma numbers for this year for this user
+      // Get all proforma numbers for this year (GLOBALLY, not per user)
+      // The constraint is global, so numbers must be unique across all users
       const { data, error } = await supabase
         .from('proformas')
         .select('proforma_number')
-        .eq('user_id', user.id)
         .like('proforma_number', `PRO-${year}-%`)
         .order('proforma_number', { ascending: false });
 
@@ -981,11 +981,16 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
         while (!proformaData && attempts < maxAttempts) {
           attempts++;
 
-          // Get all proforma numbers for this year
+          // Add random delay to avoid race conditions (except first attempt)
+          if (attempts > 1) {
+            await new Promise(resolve => setTimeout(resolve, 100 + Math.random() * 200));
+          }
+
+          // Get all proforma numbers for this year (GLOBALLY, not per user)
+          // The constraint is global, so numbers must be unique across all users
           const { data: yearProformas } = await supabase
             .from('proformas')
             .select('proforma_number')
-            .eq('user_id', user.id)
             .like('proforma_number', `PRO-${year}-%`)
             .order('proforma_number', { ascending: false });
 
@@ -1007,7 +1012,7 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
 
           const finalProformaNumber = `PRO-${year}-${String(nextNumber).padStart(4, '0')}`;
 
-          // Check if this number already exists before inserting
+          // Double-check this number doesn't exist globally (race condition protection)
           const { data: existingProforma } = await supabase
             .from('proformas')
             .select('id')
@@ -1015,7 +1020,7 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
             .maybeSingle();
 
           if (existingProforma) {
-            // Number already exists, retry
+            // Number already exists globally, retry
             console.log(`Proforma number ${finalProformaNumber} already exists, retrying...`);
             continue;
           }
