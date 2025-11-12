@@ -131,6 +131,7 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
         .from('delivery_notes')
         .select('delivery_number')
         .eq('user_id', selectedLab)
+        .like('delivery_number', 'DENT-%')
         .order('delivery_number', { ascending: false })
         .limit(1)
         .maybeSingle();
