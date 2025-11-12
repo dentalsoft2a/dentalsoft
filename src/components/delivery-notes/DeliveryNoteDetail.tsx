@@ -1,4 +1,5 @@
-import { FileText, Stethoscope, Palette, AlertCircle } from 'lucide-react';
+import { useState } from 'react';
+import { FileText, Stethoscope, Palette, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
 
 interface DeliveryNoteDetailProps {
   note: {
@@ -11,9 +12,12 @@ interface DeliveryNoteDetailProps {
     status?: string;
     created_by_dentist?: boolean;
   };
+  compact?: boolean;
 }
 
-export default function DeliveryNoteDetail({ note }: DeliveryNoteDetailProps) {
+export default function DeliveryNoteDetail({ note, compact = false }: DeliveryNoteDetailProps) {
+  const [isExpanded, setIsExpanded] = useState(!compact);
+
   if (!note.created_by_dentist) {
     return null;
   }
@@ -22,6 +26,59 @@ export default function DeliveryNoteDetail({ note }: DeliveryNoteDetailProps) {
 
   if (!hasStructuredData && !note.notes) {
     return null;
+  }
+
+  if (compact) {
+    return (
+      <div className="border-t border-slate-100 pt-2">
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="flex items-center justify-between w-full text-left p-2 hover:bg-slate-50 rounded transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <FileText className="w-4 h-4 text-blue-600" />
+            <span className="text-xs font-semibold text-slate-700">Informations de la demande</span>
+          </div>
+          {isExpanded ? (
+            <ChevronUp className="w-4 h-4 text-slate-400" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-slate-400" />
+          )}
+        </button>
+
+        {isExpanded && (
+          <div className="mt-2 space-y-2">
+            {note.work_description && (
+              <div className="bg-slate-50 rounded p-2">
+                <p className="text-xs font-medium text-slate-600 mb-0.5">Description du travail</p>
+                <p className="text-xs text-slate-900 line-clamp-2">{note.work_description}</p>
+              </div>
+            )}
+
+            {note.tooth_numbers && (
+              <div className="bg-slate-50 rounded p-2">
+                <p className="text-xs font-medium text-slate-600 mb-0.5">Numéros de dents</p>
+                <p className="text-xs text-slate-900 font-medium">{note.tooth_numbers}</p>
+              </div>
+            )}
+
+            {note.shade && (
+              <div className="bg-slate-50 rounded p-2">
+                <p className="text-xs font-medium text-slate-600 mb-0.5">Teinte</p>
+                <p className="text-xs text-slate-900 font-medium">{note.shade}</p>
+              </div>
+            )}
+
+            {note.notes && (
+              <div className="bg-slate-50 rounded p-2">
+                <p className="text-xs font-medium text-slate-600 mb-0.5">Notes additionnelles</p>
+                <p className="text-xs text-slate-700 line-clamp-3">{note.notes}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
   }
 
   return (

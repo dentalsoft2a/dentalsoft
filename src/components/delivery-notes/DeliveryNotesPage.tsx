@@ -264,43 +264,37 @@ export default function DeliveryNotesPage() {
         </div>
 
         {pendingApprovalNotes.length > 0 && (
-          <div className="p-4 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
-                <Clock className="w-5 h-5 text-white" />
+          <div className="px-3 py-3 sm:px-4 sm:py-4 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-8 h-8 bg-amber-500 rounded-lg flex items-center justify-center flex-shrink-0">
+                <Clock className="w-4 h-4 text-white" />
               </div>
-              <div>
-                <h3 className="font-bold text-amber-900">Demandes en attente d'approbation</h3>
-                <p className="text-sm text-amber-700">{pendingApprovalNotes.length} demande(s) de dentiste(s) en attente</p>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-amber-900 text-sm sm:text-base">Demandes en attente d'approbation</h3>
+                <p className="text-xs text-amber-700">{pendingApprovalNotes.length} demande(s) de dentiste(s) en attente</p>
               </div>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {pendingApprovalNotes.map((note) => (
-                <div key={note.id} className="bg-white rounded-lg border-2 border-amber-200 p-4 shadow-sm">
-                  <div className="flex items-start justify-between gap-4 mb-3">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold text-slate-900">{note.delivery_number}</span>
-                        <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded-full font-medium">
-                          En attente
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-600">Dentiste: {note.dentists?.name}</p>
-                      {(note as any).patient_name && (
-                        <p className="text-sm text-slate-600">Patient: {(note as any).patient_name}</p>
-                      )}
+                <div key={note.id} className="bg-white rounded-lg border border-amber-200 p-3 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                      <span className="font-semibold text-slate-900 text-sm truncate">{note.delivery_number}</span>
+                      <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded-full font-medium whitespace-nowrap">
+                        En attente
+                      </span>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-1 flex-shrink-0">
                       <button
                         onClick={() => handleApproveRequest(note.id)}
-                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                        className="p-1.5 text-green-600 hover:bg-green-50 rounded transition-all"
                         title="Approuver"
                       >
                         <ThumbsUp className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleRejectRequest(note.id)}
-                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-all"
                         title="Rejeter"
                       >
                         <ThumbsDown className="w-4 h-4" />
@@ -310,14 +304,20 @@ export default function DeliveryNotesPage() {
                           setEditingNote(note.id);
                           setShowModal(true);
                         }}
-                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition-all"
                         title="Modifier"
                       >
                         <Edit className="w-4 h-4" />
                       </button>
                     </div>
                   </div>
-                  <DeliveryNoteDetail note={note as any} />
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 text-xs text-slate-600 mb-2">
+                    <span className="truncate">👨‍⚕️ {note.dentists?.name}</span>
+                    {(note as any).patient_name && (
+                      <span className="truncate">🦷 {(note as any).patient_name}</span>
+                    )}
+                  </div>
+                  <DeliveryNoteDetail note={note as any} compact={true} />
                 </div>
               ))}
             </div>
