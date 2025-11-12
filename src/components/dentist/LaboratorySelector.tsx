@@ -34,20 +34,10 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
     try {
       setLoading(true);
 
-      const { data: userProfilesData, error: userProfilesError } = await supabase
-        .from('user_profiles')
-        .select('id')
-        .eq('role', 'laboratory');
-
-      if (userProfilesError) throw userProfilesError;
-
-      const labIds = (userProfilesData || []).map(up => up.id);
-
       const [profilesResult, favoritesResult] = await Promise.all([
         supabase
           .from('profiles')
           .select('id, laboratory_name')
-          .in('id', labIds)
           .not('laboratory_name', 'is', null)
           .neq('laboratory_name', '')
           .order('laboratory_name'),
