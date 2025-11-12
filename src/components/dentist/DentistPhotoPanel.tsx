@@ -39,20 +39,29 @@ export default function DentistPhotoPanel() {
 
   const loadDentistId = async () => {
     try {
-      if (!user) return;
+      if (!user) {
+        console.log('No user available');
+        return;
+      }
+
+      console.log('Loading dentist ID for user:', user.id, user.email);
 
       const { data, error } = await supabase
         .from('dentist_accounts')
         .select('id')
-        .eq('email', user.email)
+        .eq('id', user.id)
         .maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error querying dentist_accounts:', error);
+        throw error;
+      }
+
       if (data) {
         console.log('Dentist ID loaded:', data.id);
         setDentistId(data.id);
       } else {
-        console.log('No dentist account found for email:', user.email);
+        console.log('No dentist account found for user ID:', user.id);
       }
     } catch (error) {
       console.error('Error loading dentist ID:', error);
@@ -174,7 +183,10 @@ export default function DentistPhotoPanel() {
           </div>
           <div className="flex items-center gap-3">
             <button
-              onClick={() => setShowDeliveryRequest(true)}
+              onClick={() => {
+                console.log('Button clicked, dentistId:', dentistId);
+                setShowDeliveryRequest(true);
+              }}
               className="p-3 bg-white/30 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all shadow-lg"
               title="Nouvelle demande"
             >
@@ -304,11 +316,31 @@ export default function DentistPhotoPanel() {
       )}
 
       {showHistory && <DentistPhotoHistory onClose={() => setShowHistory(false)} />}
-      {showDeliveryRequest && dentistId && (
-        <DentistDeliveryRequestModal
-          onClose={() => setShowDeliveryRequest(false)}
-          dentistId={dentistId}
-        />
+      {showDeliveryRequest && (
+        dentistId ? (
+          <DentistDeliveryRequestModal
+            onClose={() => setShowDeliveryRequest(false)}
+            dentistId={dentistId}
+          />
+        ) : (
+          <div className="fixed inset-0 bg-black/95 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center">
+              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <X className="w-8 h-8 text-red-500" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Compte dentiste non trouvé</h3>
+              <p className="text-slate-600 mb-6">
+                Impossible de charger votre compte dentiste. Veuillez vous reconnecter.
+              </p>
+              <button
+                onClick={() => setShowDeliveryRequest(false)}
+                className="w-full py-3 bg-slate-200 text-slate-900 rounded-lg font-medium hover:bg-slate-300 transition"
+              >
+                Fermer
+              </button>
+            </div>
+          </div>
+        )
       )}
     </div>
   );
