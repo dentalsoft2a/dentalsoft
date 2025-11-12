@@ -145,34 +145,18 @@ export default function ProformasPage() {
       const month = proformaDate.getMonth() + 1;
       const year = proformaDate.getFullYear();
 
-      // Generate unique invoice number by finding the last invoice for this year
-      const { data: existingInvoices, error: fetchError } = await supabase
-        .from('invoices')
-        .select('invoice_number')
-        .eq('user_id', user!.id)
-        .eq('year', year)
-        .order('invoice_number', { ascending: false })
-        .limit(1);
+      // Use PostgreSQL function to generate next invoice number (bypasses RLS)
+      const { data: invoiceNumber, error: rpcError } = await supabase
+        .rpc('generate_next_invoice_number');
 
-      if (fetchError) throw fetchError;
-
-      let nextNumber = 1;
-      if (existingInvoices && existingInvoices.length > 0) {
-        const lastNumber = existingInvoices[0].invoice_number;
-        const match = lastNumber.match(/INV-\d{4}-(\d+)/);
-        if (match) {
-          nextNumber = parseInt(match[1]) + 1;
-        }
-      }
-
-      const invoiceNumber = `INV-${year}-${String(nextNumber).padStart(4, '0')}`;
+      if (rpcError) throw rpcError;
 
       const { data: invoiceData, error: invoiceError } = await supabase
         .from('invoices')
         .insert({
           user_id: user!.id,
           dentist_id: proforma.dentist_id,
-          invoice_number: invoiceNumber,
+          invoice_number: invoiceNumber as string,
           date: new Date().toISOString().split('T')[0],
           month: month,
           year: year,
