@@ -972,53 +972,88 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
           if (updateError) console.error('Error updating delivery notes status:', updateError);
         }
       } else {
-        // Re-generate proforma number just before insert to avoid duplicates
+        // Re-generate proforma number just before insert to avoid duplicates with retry logic
         const year = new Date().getFullYear();
+        let proformaData = null;
+        let attempts = 0;
+        const maxAttempts = 5;
 
-        // Get all proforma numbers for this year
-        const { data: yearProformas } = await supabase
-          .from('proformas')
-          .select('proforma_number')
-          .eq('user_id', user.id)
-          .like('proforma_number', `PRO-${year}-%`)
-          .order('proforma_number', { ascending: false });
+        while (!proformaData && attempts < maxAttempts) {
+          attempts++;
 
-        let nextNumber = 1;
+          // Get all proforma numbers for this year
+          const { data: yearProformas } = await supabase
+            .from('proformas')
+            .select('proforma_number')
+            .eq('user_id', user.id)
+            .like('proforma_number', `PRO-${year}-%`)
+            .order('proforma_number', { ascending: false });
 
-        if (yearProformas && yearProformas.length > 0) {
-          // Extract all numbers for current year and find the highest
-          const numbers = yearProformas
-            .map(p => {
-              const match = p.proforma_number.match(/PRO-(\d{4})-(\d+)/);
-              return match ? parseInt(match[2]) : 0;
-            })
-            .filter(n => n > 0);
+          let nextNumber = 1;
 
-          if (numbers.length > 0) {
-            nextNumber = Math.max(...numbers) + 1;
+          if (yearProformas && yearProformas.length > 0) {
+            // Extract all numbers for current year and find the highest
+            const numbers = yearProformas
+              .map(p => {
+                const match = p.proforma_number.match(/PRO-(\d{4})-(\d+)/);
+                return match ? parseInt(match[2]) : 0;
+              })
+              .filter(n => n > 0);
+
+            if (numbers.length > 0) {
+              nextNumber = Math.max(...numbers) + 1;
+            }
           }
+
+          const finalProformaNumber = `PRO-${year}-${String(nextNumber).padStart(4, '0')}`;
+
+          // Check if this number already exists before inserting
+          const { data: existingProforma } = await supabase
+            .from('proformas')
+            .select('id')
+            .eq('proforma_number', finalProformaNumber)
+            .maybeSingle();
+
+          if (existingProforma) {
+            // Number already exists, retry
+            console.log(`Proforma number ${finalProformaNumber} already exists, retrying...`);
+            continue;
+          }
+
+          // Try to insert
+          const { data: insertedProforma, error: proformaError } = await supabase
+            .from('proformas')
+            .insert({
+              user_id: user.id,
+              dentist_id: formData.dentist_id,
+              proforma_number: finalProformaNumber,
+              date: formData.date,
+              status: formData.status,
+              notes: formData.notes,
+              tax_rate: formData.tax_rate,
+              subtotal,
+              tax_amount,
+              total,
+            })
+            .select()
+            .single();
+
+          if (proformaError) {
+            if (proformaError.code === '23505') {
+              // Duplicate key, retry
+              console.log(`Duplicate key error for ${finalProformaNumber}, retrying...`);
+              continue;
+            } else {
+              throw proformaError;
+            }
+          }
+
+          proformaData = insertedProforma;
         }
 
-        const finalProformaNumber = `PRO-${year}-${String(nextNumber).padStart(4, '0')}`;
-
-        const { data: proformaData, error: proformaError } = await supabase
-          .from('proformas')
-          .insert({
-            user_id: user.id,
-            dentist_id: formData.dentist_id,
-            proforma_number: finalProformaNumber,
-            date: formData.date,
-            status: formData.status,
-            notes: formData.notes,
-            tax_rate: formData.tax_rate,
-            subtotal,
-            tax_amount,
-            total,
-          })
-          .select()
-          .single();
-
-        if (proformaError) throw proformaError;
+        if (!proformaData) {
+          throw new Error('Impossible de générer un numéro de proforma unique après plusieurs tentatives');
+        }
 
         const { error: itemsError } = await supabase.from('proforma_items').insert(
           items.map((item) => ({
