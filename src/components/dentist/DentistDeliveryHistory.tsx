@@ -302,88 +302,88 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
 
   return (
     <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full h-full md:max-w-6xl md:h-[90vh] flex flex-col">
-        <div className="sticky top-0 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 px-6 py-5 flex items-center justify-between rounded-t-2xl shadow-lg">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Historique des demandes</h2>
-            <p className="text-blue-100 text-sm mt-1">Suivez l'état de vos demandes et commandes</p>
+      <div className="bg-white w-full h-full md:rounded-2xl md:shadow-2xl md:max-w-6xl md:h-[90vh] flex flex-col">
+        <div className="sticky top-0 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 px-4 md:px-6 py-4 md:py-5 flex items-center justify-between md:rounded-t-2xl shadow-lg">
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg md:text-2xl font-bold text-white truncate">Historique des demandes</h2>
+            <p className="text-blue-100 text-xs md:text-sm mt-1 hidden sm:block">Suivez l'état de vos demandes et commandes</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
             <button
               onClick={handleRefresh}
               disabled={refreshing}
-              className="p-2 hover:bg-white/20 rounded-lg transition disabled:opacity-50 backdrop-blur-sm"
+              className="p-2 hover:bg-white/20 rounded-lg transition disabled:opacity-50 backdrop-blur-sm touch-manipulation"
               title="Actualiser"
             >
-              <RefreshCw className={`w-5 h-5 text-white ${refreshing ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-5 h-5 md:w-6 md:h-6 text-white ${refreshing ? 'animate-spin' : ''}`} />
             </button>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white/20 rounded-lg transition backdrop-blur-sm"
+              className="p-2 hover:bg-white/20 rounded-lg transition backdrop-blur-sm touch-manipulation"
             >
-              <X className="w-5 h-5 text-white" />
+              <X className="w-5 h-5 md:w-6 md:h-6 text-white" />
             </button>
           </div>
         </div>
 
-        <div className="p-6 border-b border-slate-200 bg-slate-50">
-          <div className="flex flex-col md:flex-row gap-4">
+        <div className="p-4 md:p-6 border-b border-slate-200 bg-slate-50">
+          <div className="flex flex-col gap-3 md:gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-slate-400" />
               <input
                 type="text"
-                placeholder="Rechercher un patient, numéro ou description..."
+                placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-9 md:pl-10 pr-4 py-2.5 md:py-3 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
-            <div className="flex gap-2">
+            <div className="flex gap-1.5 md:gap-2 overflow-x-auto pb-1 -mx-4 px-4 md:mx-0 md:px-0 scrollbar-hide">
               <button
                 onClick={() => setStatusFilter('all')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm whitespace-nowrap transition touch-manipulation ${
                   statusFilter === 'all'
                     ? 'bg-blue-600 text-white shadow-md'
                     : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
                 }`}
               >
-                Toutes ({requests.length})
+                Toutes <span className="hidden sm:inline">({requests.length})</span>
               </button>
               <button
                 onClick={() => setStatusFilter('pending')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm whitespace-nowrap transition touch-manipulation ${
                   statusFilter === 'pending'
                     ? 'bg-amber-500 text-white shadow-md'
                     : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
                 }`}
               >
-                En attente ({pendingCount})
+                En attente <span className="hidden sm:inline">({pendingCount})</span>
               </button>
               <button
                 onClick={() => setStatusFilter('approved')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm whitespace-nowrap transition touch-manipulation ${
                   statusFilter === 'approved'
                     ? 'bg-green-600 text-white shadow-md'
                     : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
                 }`}
               >
-                Approuvées ({approvedCount})
+                Approuvées <span className="hidden sm:inline">({approvedCount})</span>
               </button>
               <button
                 onClick={() => setStatusFilter('rejected')}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-3 md:px-4 py-2 rounded-lg font-medium text-xs md:text-sm whitespace-nowrap transition touch-manipulation ${
                   statusFilter === 'rejected'
                     ? 'bg-red-600 text-white shadow-md'
                     : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-300'
                 }`}
               >
-                Refusées ({rejectedCount})
+                Refusées <span className="hidden sm:inline">({rejectedCount})</span>
               </button>
             </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 md:p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -404,45 +404,47 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
                 return (
                   <div
                     key={request.id}
-                    className="bg-white rounded-xl p-5 border-2 border-slate-200 hover:border-blue-300 transition cursor-pointer shadow-sm hover:shadow-md"
+                    className="bg-white rounded-xl p-4 md:p-5 border-2 border-slate-200 hover:border-blue-300 active:border-blue-400 transition cursor-pointer shadow-sm hover:shadow-md touch-manipulation"
                     onClick={() => setSelectedRequest(request)}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-start gap-3 mb-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
                           {request.type === 'quote' ? (
-                            <FileQuestion className="w-5 h-5 text-cyan-600" />
+                            <FileQuestion className="w-4 h-4 md:w-5 md:h-5 text-cyan-600 flex-shrink-0" />
                           ) : (
-                            <FileText className="w-5 h-5 text-blue-600" />
+                            <FileText className="w-4 h-4 md:w-5 md:h-5 text-blue-600 flex-shrink-0" />
                           )}
-                          <h3 className="font-bold text-slate-900 text-lg">
+                          <h3 className="font-bold text-slate-900 text-base md:text-lg">
                             {request.delivery_number}
                           </h3>
-                          <span className="text-xs px-2 py-1 bg-slate-100 text-slate-700 rounded-full">
-                            {request.type === 'quote' ? 'Demande de devis' : 'Commande'}
+                          <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-700 rounded-full">
+                            {request.type === 'quote' ? 'Devis' : 'Commande'}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-600 mb-1">
+                        <p className="text-xs md:text-sm text-slate-600 mb-1">
                           Patient: <span className="font-semibold text-slate-900">{request.patient_name}</span>
                         </p>
-                        <p className="text-sm text-slate-600">
-                          Laboratoire: <span className="font-medium">{request.laboratory_name}</span>
+                        <p className="text-xs md:text-sm text-slate-600 truncate">
+                          Labo: <span className="font-medium">{request.laboratory_name}</span>
                         </p>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        {statusInfo.badge}
-                        <ChevronRight className="w-5 h-5 text-slate-400" />
+                      <div className="flex flex-col items-end gap-2 flex-shrink-0">
+                        <div className="transform scale-90 md:scale-100 origin-top-right">
+                          {statusInfo.badge}
+                        </div>
+                        <ChevronRight className="w-5 h-5 text-slate-400 hidden sm:block" />
                       </div>
                     </div>
 
-                    <div className="bg-slate-50 rounded-lg p-3 mb-3">
-                      <p className="text-sm text-slate-700 line-clamp-2">{request.work_description}</p>
+                    <div className="bg-slate-50 rounded-lg p-2.5 md:p-3 mb-3">
+                      <p className="text-xs md:text-sm text-slate-700 line-clamp-2">{request.work_description}</p>
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-slate-500">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-slate-500">
                       <span>Demandé le {formatDate(request.created_at)}</span>
                       {request.estimated_price && (
-                        <span className="font-semibold text-green-700">Prix estimé: {request.estimated_price.toFixed(2)} €</span>
+                        <span className="font-semibold text-green-700">Prix: {request.estimated_price.toFixed(2)} €</span>
                       )}
                     </div>
                   </div>
@@ -454,38 +456,38 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
       </div>
 
       {selectedRequest && (
-        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[60]" onClick={() => setSelectedRequest(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto m-4" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 px-6 py-5 flex items-center justify-between rounded-t-2xl shadow-lg">
-              <div>
-                <h2 className="text-2xl font-bold text-white">{selectedRequest.delivery_number}</h2>
-                <p className="text-blue-100 text-sm mt-1">Détails de la demande</p>
+        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[60] p-0 md:p-4" onClick={() => setSelectedRequest(null)}>
+          <div className="bg-white w-full h-full md:rounded-2xl md:shadow-2xl md:max-w-3xl md:w-full md:max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
+            <div className="sticky top-0 bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 px-4 md:px-6 py-4 md:py-5 flex items-center justify-between md:rounded-t-2xl shadow-lg z-10">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg md:text-2xl font-bold text-white truncate">{selectedRequest.delivery_number}</h2>
+                <p className="text-blue-100 text-xs md:text-sm mt-1">Détails de la demande</p>
               </div>
               <button
                 onClick={() => setSelectedRequest(null)}
-                className="p-2 hover:bg-white/20 rounded-lg transition backdrop-blur-sm"
+                className="p-2 hover:bg-white/20 rounded-lg transition backdrop-blur-sm touch-manipulation flex-shrink-0"
               >
-                <X className="w-5 h-5 text-white" />
+                <X className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-5 border border-blue-200">
-                <div className="flex items-center gap-3 mb-3">
+            <div className="p-4 md:p-6 space-y-4 md:space-y-6">
+              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-4 md:p-5 border border-blue-200">
+                <div className="flex items-center gap-2.5 md:gap-3 mb-3">
                   {selectedRequest.type === 'quote' ? (
-                    <div className="w-12 h-12 bg-cyan-500 rounded-xl flex items-center justify-center">
-                      <FileQuestion className="w-6 h-6 text-white" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <FileQuestion className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </div>
                   ) : (
-                    <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
-                      <FileText className="w-6 h-6 text-white" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <FileText className="w-5 h-5 md:w-6 md:h-6 text-white" />
                     </div>
                   )}
-                  <div>
-                    <h3 className="font-bold text-slate-900 text-xl">
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-bold text-slate-900 text-base md:text-xl">
                       {selectedRequest.type === 'quote' ? 'Demande de devis' : 'Commande directe'}
                     </h3>
-                    <p className="text-slate-600 text-sm">Statut de votre demande</p>
+                    <p className="text-slate-600 text-xs md:text-sm">Statut de votre demande</p>
                   </div>
                 </div>
                 <div className="mt-4">
@@ -496,86 +498,86 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white rounded-lg p-4 border border-slate-200">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Patient</label>
-                  <p className="text-lg font-bold text-slate-900">{selectedRequest.patient_name}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
+                <div className="bg-white rounded-lg p-3 md:p-4 border border-slate-200">
+                  <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Patient</label>
+                  <p className="text-base md:text-lg font-bold text-slate-900">{selectedRequest.patient_name}</p>
                 </div>
 
-                <div className="bg-white rounded-lg p-4 border border-slate-200">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Laboratoire</label>
-                  <p className="text-lg font-medium text-slate-900">{selectedRequest.laboratory_name}</p>
+                <div className="bg-white rounded-lg p-3 md:p-4 border border-slate-200">
+                  <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-1.5 md:mb-2">Laboratoire</label>
+                  <p className="text-base md:text-lg font-medium text-slate-900 break-words">{selectedRequest.laboratory_name}</p>
                 </div>
 
                 {selectedRequest.prescription_date && (
-                  <div className="bg-white rounded-lg p-4 border border-slate-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Calendar className="w-4 h-4 text-blue-600" />
-                      <label className="block text-sm font-semibold text-slate-700">Date de prescription</label>
+                  <div className="bg-white rounded-lg p-3 md:p-4 border border-slate-200">
+                    <div className="flex items-center gap-2 mb-1.5 md:mb-2">
+                      <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-600" />
+                      <label className="block text-xs md:text-sm font-semibold text-slate-700">Date de prescription</label>
                     </div>
-                    <p className="text-slate-900">
+                    <p className="text-sm md:text-base text-slate-900">
                       {new Date(selectedRequest.prescription_date).toLocaleDateString('fr-FR')}
                     </p>
                   </div>
                 )}
 
-                <div className="bg-white rounded-lg p-4 border border-slate-200">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Calendar className="w-4 h-4 text-cyan-600" />
-                    <label className="block text-sm font-semibold text-slate-700">Date de demande</label>
+                <div className="bg-white rounded-lg p-3 md:p-4 border border-slate-200">
+                  <div className="flex items-center gap-2 mb-1.5 md:mb-2">
+                    <Calendar className="w-3.5 h-3.5 md:w-4 md:h-4 text-cyan-600" />
+                    <label className="block text-xs md:text-sm font-semibold text-slate-700">Date de demande</label>
                   </div>
-                  <p className="text-slate-900">{formatDate(selectedRequest.created_at)}</p>
+                  <p className="text-sm md:text-base text-slate-900">{formatDate(selectedRequest.created_at)}</p>
                 </div>
               </div>
 
-              <div className="bg-white rounded-lg p-4 border border-slate-200">
+              <div className="bg-white rounded-lg p-3 md:p-4 border border-slate-200">
                 <div className="flex items-center gap-2 mb-2">
-                  <FileText className="w-4 h-4 text-blue-600" />
-                  <label className="block text-sm font-semibold text-slate-700">Description du travail</label>
+                  <FileText className="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-600" />
+                  <label className="block text-xs md:text-sm font-semibold text-slate-700">Description du travail</label>
                 </div>
-                <p className="text-slate-900 whitespace-pre-wrap">{selectedRequest.work_description}</p>
+                <p className="text-sm md:text-base text-slate-900 whitespace-pre-wrap break-words">{selectedRequest.work_description}</p>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4">
                 {selectedRequest.tooth_numbers && (
-                  <div className="bg-white rounded-lg p-4 border border-slate-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Stethoscope className="w-4 h-4 text-cyan-600" />
-                      <label className="block text-sm font-semibold text-slate-700">Numéros de dents</label>
+                  <div className="bg-white rounded-lg p-3 md:p-4 border border-slate-200">
+                    <div className="flex items-center gap-2 mb-1.5 md:mb-2">
+                      <Stethoscope className="w-3.5 h-3.5 md:w-4 md:h-4 text-cyan-600" />
+                      <label className="block text-xs md:text-sm font-semibold text-slate-700">Numéros de dents</label>
                     </div>
-                    <p className="text-slate-900 font-medium">{selectedRequest.tooth_numbers}</p>
+                    <p className="text-sm md:text-base text-slate-900 font-medium">{selectedRequest.tooth_numbers}</p>
                   </div>
                 )}
 
                 {selectedRequest.shade && (
-                  <div className="bg-white rounded-lg p-4 border border-slate-200">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Palette className="w-4 h-4 text-purple-600" />
-                      <label className="block text-sm font-semibold text-slate-700">Teinte</label>
+                  <div className="bg-white rounded-lg p-3 md:p-4 border border-slate-200">
+                    <div className="flex items-center gap-2 mb-1.5 md:mb-2">
+                      <Palette className="w-3.5 h-3.5 md:w-4 md:h-4 text-purple-600" />
+                      <label className="block text-xs md:text-sm font-semibold text-slate-700">Teinte</label>
                     </div>
-                    <p className="text-slate-900 font-medium">{selectedRequest.shade}</p>
+                    <p className="text-sm md:text-base text-slate-900 font-medium">{selectedRequest.shade}</p>
                   </div>
                 )}
               </div>
 
               {selectedRequest.notes && (
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">Vos notes</label>
-                  <p className="text-slate-900 whitespace-pre-wrap">{selectedRequest.notes}</p>
+                <div className="bg-slate-50 rounded-lg p-3 md:p-4 border border-slate-200">
+                  <label className="block text-xs md:text-sm font-semibold text-slate-700 mb-2">Vos notes</label>
+                  <p className="text-sm md:text-base text-slate-900 whitespace-pre-wrap break-words">{selectedRequest.notes}</p>
                 </div>
               )}
 
               {selectedRequest.estimated_price && (
-                <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-                  <label className="block text-sm font-semibold text-green-800 mb-2">Prix estimatif</label>
-                  <p className="text-3xl font-bold text-green-700">{selectedRequest.estimated_price.toFixed(2)} €</p>
+                <div className="bg-green-50 rounded-lg p-4 md:p-5 border border-green-200">
+                  <label className="block text-xs md:text-sm font-semibold text-green-800 mb-2">Prix estimatif</label>
+                  <p className="text-2xl md:text-3xl font-bold text-green-700">{selectedRequest.estimated_price.toFixed(2)} €</p>
                 </div>
               )}
 
               {selectedRequest.rejection_reason && (
-                <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-                  <label className="block text-sm font-semibold text-red-800 mb-2">Raison du refus</label>
-                  <p className="text-red-900">{selectedRequest.rejection_reason}</p>
+                <div className="bg-red-50 rounded-lg p-3 md:p-4 border border-red-200">
+                  <label className="block text-xs md:text-sm font-semibold text-red-800 mb-2">Raison du refus</label>
+                  <p className="text-sm md:text-base text-red-900 break-words">{selectedRequest.rejection_reason}</p>
                 </div>
               )}
             </div>
