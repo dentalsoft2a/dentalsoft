@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LandingPage } from './components/landing/LandingPage';
 import DashboardLayout from './components/layout/DashboardLayout';
@@ -27,7 +28,9 @@ import { usePermissions } from './hooks/usePermissions';
 function AppContent() {
   const { user, loading, isEmployee, isImpersonating } = useAuth();
   const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const navigate = useNavigate();
+  const location = useLocation();
+  const currentPath = location.pathname.substring(1) || 'dashboard';
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isDentist, setIsDentist] = useState(false);
   const [checkingUserType, setCheckingUserType] = useState(false);
@@ -54,16 +57,16 @@ function AppContent() {
   useEffect(() => {
     if (user && isEmployee && !permissionsLoading && !checkingUserType && !initialPageSet) {
       const firstPage = getFirstAllowedPage();
-      setCurrentPage(firstPage);
+      navigate(`/${firstPage}`, { replace: true });
       setInitialPageSet(true);
     }
-  }, [user, isEmployee, permissionsLoading, checkingUserType, initialPageSet]);
+  }, [user, isEmployee, permissionsLoading, checkingUserType, initialPageSet, navigate]);
 
   useEffect(() => {
     if (user && isEmployee && !permissionsLoading) {
-      if (currentPage === 'admin') {
+      if (currentPath === 'admin') {
         const firstAllowedPage = getFirstAllowedPage();
-        setCurrentPage(firstAllowedPage);
+        navigate(`/${firstAllowedPage}`, { replace: true });
         return;
       }
 
@@ -82,13 +85,13 @@ function AppContent() {
         'settings': 'settings'
       };
 
-      const menuKey = pageToMenuKey[currentPage];
+      const menuKey = pageToMenuKey[currentPath];
       if (menuKey && !hasMenuAccess(menuKey)) {
         const firstAllowedPage = getFirstAllowedPage();
-        setCurrentPage(firstAllowedPage);
+        navigate(`/${firstAllowedPage}`, { replace: true });
       }
     }
-  }, [currentPage, user, isEmployee, permissionsLoading]);
+  }, [currentPath, user, isEmployee, permissionsLoading, navigate, getFirstAllowedPage, hasMenuAccess]);
 
   const checkSuperAdminAndSubscription = async () => {
     if (!user) return;
@@ -103,7 +106,6 @@ function AppContent() {
 
     if (dentistData) {
       setIsDentist(true);
-      setCurrentPage('dentist-panel');
       setCheckingUserType(false);
       return;
     }
@@ -119,7 +121,6 @@ function AppContent() {
       setSubscriptionStatus(data.subscription_status);
 
       if (!isEmployee) {
-        setCurrentPage('dashboard');
         setInitialPageSet(true);
       }
 
@@ -215,15 +216,21 @@ function AppContent() {
   }
 
   if (!user) {
+    if (currentPath !== '' && currentPath !== 'register-dentist') {
+      return <Navigate to="/" replace />;
+    }
     return (
       <>
         {isImpersonating && <ImpersonationBanner />}
-        <LandingPage />
+        {currentPath === 'register-dentist' ? <DentistRegisterPage /> : <LandingPage />}
       </>
     );
   }
 
   if (isDentist) {
+    if (currentPath !== 'dentist-panel' && currentPath !== '') {
+      return <Navigate to="/dentist-panel" replace />;
+    }
     return (
       <>
         {showServerMonitor && <ServerStatusMonitor />}
@@ -233,26 +240,25 @@ function AppContent() {
     );
   }
 
-  if (currentPage === 'admin') {
+  if (currentPath === 'admin') {
     if (isSuperAdmin) {
       return (
         <>
           {showServerMonitor && <ServerStatusMonitor />}
           {isImpersonating && <ImpersonationBanner />}
-          <SuperAdminPanel onNavigate={setCurrentPage} />
+          <SuperAdminPanel onNavigate={(page) => navigate(`/${page}`)} />
         </>
       );
     } else {
-      setCurrentPage('dashboard');
-      return null;
+      return <Navigate to="/dashboard" replace />;
     }
   }
 
   // If subscription is expired or cancelled, redirect to subscription page
   const hasValidSubscription = subscriptionStatus === 'active' || subscriptionStatus === 'trial';
   const allowedPagesForCancelled = ['dashboard', 'proformas', 'invoices', 'delivery-notes', 'work-management', 'settings', 'subscription', 'support', 'help-center'];
-  if (!hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(currentPage)) {
-    setCurrentPage('subscription');
+  if (!hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(currentPath)) {
+    return <Navigate to="/subscription" replace />;
   }
 
   const handleStockUpdate = () => {
@@ -261,9 +267,10 @@ function AppContent() {
   };
 
   const renderPage = () => {
-    switch (currentPage) {
+    switch (currentPath) {
       case 'dashboard':
-        return <DashboardPage onNavigate={setCurrentPage} />;
+      case '':
+        return <DashboardPage onNavigate={(page) => navigate(`/${page}`)} />;
       case 'calendar':
         return <CalendarPage />;
       case 'proformas':
@@ -291,7 +298,7 @@ function AppContent() {
       case 'photos':
         return <PhotoSubmissionsPage />;
       default:
-        return <DashboardPage />;
+        return <Navigate to="/dashboard" replace />;
     }
   };
 
@@ -300,7 +307,7 @@ function AppContent() {
       {showServerMonitor && <ServerStatusMonitor />}
       {isImpersonating && <ImpersonationBanner />}
       <DashboardLayout
-        currentPage={currentPage}
+        currentPage={currentPath}
         onNavigate={(page) => {
           // Block admin page for non-super admins
           if (page === 'admin' && !isSuperAdmin) {
@@ -312,7 +319,7 @@ function AppContent() {
           if (!hasValidSubscription && !isSuperAdmin && !allowedPagesForCancelled.includes(page)) {
             return;
           }
-          setCurrentPage(page);
+          navigate(`/${page}`);
         }}
         isSuperAdmin={isSuperAdmin}
         lowStockCount={lowStockCount}
@@ -327,9 +334,11 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
