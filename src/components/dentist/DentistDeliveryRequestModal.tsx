@@ -54,6 +54,7 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
     try {
       console.log('=== Debug: Checking dentist link ===');
       console.log('User ID (dentist account):', user.id);
+      console.log('Dentist ID param:', dentistId);
       console.log('Selected Lab ID:', selectedLab);
 
       const { data: allDentists, error: allError } = await supabase
@@ -62,6 +63,7 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
         .eq('user_id', selectedLab);
 
       console.log('All dentists for this lab:', allDentists);
+      console.log('All dentists error:', allError);
 
       const { data: dentistData, error: dentistError } = await supabase
         .from('dentists')
