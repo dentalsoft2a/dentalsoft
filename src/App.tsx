@@ -12,6 +12,7 @@ import DentistsPage from './components/dentists/DentistsPage';
 import CatalogPage from './components/catalog/CatalogPage';
 import WorkManagementPage from './components/work/WorkManagementPage';
 import ResourcesPage from './components/resources/ResourcesPage';
+import BatchManagementPage from './components/batch/BatchManagementPage';
 import SettingsPage from './components/settings/SettingsPage';
 import { SuperAdminPanel } from './components/admin/SuperAdminPanel';
 import { SupportPage } from './components/support/SupportPage';
@@ -81,6 +82,7 @@ function AppContent() {
         'dentists': 'dentists',
         'catalog': 'catalog',
         'resources': 'resources',
+        'batch-management': 'batch-management',
         'help-center': 'help-center',
         'settings': 'settings'
       };
@@ -290,6 +292,8 @@ function AppContent() {
         return <CatalogPage />;
       case 'resources':
         return <ResourcesPage onStockUpdate={handleStockUpdate} />;
+      case 'batch-management':
+        return <BatchManagementPage />;
       case 'settings':
         return <SettingsPage />;
       case 'support':

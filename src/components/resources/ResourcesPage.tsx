@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
 import ResourceVariantManager from './ResourceVariantManager';
+import ResourceBatchLinkManager from '../batch/ResourceBatchLinkManager';
 
 interface Resource {
   id: string;
@@ -36,10 +37,11 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
   const [showModal, setShowModal] = useState(false);
   const [editingResource, setEditingResource] = useState<Resource | null>(null);
   const [showVariantManager, setShowVariantManager] = useState<{ id: string; name: string } | null>(null);
+  const [showBatchLinkManager, setShowBatchLinkManager] = useState<{ id: string; name: string; type: 'resource' | 'variant' } | null>(null);
   const [lowStockVariants, setLowStockVariants] = useState<any[]>([]);
   const [showQuickFill, setShowQuickFill] = useState<{ id: string; name: string; currentStock: number; type: 'resource' | 'variant' } | null>(null);
 
-  useLockScroll(showModal || !!showVariantManager || !!showQuickFill);
+  useLockScroll(showModal || !!showVariantManager || !!showBatchLinkManager || !!showQuickFill);
   const [quickFillQuantity, setQuickFillQuantity] = useState<number>(0);
   const [showTutorial, setShowTutorial] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -882,28 +884,40 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-4 border-t border-slate-100">
-                    <button
-                      onClick={() => setShowVariantManager({ id: resource.id, name: resource.name })}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-cyan-600 bg-cyan-50 hover:bg-cyan-100 rounded-xl transition-all duration-200 font-medium"
-                      title="Gérer les variantes"
-                    >
-                      <Palette className="w-4 h-4" />
-                      <span>Variantes</span>
-                    </button>
-                    <button
-                      onClick={() => handleOpenModal(resource)}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl transition-all duration-200 font-medium"
-                    >
-                      <Edit className="w-4 h-4" />
-                      <span>Modifier</span>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(resource.id)}
-                      className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                  <div className="space-y-2 pt-4 border-t border-slate-100">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setShowVariantManager({ id: resource.id, name: resource.name })}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-cyan-600 bg-cyan-50 hover:bg-cyan-100 rounded-xl transition-all duration-200 font-medium"
+                        title="Gérer les variantes"
+                      >
+                        <Palette className="w-4 h-4" />
+                        <span>Variantes</span>
+                      </button>
+                      <button
+                        onClick={() => setShowBatchLinkManager({ id: resource.id, name: resource.name, type: 'resource' })}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all duration-200 font-medium"
+                        title="Gérer les numéros de lot"
+                      >
+                        <Tag className="w-4 h-4" />
+                        <span>N° Lot</span>
+                      </button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleOpenModal(resource)}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl transition-all duration-200 font-medium"
+                      >
+                        <Edit className="w-4 h-4" />
+                        <span>Modifier</span>
+                      </button>
+                      <button
+                        onClick={() => handleDelete(resource.id)}
+                        className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all duration-200"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -918,6 +932,18 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
           resourceName={showVariantManager.name}
           onClose={() => {
             setShowVariantManager(null);
+            loadResources();
+          }}
+        />
+      )}
+
+      {showBatchLinkManager && (
+        <ResourceBatchLinkManager
+          resourceId={showBatchLinkManager.type === 'resource' ? showBatchLinkManager.id : undefined}
+          variantId={showBatchLinkManager.type === 'variant' ? showBatchLinkManager.id : undefined}
+          resourceName={showBatchLinkManager.name}
+          onClose={() => {
+            setShowBatchLinkManager(null);
             loadResources();
           }}
         />

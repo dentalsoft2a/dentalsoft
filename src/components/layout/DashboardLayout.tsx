@@ -20,7 +20,8 @@ import {
   Camera,
   Cloud,
   Link as LinkIcon,
-  ClipboardCheck
+  ClipboardCheck,
+  Tag
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -103,6 +104,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     { name: 'Dentistes', icon: Users, page: 'dentists', allowedForCancelled: false, menuKey: 'dentists' },
     { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog' },
     { name: 'Ressources', icon: Box, page: 'resources', allowedForCancelled: false, menuKey: 'resources' },
+    { name: 'N° Lot', icon: Tag, page: 'batch-management', allowedForCancelled: false, menuKey: 'batch-management' },
     { name: 'Paramètres', icon: Settings, page: 'settings', allowedForCancelled: true, menuKey: 'settings' },
   ];
 
