@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
-import { Camera, X, Send, CheckCircle, LogOut, History } from 'lucide-react';
+import { Camera, X, Send, CheckCircle, LogOut, History, ClipboardList } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
 import DentistPhotoHistory from './DentistPhotoHistory';
+import DentistDeliveryRequestModal from './DentistDeliveryRequestModal';
 import LaboratorySelector from './LaboratorySelector';
 
 export default function DentistPhotoPanel() {
@@ -19,8 +20,9 @@ export default function DentistPhotoPanel() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [showDeliveryRequest, setShowDeliveryRequest] = useState(false);
 
-  useLockScroll(showModal || showHistory);
+  useLockScroll(showModal || showHistory || showDeliveryRequest);
 
   useEffect(() => {
     loadDentistId();
@@ -172,6 +174,13 @@ export default function DentistPhotoPanel() {
           </div>
           <div className="flex items-center gap-3">
             <button
+              onClick={() => setShowDeliveryRequest(true)}
+              className="p-3 bg-white/30 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all shadow-lg"
+              title="Nouvelle demande"
+            >
+              <ClipboardList className="w-6 h-6 text-white drop-shadow-lg" />
+            </button>
+            <button
               onClick={() => setShowHistory(true)}
               className="p-3 bg-white/30 hover:bg-white/40 rounded-lg backdrop-blur-sm transition-all shadow-lg"
               title="Voir l'historique"
@@ -295,6 +304,12 @@ export default function DentistPhotoPanel() {
       )}
 
       {showHistory && <DentistPhotoHistory onClose={() => setShowHistory(false)} />}
+      {showDeliveryRequest && dentistId && (
+        <DentistDeliveryRequestModal
+          onClose={() => setShowDeliveryRequest(false)}
+          dentistId={dentistId}
+        />
+      )}
     </div>
   );
 }
