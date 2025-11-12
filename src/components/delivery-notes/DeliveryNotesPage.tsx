@@ -8,6 +8,7 @@ import { generateDeliveryNotePDF } from '../../utils/pdfGenerator';
 import { deductStockForDeliveryNote, restoreStockForDeliveryNote } from '../../utils/stockManager';
 import CatalogItemSelector from './CatalogItemSelector';
 import ResourceVariantSelector from './ResourceVariantSelector';
+import ToothSelector from './ToothSelector';
 import DatePicker from '../common/DatePicker';
 import CustomSelect from '../common/CustomSelect';
 import DeliveryNoteDetail from './DeliveryNoteDetail';
@@ -634,6 +635,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
     unit: string;
     shade: string;
     tooth_number: string;
+    tooth_numbers?: string[]; // Multiple teeth selection
     catalog_item_id?: string;
     resource_variants?: Record<string, string>;
   }>>([]);
@@ -724,8 +726,11 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
       const itemsData = Array.isArray(data.items) ? data.items : [];
       setItems(
         itemsData.length > 0
-          ? itemsData
-          : [{ description: '', quantity: 1, unit_price: 0, unit: '', shade: '', tooth_number: '', catalog_item_id: undefined, resource_variants: {} }]
+          ? itemsData.map((item: any) => ({
+              ...item,
+              tooth_numbers: item.tooth_number ? item.tooth_number.split(',').map((t: string) => t.trim()).filter(Boolean) : []
+            }))
+          : [{ description: '', quantity: 1, unit_price: 0, unit: '', shade: '', tooth_number: '', tooth_numbers: [], catalog_item_id: undefined, resource_variants: {} }]
       );
     } catch (error) {
       console.error('Error loading delivery note:', error);
@@ -733,7 +738,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
   };
 
   const addItem = () => {
-    setItems([...items, { description: '', quantity: 1, unit_price: 0, unit: '', shade: '', tooth_number: '', catalog_item_id: undefined, resource_variants: {} }]);
+    setItems([...items, { description: '', quantity: 1, unit_price: 0, unit: '', shade: '', tooth_number: '', tooth_numbers: [], catalog_item_id: undefined, resource_variants: {} }]);
   };
 
   const removeItem = (index: number) => {
@@ -999,6 +1004,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                   unit: item.unit,
                   shade: '',
                   tooth_number: '',
+                  tooth_numbers: [],
                   resource_variants: {},
                 };
                 setItems([...items, newItem]);
@@ -1154,55 +1160,26 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                     <div className="group/item">
                       <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
                         <span className="w-1 h-1 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
-                        N° dent
+                        N° dents
                       </label>
-                      <select
-                        value={item.tooth_number}
-                        onChange={(e) => updateItem(index, 'tooth_number', e.target.value)}
-                        className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white/80 shadow-sm"
-                      >
-                        <option value="">Sélectionner un numéro</option>
-                        <optgroup label="Maxillaire droit (adulte)">
-                          <option value="11">11 (Incisive centrale supérieure droite)</option>
-                          <option value="12">12 (Incisive latérale supérieure droite)</option>
-                          <option value="13">13 (Canine supérieure droite)</option>
-                          <option value="14">14 (Première prémolaire supérieure droite)</option>
-                          <option value="15">15 (Deuxième prémolaire supérieure droite)</option>
-                          <option value="16">16 (Première molaire supérieure droite)</option>
-                          <option value="17">17 (Deuxième molaire supérieure droite)</option>
-                          <option value="18">18 (Troisième molaire supérieure droite)</option>
-                        </optgroup>
-                        <optgroup label="Maxillaire gauche (adulte)">
-                          <option value="21">21 (Incisive centrale supérieure gauche)</option>
-                          <option value="22">22 (Incisive latérale supérieure gauche)</option>
-                          <option value="23">23 (Canine supérieure gauche)</option>
-                          <option value="24">24 (Première prémolaire supérieure gauche)</option>
-                          <option value="25">25 (Deuxième prémolaire supérieure gauche)</option>
-                          <option value="26">26 (Première molaire supérieure gauche)</option>
-                          <option value="27">27 (Deuxième molaire supérieure gauche)</option>
-                          <option value="28">28 (Troisième molaire supérieure gauche)</option>
-                        </optgroup>
-                        <optgroup label="Mandibulaire gauche (adulte)">
-                          <option value="31">31 (Incisive centrale inférieure gauche)</option>
-                          <option value="32">32 (Incisive latérale inférieure gauche)</option>
-                          <option value="33">33 (Canine inférieure gauche)</option>
-                          <option value="34">34 (Première prémolaire inférieure gauche)</option>
-                          <option value="35">35 (Deuxième prémolaire inférieure gauche)</option>
-                          <option value="36">36 (Première molaire inférieure gauche)</option>
-                          <option value="37">37 (Deuxième molaire inférieure gauche)</option>
-                          <option value="38">38 (Troisième molaire inférieure gauche)</option>
-                        </optgroup>
-                        <optgroup label="Mandibulaire droit (adulte)">
-                          <option value="41">41 (Incisive centrale inférieure droite)</option>
-                          <option value="42">42 (Incisive latérale inférieure droite)</option>
-                          <option value="43">43 (Canine inférieure droite)</option>
-                          <option value="44">44 (Première prémolaire inférieure droite)</option>
-                          <option value="45">45 (Deuxième prémolaire inférieure droite)</option>
-                          <option value="46">46 (Première molaire inférieure droite)</option>
-                          <option value="47">47 (Deuxième molaire inférieure droite)</option>
-                          <option value="48">48 (Troisième molaire inférieure droite)</option>
-                        </optgroup>
-                      </select>
+                      <ToothSelector
+                        selectedTeeth={item.tooth_numbers || []}
+                        onChange={(teeth) => {
+                          const newItems = [...items];
+                          newItems[index] = {
+                            ...newItems[index],
+                            tooth_numbers: teeth,
+                            tooth_number: teeth.join(', '),
+                            quantity: teeth.length > 0 ? teeth.length : 1
+                          };
+                          setItems(newItems);
+                        }}
+                      />
+                      {item.tooth_numbers && item.tooth_numbers.length > 0 && (
+                        <p className="mt-1.5 text-xs text-slate-600">
+                          <span className="font-semibold text-primary-600">{item.tooth_numbers.length}</span> dent{item.tooth_numbers.length !== 1 ? 's' : ''} sélectionnée{item.tooth_numbers.length !== 1 ? 's' : ''} • Quantité mise à jour automatiquement
+                        </p>
+                      )}
                     </div>
                   </div>
 
