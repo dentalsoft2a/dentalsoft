@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, FileDown, User, CheckCircle, Play } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, FileDown, User, CheckCircle, Play, Clock, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -10,6 +10,7 @@ import CatalogItemSelector from './CatalogItemSelector';
 import ResourceVariantSelector from './ResourceVariantSelector';
 import DatePicker from '../common/DatePicker';
 import CustomSelect from '../common/CustomSelect';
+import DeliveryNoteDetail from './DeliveryNoteDetail';
 
 type DeliveryNote = Database['public']['Tables']['delivery_notes']['Row'] & {
   dentists?: { name: string };
@@ -78,7 +79,7 @@ export default function DeliveryNotesPage() {
         .from('delivery_notes')
         .select('*, dentists(name)')
         .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setDeliveryNotes(data || []);
@@ -89,7 +90,47 @@ export default function DeliveryNotesPage() {
     }
   };
 
-  const filteredNotes = deliveryNotes.filter((note) => {
+  const handleApproveRequest = async (noteId: string) => {
+    if (!confirm('Approuver cette demande et commencer le travail ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('delivery_notes')
+        .update({ status: 'pending' })
+        .eq('id', noteId);
+
+      if (error) throw error;
+      loadDeliveryNotes();
+    } catch (error) {
+      console.error('Error approving request:', error);
+      alert('Erreur lors de l\'approbation de la demande');
+    }
+  };
+
+  const handleRejectRequest = async (noteId: string) => {
+    const reason = prompt('Raison du refus (optionnel):');
+    if (reason === null) return;
+
+    if (!confirm('Rejeter cette demande ? Elle sera supprimée.')) return;
+
+    try {
+      const { error } = await supabase
+        .from('delivery_notes')
+        .delete()
+        .eq('id', noteId);
+
+      if (error) throw error;
+      loadDeliveryNotes();
+    } catch (error) {
+      console.error('Error rejecting request:', error);
+      alert('Erreur lors du rejet de la demande');
+    }
+  };
+
+  const pendingApprovalNotes = deliveryNotes.filter(note => note.status === 'pending_approval');
+  const activeNotes = deliveryNotes.filter(note => note.status !== 'pending_approval');
+
+  const filteredNotes = activeNotes.filter((note) => {
     const matchesSearch =
       note.delivery_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       note.dentists?.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -222,9 +263,70 @@ export default function DeliveryNotesPage() {
           </div>
         </div>
 
+        {pendingApprovalNotes.length > 0 && (
+          <div className="p-4 border-b border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center">
+                <Clock className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="font-bold text-amber-900">Demandes en attente d'approbation</h3>
+                <p className="text-sm text-amber-700">{pendingApprovalNotes.length} demande(s) de dentiste(s) en attente</p>
+              </div>
+            </div>
+            <div className="space-y-3">
+              {pendingApprovalNotes.map((note) => (
+                <div key={note.id} className="bg-white rounded-lg border-2 border-amber-200 p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-4 mb-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold text-slate-900">{note.delivery_number}</span>
+                        <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded-full font-medium">
+                          En attente
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-600">Dentiste: {note.dentists?.name}</p>
+                      {(note as any).patient_name && (
+                        <p className="text-sm text-slate-600">Patient: {(note as any).patient_name}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleApproveRequest(note.id)}
+                        className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all"
+                        title="Approuver"
+                      >
+                        <ThumbsUp className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleRejectRequest(note.id)}
+                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                        title="Rejeter"
+                      >
+                        <ThumbsDown className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingNote(note.id);
+                          setShowModal(true);
+                        }}
+                        className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                        title="Modifier"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  <DeliveryNoteDetail note={note as any} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <div className="p-8 text-center text-slate-600">Chargement...</div>
-        ) : filteredNotes.length === 0 ? (
+        ) : filteredNotes.length === 0 && pendingApprovalNotes.length === 0 ? (
           <div className="p-8 text-center text-slate-600">
             {searchTerm ? 'Aucun bon de livraison trouvé' : 'Aucun bon de livraison enregistré'}
           </div>

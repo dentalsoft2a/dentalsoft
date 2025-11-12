@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Send, CheckCircle, ClipboardList, Calendar as CalendarIcon } from 'lucide-react';
+import { X, Send, CheckCircle, ClipboardList, Calendar as CalendarIcon, FileQuestion, ShoppingCart } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import LaboratorySelector from './LaboratorySelector';
@@ -22,6 +22,7 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [labSettings, setLabSettings] = useState<any>(null);
+  const [requestType, setRequestType] = useState<'order' | 'quote'>('order');
 
   useEffect(() => {
     if (selectedLab) {
@@ -39,6 +40,15 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
 
       if (error) throw error;
       setLabSettings(data);
+
+      // Set default request type based on lab settings
+      if (data) {
+        if (data.allow_dentist_orders && !data.allow_dentist_quote_requests) {
+          setRequestType('order');
+        } else if (!data.allow_dentist_orders && data.allow_dentist_quote_requests) {
+          setRequestType('quote');
+        }
+      }
     } catch (error) {
       console.error('Error loading lab settings:', error);
     }
@@ -82,8 +92,15 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
         return;
       }
 
-      if (labSettings && !labSettings.allow_dentist_orders) {
+      // Check if request type is allowed
+      if (requestType === 'order' && labSettings && !labSettings.allow_dentist_orders) {
         setError('Ce laboratoire n\'accepte pas les commandes directes pour le moment');
+        setLoading(false);
+        return;
+      }
+
+      if (requestType === 'quote' && labSettings && !labSettings.allow_dentist_quote_requests) {
+        setError('Ce laboratoire n\'accepte pas les demandes de devis pour le moment');
         setLoading(false);
         return;
       }
@@ -104,9 +121,65 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
         }
       }
 
-      const deliveryNumber = `DENT-${nextNumber.toString().padStart(6, '0')}`;
+      // Handle quote request
+      if (requestType === 'quote') {
+        const { data: quoteRequest, error: insertError } = await supabase
+          .from('quote_requests')
+          .insert({
+            laboratory_id: selectedLab,
+            dentist_account_id: user.id,
+            dentist_id: dentistData.id,
+            patient_name: patientName,
+            work_description: workDescription,
+            tooth_numbers: toothNumbers || null,
+            shade: shade || null,
+            notes: notes || null,
+            requested_delivery_date: requestedDeliveryDate || null,
+            status: 'pending'
+          })
+          .select()
+          .single();
 
-      const notesText = `Description: ${workDescription}${toothNumbers ? `\nDents: ${toothNumbers}` : ''}${shade ? `\nTeinte: ${shade}` : ''}${notes ? `\n\nNotes: ${notes}` : ''}`;
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          throw insertError;
+        }
+
+        if (!quoteRequest) {
+          throw new Error('Failed to create quote request');
+        }
+
+        const { data: dentistAccount } = await supabase
+          .from('dentist_accounts')
+          .select('name, email')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        const { error: notificationError } = await supabase
+          .from('dentist_notifications')
+          .insert({
+            dentist_account_id: user.id,
+            laboratory_id: selectedLab,
+            type: 'quote_request_created',
+            title: 'Nouvelle demande de devis',
+            message: `${dentistAccount?.name || 'Un dentiste'} a créé une demande de devis pour ${patientName}`,
+            reference_id: quoteRequest.id,
+            reference_type: 'quote_request'
+          });
+
+        if (notificationError) {
+          console.error('Notification error:', notificationError);
+        }
+
+        setSuccess(true);
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+        return;
+      }
+
+      // Handle direct order
+      const deliveryNumber = `DENT-${nextNumber.toString().padStart(6, '0')}`;
 
       const { data: deliveryNote, error: insertError } = await supabase
         .rpc('insert_delivery_note_for_dentist', {
@@ -116,7 +189,10 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
           p_patient_name: patientName,
           p_date: requestedDeliveryDate || new Date().toISOString().split('T')[0],
           p_status: 'pending_approval',
-          p_notes: notesText
+          p_notes: notes || null,
+          p_work_description: workDescription,
+          p_tooth_numbers: toothNumbers || null,
+          p_shade: shade || null
         });
 
       if (insertError) {
@@ -203,12 +279,73 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
               </div>
             )}
 
-            {labSettings && !labSettings.allow_dentist_orders && selectedLab && (
-              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <p className="text-sm text-amber-700">
-                  Ce laboratoire n'accepte pas les commandes directes. Contactez-le pour plus d'informations.
-                </p>
-              </div>
+            {labSettings && selectedLab && (
+              <>
+                {!labSettings.allow_dentist_orders && !labSettings.allow_dentist_quote_requests && (
+                  <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <p className="text-sm text-red-700">
+                      Ce laboratoire n'accepte aucune demande en ligne pour le moment. Veuillez les contacter directement.
+                    </p>
+                  </div>
+                )}
+
+                {(labSettings.allow_dentist_orders || labSettings.allow_dentist_quote_requests) && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-slate-700 mb-3">
+                      Type de demande *
+                    </label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {labSettings.allow_dentist_orders && (
+                        <button
+                          type="button"
+                          onClick={() => setRequestType('order')}
+                          className={`flex items-center gap-3 p-4 border-2 rounded-lg transition-all ${
+                            requestType === 'order'
+                              ? 'border-blue-500 bg-blue-50 shadow-md'
+                              : 'border-slate-200 hover:border-slate-300 bg-white'
+                          }`}
+                        >
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            requestType === 'order' ? 'bg-blue-500' : 'bg-slate-200'
+                          }`}>
+                            <ShoppingCart className={`w-5 h-5 ${
+                              requestType === 'order' ? 'text-white' : 'text-slate-600'
+                            }`} />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold text-slate-900">Commande directe</div>
+                            <div className="text-xs text-slate-600">Créer un bon de livraison</div>
+                          </div>
+                        </button>
+                      )}
+
+                      {labSettings.allow_dentist_quote_requests && (
+                        <button
+                          type="button"
+                          onClick={() => setRequestType('quote')}
+                          className={`flex items-center gap-3 p-4 border-2 rounded-lg transition-all ${
+                            requestType === 'quote'
+                              ? 'border-cyan-500 bg-cyan-50 shadow-md'
+                              : 'border-slate-200 hover:border-slate-300 bg-white'
+                          }`}
+                        >
+                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                            requestType === 'quote' ? 'bg-cyan-500' : 'bg-slate-200'
+                          }`}>
+                            <FileQuestion className={`w-5 h-5 ${
+                              requestType === 'quote' ? 'text-white' : 'text-slate-600'
+                            }`} />
+                          </div>
+                          <div className="text-left">
+                            <div className="font-semibold text-slate-900">Demande de devis</div>
+                            <div className="text-xs text-slate-600">Obtenir un prix estimatif</div>
+                          </div>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -307,11 +444,11 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
 
               <button
                 type="submit"
-                disabled={loading || (labSettings && !labSettings.allow_dentist_orders)}
+                disabled={loading || (labSettings && !labSettings.allow_dentist_orders && !labSettings.allow_dentist_quote_requests)}
                 className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
               >
                 <Send className="w-5 h-5" />
-                {loading ? 'Envoi en cours...' : 'Envoyer la demande'}
+                {loading ? 'Envoi en cours...' : requestType === 'quote' ? 'Envoyer la demande de devis' : 'Envoyer la demande'}
               </button>
             </form>
           </div>
