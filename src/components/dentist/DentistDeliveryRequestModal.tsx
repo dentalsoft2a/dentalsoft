@@ -52,17 +52,32 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
     setError(null);
 
     try {
+      console.log('=== Debug: Checking dentist link ===');
+      console.log('User ID (dentist account):', user.id);
+      console.log('Selected Lab ID:', selectedLab);
+
+      const { data: allDentists, error: allError } = await supabase
+        .from('dentists')
+        .select('*')
+        .eq('user_id', selectedLab);
+
+      console.log('All dentists for this lab:', allDentists);
+
       const { data: dentistData, error: dentistError } = await supabase
         .from('dentists')
-        .select('id, user_id')
+        .select('id, user_id, linked_dentist_account_id')
         .eq('user_id', selectedLab)
         .eq('linked_dentist_account_id', user.id)
         .maybeSingle();
 
+      console.log('Dentist data found:', dentistData);
+      console.log('Dentist error:', dentistError);
+
       if (dentistError) throw dentistError;
 
       if (!dentistData) {
-        setError('Vous n\'êtes pas autorisé à commander auprès de ce laboratoire');
+        console.error('No matching dentist record found');
+        setError('Vous n\'êtes pas autorisé à commander auprès de ce laboratoire. Veuillez contacter le laboratoire pour qu\'il vous ajoute à sa liste de dentistes.');
         setLoading(false);
         return;
       }
