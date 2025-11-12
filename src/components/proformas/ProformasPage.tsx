@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Eye, Edit, Trash2, Search, FileDown, Receipt, Mail, Send } from 'lucide-react';
+import { Plus, Eye, CreditCard as Edit, Trash2, Search, FileDown, Receipt, Mail, Send } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
