@@ -37,11 +37,13 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
       const [labsResult, favoritesResult] = await Promise.all([
         supabase
           .from('user_profiles')
-          .select('id, laboratory_name')
+          .select(`
+            id,
+            profiles!inner(laboratory_name)
+          `)
           .eq('role', 'laboratory')
-          .not('laboratory_name', 'is', null)
-          .neq('laboratory_name', '')
-          .order('laboratory_name'),
+          .not('profiles.laboratory_name', 'is', null)
+          .neq('profiles.laboratory_name', ''),
         supabase
           .from('dentist_favorite_laboratories')
           .select('laboratory_profile_id')
@@ -50,9 +52,13 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
 
       if (labsResult.error) throw labsResult.error;
 
-      const labs = (labsResult.data || []).filter(
-        lab => lab.laboratory_name && lab.laboratory_name.trim() !== ''
-      );
+      const labs = (labsResult.data || [])
+        .map(item => ({
+          id: item.id,
+          laboratory_name: (item.profiles as any)?.laboratory_name || ''
+        }))
+        .filter(lab => lab.laboratory_name && lab.laboratory_name.trim() !== '')
+        .sort((a, b) => a.laboratory_name.localeCompare(b.laboratory_name));
 
       const favoriteIds = new Set(
         (favoritesResult.data || []).map(fav => fav.laboratory_profile_id)
