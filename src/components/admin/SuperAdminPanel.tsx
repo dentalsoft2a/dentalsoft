@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell, Settings, ChevronDown, Gift, Building2 } from 'lucide-react';
+import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell, Settings, ChevronDown, Gift, Building2, Database } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { UsersManagement } from './UsersManagement';
 import { SubscriptionSettings } from './SubscriptionSettings';
@@ -10,8 +10,9 @@ import { SmtpSettings } from './SmtpSettings';
 import AlertsManagement from './AlertsManagement';
 import { ReferralManagement } from './ReferralManagement';
 import { CompanySettings } from './CompanySettings';
+import DatabaseOptimization from './DatabaseOptimization';
 
-type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit' | 'alerts' | 'referrals' | 'company';
+type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit' | 'alerts' | 'referrals' | 'company' | 'database';
 type CategoryType = 'gestion' | 'configuration' | 'suivi';
 
 interface SuperAdminPanelProps {
@@ -69,7 +70,8 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
       items: [
         { id: 'company' as TabType, label: 'Entreprise', icon: Building2 },
         { id: 'smtp' as TabType, label: 'Email', icon: Mail },
-        { id: 'alerts' as TabType, label: 'Alertes', icon: Bell }
+        { id: 'alerts' as TabType, label: 'Alertes', icon: Bell },
+        { id: 'database' as TabType, label: 'Base de données', icon: Database }
       ]
     },
     {
@@ -245,6 +247,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
               {activeTab === 'alerts' && <AlertsManagement />}
               {activeTab === 'codes' && <AccessCodesManagement />}
               {activeTab === 'smtp' && <SmtpSettings />}
+              {activeTab === 'database' && <DatabaseOptimization />}
               {activeTab === 'support' && <SupportTickets />}
               {activeTab === 'audit' && <AdminAuditLog />}
             </div>
