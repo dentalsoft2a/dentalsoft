@@ -46,8 +46,7 @@ export default function BatchSelector({ selectedBatches, onSelect }: BatchSelect
           material_id,
           batch_number,
           is_current,
-          batch_materials(name),
-          batch_brands(name)
+          batch_materials(name, batch_brands(name))
         `)
         .eq('user_id', user.id)
         .order('is_current', { ascending: false })
@@ -61,7 +60,7 @@ export default function BatchSelector({ selectedBatches, onSelect }: BatchSelect
         batch_number: batch.batch_number,
         is_current: batch.is_current,
         material_name: batch.batch_materials?.name,
-        brand_name: batch.batch_brands?.name
+        brand_name: batch.batch_materials?.batch_brands?.name
       }));
 
       setAvailableBatches(formattedBatches);
