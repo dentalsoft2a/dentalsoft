@@ -16,6 +16,7 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
   const [workDescription, setWorkDescription] = useState('');
   const [toothNumbers, setToothNumbers] = useState('');
   const [shade, setShade] = useState('');
+  const [prescriptionDate, setPrescriptionDate] = useState('');
   const [requestedDeliveryDate, setRequestedDeliveryDate] = useState('');
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,7 +57,28 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !selectedLab || !patientName || !workDescription) return;
+    if (!user || !selectedLab || !patientName || !workDescription || !prescriptionDate) return;
+
+    // Validation: la date de prescription ne doit pas être dans le futur
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const prescDate = new Date(prescriptionDate);
+    prescDate.setHours(0, 0, 0, 0);
+
+    if (prescDate > today) {
+      setError('La date de prescription ne peut pas être dans le futur');
+      return;
+    }
+
+    // Validation: si une date de livraison est spécifiée, la prescription doit être antérieure
+    if (requestedDeliveryDate) {
+      const deliveryDate = new Date(requestedDeliveryDate);
+      deliveryDate.setHours(0, 0, 0, 0);
+      if (prescDate > deliveryDate) {
+        setError('La date de prescription doit être antérieure ou égale à la date de livraison');
+        return;
+      }
+    }
 
     setLoading(true);
     setError(null);
@@ -134,6 +156,7 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
             tooth_numbers: toothNumbers || null,
             shade: shade || null,
             notes: notes || null,
+            prescription_date: prescriptionDate,
             requested_delivery_date: requestedDeliveryDate || null,
             status: 'pending'
           })
@@ -179,7 +202,8 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
             p_notes: notes || null,
             p_work_description: workDescription,
             p_tooth_numbers: toothNumbers || null,
-            p_shade: shade || null
+            p_shade: shade || null,
+            p_prescription_date: prescriptionDate
           });
 
         if (result.error) {
@@ -397,6 +421,24 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
                     placeholder="A2, B1..."
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Date de prescription *
+                </label>
+                <div className="relative">
+                  <input
+                    type="date"
+                    value={prescriptionDate}
+                    onChange={(e) => setPrescriptionDate(e.target.value)}
+                    max={getTodayDate()}
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-base"
+                    required
+                  />
+                  <CalendarIcon className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                </div>
+                <p className="mt-1 text-xs text-slate-500">Date à laquelle le travail a été prescrit par le dentiste</p>
               </div>
 
               <div>

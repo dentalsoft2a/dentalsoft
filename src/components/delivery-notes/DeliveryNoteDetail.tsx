@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FileText, Stethoscope, Palette, AlertCircle, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, Stethoscope, Palette, AlertCircle, ChevronDown, ChevronUp, Calendar } from 'lucide-react';
 
 interface DeliveryNoteDetailProps {
   note: {
@@ -11,6 +11,7 @@ interface DeliveryNoteDetailProps {
     notes?: string;
     status?: string;
     created_by_dentist?: boolean;
+    prescription_date?: string;
   };
   compact?: boolean;
 }
@@ -22,7 +23,7 @@ export default function DeliveryNoteDetail({ note, compact = false }: DeliveryNo
     return null;
   }
 
-  const hasStructuredData = note.work_description || note.tooth_numbers || note.shade;
+  const hasStructuredData = note.work_description || note.tooth_numbers || note.shade || note.prescription_date;
 
   if (!hasStructuredData && !note.notes) {
     return null;
@@ -48,6 +49,19 @@ export default function DeliveryNoteDetail({ note, compact = false }: DeliveryNo
 
         {isExpanded && (
           <div className="mt-2 space-y-2">
+            {note.prescription_date && (
+              <div className="bg-slate-50 rounded p-2">
+                <p className="text-xs font-medium text-slate-600 mb-0.5">Date de prescription</p>
+                <p className="text-xs text-slate-900 font-medium">
+                  {new Date(note.prescription_date).toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </p>
+              </div>
+            )}
+
             {note.work_description && (
               <div className="bg-slate-50 rounded p-2">
                 <p className="text-xs font-medium text-slate-600 mb-0.5">Description du travail</p>
@@ -102,6 +116,24 @@ export default function DeliveryNoteDetail({ note, compact = false }: DeliveryNo
           </div>
           <h4 className="font-bold text-slate-900">Informations de la demande</h4>
         </div>
+
+        {note.prescription_date && (
+          <div className="bg-white rounded-lg p-3 border border-slate-200">
+            <div className="flex items-start gap-2">
+              <Calendar className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-slate-600 mb-1">Date de prescription</p>
+                <p className="text-sm text-slate-900 font-medium">
+                  {new Date(note.prescription_date).toLocaleDateString('fr-FR', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {note.work_description && (
           <div className="bg-white rounded-lg p-3 border border-slate-200">
