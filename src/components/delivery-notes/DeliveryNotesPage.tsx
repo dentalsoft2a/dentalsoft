@@ -104,8 +104,16 @@ export default function DeliveryNotesPage() {
 
       const noteData = note as any;
 
-      // Validate that all items have prices
+      // Validate that items exist and all have valid prices
       const noteItems = noteData.items || [];
+
+      // Check if there are items
+      if (noteItems.length === 0) {
+        alert('Impossible d\'approuver cette demande : vous devez d\'abord modifier le BL pour ajouter les articles et leurs prix.');
+        return;
+      }
+
+      // Check if all items have valid prices (> 0)
       const hasInvalidPrices = noteItems.some((item: any) => {
         const price = parseFloat(item.unit_price);
         return isNaN(price) || price <= 0;
