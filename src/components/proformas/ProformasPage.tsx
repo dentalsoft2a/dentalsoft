@@ -687,28 +687,31 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
     if (!user) return;
 
     try {
-      // Get the last proforma number for this user
+      const year = new Date().getFullYear();
+
+      // Get all proforma numbers for this year for this user
       const { data, error } = await supabase
         .from('proformas')
         .select('proforma_number')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
+        .like('proforma_number', `PRO-${year}-%`)
+        .order('proforma_number', { ascending: false });
 
       if (error) throw error;
 
-      const year = new Date().getFullYear();
       let nextNumber = 1;
 
       if (data && data.length > 0) {
-        const lastNumber = data[0].proforma_number;
-        const match = lastNumber.match(/PRO-(\d{4})-(\d+)/);
-        if (match) {
-          const lastYear = parseInt(match[1]);
-          const lastNum = parseInt(match[2]);
-          if (lastYear === year) {
-            nextNumber = lastNum + 1;
-          }
+        // Extract all numbers for current year and find the highest
+        const numbers = data
+          .map(p => {
+            const match = p.proforma_number.match(/PRO-(\d{4})-(\d+)/);
+            return match ? parseInt(match[2]) : 0;
+          })
+          .filter(n => n > 0);
+
+        if (numbers.length > 0) {
+          nextNumber = Math.max(...numbers) + 1;
         }
       }
 
@@ -970,25 +973,29 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
         }
       } else {
         // Re-generate proforma number just before insert to avoid duplicates
-        const { data: lastProforma } = await supabase
+        const year = new Date().getFullYear();
+
+        // Get all proforma numbers for this year
+        const { data: yearProformas } = await supabase
           .from('proformas')
           .select('proforma_number')
           .eq('user_id', user.id)
-          .order('created_at', { ascending: false })
-          .limit(1);
+          .like('proforma_number', `PRO-${year}-%`)
+          .order('proforma_number', { ascending: false });
 
-        const year = new Date().getFullYear();
         let nextNumber = 1;
 
-        if (lastProforma && lastProforma.length > 0) {
-          const lastNumber = lastProforma[0].proforma_number;
-          const match = lastNumber.match(/PRO-(\d{4})-(\d+)/);
-          if (match) {
-            const lastYear = parseInt(match[1]);
-            const lastNum = parseInt(match[2]);
-            if (lastYear === year) {
-              nextNumber = lastNum + 1;
-            }
+        if (yearProformas && yearProformas.length > 0) {
+          // Extract all numbers for current year and find the highest
+          const numbers = yearProformas
+            .map(p => {
+              const match = p.proforma_number.match(/PRO-(\d{4})-(\d+)/);
+              return match ? parseInt(match[2]) : 0;
+            })
+            .filter(n => n > 0);
+
+          if (numbers.length > 0) {
+            nextNumber = Math.max(...numbers) + 1;
           }
         }
 
@@ -1042,9 +1049,16 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
       }
 
       onSave();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving proforma:', error);
-      alert('Erreur lors de la sauvegarde');
+      if (error.code === '23505') {
+        alert('Ce numéro de proforma existe déjà. Veuillez réessayer.');
+        // Force reload to get fresh data
+        await loadProformas();
+        onCancel();
+      } else {
+        alert('Erreur lors de la sauvegarde');
+      }
     } finally {
       setLoading(false);
     }
