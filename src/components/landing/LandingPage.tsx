@@ -4,12 +4,14 @@ import DentalCloudLogo from '../common/DentalCloudLogo';
 import { supabase } from '../../lib/supabase';
 import LoginPage from '../auth/LoginPage';
 import RegisterPage from '../auth/RegisterPage';
+import DentistLoginPage from '../dentist/DentistLoginPage';
+import DentistRegisterPage from '../dentist/DentistRegisterPage';
 
 export function LandingPage() {
   const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
                 (window.navigator as any).standalone === true;
 
-  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'register'>(
+  const [currentView, setCurrentView] = useState<'landing' | 'login' | 'register' | 'dentist-login' | 'dentist-register'>(
     isPWA ? 'login' : 'landing'
   );
   const [price, setPrice] = useState<number>(59.99);
@@ -163,6 +165,14 @@ export function LandingPage() {
     );
   }
 
+  if (currentView === 'dentist-login') {
+    return <DentistLoginPage onNavigate={setCurrentView} />;
+  }
+
+  if (currentView === 'dentist-register') {
+    return <DentistRegisterPage onNavigate={setCurrentView} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-cyan-50">
       <nav className="bg-white/80 backdrop-blur-lg border-b border-slate-200 sticky top-0 z-50">
@@ -219,6 +229,14 @@ export function LandingPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-primary-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span className="relative z-10">Commencer - 1 mois offert</span>
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform relative z-10" />
+                </button>
+
+                <button
+                  onClick={() => setCurrentView('dentist-register')}
+                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-white border-2 border-blue-500 text-blue-600 text-sm sm:text-base font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 group"
+                >
+                  <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <span>Espace Dentiste - Gratuit</span>
                 </button>
 
                 <div className="relative">
