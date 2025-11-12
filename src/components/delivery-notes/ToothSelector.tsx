@@ -70,8 +70,17 @@ export default function ToothSelector({ selectedTeeth, onChange }: ToothSelector
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
+      const dropdownHeight = 384; // max-h-96 = 24rem = 384px
+      const spaceBelow = window.innerHeight - rect.bottom;
+      const spaceAbove = rect.top;
+
+      // Ouvrir vers le haut si pas assez d'espace en bas
+      const shouldOpenUpward = spaceBelow < dropdownHeight && spaceAbove > spaceBelow;
+
       setDropdownPosition({
-        top: rect.bottom + window.scrollY + 4,
+        top: shouldOpenUpward
+          ? rect.top + window.scrollY - dropdownHeight - 4
+          : rect.bottom + window.scrollY + 4,
         left: rect.left + window.scrollX,
         width: rect.width
       });
