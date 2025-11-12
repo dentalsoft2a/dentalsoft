@@ -62,49 +62,49 @@ export default function DentistLoginPage({ onNavigate }: DentistLoginPageProps) 
         </button>
 
         <div className="max-w-md mx-auto">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <DentalCloudLogo size="lg" />
+          <div className="text-center mb-6">
+            <div className="flex justify-center mb-3">
+              <DentalCloudLogo size={40} showText={false} />
             </div>
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Connexion Dentiste</h1>
-            <p className="text-slate-600">Accédez à votre portail dentiste</p>
+            <h1 className="text-2xl font-bold text-slate-900 mb-1">Connexion Dentiste</h1>
+            <p className="text-sm text-slate-600">Accédez à votre portail dentiste</p>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-8">
-            <div className="flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl mb-6 mx-auto">
-              <Camera className="w-8 h-8 text-white" />
+          <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-6">
+            <div className="flex items-center justify-center w-14 h-14 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl mb-5 mx-auto">
+              <Camera className="w-7 h-7 text-white" />
             </div>
 
             {error && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                 {error}
               </div>
             )}
 
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-3">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
                   Email *
                 </label>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
                   placeholder="votre@email.com"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
                   Mot de passe *
                 </label>
                 <input
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+                  className="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition text-sm"
                   placeholder="••••••••"
                   required
                   minLength={6}
@@ -114,13 +114,13 @@ export default function DentistLoginPage({ onNavigate }: DentistLoginPageProps) 
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition disabled:opacity-50 disabled:cursor-not-allowed text-sm mt-4"
               >
                 {loading ? 'Connexion en cours...' : 'Se connecter'}
               </button>
             </form>
 
-            <div className="mt-6 text-center">
+            <div className="mt-5 text-center">
               <p className="text-sm text-slate-600">
                 Pas encore inscrit ?{' '}
                 <button
@@ -132,7 +132,7 @@ export default function DentistLoginPage({ onNavigate }: DentistLoginPageProps) 
               </p>
             </div>
 
-            <div className="mt-4 text-center">
+            <div className="mt-3 text-center">
               <p className="text-xs text-slate-500">
                 Vous êtes un laboratoire ?{' '}
                 <button
