@@ -9,6 +9,7 @@ import { deductStockForDeliveryNote, restoreStockForDeliveryNote } from '../../u
 import CatalogItemSelector from './CatalogItemSelector';
 import ResourceVariantSelector from './ResourceVariantSelector';
 import ToothSelector from './ToothSelector';
+import BatchSelector from './BatchSelector';
 import DatePicker from '../common/DatePicker';
 import CustomSelect from '../common/CustomSelect';
 import DeliveryNoteDetail from './DeliveryNoteDetail';
@@ -311,11 +312,40 @@ export default function DeliveryNotesPage() {
 
       const items = Array.isArray(note.items) ? note.items : [];
 
+      // Load batch tracking data
+      const { data: batchData, error: batchError } = await supabase
+        .from('delivery_note_batches')
+        .select(`
+          delivery_note_item_index,
+          quantity_used,
+          batch_numbers(batch_number),
+          batch_materials(name)
+        `)
+        .eq('delivery_note_id', note.id);
+
+      if (batchError) console.error('Error loading batches:', batchError);
+
+      // Attach batches to items
+      const itemsWithBatches = items.map((item: any, index: number) => {
+        const itemBatches = (batchData || [])
+          .filter((b: any) => b.delivery_note_item_index === index)
+          .map((b: any) => ({
+            batch_number: b.batch_numbers?.batch_number,
+            material_name: b.batch_materials?.name,
+            quantity_used: b.quantity_used
+          }));
+
+        return {
+          ...item,
+          batches: itemBatches.length > 0 ? itemBatches : undefined
+        };
+      });
+
       await generateDeliveryNotePDF({
         delivery_number: note.delivery_number,
         date: note.date,
         prescription_date: (note as any).prescription_date,
-        items: items as any,
+        items: itemsWithBatches as any,
         laboratory_name: profile?.laboratory_name || '',
         laboratory_address: profile?.laboratory_address || '',
         laboratory_phone: profile?.laboratory_phone || '',
@@ -658,6 +688,13 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
     tooth_numbers?: string[]; // Multiple teeth selection
     catalog_item_id?: string;
     resource_variants?: Record<string, string>;
+    batches?: Array<{
+      batch_number_id: string;
+      material_id: string;
+      quantity_used: number;
+      batch_number?: string;
+      material_name?: string;
+    }>;
   }>>([]);
   const [loading, setLoading] = useState(false);
 
@@ -834,6 +871,28 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
             alert(stockResult.error || 'Erreur lors de la gestion du stock');
             setLoading(false);
             return;
+          }
+        }
+
+        // Save batch tracking for each item
+        const batchRecords = items.flatMap((item, itemIndex) =>
+          (item.batches || []).map(batch => ({
+            user_id: user.id,
+            delivery_note_id: newNote.id,
+            delivery_note_item_index: itemIndex,
+            batch_number_id: batch.batch_number_id,
+            material_id: batch.material_id,
+            quantity_used: batch.quantity_used
+          }))
+        );
+
+        if (batchRecords.length > 0) {
+          const { error: batchError } = await supabase
+            .from('delivery_note_batches')
+            .insert(batchRecords);
+
+          if (batchError) {
+            console.error('Error saving batch tracking:', batchError);
           }
         }
       }
@@ -1204,7 +1263,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                   </div>
 
                   {item.catalog_item_id && (
-                    <div className="mt-4">
+                    <div className="mt-4 space-y-4">
                       <ResourceVariantSelector
                         catalogItemId={item.catalog_item_id}
                         selectedVariants={item.resource_variants}
@@ -1216,6 +1275,18 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                             resource_variants: variants
                           };
                           console.log('📝 Updated item:', newItems[index]);
+                          setItems(newItems);
+                        }}
+                      />
+
+                      <BatchSelector
+                        selectedBatches={item.batches || []}
+                        onSelect={(batches) => {
+                          const newItems = [...items];
+                          newItems[index] = {
+                            ...newItems[index],
+                            batches
+                          };
                           setItems(newItems);
                         }}
                       />

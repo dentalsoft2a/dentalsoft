@@ -313,6 +313,56 @@ export default function BatchManagementPage() {
 
   const favoriteMaterials = materials.filter(m => m.is_favorite);
 
+  const handleExportHistory = async () => {
+    try {
+      // Fetch all delivery note batches with related data
+      const { data, error } = await supabase
+        .from('delivery_note_batches')
+        .select(`
+          *,
+          delivery_notes(delivery_number, date, dentists(name)),
+          batch_numbers(batch_number),
+          batch_materials(name, batch_brands(name))
+        `)
+        .eq('user_id', user!.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Format data as CSV
+      const csvHeaders = 'Date,Bon de livraison,Dentiste,Lot,Matériau,Marque,Quantité utilisée\n';
+      const csvRows = (data || []).map((row: any) => {
+        const date = row.delivery_notes?.date || '';
+        const deliveryNumber = row.delivery_notes?.delivery_number || '';
+        const dentist = row.delivery_notes?.dentists?.name || '';
+        const batchNumber = row.batch_numbers?.batch_number || '';
+        const material = row.batch_materials?.name || '';
+        const brand = row.batch_materials?.batch_brands?.name || '';
+        const quantity = row.quantity_used || '';
+
+        return `${date},"${deliveryNumber}","${dentist}","${batchNumber}","${material}","${brand}",${quantity}`;
+      }).join('\n');
+
+      const csv = csvHeaders + csvRows;
+
+      // Create download
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `historique-lots-${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      alert('Export réussi !');
+    } catch (error) {
+      console.error('Error exporting history:', error);
+      alert('Erreur lors de l\'export de l\'historique');
+    }
+  };
+
   return (
     <div>
       <div className="mb-6 md:mb-8 animate-fade-in">
@@ -417,6 +467,14 @@ export default function BatchManagementPage() {
         >
           <Star className={`w-4 h-4 ${showFavoritesOnly ? 'fill-amber-600' : ''}`} />
           <span className="hidden sm:inline">Favoris</span>
+        </button>
+        <button
+          onClick={handleExportHistory}
+          className="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-lg transition-all shadow-md"
+          title="Exporter l'historique des lots"
+        >
+          <Archive className="w-4 h-4" />
+          <span className="hidden sm:inline">Export historique</span>
         </button>
       </div>
 

@@ -7,6 +7,11 @@ interface DeliveryNoteItem {
   unit: string;
   shade: string;
   tooth_number: string;
+  batches?: Array<{
+    batch_number?: string;
+    material_name?: string;
+    quantity_used: number;
+  }>;
 }
 
 interface DeliveryNoteData {
@@ -205,6 +210,24 @@ export async function generateDeliveryNotePDF(data: DeliveryNoteData) {
       }
       yPos += 4;
     });
+
+    // Add batch tracking information
+    if (item.batches && item.batches.length > 0) {
+      doc.setFontSize(7);
+      doc.setTextColor(100, 100, 100);
+      doc.setFont('helvetica', 'italic');
+
+      item.batches.forEach((batch) => {
+        const batchText = `Lot: ${batch.batch_number || 'N/A'} - ${batch.material_name || 'Matériau'} - Qté: ${batch.quantity_used}`;
+        doc.text(batchText, col1X + 5, yPos);
+        yPos += 3;
+      });
+
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(0, 0, 0);
+      yPos += 1;
+    }
 
     if (index < data.items.length - 1) {
       yPos += 2;
