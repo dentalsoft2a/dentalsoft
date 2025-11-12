@@ -1,16 +1,20 @@
 import { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../lib/supabase';
 import DentalCloudLogo from '../common/DentalCloudLogo';
+import { Camera, Building2 } from 'lucide-react';
 
 interface LoginPageProps {
   onToggleRegister: () => void;
+  onNavigateToDentistRegister?: () => void;
 }
 
-export default function LoginPage({ onToggleRegister }: LoginPageProps) {
+export default function LoginPage({ onToggleRegister, onNavigateToDentistRegister }: LoginPageProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userType, setUserType] = useState<'laboratory' | 'dentist'>('laboratory');
   const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -18,10 +22,37 @@ export default function LoginPage({ onToggleRegister }: LoginPageProps) {
     setError('');
     setLoading(true);
 
-    const { error } = await signIn(email, password);
+    try {
+      if (userType === 'dentist') {
+        const { data, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
 
-    if (error) {
-      setError(error.message);
+        if (signInError) throw signInError;
+
+        if (data.user) {
+          const { data: dentistAccount, error: dentistError } = await supabase
+            .from('dentist_accounts')
+            .select('id')
+            .eq('id', data.user.id)
+            .maybeSingle();
+
+          if (dentistError) throw dentistError;
+
+          if (!dentistAccount) {
+            await supabase.auth.signOut();
+            throw new Error('Ce compte n\'est pas un compte dentiste. Utilisez le mode "Laboratoire".');
+          }
+
+          window.location.reload();
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) throw error;
+      }
+    } catch (err: any) {
+      setError(err.message || 'Une erreur est survenue lors de la connexion');
       setLoading(false);
     }
   };
@@ -35,7 +66,38 @@ export default function LoginPage({ onToggleRegister }: LoginPageProps) {
               <DentalCloudLogo size={56} showText={false} />
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">DentalCloud</h1>
-            <p className="text-slate-600 mt-2">Gestion professionnelle pour laboratoires dentaires</p>
+            <p className="text-slate-600 mt-2">
+              {userType === 'laboratory' ? 'Gestion professionnelle pour laboratoires dentaires' : 'Portail dentiste'}
+            </p>
+          </div>
+
+          <div className="mb-6">
+            <div className="bg-slate-100 rounded-xl p-1 flex gap-1">
+              <button
+                type="button"
+                onClick={() => setUserType('laboratory')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  userType === 'laboratory'
+                    ? 'bg-gradient-to-r from-primary-500 to-cyan-500 text-white shadow-lg'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+                <span>Laboratoire</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setUserType('dentist')}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                  userType === 'dentist'
+                    ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg'
+                    : 'text-slate-600 hover:text-slate-900'
+                }`}
+              >
+                <Camera className="w-4 h-4" />
+                <span>Dentiste</span>
+              </button>
+            </div>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -88,10 +150,10 @@ export default function LoginPage({ onToggleRegister }: LoginPageProps) {
             <p className="text-slate-600 text-sm">
               Pas encore de compte ?{' '}
               <button
-                onClick={onToggleRegister}
+                onClick={userType === 'dentist' && onNavigateToDentistRegister ? onNavigateToDentistRegister : onToggleRegister}
                 className="text-primary-600 font-medium hover:text-primary-700 transition-colors duration-200 hover:underline"
               >
-                Créer un compte
+                Créer un compte {userType === 'dentist' ? 'dentiste' : 'laboratoire'}
               </button>
             </p>
           </div>

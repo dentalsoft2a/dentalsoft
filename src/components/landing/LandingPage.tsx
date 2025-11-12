@@ -135,6 +135,7 @@ export function LandingPage() {
         )}
         <LoginPage
           onToggleRegister={() => setCurrentView('register')}
+          onNavigateToDentistRegister={() => setCurrentView('dentist-register')}
         />
       </div>
     );
@@ -229,14 +230,6 @@ export function LandingPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-primary-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span className="relative z-10">Commencer - 1 mois offert</span>
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform relative z-10" />
-                </button>
-
-                <button
-                  onClick={() => setCurrentView('dentist-register')}
-                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-white border-2 border-blue-500 text-blue-600 text-sm sm:text-base font-semibold hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 group"
-                >
-                  <Camera className="w-4 h-4 sm:w-5 sm:h-5" />
-                  <span>Espace Dentiste - Gratuit</span>
                 </button>
 
                 <div className="relative">
