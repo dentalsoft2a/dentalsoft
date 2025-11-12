@@ -36,8 +36,9 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
 
       const [labsResult, favoritesResult] = await Promise.all([
         supabase
-          .from('profiles')
+          .from('user_profiles')
           .select('id, laboratory_name')
+          .eq('role', 'laboratory')
           .not('laboratory_name', 'is', null)
           .neq('laboratory_name', '')
           .order('laboratory_name'),
