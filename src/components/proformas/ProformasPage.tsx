@@ -791,10 +791,12 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
       )];
 
       // Build the query for available delivery notes
+      // Exclude pending_approval as they need to be approved first (converted to BL-)
       let query = supabase
         .from('delivery_notes')
         .select('*, dentists(name)')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .in('status', ['pending', 'in_progress', 'completed']);
 
       // Exclude delivery notes that are already used in proformas
       if (usedDeliveryNoteIds.length > 0) {
@@ -817,7 +819,16 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
       const { data, error } = await query.order('date', { ascending: false });
 
       if (error) throw error;
-      setDeliveryNotes(data || []);
+
+      // Filter out notes without valid items (safety check)
+      const filteredNotes = (data || []).filter(note => {
+        const hasValidItems = Array.isArray(note.items) &&
+          note.items.length > 0 &&
+          note.items.some((item: any) => item.unit_price > 0);
+        return hasValidItems;
+      });
+
+      setDeliveryNotes(filteredNotes);
     } catch (error) {
       console.error('Error loading delivery notes:', error);
     } finally {
@@ -1254,10 +1265,12 @@ function BulkCreateProformasModal({ onClose, onSave }: BulkCreateProformasModalP
       const endDate = new Date(year, month, 0);
 
       // Get all delivery notes for the selected month
+      // Exclude pending_approval as they need to be approved first (converted to BL-)
       const { data: deliveryNotes, error: notesError } = await supabase
         .from('delivery_notes')
         .select('*, dentists(id, name)')
         .eq('user_id', user.id)
+        .in('status', ['pending', 'in_progress', 'completed'])
         .gte('date', startDate.toISOString().split('T')[0])
         .lte('date', endDate.toISOString().split('T')[0])
         .order('dentist_id')
@@ -1279,9 +1292,17 @@ function BulkCreateProformasModal({ onClose, onSave }: BulkCreateProformasModalP
       );
 
       // Filter out delivery notes that are already used in proformas
-      const availableDeliveryNotes = deliveryNotes?.filter(
-        note => !usedDeliveryNoteIds.has(note.id)
-      ) || [];
+      // Also filter out notes without valid items (safety check)
+      const availableDeliveryNotes = deliveryNotes?.filter(note => {
+        if (usedDeliveryNoteIds.has(note.id)) return false;
+
+        // Ensure note has items with prices
+        const hasValidItems = Array.isArray(note.items) &&
+          note.items.length > 0 &&
+          note.items.some((item: any) => item.unit_price > 0);
+
+        return hasValidItems;
+      }) || [];
 
       // Group by dentist
       const groupedByDentist = new Map<string, {

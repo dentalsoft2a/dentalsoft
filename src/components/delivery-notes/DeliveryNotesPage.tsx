@@ -104,6 +104,34 @@ export default function DeliveryNotesPage() {
       if (!note) throw new Error('Bon de livraison introuvable');
 
       const noteData = note as any;
+
+      // Generate a classic BL number
+      const { data: lastDeliveryNote } = await supabase
+        .from('delivery_notes')
+        .select('delivery_number')
+        .eq('user_id', user!.id)
+        .like('delivery_number', 'BL-%')
+        .order('delivery_number', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      let nextNumber = 1;
+      const year = new Date().getFullYear();
+
+      if (lastDeliveryNote?.delivery_number) {
+        const match = lastDeliveryNote.delivery_number.match(/BL-(\d{4})-(\d+)/);
+        if (match) {
+          const lastYear = parseInt(match[1]);
+          const lastNum = parseInt(match[2]);
+          if (lastYear === year) {
+            nextNumber = lastNum + 1;
+          }
+        }
+      }
+
+      const newDeliveryNumber = `BL-${year}-${String(nextNumber).padStart(4, '0')}`;
+
+      // Prepare items with default values
       let items = noteData.items || [];
 
       if (items.length === 0 && noteData.work_description) {
@@ -125,16 +153,39 @@ export default function DeliveryNotesPage() {
         }));
       }
 
-      const { error } = await supabase
+      // Create a new classic BL with all the information from the request
+      const { data: newBL, error: createError } = await supabase
         .from('delivery_notes')
-        .update({
+        .insert({
+          user_id: noteData.user_id,
+          dentist_id: noteData.dentist_id,
+          delivery_number: newDeliveryNumber,
+          patient_name: noteData.patient_name,
+          date: noteData.date,
           status: 'pending',
-          items: items
+          items: items,
+          notes: noteData.notes,
+          work_description: noteData.work_description,
+          tooth_numbers: noteData.tooth_numbers,
+          shade: noteData.shade,
+          prescription_date: noteData.prescription_date,
+          created_by_dentist: false
         })
+        .select()
+        .single();
+
+      if (createError) throw createError;
+
+      // Delete the original DENT- request
+      const { error: deleteError } = await supabase
+        .from('delivery_notes')
+        .delete()
         .eq('id', noteId);
 
-      if (error) throw error;
+      if (deleteError) throw deleteError;
+
       loadDeliveryNotes();
+      alert(`Demande approuvée ! Bon de livraison ${newDeliveryNumber} créé.`);
     } catch (error) {
       console.error('Error approving request:', error);
       alert('Erreur lors de l\'approbation de la demande');
