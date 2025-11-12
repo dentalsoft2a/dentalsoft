@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Plus, Edit, Trash2, Search, Mail, Phone, MapPin, User, CheckCircle2, Clock, Download, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Mail, Phone, MapPin, User, CheckCircle2, Clock, Download, Upload, UserCheck } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -10,6 +10,8 @@ type Dentist = Database['public']['Tables']['dentists']['Row'];
 interface DentistWithStats extends Dentist {
   total_delivery_notes?: number;
   active_delivery_notes?: number;
+  is_linked?: boolean;
+  linked_account_name?: string;
 }
 
 export default function DentistsPage() {
@@ -49,10 +51,28 @@ export default function DentistsPage() {
           const total = deliveryNotes?.length || 0;
           const active = deliveryNotes?.filter(dn => dn.status === 'pending' || dn.status === 'in_progress').length || 0;
 
+          let is_linked = false;
+          let linked_account_name = '';
+
+          if (dentist.linked_dentist_account_id) {
+            const { data: accountData } = await supabase
+              .from('dentist_accounts')
+              .select('name')
+              .eq('id', dentist.linked_dentist_account_id)
+              .maybeSingle();
+
+            if (accountData) {
+              is_linked = true;
+              linked_account_name = accountData.name;
+            }
+          }
+
           return {
             ...dentist,
             total_delivery_notes: total,
             active_delivery_notes: active,
+            is_linked,
+            linked_account_name,
           };
         })
       );
@@ -224,10 +244,18 @@ export default function DentistsPage() {
                       <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
                         {dentist.name.charAt(0).toUpperCase()}
                       </div>
-                      <div>
-                        <h3 className="font-bold text-lg text-slate-900 group-hover:text-primary-700 transition-colors">
-                          {dentist.name}
-                        </h3>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h3 className="font-bold text-lg text-slate-900 group-hover:text-primary-700 transition-colors">
+                            {dentist.name}
+                          </h3>
+                          {dentist.is_linked && (
+                            <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-lg">
+                              <UserCheck className="w-3.5 h-3.5 text-emerald-600" />
+                              <span className="text-xs font-bold text-emerald-700">Compte lié</span>
+                            </div>
+                          )}
+                        </div>
                         {dentist.active_delivery_notes !== undefined && dentist.active_delivery_notes > 0 ? (
                           <div className="flex items-center gap-1.5 mt-1">
                             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse shadow-sm shadow-emerald-500/50"></div>
@@ -249,6 +277,18 @@ export default function DentistsPage() {
                 </div>
 
                 <div className="space-y-3 mb-4">
+                  {dentist.is_linked && dentist.linked_account_name && (
+                    <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200 rounded-xl">
+                      <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                        <UserCheck className="w-4 h-4 text-emerald-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs font-medium text-emerald-600 mb-0.5">Compte dentiste actif</div>
+                        <div className="text-sm font-bold text-emerald-900 truncate">{dentist.linked_account_name}</div>
+                      </div>
+                    </div>
+                  )}
+
                   {dentist.email && (
                     <div className="flex items-center gap-3 text-sm text-slate-600 group/item hover:text-primary-600 transition-colors">
                       <div className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center group-hover/item:bg-primary-50 transition-colors">
