@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LandingPage } from './components/landing/LandingPage';
 import DashboardLayout from './components/layout/DashboardLayout';
@@ -30,7 +30,7 @@ function AppContent() {
   const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
   const location = useLocation();
-  const currentPath = location.pathname.substring(1) || 'dashboard';
+  const currentPath = location.pathname.substring(1);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [isDentist, setIsDentist] = useState(false);
   const [checkingUserType, setCheckingUserType] = useState(false);
@@ -110,11 +110,11 @@ function AppContent() {
       return;
     }
 
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from('user_profiles')
       .select('role, subscription_status, trial_ends_at, subscription_ends_at')
       .eq('id', user.id)
-      .single();
+      .maybeSingle();
 
     if (data) {
       setIsSuperAdmin(data.role === 'super_admin');
@@ -216,13 +216,13 @@ function AppContent() {
   }
 
   if (!user) {
-    if (currentPath !== '' && currentPath !== 'register-dentist') {
+    if (currentPath !== '' && currentPath !== 'register-dentist' && currentPath !== 'dashboard') {
       return <Navigate to="/" replace />;
     }
     return (
       <>
         {isImpersonating && <ImpersonationBanner />}
-        {currentPath === 'register-dentist' ? <DentistRegisterPage /> : <LandingPage />}
+        {currentPath === 'register-dentist' ? <DentistRegisterPage onNavigate={(page) => navigate(`/${page}`)} /> : <LandingPage />}
       </>
     );
   }
