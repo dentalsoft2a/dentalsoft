@@ -46,15 +46,23 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
     if (!user) return;
 
     try {
+      console.log('🔍 Loading requests for user:', user.id);
+
       // First get all dentist profiles linked to this dentist account
       const { data: dentistProfiles, error: dentistProfileError } = await supabase
         .from('dentists')
         .select('id, user_id')
         .eq('linked_dentist_account_id', user.id);
 
-      if (dentistProfileError) throw dentistProfileError;
+      console.log('👥 Dentist profiles found:', dentistProfiles);
+
+      if (dentistProfileError) {
+        console.error('❌ Error loading dentist profiles:', dentistProfileError);
+        throw dentistProfileError;
+      }
 
       if (!dentistProfiles || dentistProfiles.length === 0) {
+        console.log('⚠️ No dentist profiles found for this account');
         setRequests([]);
         setLoading(false);
         return;
@@ -62,6 +70,7 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
 
       // Get dentist IDs to filter delivery notes
       const dentistIds = dentistProfiles.map(d => d.id);
+      console.log('🎯 Dentist IDs to filter:', dentistIds);
 
       // Load delivery notes (DENT- prefixed and created by this dentist)
       const { data: deliveryData, error: deliveryError } = await supabase
@@ -71,7 +80,12 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
         .in('dentist_id', dentistIds)
         .order('created_at', { ascending: false });
 
-      if (deliveryError) throw deliveryError;
+      console.log('📦 Delivery notes found:', deliveryData);
+
+      if (deliveryError) {
+        console.error('❌ Error loading delivery notes:', deliveryError);
+        throw deliveryError;
+      }
 
       // Load quote requests
       const { data: quoteData, error: quoteError } = await supabase
@@ -80,7 +94,12 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
         .eq('dentist_account_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (quoteError) throw quoteError;
+      console.log('💰 Quote requests found:', quoteData);
+
+      if (quoteError) {
+        console.error('❌ Error loading quote requests:', quoteError);
+        throw quoteError;
+      }
 
       // Get laboratory names from delivery notes
       const labIds = [
@@ -140,9 +159,12 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
       );
 
+      console.log('✅ Total requests combined:', combined.length);
+      console.log('📋 Combined requests:', combined);
+
       setRequests(combined);
     } catch (error) {
-      console.error('Error loading requests:', error);
+      console.error('❌ Error loading requests:', error);
     } finally {
       setLoading(false);
     }
