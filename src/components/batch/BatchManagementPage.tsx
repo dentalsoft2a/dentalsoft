@@ -163,9 +163,13 @@ export default function BatchManagementPage() {
       setShowBrandModal(false);
       setEditingBrand(null);
       setBrandFormData({ name: '', description: '', is_active: true });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving brand:', error);
-      alert('Erreur lors de l\'enregistrement');
+      if (error.code === '23505') {
+        alert('Une marque avec ce nom existe déjà. Veuillez choisir un autre nom.');
+      } else {
+        alert('Erreur lors de l\'enregistrement');
+      }
     }
   };
 
@@ -200,9 +204,13 @@ export default function BatchManagementPage() {
         is_favorite: false,
         is_active: true,
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving material:', error);
-      alert('Erreur lors de l\'enregistrement');
+      if (error.code === '23505') {
+        alert('Un matériau avec ce nom existe déjà pour cette marque. Veuillez choisir un autre nom.');
+      } else {
+        alert('Erreur lors de l\'enregistrement');
+      }
     }
   };
 
