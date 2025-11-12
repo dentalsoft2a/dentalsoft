@@ -149,27 +149,8 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
           throw new Error('Failed to create quote request');
         }
 
-        const { data: dentistAccount } = await supabase
-          .from('dentist_accounts')
-          .select('name, email')
-          .eq('id', user.id)
-          .maybeSingle();
-
-        const { error: notificationError } = await supabase
-          .from('dentist_notifications')
-          .insert({
-            dentist_account_id: user.id,
-            laboratory_id: selectedLab,
-            type: 'quote_request_created',
-            title: 'Nouvelle demande de devis',
-            message: `${dentistAccount?.name || 'Un dentiste'} a créé une demande de devis pour ${patientName}`,
-            reference_id: quoteRequest.id,
-            reference_type: 'quote_request'
-          });
-
-        if (notificationError) {
-          console.error('Notification error:', notificationError);
-        }
+        // Note: Notification removed - dentists don't need to notify themselves
+        // The laboratory will see the new quote request in their interface
 
         setSuccess(true);
         setTimeout(() => {
@@ -228,27 +209,8 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
         throw new Error('Failed to create delivery note after multiple attempts');
       }
 
-      const { data: dentistAccount } = await supabase
-        .from('dentist_accounts')
-        .select('name, email')
-        .eq('id', user.id)
-        .maybeSingle();
-
-      const { error: notificationError } = await supabase
-        .from('dentist_notifications')
-        .insert({
-          dentist_account_id: user.id,
-          laboratory_id: selectedLab,
-          type: 'delivery_note_created',
-          title: 'Nouvelle demande de bon de livraison',
-          message: `${dentistAccount?.name || 'Un dentiste'} a créé une demande de bon de livraison pour ${patientName}`,
-          reference_id: deliveryNote.id,
-          reference_type: 'delivery_note'
-        });
-
-      if (notificationError) {
-        console.error('Notification error:', notificationError);
-      }
+      // Note: Notification removed - dentists don't need to notify themselves
+      // The laboratory will see the new delivery request in their interface
 
       setSuccess(true);
       setTimeout(() => {
