@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, X, Grid3x3 } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 
 interface VisualToothSelectorProps {
   selectedTeeth: string[];
@@ -20,7 +20,6 @@ const ALL_TEETH = [
 
 export default function VisualToothSelector({ selectedTeeth, onChange }: VisualToothSelectorProps) {
   const [hoveredTooth, setHoveredTooth] = useState<string | null>(null);
-  const [mobileView, setMobileView] = useState<'visual' | 'grid'>('visual');
 
   const toggleTooth = (toothValue: string) => {
     if (selectedTeeth.includes(toothValue)) {
@@ -68,8 +67,8 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
   };
 
   return (
-    <div className="w-full bg-gradient-to-br from-slate-50 to-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-      <div className="flex items-center justify-between mb-3 gap-2">
+    <div className="w-full bg-gradient-to-br from-slate-50 to-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
           <div>
@@ -77,66 +76,48 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
             <p className="text-xs text-slate-600">
               {selectedTeeth.length > 0
                 ? `${selectedTeeth.length} dent${selectedTeeth.length !== 1 ? 's' : ''} sélectionnée${selectedTeeth.length !== 1 ? 's' : ''}`
-                : 'Cliquez sur les dents pour les sélectionner'
+                : 'Sélectionnez les dents'
               }
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        {selectedTeeth.length > 0 && (
           <button
             type="button"
-            onClick={() => setMobileView(mobileView === 'visual' ? 'grid' : 'visual')}
-            className="md:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 rounded-lg transition-all border border-primary-200"
+            onClick={clearAll}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-all"
           >
-            <Grid3x3 className="w-3.5 h-3.5" />
-            {mobileView === 'visual' ? 'Grille' : 'Visuel'}
+            <X className="w-3.5 h-3.5" />
+            Tout effacer
           </button>
-          {selectedTeeth.length > 0 && (
-            <button
-              type="button"
-              onClick={clearAll}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-all"
-            >
-              <X className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Tout effacer</span>
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
-      {mobileView === 'grid' && (
-        <div className="md:hidden">
-          <div className="grid grid-cols-8 gap-2">
-            {ALL_TEETH.map((tooth) => {
-              const isSelected = selectedTeeth.includes(tooth);
-              return (
-                <button
-                  key={tooth}
-                  type="button"
-                  onClick={() => toggleTooth(tooth)}
-                  className={`
-                    relative aspect-square rounded-lg border-2 flex items-center justify-center
-                    font-bold text-xs transition-all duration-200 cursor-pointer
-                    ${isSelected
-                      ? 'bg-gradient-to-br from-primary-500 to-cyan-500 border-primary-600 text-white shadow-lg'
-                      : 'bg-white border-slate-300 text-slate-700 active:bg-primary-50'
-                    }
-                  `}
-                >
-                  <span>{tooth}</span>
-                  {isSelected && (
-                    <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center shadow-md">
-                      <Check className="w-2 h-2 text-white" strokeWidth={3} />
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
+      <div className="md:hidden mb-4">
+        <select
+          multiple
+          value={selectedTeeth}
+          onChange={(e) => {
+            const options = Array.from(e.target.selectedOptions);
+            onChange(options.map(opt => opt.value));
+          }}
+          className="w-full border-2 border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+          size={8}
+        >
+          {ALL_TEETH.map((tooth) => (
+            <option
+              key={tooth}
+              value={tooth}
+              className={`py-2 px-3 cursor-pointer ${selectedTeeth.includes(tooth) ? 'bg-primary-100 font-bold' : ''}`}
+            >
+              Dent {tooth} {selectedTeeth.includes(tooth) ? '✓' : ''}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-slate-500 mt-2">Maintenez Ctrl/Cmd pour sélectionner plusieurs dents</p>
+      </div>
 
-      <div className={`space-y-4 ${mobileView === 'grid' ? 'hidden md:block' : ''}`}>
+      <div className="hidden md:block space-y-4">
         <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-center gap-1 mb-2">
             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
