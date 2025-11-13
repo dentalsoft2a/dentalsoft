@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus, Camera, Phone, Layers } from 'lucide-react';
+import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus, Camera, Phone, Layers, Scale, FileCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import { supabase } from '../../lib/supabase';
@@ -484,6 +484,39 @@ export function LandingPage() {
           </section>
 
           <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 mb-8 sm:mb-12 lg:mb-16 shadow-lg">
+              <div className="flex flex-col lg:flex-row items-start gap-4 sm:gap-6 max-w-6xl mx-auto">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-lg sm:rounded-xl bg-gradient-to-br from-green-600 to-emerald-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <Scale className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2 sm:mb-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
+                    <span>Gestion des numéros de lot</span>
+                    <span className="text-xs sm:text-sm lg:text-base bg-green-600 text-white px-3 py-1 sm:px-4 sm:py-1.5 rounded-full font-medium inline-block w-fit">Conformité légale</span>
+                  </h3>
+                  <p className="text-slate-700 text-sm sm:text-base lg:text-lg xl:text-xl leading-relaxed mb-3 sm:mb-4">
+                    Système de traçabilité complet pour respecter les obligations légales européennes. Chaque produit est lié à son numéro de lot avec une gestion automatisée pour un travail rapide et conforme.
+                  </p>
+                  <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
+                    <div className="flex items-start gap-2 sm:gap-3 bg-white rounded-lg p-3 sm:p-4 shadow-sm">
+                      <FileCheck className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-slate-900 text-sm sm:text-base mb-1">Traçabilité totale</h4>
+                        <p className="text-xs sm:text-sm text-slate-600">Associez automatiquement chaque article à son lot pour une conformité réglementaire parfaite</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3 bg-white rounded-lg p-3 sm:p-4 shadow-sm">
+                      <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-semibold text-slate-900 text-sm sm:text-base mb-1">Automatisation complète</h4>
+                        <p className="text-xs sm:text-sm text-slate-600">Le système gère les dates de péremption et les alertes pour un gain de temps maximal</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <div className="text-center mb-6 sm:mb-8 lg:mb-12 px-4">
               <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
                 <Box className="w-3 h-3 sm:w-4 sm:h-4" />
