@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import App from './App.tsx';
 import './index.css';
 import { checkAndClearCache } from './utils/cacheManager';
+import './utils/logger';
 
 checkAndClearCache();
 
