@@ -8,7 +8,7 @@ import { generateDeliveryNotePDF } from '../../utils/pdfGenerator';
 import { deductStockForDeliveryNote, restoreStockForDeliveryNote } from '../../utils/stockManager';
 import CatalogItemSelector from './CatalogItemSelector';
 import ResourceVariantSelector from './ResourceVariantSelector';
-import ToothSelector from './ToothSelector';
+import VisualToothSelector from './VisualToothSelector';
 import BatchSelector from './BatchSelector';
 import DatePicker from '../common/DatePicker';
 import CustomSelect from '../common/CustomSelect';
@@ -1279,12 +1279,12 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                         </optgroup>
                       </select>
                     </div>
-                    <div className="group/item">
+                    <div className="md:col-span-2 group/item">
                       <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
                         <span className="w-1 h-1 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
                         N° dents
                       </label>
-                      <ToothSelector
+                      <VisualToothSelector
                         selectedTeeth={item.tooth_numbers || []}
                         onChange={(teeth) => {
                           const newItems = [...items];
@@ -1297,11 +1297,6 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                           setItems(newItems);
                         }}
                       />
-                      {item.tooth_numbers && item.tooth_numbers.length > 0 && (
-                        <p className="mt-1.5 text-xs text-slate-600">
-                          <span className="font-semibold text-primary-600">{item.tooth_numbers.length}</span> dent{item.tooth_numbers.length !== 1 ? 's' : ''} sélectionnée{item.tooth_numbers.length !== 1 ? 's' : ''} • Quantité mise à jour automatiquement
-                        </p>
-                      )}
                     </div>
                   </div>
 
