@@ -210,13 +210,13 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
 
           <div className="flex items-center justify-center gap-2 md:gap-3">
             <div className="flex items-center gap-0.5">
-              {LOWER_LEFT_TEETH.map(renderTooth)}
+              {LOWER_RIGHT_TEETH.map(renderTooth)}
             </div>
 
             <div className="w-px h-10 bg-slate-300"></div>
 
             <div className="flex items-center gap-0.5">
-              {LOWER_RIGHT_TEETH.map(renderTooth)}
+              {LOWER_LEFT_TEETH.map(renderTooth)}
             </div>
           </div>
         </div>
