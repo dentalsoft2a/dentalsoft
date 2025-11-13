@@ -229,6 +229,12 @@ export default function DeliveryNotesPage() {
     if (!confirm('Rejeter cette demande ? Le dentiste pourra voir la raison du refus dans son historique.')) return;
 
     try {
+      console.log('🔄 Calling reject_delivery_note_request with:', {
+        p_delivery_note_id: noteId,
+        p_rejection_reason: reason.trim(),
+        p_rejected_by: user!.id
+      });
+
       const { data, error } = await supabase
         .rpc('reject_delivery_note_request', {
           p_delivery_note_id: noteId,
@@ -236,18 +242,25 @@ export default function DeliveryNotesPage() {
           p_rejected_by: user!.id
         });
 
-      if (error) throw error;
+      console.log('📦 RPC Response:', { data, error });
+
+      if (error) {
+        console.error('❌ RPC Error:', error);
+        throw error;
+      }
 
       if (data && !data.success) {
+        console.error('❌ Function returned error:', data.error);
         alert(data.error || 'Erreur lors du refus de la demande');
         return;
       }
 
+      console.log('✅ Request rejected successfully');
       alert('Demande refusée avec succès. Le dentiste sera informé de la raison du refus.');
-      loadDeliveryNotes();
+      await loadDeliveryNotes();
     } catch (error) {
-      console.error('Error rejecting request:', error);
-      alert('Erreur lors du rejet de la demande');
+      console.error('❌ Error rejecting request:', error);
+      alert('Erreur lors du rejet de la demande: ' + (error as Error).message);
     }
   };
 
