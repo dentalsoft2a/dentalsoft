@@ -215,6 +215,11 @@ export default function DeliveryNotesPage() {
   };
 
   const handleRejectRequest = async (noteId: string) => {
+    if (!user) {
+      alert('Vous devez être connecté pour refuser une demande');
+      return;
+    }
+
     const reason = prompt('Raison du refus (obligatoire pour informer le dentiste):');
 
     // Si l'utilisateur annule
@@ -232,14 +237,14 @@ export default function DeliveryNotesPage() {
       console.log('🔄 Calling reject_delivery_note_request with:', {
         p_delivery_note_id: noteId,
         p_rejection_reason: reason.trim(),
-        p_rejected_by: user!.id
+        p_rejected_by: user.id
       });
 
       const { data, error } = await supabase
         .rpc('reject_delivery_note_request', {
           p_delivery_note_id: noteId,
           p_rejection_reason: reason.trim(),
-          p_rejected_by: user!.id
+          p_rejected_by: user.id
         });
 
       console.log('📦 RPC Response:', { data, error });
@@ -256,8 +261,16 @@ export default function DeliveryNotesPage() {
       }
 
       console.log('✅ Request rejected successfully');
-      alert('Demande refusée avec succès. Le dentiste sera informé de la raison du refus.');
-      await loadDeliveryNotes();
+
+      try {
+        console.log('🔄 Reloading delivery notes...');
+        await loadDeliveryNotes();
+        console.log('✅ Delivery notes reloaded');
+        alert('Demande refusée avec succès. Le dentiste sera informé de la raison du refus.');
+      } catch (reloadError) {
+        console.error('❌ Error reloading delivery notes:', reloadError);
+        alert('Demande refusée mais erreur lors du rechargement: ' + (reloadError as Error).message);
+      }
     } catch (error) {
       console.error('❌ Error rejecting request:', error);
       alert('Erreur lors du rejet de la demande: ' + (error as Error).message);
