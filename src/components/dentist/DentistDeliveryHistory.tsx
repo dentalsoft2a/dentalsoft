@@ -130,6 +130,7 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
         date: item.date,
         status: item.status,
         created_at: item.created_at,
+        rejection_reason: item.rejection_reason,
         laboratory_name: labMap.get(item.dentists?.user_id) || 'Laboratoire inconnu',
         type: 'delivery' as const
       }));
@@ -257,6 +258,16 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
             ),
             description: 'Le travail est terminé et prêt pour la livraison'
           };
+        case 'refused':
+          return {
+            badge: (
+              <span className="inline-flex items-center gap-1 px-3 py-1 bg-red-100 text-red-800 rounded-full text-sm font-medium">
+                <XCircle className="w-4 h-4" />
+                Demande refusée
+              </span>
+            ),
+            description: 'Le laboratoire a refusé votre demande'
+          };
         default:
           return { badge: null, description: '' };
       }
@@ -290,14 +301,14 @@ export default function DentistDeliveryHistory({ onClose }: DentistDeliveryHisto
       statusFilter === 'all' ||
       (statusFilter === 'pending' && (request.status === 'pending_approval' || request.status === 'pending')) ||
       (statusFilter === 'approved' && (request.status === 'approved' || request.status === 'in_progress' || request.status === 'completed')) ||
-      (statusFilter === 'rejected' && request.status === 'rejected');
+      (statusFilter === 'rejected' && (request.status === 'rejected' || request.status === 'refused'));
 
     return matchesSearch && matchesStatus;
   });
 
   const pendingCount = requests.filter(r => r.status === 'pending_approval' || r.status === 'pending').length;
   const approvedCount = requests.filter(r => ['approved', 'in_progress', 'completed', 'converted'].includes(r.status)).length;
-  const rejectedCount = requests.filter(r => r.status === 'rejected').length;
+  const rejectedCount = requests.filter(r => r.status === 'rejected' || r.status === 'refused').length;
 
   return (
     <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50">

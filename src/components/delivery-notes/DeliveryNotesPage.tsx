@@ -215,18 +215,35 @@ export default function DeliveryNotesPage() {
   };
 
   const handleRejectRequest = async (noteId: string) => {
-    const reason = prompt('Raison du refus (optionnel):');
+    const reason = prompt('Raison du refus (obligatoire pour informer le dentiste):');
+
+    // Si l'utilisateur annule
     if (reason === null) return;
 
-    if (!confirm('Rejeter cette demande ? Elle sera supprimée.')) return;
+    // Si la raison est vide
+    if (!reason.trim()) {
+      alert('Veuillez indiquer une raison de refus pour informer le dentiste.');
+      return;
+    }
+
+    if (!confirm('Rejeter cette demande ? Le dentiste pourra voir la raison du refus dans son historique.')) return;
 
     try {
-      const { error } = await supabase
-        .from('delivery_notes')
-        .delete()
-        .eq('id', noteId);
+      const { data, error } = await supabase
+        .rpc('reject_delivery_note_request', {
+          p_delivery_note_id: noteId,
+          p_rejection_reason: reason.trim(),
+          p_rejected_by: user!.id
+        });
 
       if (error) throw error;
+
+      if (data && !data.success) {
+        alert(data.error || 'Erreur lors du refus de la demande');
+        return;
+      }
+
+      alert('Demande refusée avec succès. Le dentiste sera informé de la raison du refus.');
       loadDeliveryNotes();
     } catch (error) {
       console.error('Error rejecting request:', error);
@@ -235,7 +252,7 @@ export default function DeliveryNotesPage() {
   };
 
   const pendingApprovalNotes = deliveryNotes.filter(note => note.status === 'pending_approval');
-  const activeNotes = deliveryNotes.filter(note => note.status !== 'pending_approval');
+  const activeNotes = deliveryNotes.filter(note => note.status !== 'pending_approval' && note.status !== 'refused');
 
   const filteredNotes = activeNotes.filter((note) => {
     const matchesSearch =
