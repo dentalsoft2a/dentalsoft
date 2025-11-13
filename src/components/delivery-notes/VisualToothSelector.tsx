@@ -167,356 +167,58 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
       </div>
 
       <div className="hidden md:block space-y-4">
-        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-center gap-1 mb-3">
+        <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-center gap-1 mb-2">
             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Mâchoire supérieure (Maxillaire)</h4>
           </div>
 
-          <div className="flex items-center justify-center gap-4 mb-2 text-xs text-slate-500">
+          <div className="flex items-center justify-center gap-2 md:gap-3">
+            <div className="flex items-center gap-0.5">
+              {UPPER_RIGHT_TEETH.map(renderTooth)}
+            </div>
+
+            <div className="w-px h-10 bg-slate-300"></div>
+
+            <div className="flex items-center gap-0.5">
+              {UPPER_LEFT_TEETH.map(renderTooth)}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-center gap-4 mt-2 text-xs text-slate-500">
             <span className="font-medium">Droite</span>
             <span>•</span>
             <span className="font-medium">Gauche</span>
           </div>
-
-          <svg viewBox="0 0 800 180" className="w-full max-w-4xl mx-auto">
-            <defs>
-              <filter id="tooth-shadow">
-                <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.15"/>
-              </filter>
-            </defs>
-
-            {/* Gencives supérieures */}
-            <path
-              d="M 50 140 Q 100 120, 150 115 Q 200 110, 250 108 Q 300 107, 350 106 Q 400 106, 450 106 Q 500 107, 550 108 Q 600 110, 650 115 Q 700 120, 750 140"
-              fill="#FFB8B8"
-              stroke="#FF9999"
-              strokeWidth="1.5"
-              opacity="0.6"
-            />
-
-            {/* Upper Right Teeth (18-11) */}
-            {UPPER_RIGHT_TEETH.map((tooth, index) => {
-              const isSelected = selectedTeeth.includes(tooth);
-              const isHovered = hoveredTooth === tooth;
-              const positions = [
-                { x: 65, y: 95, width: 28, height: 32, type: 'molar' },    // 18
-                { x: 105, y: 85, width: 28, height: 32, type: 'molar' },   // 17
-                { x: 145, y: 78, width: 26, height: 30, type: 'molar' },   // 16
-                { x: 183, y: 73, width: 24, height: 28, type: 'premolar' }, // 15
-                { x: 219, y: 70, width: 24, height: 28, type: 'premolar' }, // 14
-                { x: 255, y: 68, width: 22, height: 30, type: 'canine' },  // 13
-                { x: 289, y: 67, width: 20, height: 28, type: 'incisor' }, // 12
-                { x: 321, y: 66, width: 20, height: 28, type: 'incisor' }  // 11
-              ];
-              const pos = positions[index];
-
-              return (
-                <g
-                  key={tooth}
-                  onMouseEnter={() => setHoveredTooth(tooth)}
-                  onMouseLeave={() => setHoveredTooth(null)}
-                  onClick={() => toggleTooth(tooth)}
-                  className="cursor-pointer transition-all duration-200"
-                  style={{ transformOrigin: `${pos.x + pos.width/2}px ${pos.y + pos.height/2}px` }}
-                >
-                  <rect
-                    x={pos.x}
-                    y={pos.y}
-                    width={pos.width}
-                    height={pos.height}
-                    rx={pos.type === 'canine' ? 3 : 4}
-                    fill={isSelected ? 'url(#tooth-gradient)' : '#FFFFF0'}
-                    stroke={isSelected ? '#0EA5E9' : isHovered ? '#60A5FA' : '#E2E8F0'}
-                    strokeWidth={isSelected ? 2.5 : isHovered ? 2 : 1.5}
-                    filter={isHovered || isSelected ? 'url(#tooth-shadow)' : ''}
-                    className={`transition-all duration-200 ${isHovered ? 'scale-105' : ''}`}
-                  />
-                  <text
-                    x={pos.x + pos.width/2}
-                    y={pos.y + pos.height/2 + 4}
-                    textAnchor="middle"
-                    className="text-[11px] font-bold select-none pointer-events-none"
-                    fill={isSelected ? '#FFFFFF' : '#475569'}
-                  >
-                    {tooth}
-                  </text>
-                  {isSelected && (
-                    <circle
-                      cx={pos.x + pos.width - 4}
-                      cy={pos.y + 4}
-                      r="5"
-                      fill="#10B981"
-                    />
-                  )}
-                  {isSelected && (
-                    <path
-                      d={`M ${pos.x + pos.width - 6} ${pos.y + 4} L ${pos.x + pos.width - 4} ${pos.y + 6} L ${pos.x + pos.width - 2} ${pos.y + 2}`}
-                      stroke="white"
-                      strokeWidth="1.5"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
-                </g>
-              );
-            })}
-
-            {/* Ligne médiane */}
-            <line x1="400" y1="60" x2="400" y2="110" stroke="#CBD5E1" strokeWidth="1.5" strokeDasharray="3,3" />
-
-            {/* Upper Left Teeth (21-28) */}
-            {UPPER_LEFT_TEETH.map((tooth, index) => {
-              const isSelected = selectedTeeth.includes(tooth);
-              const isHovered = hoveredTooth === tooth;
-              const positions = [
-                { x: 459, y: 66, width: 20, height: 28, type: 'incisor' }, // 21
-                { x: 491, y: 67, width: 20, height: 28, type: 'incisor' }, // 22
-                { x: 523, y: 68, width: 22, height: 30, type: 'canine' },  // 23
-                { x: 557, y: 70, width: 24, height: 28, type: 'premolar' }, // 24
-                { x: 593, y: 73, width: 24, height: 28, type: 'premolar' }, // 25
-                { x: 629, y: 78, width: 26, height: 30, type: 'molar' },   // 26
-                { x: 667, y: 85, width: 28, height: 32, type: 'molar' },   // 27
-                { x: 707, y: 95, width: 28, height: 32, type: 'molar' }    // 28
-              ];
-              const pos = positions[index];
-
-              return (
-                <g
-                  key={tooth}
-                  onMouseEnter={() => setHoveredTooth(tooth)}
-                  onMouseLeave={() => setHoveredTooth(null)}
-                  onClick={() => toggleTooth(tooth)}
-                  className="cursor-pointer transition-all duration-200"
-                  style={{ transformOrigin: `${pos.x + pos.width/2}px ${pos.y + pos.height/2}px` }}
-                >
-                  <rect
-                    x={pos.x}
-                    y={pos.y}
-                    width={pos.width}
-                    height={pos.height}
-                    rx={pos.type === 'canine' ? 3 : 4}
-                    fill={isSelected ? 'url(#tooth-gradient)' : '#FFFFF0'}
-                    stroke={isSelected ? '#0EA5E9' : isHovered ? '#60A5FA' : '#E2E8F0'}
-                    strokeWidth={isSelected ? 2.5 : isHovered ? 2 : 1.5}
-                    filter={isHovered || isSelected ? 'url(#tooth-shadow)' : ''}
-                    className={`transition-all duration-200 ${isHovered ? 'scale-105' : ''}`}
-                  />
-                  <text
-                    x={pos.x + pos.width/2}
-                    y={pos.y + pos.height/2 + 4}
-                    textAnchor="middle"
-                    className="text-[11px] font-bold select-none pointer-events-none"
-                    fill={isSelected ? '#FFFFFF' : '#475569'}
-                  >
-                    {tooth}
-                  </text>
-                  {isSelected && (
-                    <circle
-                      cx={pos.x + pos.width - 4}
-                      cy={pos.y + 4}
-                      r="5"
-                      fill="#10B981"
-                    />
-                  )}
-                  {isSelected && (
-                    <path
-                      d={`M ${pos.x + pos.width - 6} ${pos.y + 4} L ${pos.x + pos.width - 4} ${pos.y + 6} L ${pos.x + pos.width - 2} ${pos.y + 2}`}
-                      stroke="white"
-                      strokeWidth="1.5"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
-                </g>
-              );
-            })}
-
-            {/* Gradient pour les dents sélectionnées */}
-            <defs>
-              <linearGradient id="tooth-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#3B82F6" />
-                <stop offset="100%" stopColor="#06B6D4" />
-              </linearGradient>
-            </defs>
-          </svg>
         </div>
 
         <div className="relative">
           <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-20 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-sm">
-          <div className="flex items-center justify-center gap-1 mb-3">
+        <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-center gap-1 mb-2">
             <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
             <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Mâchoire inférieure (Mandibulaire)</h4>
           </div>
 
-          <div className="flex items-center justify-center gap-4 mb-2 text-xs text-slate-500">
+          <div className="flex items-center justify-center gap-4 mt-2 text-xs text-slate-500 order-first mb-2">
             <span className="font-medium">Gauche</span>
             <span>•</span>
             <span className="font-medium">Droite</span>
           </div>
 
-          <svg viewBox="0 0 800 180" className="w-full max-w-4xl mx-auto">
-            {/* Gencives inférieures */}
-            <path
-              d="M 50 40 Q 100 60, 150 65 Q 200 70, 250 72 Q 300 73, 350 74 Q 400 74, 450 74 Q 500 73, 550 72 Q 600 70, 650 65 Q 700 60, 750 40"
-              fill="#FFB8B8"
-              stroke="#FF9999"
-              strokeWidth="1.5"
-              opacity="0.6"
-            />
+          <div className="flex items-center justify-center gap-2 md:gap-3">
+            <div className="flex items-center gap-0.5">
+              {LOWER_LEFT_TEETH.map(renderTooth)}
+            </div>
 
-            {/* Lower Left Teeth (38-31) */}
-            {LOWER_LEFT_TEETH.map((tooth, index) => {
-              const isSelected = selectedTeeth.includes(tooth);
-              const isHovered = hoveredTooth === tooth;
-              const positions = [
-                { x: 707, y: 53, width: 28, height: 32, type: 'molar' },   // 38
-                { x: 667, y: 63, width: 28, height: 32, type: 'molar' },   // 37
-                { x: 629, y: 70, width: 26, height: 30, type: 'molar' },   // 36
-                { x: 593, y: 77, width: 24, height: 28, type: 'premolar' }, // 35
-                { x: 557, y: 80, width: 24, height: 28, type: 'premolar' }, // 34
-                { x: 523, y: 82, width: 22, height: 30, type: 'canine' },  // 33
-                { x: 491, y: 83, width: 20, height: 26, type: 'incisor' }, // 32
-                { x: 459, y: 84, width: 20, height: 26, type: 'incisor' }  // 31
-              ];
-              const pos = positions[index];
+            <div className="w-px h-10 bg-slate-300"></div>
 
-              return (
-                <g
-                  key={tooth}
-                  onMouseEnter={() => setHoveredTooth(tooth)}
-                  onMouseLeave={() => setHoveredTooth(null)}
-                  onClick={() => toggleTooth(tooth)}
-                  className="cursor-pointer transition-all duration-200"
-                  style={{ transformOrigin: `${pos.x + pos.width/2}px ${pos.y + pos.height/2}px` }}
-                >
-                  <rect
-                    x={pos.x}
-                    y={pos.y}
-                    width={pos.width}
-                    height={pos.height}
-                    rx={pos.type === 'canine' ? 3 : 4}
-                    fill={isSelected ? 'url(#tooth-gradient-lower)' : '#FFFFF0'}
-                    stroke={isSelected ? '#06B6D4' : isHovered ? '#22D3EE' : '#E2E8F0'}
-                    strokeWidth={isSelected ? 2.5 : isHovered ? 2 : 1.5}
-                    filter={isHovered || isSelected ? 'url(#tooth-shadow)' : ''}
-                    className={`transition-all duration-200 ${isHovered ? 'scale-105' : ''}`}
-                  />
-                  <text
-                    x={pos.x + pos.width/2}
-                    y={pos.y + pos.height/2 + 4}
-                    textAnchor="middle"
-                    className="text-[11px] font-bold select-none pointer-events-none"
-                    fill={isSelected ? '#FFFFFF' : '#475569'}
-                  >
-                    {tooth}
-                  </text>
-                  {isSelected && (
-                    <circle
-                      cx={pos.x + pos.width - 4}
-                      cy={pos.y + 4}
-                      r="5"
-                      fill="#10B981"
-                    />
-                  )}
-                  {isSelected && (
-                    <path
-                      d={`M ${pos.x + pos.width - 6} ${pos.y + 4} L ${pos.x + pos.width - 4} ${pos.y + 6} L ${pos.x + pos.width - 2} ${pos.y + 2}`}
-                      stroke="white"
-                      strokeWidth="1.5"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
-                </g>
-              );
-            })}
-
-            {/* Ligne médiane */}
-            <line x1="400" y1="70" x2="400" y2="120" stroke="#CBD5E1" strokeWidth="1.5" strokeDasharray="3,3" />
-
-            {/* Lower Right Teeth (41-48) */}
-            {LOWER_RIGHT_TEETH.map((tooth, index) => {
-              const isSelected = selectedTeeth.includes(tooth);
-              const isHovered = hoveredTooth === tooth;
-              const positions = [
-                { x: 321, y: 84, width: 20, height: 26, type: 'incisor' }, // 41
-                { x: 289, y: 83, width: 20, height: 26, type: 'incisor' }, // 42
-                { x: 255, y: 82, width: 22, height: 30, type: 'canine' },  // 43
-                { x: 219, y: 80, width: 24, height: 28, type: 'premolar' }, // 44
-                { x: 183, y: 77, width: 24, height: 28, type: 'premolar' }, // 45
-                { x: 145, y: 70, width: 26, height: 30, type: 'molar' },   // 46
-                { x: 105, y: 63, width: 28, height: 32, type: 'molar' },   // 47
-                { x: 65, y: 53, width: 28, height: 32, type: 'molar' }     // 48
-              ];
-              const pos = positions[index];
-
-              return (
-                <g
-                  key={tooth}
-                  onMouseEnter={() => setHoveredTooth(tooth)}
-                  onMouseLeave={() => setHoveredTooth(null)}
-                  onClick={() => toggleTooth(tooth)}
-                  className="cursor-pointer transition-all duration-200"
-                  style={{ transformOrigin: `${pos.x + pos.width/2}px ${pos.y + pos.height/2}px` }}
-                >
-                  <rect
-                    x={pos.x}
-                    y={pos.y}
-                    width={pos.width}
-                    height={pos.height}
-                    rx={pos.type === 'canine' ? 3 : 4}
-                    fill={isSelected ? 'url(#tooth-gradient-lower)' : '#FFFFF0'}
-                    stroke={isSelected ? '#06B6D4' : isHovered ? '#22D3EE' : '#E2E8F0'}
-                    strokeWidth={isSelected ? 2.5 : isHovered ? 2 : 1.5}
-                    filter={isHovered || isSelected ? 'url(#tooth-shadow)' : ''}
-                    className={`transition-all duration-200 ${isHovered ? 'scale-105' : ''}`}
-                  />
-                  <text
-                    x={pos.x + pos.width/2}
-                    y={pos.y + pos.height/2 + 4}
-                    textAnchor="middle"
-                    className="text-[11px] font-bold select-none pointer-events-none"
-                    fill={isSelected ? '#FFFFFF' : '#475569'}
-                  >
-                    {tooth}
-                  </text>
-                  {isSelected && (
-                    <circle
-                      cx={pos.x + pos.width - 4}
-                      cy={pos.y + 4}
-                      r="5"
-                      fill="#10B981"
-                    />
-                  )}
-                  {isSelected && (
-                    <path
-                      d={`M ${pos.x + pos.width - 6} ${pos.y + 4} L ${pos.x + pos.width - 4} ${pos.y + 6} L ${pos.x + pos.width - 2} ${pos.y + 2}`}
-                      stroke="white"
-                      strokeWidth="1.5"
-                      fill="none"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  )}
-                </g>
-              );
-            })}
-
-            {/* Gradient pour les dents inférieures sélectionnées */}
-            <defs>
-              <linearGradient id="tooth-gradient-lower" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#06B6D4" />
-                <stop offset="100%" stopColor="#0891B2" />
-              </linearGradient>
-            </defs>
-          </svg>
+            <div className="flex items-center gap-0.5">
+              {LOWER_RIGHT_TEETH.map(renderTooth)}
+            </div>
+          </div>
         </div>
       </div>
 
