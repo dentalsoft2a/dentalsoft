@@ -33,10 +33,43 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
     setError('');
     setLoading(true);
 
-    const { error } = await signUp(email, password, firstName, lastName, laboratoryName, isDentistMode, referralCode);
+    try {
+      // Importer supabase pour vérifier l'email
+      const { supabase } = await import('../../lib/supabase');
 
-    if (error) {
-      setError(error.message);
+      // Vérifier si l'email existe déjà avant de créer le compte
+      if (isDentistMode) {
+        const { data: validationData, error: validationError } = await supabase
+          .rpc('validate_dentist_registration', { p_email: email.trim().toLowerCase() });
+
+        if (validationError) {
+          throw new Error('Erreur lors de la validation de l\'email');
+        }
+
+        if (validationData && !validationData.valid) {
+          throw new Error(validationData.message || 'Cet email est déjà utilisé');
+        }
+      } else {
+        const { data: validationData, error: validationError } = await supabase
+          .rpc('validate_laboratory_registration', { p_email: email.trim().toLowerCase() });
+
+        if (validationError) {
+          throw new Error('Erreur lors de la validation de l\'email');
+        }
+
+        if (validationData && !validationData.valid) {
+          throw new Error(validationData.message || 'Cet email est déjà utilisé');
+        }
+      }
+
+      // Procéder à l'inscription
+      const { error } = await signUp(email, password, firstName, lastName, laboratoryName, isDentistMode, referralCode);
+
+      if (error) {
+        throw error;
+      }
+    } catch (err: any) {
+      setError(err.message || 'Une erreur est survenue');
       setLoading(false);
     }
   };

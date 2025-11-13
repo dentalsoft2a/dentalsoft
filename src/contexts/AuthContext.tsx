@@ -215,7 +215,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               onConflict: 'id'
             });
 
-          if (profileError) throw profileError;
+          if (profileError) {
+            // Si l'insertion échoue, supprimer le compte auth créé
+            await supabase.auth.admin.deleteUser(data.user.id).catch(() => {});
+
+            // Retourner une erreur plus claire
+            if (profileError.code === '23505') { // Contrainte unique violée
+              throw new Error('Un compte avec cet email existe déjà. Veuillez vous connecter ou utiliser un autre email.');
+            }
+            throw profileError;
+          }
 
           // Process referral if a code was provided
           if (referralCode && referralCode.trim()) {
