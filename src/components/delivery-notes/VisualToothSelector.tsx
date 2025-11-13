@@ -203,9 +203,9 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
           </div>
 
           <div className="flex items-center justify-center gap-4 mt-2 text-xs text-slate-500 order-first mb-2">
-            <span className="font-medium">Gauche</span>
-            <span>•</span>
             <span className="font-medium">Droite</span>
+            <span>•</span>
+            <span className="font-medium">Gauche</span>
           </div>
 
           <div className="flex items-center justify-center gap-2 md:gap-3">
