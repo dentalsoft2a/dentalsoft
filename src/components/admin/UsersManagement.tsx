@@ -71,7 +71,12 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
     if (error) {
       console.error('Error loading users:', error);
     } else {
-      setUsers(data || []);
+      // Filtrer pour exclure les dentistes (au cas où ils seraient dans user_profiles)
+      const filteredData = (data || []).filter(user => {
+        // Exclure les utilisateurs qui ont un compte dentiste
+        return !dentists.some(dentist => dentist.id === user.id);
+      });
+      setUsers(filteredData);
     }
   };
 
