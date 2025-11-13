@@ -38,8 +38,8 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
         onMouseEnter={() => setHoveredTooth(toothNumber)}
         onMouseLeave={() => setHoveredTooth(null)}
         className={`
-          relative w-10 h-12 md:w-12 md:h-14 rounded-lg border-2 flex items-center justify-center
-          font-bold text-xs md:text-sm transition-all duration-200 cursor-pointer
+          relative w-9 h-11 md:w-10 md:h-12 rounded-lg border-2 flex items-center justify-center
+          font-bold text-xs transition-all duration-200 cursor-pointer flex-shrink-0
           ${isSelected
             ? 'bg-gradient-to-br from-primary-500 to-cyan-500 border-primary-600 text-white shadow-lg scale-105'
             : 'bg-white border-slate-300 text-slate-700 hover:border-primary-400 hover:bg-primary-50'
@@ -60,8 +60,8 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
   };
 
   return (
-    <div className="w-full bg-gradient-to-br from-slate-50 to-white p-4 md:p-6 rounded-xl border border-slate-200 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+    <div className="w-full bg-gradient-to-br from-slate-50 to-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
           <div>
@@ -86,21 +86,21 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
         )}
       </div>
 
-      <div className="space-y-6">
-        <div className="bg-white rounded-lg p-3 md:p-4 border border-slate-200 shadow-sm">
+      <div className="space-y-4">
+        <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-center gap-1 mb-2">
             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-            <h4 className="text-xs md:text-sm font-bold text-slate-700 uppercase tracking-wide">Mâchoire supérieure (Maxillaire)</h4>
+            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Mâchoire supérieure (Maxillaire)</h4>
           </div>
 
-          <div className="flex items-center justify-center gap-6 md:gap-8">
-            <div className="flex items-center gap-1 md:gap-1.5">
+          <div className="flex items-center justify-center gap-3 md:gap-4">
+            <div className="flex items-center gap-0.5 md:gap-1">
               {UPPER_RIGHT_TEETH.map(renderTooth)}
             </div>
 
-            <div className="w-px h-14 bg-slate-300"></div>
+            <div className="w-px h-12 bg-slate-300"></div>
 
-            <div className="flex items-center gap-1 md:gap-1.5">
+            <div className="flex items-center gap-0.5 md:gap-1">
               {UPPER_LEFT_TEETH.map(renderTooth)}
             </div>
           </div>
@@ -116,10 +116,10 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
           <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-20 h-px bg-gradient-to-r from-transparent via-slate-300 to-transparent"></div>
         </div>
 
-        <div className="bg-white rounded-lg p-3 md:p-4 border border-slate-200 shadow-sm">
+        <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-center gap-1 mb-2">
             <div className="w-2 h-2 rounded-full bg-cyan-500"></div>
-            <h4 className="text-xs md:text-sm font-bold text-slate-700 uppercase tracking-wide">Mâchoire inférieure (Mandibulaire)</h4>
+            <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">Mâchoire inférieure (Mandibulaire)</h4>
           </div>
 
           <div className="flex items-center justify-center gap-4 mt-2 text-xs text-slate-500 order-first mb-2">
@@ -128,14 +128,14 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
             <span className="font-medium">Droite</span>
           </div>
 
-          <div className="flex items-center justify-center gap-6 md:gap-8">
-            <div className="flex items-center gap-1 md:gap-1.5">
+          <div className="flex items-center justify-center gap-3 md:gap-4">
+            <div className="flex items-center gap-0.5 md:gap-1">
               {LOWER_LEFT_TEETH.map(renderTooth)}
             </div>
 
-            <div className="w-px h-14 bg-slate-300"></div>
+            <div className="w-px h-12 bg-slate-300"></div>
 
-            <div className="flex items-center gap-1 md:gap-1.5">
+            <div className="flex items-center gap-0.5 md:gap-1">
               {LOWER_RIGHT_TEETH.map(renderTooth)}
             </div>
           </div>
