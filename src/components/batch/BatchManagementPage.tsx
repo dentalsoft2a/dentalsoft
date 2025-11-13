@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, Save, X, Package, Star, Tag, Archive, CheckCircle2, AlertTriangle, Clock, History } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Save, X, Package, Star, Tag, Archive, CheckCircle2, AlertTriangle, Clock, History, Link as LinkIcon, XCircle, Power, PowerOff } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -31,6 +31,7 @@ interface BatchNumber {
   material_id: string;
   batch_number: string;
   is_current: boolean;
+  is_available: boolean;
   started_at: string;
   ended_at: string | null;
   notes: string | null;
@@ -52,12 +53,16 @@ export default function BatchManagementPage() {
   const [showMaterialModal, setShowMaterialModal] = useState(false);
   const [showBatchModal, setShowBatchModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState<string | null>(null);
+  const [showLinkModal, setShowLinkModal] = useState<string | null>(null);
+  const [catalogItems, setCatalogItems] = useState<any[]>([]);
+  const [linkedCatalogItems, setLinkedCatalogItems] = useState<any[]>([]);
+  const [linkedResources, setLinkedResources] = useState<any[]>([]);
 
   const [editingBrand, setEditingBrand] = useState<BatchBrand | null>(null);
   const [editingMaterial, setEditingMaterial] = useState<BatchMaterial | null>(null);
   const [editingBatchMaterialId, setEditingBatchMaterialId] = useState<string | null>(null);
 
-  useLockScroll(showBrandModal || showMaterialModal || showBatchModal || !!showHistoryModal);
+  useLockScroll(showBrandModal || showMaterialModal || showBatchModal || !!showHistoryModal || !!showLinkModal);
 
   const [brandFormData, setBrandFormData] = useState({
     name: '',
@@ -81,6 +86,7 @@ export default function BatchManagementPage() {
 
   useEffect(() => {
     loadAllData();
+    loadCatalogItems();
   }, [user]);
 
   const loadAllData = async () => {
@@ -97,6 +103,47 @@ export default function BatchManagementPage() {
       console.error('Error loading data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadCatalogItems = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('catalog_items')
+      .select('*')
+      .eq('user_id', user.id)
+      .eq('is_active', true)
+      .order('name');
+
+    if (error) {
+      console.error('Error loading catalog items:', error);
+      return;
+    }
+    setCatalogItems(data || []);
+  };
+
+  const loadLinkedItems = async (materialId: string) => {
+    if (!user) return;
+
+    try {
+      const { data: catalogData, error: catalogError } = await supabase
+        .from('catalog_item_batch_link')
+        .select('*, catalog_items(name)')
+        .eq('material_id', materialId);
+
+      if (catalogError) throw catalogError;
+      setLinkedCatalogItems(catalogData || []);
+
+      const { data: resourceData, error: resourceError } = await supabase
+        .from('resource_batch_link')
+        .select('*, resources(name), resource_variants(variant_name)')
+        .eq('material_id', materialId);
+
+      if (resourceError) throw resourceError;
+      setLinkedResources(resourceData || []);
+    } catch (error) {
+      console.error('Error loading linked items:', error);
     }
   };
 
@@ -286,6 +333,88 @@ export default function BatchManagementPage() {
     } catch (error) {
       console.error('Error toggling favorite:', error);
       alert('Erreur lors de la mise à jour');
+    }
+  };
+
+  const toggleBatchAvailability = async (batchId: string, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('batch_numbers')
+        .update({ is_available: !currentStatus })
+        .eq('id', batchId);
+
+      if (error) throw error;
+      await loadBatchNumbers();
+    } catch (error) {
+      console.error('Error toggling batch availability:', error);
+      alert('Erreur lors de la mise à jour');
+    }
+  };
+
+  const handleLinkCatalogItem = async (catalogItemId: string, isRequired: boolean) => {
+    if (!showLinkModal || !user) return;
+
+    try {
+      const { error } = await supabase
+        .from('catalog_item_batch_link')
+        .insert({
+          user_id: user.id,
+          catalog_item_id: catalogItemId,
+          material_id: showLinkModal,
+          is_required: isRequired
+        });
+
+      if (error) {
+        if (error.code === '23505') {
+          alert('Cet article est déjà lié à ce matériau');
+        } else {
+          throw error;
+        }
+        return;
+      }
+
+      await loadLinkedItems(showLinkModal);
+    } catch (error) {
+      console.error('Error linking catalog item:', error);
+      alert('Erreur lors de la liaison');
+    }
+  };
+
+  const handleUnlinkCatalogItem = async (linkId: string) => {
+    if (!confirm('Retirer cette liaison ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('catalog_item_batch_link')
+        .delete()
+        .eq('id', linkId);
+
+      if (error) throw error;
+      if (showLinkModal) {
+        await loadLinkedItems(showLinkModal);
+      }
+    } catch (error) {
+      console.error('Error unlinking catalog item:', error);
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const handleUnlinkResource = async (linkId: string) => {
+    if (!confirm('Retirer cette liaison ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('resource_batch_link')
+        .delete()
+        .eq('id', linkId);
+
+      if (error) throw error;
+      if (showLinkModal) {
+        await loadLinkedItems(showLinkModal);
+      }
+    } catch (error) {
+      console.error('Error unlinking resource:', error);
+      alert('Erreur lors de la suppression');
     }
   };
 
@@ -541,10 +670,29 @@ export default function BatchManagementPage() {
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-medium text-slate-700">N° Lot actuel</span>
                       {currentBatch && (
-                        <span className="flex items-center gap-1 text-xs text-emerald-600">
-                          <CheckCircle2 className="w-3 h-3" />
-                          Actif
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleBatchAvailability(currentBatch.id, currentBatch.is_available)}
+                            className={`flex items-center gap-1 text-xs px-2 py-1 rounded-full font-medium transition-all ${
+                              currentBatch.is_available
+                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                                : 'bg-red-100 text-red-700 hover:bg-red-200'
+                            }`}
+                            title={currentBatch.is_available ? 'Marquer comme non disponible' : 'Marquer comme disponible'}
+                          >
+                            {currentBatch.is_available ? (
+                              <>
+                                <Power className="w-3 h-3" />
+                                Disponible
+                              </>
+                            ) : (
+                              <>
+                                <PowerOff className="w-3 h-3" />
+                                Non dispo
+                              </>
+                            )}
+                          </button>
+                        </div>
                       )}
                     </div>
                     {currentBatch ? (
@@ -559,49 +707,61 @@ export default function BatchManagementPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => {
-                        setEditingBatchMaterialId(material.id);
-                        setBatchFormData({ batch_number: '', notes: '' });
-                        setShowBatchModal(true);
-                      }}
-                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl transition-all font-medium"
-                    >
-                      <Plus className="w-4 h-4" />
-                      <span>Nouveau lot</span>
-                    </button>
-                    {history.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
                       <button
-                        onClick={() => setShowHistoryModal(material.id)}
-                        className="p-2.5 text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
-                        title="Historique"
+                        onClick={() => {
+                          setEditingBatchMaterialId(material.id);
+                          setBatchFormData({ batch_number: '', notes: '' });
+                          setShowBatchModal(true);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-primary-600 bg-primary-50 hover:bg-primary-100 rounded-xl transition-all font-medium"
                       >
-                        <History className="w-4 h-4" />
+                        <Plus className="w-4 h-4" />
+                        <span>Nouveau lot</span>
                       </button>
-                    )}
+                      {history.length > 0 && (
+                        <button
+                          onClick={() => setShowHistoryModal(material.id)}
+                          className="p-2.5 text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                          title="Historique"
+                        >
+                          <History className="w-4 h-4" />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => {
+                          setEditingMaterial(material);
+                          setMaterialFormData({
+                            brand_id: material.brand_id,
+                            name: material.name,
+                            description: material.description || '',
+                            material_type: material.material_type,
+                            is_favorite: material.is_favorite,
+                            is_active: material.is_active,
+                          });
+                          setShowMaterialModal(true);
+                        }}
+                        className="p-2.5 text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteMaterial(material.id)}
+                        className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                     <button
-                      onClick={() => {
-                        setEditingMaterial(material);
-                        setMaterialFormData({
-                          brand_id: material.brand_id,
-                          name: material.name,
-                          description: material.description || '',
-                          material_type: material.material_type,
-                          is_favorite: material.is_favorite,
-                          is_active: material.is_active,
-                        });
-                        setShowMaterialModal(true);
+                      onClick={async () => {
+                        setShowLinkModal(material.id);
+                        await loadLinkedItems(material.id);
                       }}
-                      className="p-2.5 text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 text-cyan-600 bg-cyan-50 hover:bg-cyan-100 rounded-xl transition-all font-medium text-sm"
                     >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteMaterial(material.id)}
-                      className="p-2.5 text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
+                      <LinkIcon className="w-4 h-4" />
+                      <span>Gérer les assignations</span>
                     </button>
                   </div>
                 </div>
@@ -908,6 +1068,140 @@ export default function BatchManagementPage() {
         </div>
       )}
 
+      {showLinkModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-6 border-b border-slate-200">
+              <h2 className="text-xl font-bold text-slate-900">Gérer les assignations</h2>
+              <button
+                onClick={() => {
+                  setShowLinkModal(null);
+                  setLinkedCatalogItems([]);
+                  setLinkedResources([]);
+                }}
+                className="p-2 hover:bg-slate-100 rounded-lg transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 space-y-6">
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-900">
+                  <strong>Assignations:</strong> Liez ce matériau aux articles du catalogue ou aux ressources.
+                  Lors de la création d'un bon de livraison, seuls les lots assignés à l'article ou ressource sélectionné seront proposés.
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-bold text-slate-900">Articles du catalogue liés</h3>
+                {linkedCatalogItems.length > 0 ? (
+                  <div className="space-y-2">
+                    {linkedCatalogItems.map((link: any) => (
+                      <div key={link.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="flex items-center gap-2">
+                          <Package className="w-4 h-4 text-slate-600" />
+                          <span className="font-medium text-slate-900">{link.catalog_items?.name}</span>
+                          {link.is_required && (
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded-full font-medium">
+                              Obligatoire
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleUnlinkCatalogItem(link.id)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 italic">Aucun article lié</p>
+                )}
+
+                <div className="flex gap-2">
+                  <select
+                    className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                    id="catalog-item-select"
+                  >
+                    <option value="">Sélectionner un article du catalogue</option>
+                    {catalogItems
+                      .filter(item => !linkedCatalogItems.some((link: any) => link.catalog_item_id === item.id))
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                  </select>
+                  <label className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg">
+                    <input
+                      type="checkbox"
+                      id="is-required-checkbox"
+                      className="w-4 h-4 text-primary-600 border-slate-300 rounded focus:ring-2 focus:ring-primary-500"
+                    />
+                    <span className="text-sm text-slate-700">Obligatoire</span>
+                  </label>
+                  <button
+                    onClick={() => {
+                      const select = document.getElementById('catalog-item-select') as HTMLSelectElement;
+                      const checkbox = document.getElementById('is-required-checkbox') as HTMLInputElement;
+                      if (select.value) {
+                        handleLinkCatalogItem(select.value, checkbox.checked);
+                        select.value = '';
+                        checkbox.checked = false;
+                      }
+                    }}
+                    className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition text-sm font-medium"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="font-bold text-slate-900">Ressources liées</h3>
+                {linkedResources.length > 0 ? (
+                  <div className="space-y-2">
+                    {linkedResources.map((link: any) => (
+                      <div key={link.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-200">
+                        <div className="flex items-center gap-2">
+                          <Archive className="w-4 h-4 text-slate-600" />
+                          <span className="font-medium text-slate-900">
+                            {link.resources?.name}
+                            {link.resource_variants && ` - ${link.resource_variants.variant_name}`}
+                          </span>
+                          {link.is_required && (
+                            <span className="px-2 py-0.5 bg-amber-100 text-amber-800 text-xs rounded-full font-medium">
+                              Obligatoire
+                            </span>
+                          )}
+                        </div>
+                        <button
+                          onClick={() => handleUnlinkResource(link.id)}
+                          className="p-1.5 text-red-600 hover:bg-red-50 rounded transition"
+                        >
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-slate-500 italic">Aucune ressource liée</p>
+                )}
+
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <p className="text-xs text-amber-800">
+                    <strong>Note:</strong> Pour lier des ressources, utilisez le composant de gestion des ressources dans la page Ressources.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showHistoryModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
@@ -943,6 +1237,16 @@ export default function BatchManagementPage() {
                               Actuel
                             </span>
                           )}
+                          <button
+                            onClick={() => toggleBatchAvailability(batch.id, batch.is_available)}
+                            className={`px-2 py-0.5 text-xs rounded-full font-medium transition-all ${
+                              batch.is_available
+                                ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                                : 'bg-red-100 text-red-700 hover:bg-red-200'
+                            }`}
+                          >
+                            {batch.is_available ? 'Disponible' : 'Non disponible'}
+                          </button>
                         </div>
                         <div className="space-y-1 text-sm">
                           <div className="flex items-center gap-2 text-slate-600">
