@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, X, Grid3x3 } from 'lucide-react';
 
 interface VisualToothSelectorProps {
   selectedTeeth: string[];
@@ -11,8 +11,16 @@ const UPPER_LEFT_TEETH = ['21', '22', '23', '24', '25', '26', '27', '28'];
 const LOWER_LEFT_TEETH = ['38', '37', '36', '35', '34', '33', '32', '31'];
 const LOWER_RIGHT_TEETH = ['41', '42', '43', '44', '45', '46', '47', '48'];
 
+const ALL_TEETH = [
+  ...UPPER_RIGHT_TEETH,
+  ...UPPER_LEFT_TEETH,
+  ...LOWER_LEFT_TEETH,
+  ...LOWER_RIGHT_TEETH
+].sort((a, b) => parseInt(a) - parseInt(b));
+
 export default function VisualToothSelector({ selectedTeeth, onChange }: VisualToothSelectorProps) {
   const [hoveredTooth, setHoveredTooth] = useState<string | null>(null);
+  const [mobileView, setMobileView] = useState<'visual' | 'grid'>('visual');
 
   const toggleTooth = (toothValue: string) => {
     if (selectedTeeth.includes(toothValue)) {
@@ -61,7 +69,7 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
 
   return (
     <div className="w-full bg-gradient-to-br from-slate-50 to-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm overflow-x-auto">
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between mb-3 gap-2">
         <div className="flex items-center gap-2">
           <div className="w-1.5 h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
           <div>
@@ -74,19 +82,61 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
             </p>
           </div>
         </div>
-        {selectedTeeth.length > 0 && (
+        <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={clearAll}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-all"
+            onClick={() => setMobileView(mobileView === 'visual' ? 'grid' : 'visual')}
+            className="md:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-primary-600 hover:bg-primary-50 rounded-lg transition-all border border-primary-200"
           >
-            <X className="w-3.5 h-3.5" />
-            Tout effacer
+            <Grid3x3 className="w-3.5 h-3.5" />
+            {mobileView === 'visual' ? 'Grille' : 'Visuel'}
           </button>
-        )}
+          {selectedTeeth.length > 0 && (
+            <button
+              type="button"
+              onClick={clearAll}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 rounded-lg transition-all"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Tout effacer</span>
+            </button>
+          )}
+        </div>
       </div>
 
-      <div className="space-y-4">
+      {mobileView === 'grid' && (
+        <div className="md:hidden">
+          <div className="grid grid-cols-8 gap-2">
+            {ALL_TEETH.map((tooth) => {
+              const isSelected = selectedTeeth.includes(tooth);
+              return (
+                <button
+                  key={tooth}
+                  type="button"
+                  onClick={() => toggleTooth(tooth)}
+                  className={`
+                    relative aspect-square rounded-lg border-2 flex items-center justify-center
+                    font-bold text-xs transition-all duration-200 cursor-pointer
+                    ${isSelected
+                      ? 'bg-gradient-to-br from-primary-500 to-cyan-500 border-primary-600 text-white shadow-lg'
+                      : 'bg-white border-slate-300 text-slate-700 active:bg-primary-50'
+                    }
+                  `}
+                >
+                  <span>{tooth}</span>
+                  {isSelected && (
+                    <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-500 rounded-full flex items-center justify-center shadow-md">
+                      <Check className="w-2 h-2 text-white" strokeWidth={3} />
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      <div className={`space-y-4 ${mobileView === 'grid' ? 'hidden md:block' : ''}`}>
         <div className="bg-white rounded-lg p-3 border border-slate-200 shadow-sm">
           <div className="flex items-center justify-center gap-1 mb-2">
             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
