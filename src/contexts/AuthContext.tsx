@@ -194,7 +194,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             phone: lastName,
           });
 
-          if (dentistError) throw dentistError;
+          if (dentistError) {
+            // Si l'insertion échoue, supprimer le compte auth créé
+            await supabase.auth.admin.deleteUser(data.user.id).catch(() => {});
+
+            // Retourner une erreur plus claire
+            if (dentistError.code === '23505') { // Contrainte unique violée
+              throw new Error('Un compte avec cet email existe déjà. Veuillez vous connecter ou utiliser un autre email.');
+            }
+            throw dentistError;
+          }
         } else {
           const { error: profileError } = await supabase.from('profiles')
             .upsert({

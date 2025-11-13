@@ -22,7 +22,23 @@ export default function DentistRegisterPage({ onNavigate }: DentistRegisterPageP
     setLoading(true);
 
     try {
-      const { error } = await signUp(email, password, name, '', '', true);
+      // Importer supabase pour vérifier l'email
+      const { supabase } = await import('../../lib/supabase');
+
+      // Vérifier si l'email existe déjà avant de créer le compte
+      const { data: validationData, error: validationError } = await supabase
+        .rpc('validate_dentist_registration', { p_email: email.trim().toLowerCase() });
+
+      if (validationError) {
+        throw new Error('Erreur lors de la validation de l\'email');
+      }
+
+      if (validationData && !validationData.valid) {
+        throw new Error(validationData.message || 'Cet email est déjà utilisé');
+      }
+
+      // Procéder à l'inscription
+      const { error } = await signUp(email, password, name, phone, '', true);
       if (error) throw error;
     } catch (err: any) {
       setError(err.message || 'Une erreur est survenue');
