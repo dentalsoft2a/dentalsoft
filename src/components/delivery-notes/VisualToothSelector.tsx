@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { Check, X, ChevronDown } from 'lucide-react';
 
 interface VisualToothSelectorProps {
   selectedTeeth: string[];
@@ -20,6 +20,19 @@ const ALL_TEETH = [
 
 export default function VisualToothSelector({ selectedTeeth, onChange }: VisualToothSelectorProps) {
   const [hoveredTooth, setHoveredTooth] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const toggleTooth = (toothValue: string) => {
     if (selectedTeeth.includes(toothValue)) {
@@ -93,28 +106,64 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
         )}
       </div>
 
-      <div className="md:hidden mb-4">
-        <select
-          multiple
-          value={selectedTeeth}
-          onChange={(e) => {
-            const options = Array.from(e.target.selectedOptions);
-            onChange(options.map(opt => opt.value));
-          }}
-          className="w-full border-2 border-slate-300 rounded-lg p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-          size={8}
+      <div className="md:hidden mb-4 relative" ref={dropdownRef}>
+        <button
+          type="button"
+          onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+          className="w-full flex items-center justify-between px-4 py-3 bg-white border-2 border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:border-primary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
         >
-          {ALL_TEETH.map((tooth) => (
-            <option
-              key={tooth}
-              value={tooth}
-              className={`py-2 px-3 cursor-pointer ${selectedTeeth.includes(tooth) ? 'bg-primary-100 font-bold' : ''}`}
-            >
-              Dent {tooth} {selectedTeeth.includes(tooth) ? '✓' : ''}
-            </option>
-          ))}
-        </select>
-        <p className="text-xs text-slate-500 mt-2">Maintenez Ctrl/Cmd pour sélectionner plusieurs dents</p>
+          <span>
+            {selectedTeeth.length > 0
+              ? `${selectedTeeth.length} dent${selectedTeeth.length !== 1 ? 's' : ''} sélectionnée${selectedTeeth.length !== 1 ? 's' : ''}`
+              : 'Sélectionner des dents'
+            }
+          </span>
+          <ChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isDropdownOpen && (
+          <div className="absolute z-50 w-full mt-2 bg-white border-2 border-slate-300 rounded-lg shadow-xl max-h-80 overflow-y-auto">
+            <div className="p-2 border-b border-slate-200 sticky top-0 bg-white">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-slate-700">Sélectionnez les dents</span>
+                {selectedTeeth.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      clearAll();
+                    }}
+                    className="text-xs text-red-600 hover:text-red-700 font-medium"
+                  >
+                    Tout effacer
+                  </button>
+                )}
+              </div>
+            </div>
+            <div className="p-1">
+              {ALL_TEETH.map((tooth) => {
+                const isSelected = selectedTeeth.includes(tooth);
+                return (
+                  <button
+                    key={tooth}
+                    type="button"
+                    onClick={() => toggleTooth(tooth)}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-primary-500 to-cyan-500 text-white shadow-md'
+                        : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <span>Dent {tooth}</span>
+                    {isSelected && (
+                      <Check className="w-4 h-4" strokeWidth={3} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="hidden md:block space-y-4">
