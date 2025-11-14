@@ -36,7 +36,7 @@ interface UserExtension {
 
 export default function ExtensionsPage() {
   const { user } = useAuth();
-  const { extensions, userExtensions, loading, reloadExtensions } = useExtensions();
+  const { extensions, userExtensions, loading, reloadExtensions, hasUnlockAllAccess } = useExtensions();
   const [features, setFeatures] = useState<ExtensionFeature[]>([]);
   const [processingExtension, setProcessingExtension] = useState<string | null>(null);
 
@@ -77,40 +77,17 @@ export default function ExtensionsPage() {
   };
 
   const handleSubscribe = async (extensionId: string) => {
-    setProcessingExtension(extensionId);
-    try {
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', user?.id)
-        .maybeSingle();
+    const extension = extensions.find(e => e.id === extensionId);
+    if (!extension) return;
 
-      if (profileError) throw profileError;
+    alert(
+      `Pour activer l'extension "${extension.name}" (${extension.monthly_price.toFixed(2)}€/mois), veuillez contacter notre équipe support.\n\n` +
+      `Vous pouvez également passer au Plan Premium Complet (99.99€/mois) qui débloque automatiquement TOUTES les extensions actuelles et futures.`
+    );
 
-      const expiryDate = new Date();
-      expiryDate.setMonth(expiryDate.getMonth() + 1);
-
-      const { error } = await supabase
-        .from('user_extensions')
-        .insert([{
-          user_id: user?.id,
-          profile_id: profileData?.id,
-          extension_id: extensionId,
-          status: 'active',
-          start_date: new Date().toISOString(),
-          expiry_date: expiryDate.toISOString(),
-          auto_renew: true
-        }]);
-
-      if (error) throw error;
-
-      alert('Extension activée avec succès!');
-      reloadExtensions();
-    } catch (error) {
-      console.error('Error subscribing to extension:', error);
-      alert('Erreur lors de l\'activation de l\'extension');
-    } finally {
-      setProcessingExtension(null);
+    // Rediriger vers la page d'abonnement
+    if (confirm('Voulez-vous voir le Plan Premium Complet?')) {
+      window.location.href = '/#/subscription';
     }
   };
 
@@ -192,6 +169,22 @@ export default function ExtensionsPage() {
           Débloquez des fonctionnalités avancées pour votre laboratoire dentaire
         </p>
       </div>
+
+      {hasUnlockAllAccess && (
+        <div className="mb-8 bg-gradient-to-r from-amber-500 to-orange-600 rounded-xl p-6 border-2 border-amber-400 shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-white/20 backdrop-blur rounded-lg">
+              <Sparkles className="w-6 h-6 text-white" />
+            </div>
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-white mb-1">Plan Premium Complet Actif</h2>
+              <p className="text-white/90 text-sm">
+                Toutes les extensions sont déjà incluses dans votre plan. Profitez de toutes les fonctionnalités sans limites!
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {activeExtensions.length > 0 && (
         <div className="mb-8 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl p-6 border border-blue-200">
@@ -308,23 +301,30 @@ export default function ExtensionsPage() {
                 </div>
 
                 {!isActive && !isCancelled && !isExpired && (
-                  <button
-                    onClick={() => handleSubscribe(extension.id)}
-                    disabled={processingExtension === extension.id}
-                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                  >
-                    {processingExtension === extension.id ? (
-                      <>
-                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                        Activation...
-                      </>
-                    ) : (
-                      <>
-                        <CreditCard className="w-5 h-5" />
-                        S'abonner maintenant
-                      </>
-                    )}
-                  </button>
+                  hasUnlockAllAccess ? (
+                    <div className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-lg flex items-center justify-center gap-2">
+                      <Sparkles className="w-5 h-5" />
+                      Inclus dans votre Plan Premium Complet
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => handleSubscribe(extension.id)}
+                      disabled={processingExtension === extension.id}
+                      className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {processingExtension === extension.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                          Activation...
+                        </>
+                      ) : (
+                        <>
+                          <CreditCard className="w-5 h-5" />
+                          S'abonner maintenant
+                        </>
+                      )}
+                    </button>
+                  )
                 )}
 
                 {(isCancelled || isExpired) && (
