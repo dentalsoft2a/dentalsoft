@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Send, CheckCircle, ClipboardList, Calendar as CalendarIcon, FileQuestion, ShoppingCart } from 'lucide-react';
+import { X, Send, CheckCircle, ClipboardList, Calendar as CalendarIcon, FileQuestion, ShoppingCart, Upload, File, Trash2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import LaboratorySelector from './LaboratorySelector';
@@ -24,6 +24,8 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
   const [error, setError] = useState<string | null>(null);
   const [labSettings, setLabSettings] = useState<any>(null);
   const [requestType, setRequestType] = useState<'order' | 'quote'>('order');
+  const [stlFiles, setStlFiles] = useState<File[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   useEffect(() => {
     if (selectedLab) {
@@ -52,6 +54,79 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
       }
     } catch (error) {
       console.error('Error loading lab settings:', error);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const validFiles = files.filter(file => {
+      const extension = file.name.toLowerCase().split('.').pop();
+      return extension === 'stl';
+    });
+
+    if (validFiles.length !== files.length) {
+      alert('Seuls les fichiers STL sont acceptés');
+    }
+
+    setStlFiles(prev => [...prev, ...validFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setStlFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const uploadStlFiles = async (deliveryNoteId: string, dentistRecordId: string) => {
+    if (stlFiles.length === 0) return;
+
+    setUploadingFiles(true);
+    try {
+      for (const file of stlFiles) {
+        // Create unique path for the file
+        const timestamp = Date.now();
+        const filePath = `${selectedLab}/${deliveryNoteId}/${timestamp}_${file.name}`;
+
+        // Upload file to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('stl-files')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          console.error('Error uploading file:', uploadError);
+          throw uploadError;
+        }
+
+        // Create metadata record in stl_files table
+        const { error: metadataError } = await supabase
+          .from('stl_files')
+          .insert({
+            delivery_note_id: deliveryNoteId,
+            dentist_id: dentistRecordId,
+            laboratory_id: selectedLab,
+            file_name: file.name,
+            file_path: filePath,
+            file_size: file.size,
+            mime_type: file.type || 'application/octet-stream',
+            notes: null
+          });
+
+        if (metadataError) {
+          console.error('Error creating file metadata:', metadataError);
+          throw metadataError;
+        }
+      }
+    } catch (error) {
+      console.error('Error uploading STL files:', error);
+      throw error;
+    } finally {
+      setUploadingFiles(false);
     }
   };
 
@@ -232,6 +307,17 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
 
       if (!deliveryNote) {
         throw new Error('Failed to create delivery note after multiple attempts');
+      }
+
+      // Upload STL files if any
+      if (stlFiles.length > 0) {
+        try {
+          await uploadStlFiles(deliveryNote.id, dentistData.id);
+        } catch (uploadError) {
+          console.error('Error uploading STL files:', uploadError);
+          // Don't fail the whole request if file upload fails
+          alert('La demande a été créée mais l\'upload des fichiers STL a échoué. Vous pouvez les envoyer plus tard.');
+        }
       }
 
       // Note: Notification removed - dentists don't need to notify themselves
@@ -471,13 +557,67 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Fichiers STL (Scans 3D)
+                </label>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-center w-full">
+                    <label className="flex flex-col items-center justify-center w-full px-4 py-6 border-2 border-slate-300 border-dashed rounded-lg cursor-pointer bg-slate-50 hover:bg-slate-100 transition">
+                      <div className="flex flex-col items-center justify-center">
+                        <Upload className="w-10 h-10 mb-2 text-slate-500" />
+                        <p className="mb-1 text-sm text-slate-600">
+                          <span className="font-semibold">Cliquez pour uploader</span> ou glissez-déposez
+                        </p>
+                        <p className="text-xs text-slate-500">Fichiers STL uniquement (max 100MB par fichier)</p>
+                      </div>
+                      <input
+                        type="file"
+                        multiple
+                        accept=".stl"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {stlFiles.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium text-slate-700">{stlFiles.length} fichier(s) sélectionné(s)</p>
+                      {stlFiles.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg"
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <File className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-slate-900 truncate">{file.name}</p>
+                              <p className="text-xs text-slate-600">{formatFileSize(file.size)}</p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeFile(index)}
+                            className="p-2 text-red-600 hover:bg-red-100 rounded-lg transition flex-shrink-0"
+                            title="Supprimer"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <button
                 type="submit"
-                disabled={loading || (labSettings && !labSettings.allow_dentist_orders && !labSettings.allow_dentist_quote_requests)}
+                disabled={loading || uploadingFiles || (labSettings && !labSettings.allow_dentist_orders && !labSettings.allow_dentist_quote_requests)}
                 className="w-full py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-lg"
               >
                 <Send className="w-5 h-5" />
-                {loading ? 'Envoi en cours...' : requestType === 'quote' ? 'Envoyer la demande de devis' : 'Envoyer la demande'}
+                {uploadingFiles ? 'Upload des fichiers...' : loading ? 'Envoi en cours...' : requestType === 'quote' ? 'Envoyer la demande de devis' : 'Envoyer la demande'}
               </button>
             </form>
           </div>

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2, Plus, Upload, RefreshCw } from 'lucide-react';
+import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2, Plus, Upload, RefreshCw, FileCode, File as FileIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -20,6 +20,24 @@ interface PhotoSubmission {
   };
 }
 
+interface StlFile {
+  id: string;
+  delivery_note_id: string | null;
+  dentist_id: string;
+  laboratory_id: string;
+  file_name: string;
+  file_path: string;
+  file_size: number;
+  mime_type: string;
+  uploaded_at: string;
+  notes: string | null;
+  viewed_by_lab: boolean;
+  viewed_at: string | null;
+  dentist_name?: string;
+  delivery_number?: string;
+  patient_name?: string;
+}
+
 interface DentistAccount {
   id: string;
   name: string;
@@ -28,10 +46,12 @@ interface DentistAccount {
 
 export default function PhotoSubmissionsPage() {
   const { laboratoryId } = useAuth();
-  const [activeTab, setActiveTab] = useState<'photos'>('photos');
+  const [activeTab, setActiveTab] = useState<'photos' | 'scans'>('photos');
   const [submissions, setSubmissions] = useState<PhotoSubmission[]>([]);
+  const [stlFiles, setStlFiles] = useState<StlFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoSubmission | null>(null);
+  const [selectedStlFile, setSelectedStlFile] = useState<StlFile | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [sourceFilter, setSourceFilter] = useState<string>('all');
@@ -50,9 +70,13 @@ export default function PhotoSubmissionsPage() {
   const [fullscreenImage, setFullscreenImage] = useState(false);
 
   useEffect(() => {
-    loadSubmissions();
+    if (activeTab === 'photos') {
+      loadSubmissions();
+    } else if (activeTab === 'scans') {
+      loadStlFiles();
+    }
     loadDentists();
-  }, [laboratoryId]);
+  }, [laboratoryId, activeTab]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -80,12 +104,32 @@ export default function PhotoSubmissionsPage() {
     }
   };
 
-  const loadSubmissions = async () => {
+  const loadStlFiles = async () => {
     if (!laboratoryId) return;
 
     setLoading(true);
     try {
       const { data, error } = await supabase
+        .from('stl_files_view')
+        .select('*')
+        .eq('laboratory_id', laboratoryId)
+        .order('uploaded_at', { ascending: false });
+
+      if (error) throw error;
+      setStlFiles(data || []);
+    } catch (error) {
+      console.error('Error loading STL files:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadSubmissions = async () => {
+    if (!laboratoryId) return;
+
+    setLoading(true);
+    try {
+      const { data, error} = await supabase
         .from('photo_submissions')
         .select(`
           *,
@@ -320,6 +364,22 @@ export default function PhotoSubmissionsPage() {
           >
             <Camera className="w-4 h-4 md:w-5 md:h-5" />
             Photos
+          </button>
+          <button
+            onClick={() => setActiveTab('scans')}
+            className={`flex items-center gap-2 px-4 md:px-6 py-3 font-semibold transition-all whitespace-nowrap text-sm md:text-base ${
+              activeTab === 'scans'
+                ? 'text-cyan-600 border-b-2 border-cyan-600'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <FileCode className="w-4 h-4 md:w-5 md:h-5" />
+            Dossier Scans
+            {stlFiles.length > 0 && (
+              <span className="ml-1 px-2 py-0.5 bg-cyan-100 text-cyan-700 rounded-full text-xs font-bold">
+                {stlFiles.length}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -847,6 +907,151 @@ export default function PhotoSubmissionsPage() {
         )}
       </>
     )}
+
+      {activeTab === 'scans' && (
+        <>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="text-center">
+                <div className="w-16 h-16 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                <p className="text-slate-600">Chargement des fichiers STL...</p>
+              </div>
+            </div>
+          ) : stlFiles.length === 0 ? (
+            <div className="text-center py-12 bg-slate-50 rounded-xl border-2 border-dashed border-slate-300">
+              <FileCode className="w-16 h-16 text-slate-400 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-slate-900 mb-2">Aucun fichier STL</h3>
+              <p className="text-slate-600">Les fichiers STL envoyés par les dentistes apparaîtront ici</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {stlFiles.map((file) => (
+                <div
+                  key={file.id}
+                  className="bg-white rounded-xl shadow-md border border-slate-200 p-4 md:p-6 hover:shadow-lg transition-all duration-200"
+                >
+                  <div className="flex flex-col md:flex-row md:items-start gap-4">
+                    <div className="flex-shrink-0">
+                      <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-500 rounded-xl flex items-center justify-center">
+                        <FileIcon className="w-8 h-8 text-white" />
+                      </div>
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-2 mb-3">
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-slate-900 mb-1 truncate">{file.file_name}</h3>
+                          <div className="flex flex-wrap items-center gap-2 text-sm text-slate-600">
+                            <span className="flex items-center gap-1">
+                              <User className="w-4 h-4" />
+                              {file.dentist_name || 'Dentiste inconnu'}
+                            </span>
+                            {file.patient_name && (
+                              <>
+                                <span className="text-slate-400">•</span>
+                                <span>Patient: {file.patient_name}</span>
+                              </>
+                            )}
+                            {file.delivery_number && (
+                              <>
+                                <span className="text-slate-400">•</span>
+                                <span>BL: {file.delivery_number}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          {!file.viewed_by_lab && (
+                            <span className="px-3 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs font-semibold whitespace-nowrap">
+                              Nouveau
+                            </span>
+                          )}
+                          <span className="px-3 py-1 bg-slate-100 text-slate-700 rounded-full text-xs font-medium whitespace-nowrap">
+                            {(file.file_size / (1024 * 1024)).toFixed(2)} MB
+                          </span>
+                        </div>
+                      </div>
+
+                      {file.notes && (
+                        <div className="mb-3 p-3 bg-slate-50 rounded-lg">
+                          <p className="text-sm text-slate-700">{file.notes}</p>
+                        </div>
+                      )}
+
+                      <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 text-sm text-slate-600">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-4 h-4" />
+                          Uploadé le {new Date(file.uploaded_at).toLocaleDateString('fr-FR', {
+                            day: '2-digit',
+                            month: '2-digit',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                          })}
+                        </span>
+                        {file.viewed_at && (
+                          <>
+                            <span className="hidden md:inline text-slate-400">•</span>
+                            <span className="flex items-center gap-1 text-green-600">
+                              <Eye className="w-4 h-4" />
+                              Vu le {new Date(file.viewed_at).toLocaleDateString('fr-FR', {
+                                day: '2-digit',
+                                month: '2-digit',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex md:flex-col gap-2">
+                      <button
+                        onClick={async () => {
+                          try {
+                            const { data, error } = await supabase.storage
+                              .from('stl-files')
+                              .createSignedUrl(file.file_path, 3600);
+
+                            if (error) throw error;
+
+                            if (data?.signedUrl) {
+                              // Mark as viewed
+                              if (!file.viewed_by_lab) {
+                                await supabase.rpc('mark_stl_file_as_viewed', {
+                                  p_file_id: file.id
+                                });
+                                await loadStlFiles();
+                              }
+
+                              // Download the file
+                              const link = document.createElement('a');
+                              link.href = data.signedUrl;
+                              link.download = file.file_name;
+                              document.body.appendChild(link);
+                              link.click();
+                              document.body.removeChild(link);
+                            }
+                          } catch (error) {
+                            console.error('Error downloading file:', error);
+                            alert('Erreur lors du téléchargement du fichier');
+                          }
+                        }}
+                        className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition text-sm font-medium"
+                        title="Télécharger le fichier STL"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span className="md:hidden">Télécharger</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
