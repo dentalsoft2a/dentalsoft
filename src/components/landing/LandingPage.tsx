@@ -898,14 +898,38 @@ export function LandingPage() {
                   <p className="text-xs sm:text-sm text-white/90 mt-1 sm:mt-2">Sans engagement</p>
 
                   {totalExtensionsPrice > 0 && (
-                    <div className="mt-4 bg-white/20 backdrop-blur rounded-lg p-3">
-                      <p className="text-xs sm:text-sm text-white/90 mb-1">Économisez jusqu'à</p>
-                      <p className="text-2xl sm:text-3xl font-bold text-white">
-                        {(price + totalExtensionsPrice - premiumPrice).toFixed(2)}€/mois
-                      </p>
-                      <p className="text-xs text-white/80 mt-1">
-                        vs {(price + totalExtensionsPrice).toFixed(2)}€ Standard + Toutes les extensions
-                      </p>
+                    <div className="mt-4 space-y-3">
+                      <div className="bg-white/20 backdrop-blur rounded-lg p-3">
+                        <p className="text-xs sm:text-sm text-white/90 mb-2">Économie mensuelle</p>
+                        <div className="flex items-baseline gap-2 mb-2">
+                          <span className="text-3xl sm:text-4xl font-bold text-white">
+                            {(price + totalExtensionsPrice - premiumPrice).toFixed(2)}€
+                          </span>
+                          <span className="text-sm text-white/80">/mois</span>
+                        </div>
+                        <p className="text-xs text-white/90">
+                          soit <span className="font-bold">{((price + totalExtensionsPrice - premiumPrice) * 12).toFixed(2)}€/an</span>
+                        </p>
+                      </div>
+
+                      <div className="bg-white/10 backdrop-blur rounded-lg p-3 text-xs space-y-1.5">
+                        <div className="flex justify-between items-center">
+                          <span className="text-white/80">Plan Standard:</span>
+                          <span className="font-semibold text-white">{price.toFixed(2)}€</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-white/80">+ Toutes les extensions:</span>
+                          <span className="font-semibold text-white">{totalExtensionsPrice.toFixed(2)}€</span>
+                        </div>
+                        <div className="border-t border-white/20 pt-1.5 mt-1.5 flex justify-between items-center">
+                          <span className="text-white/80">Total à payer:</span>
+                          <span className="font-bold text-white text-base">{(price + totalExtensionsPrice).toFixed(2)}€</span>
+                        </div>
+                        <div className="border-t border-white/20 pt-1.5 mt-1.5 flex justify-between items-center">
+                          <span className="text-white font-semibold">Premium Complet:</span>
+                          <span className="font-bold text-amber-200 text-base">{premiumPrice.toFixed(2)}€</span>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </div>
