@@ -1337,34 +1337,19 @@ function BulkCreateProformasModal({ onClose, onSave }: BulkCreateProformasModalP
 
     setLoading(true);
     try {
-      // Get last proforma number to generate sequential numbers
-      const { data: lastProforma } = await supabase
-        .from('proformas')
-        .select('proforma_number')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      const year = new Date().getFullYear();
-      let nextNumber = 1;
-
-      if (lastProforma && lastProforma.length > 0) {
-        const lastNumber = lastProforma[0].proforma_number;
-        const match = lastNumber.match(/PRO-(\d{4})-(\d+)/);
-        if (match) {
-          const lastYear = parseInt(match[1]);
-          const lastNum = parseInt(match[2]);
-          if (lastYear === year) {
-            nextNumber = lastNum + 1;
-          }
-        }
-      }
-
       let createdCount = 0;
 
       for (const group of preview) {
-        const proformaNumber = `PRO-${year}-${String(nextNumber).padStart(4, '0')}`;
-        nextNumber++;
+        // Use PostgreSQL function to generate next proforma number (bypasses RLS)
+        const { data: nextNumberData, error: rpcError } = await supabase
+          .rpc('generate_next_proforma_number');
+
+        if (rpcError) {
+          console.error('Error generating proforma number:', rpcError);
+          throw rpcError;
+        }
+
+        const proformaNumber = nextNumberData as string;
 
         // Calculate totals
         const items = group.deliveryNotes.flatMap(note =>
