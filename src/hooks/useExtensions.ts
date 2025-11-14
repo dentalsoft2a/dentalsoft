@@ -60,7 +60,6 @@ export function useExtensions() {
       const { data: extensionsData, error: extensionsError } = await supabase
         .from('extensions')
         .select('*')
-        .eq('is_active', true)
         .order('sort_order');
 
       if (extensionsError) throw extensionsError;
@@ -93,6 +92,16 @@ export function useExtensions() {
   };
 
   const hasFeatureAccess = (featureKey: string): boolean => {
+    const extensionForFeature = extensions.find(ext =>
+      ext.features.some(f => f.feature_key === featureKey)
+    );
+
+    if (!extensionForFeature) return true;
+
+    if (!extensionForFeature.is_active) {
+      return true;
+    }
+
     return userExtensions.some(ue => {
       if (ue.status !== 'active') return false;
       if (ue.expiry_date && new Date(ue.expiry_date) < new Date()) return false;

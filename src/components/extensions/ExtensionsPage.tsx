@@ -240,7 +240,7 @@ export default function ExtensionsPage() {
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {extensions.map(extension => {
+        {extensions.filter(ext => ext.is_active).map(extension => {
           const IconComponent = getIconComponent(extension.icon);
           const extensionFeatures = getExtensionFeatures(extension.id);
           const userExt = getUserExtension(extension.id);
