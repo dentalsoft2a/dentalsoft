@@ -70,6 +70,9 @@ Deno.serve(async (req: Request) => {
           const extensionId = session.metadata.extension_id;
           const subscriptionId = session.subscription as string;
 
+          console.log("Processing extension subscription for user:", userId, "extension:", extensionId);
+
+          // Get profile_id from profiles table
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("id")
@@ -78,29 +81,58 @@ Deno.serve(async (req: Request) => {
 
           if (profileError) {
             console.error("Error finding profile:", profileError);
-            break;
           }
 
           const expiryDate = new Date();
           expiryDate.setMonth(expiryDate.getMonth() + 1);
 
-          const { error: insertError } = await supabase
+          // Check if user_extension already exists to avoid duplicates
+          const { data: existingExtension } = await supabase
             .from("user_extensions")
-            .insert({
-              user_id: userId,
-              profile_id: profile?.id,
-              extension_id: extensionId,
-              status: "active",
-              start_date: new Date().toISOString(),
-              expiry_date: expiryDate.toISOString(),
-              auto_renew: true,
-              stripe_subscription_id: subscriptionId,
-            });
+            .select("id")
+            .eq("user_id", userId)
+            .eq("extension_id", extensionId)
+            .maybeSingle();
 
-          if (insertError) {
-            console.error("Error creating user extension:", insertError);
+          if (existingExtension) {
+            console.log("Extension already exists, updating status");
+            const { error: updateError } = await supabase
+              .from("user_extensions")
+              .update({
+                status: "active",
+                start_date: new Date().toISOString(),
+                expiry_date: expiryDate.toISOString(),
+                auto_renew: true,
+                stripe_subscription_id: subscriptionId,
+                cancelled_at: null,
+              })
+              .eq("id", existingExtension.id);
+
+            if (updateError) {
+              console.error("Error updating user extension:", updateError);
+            } else {
+              console.log("Extension updated successfully for user:", userId);
+            }
           } else {
-            console.log("Extension activated successfully for user:", userId);
+            console.log("Creating new user extension");
+            const { error: insertError } = await supabase
+              .from("user_extensions")
+              .insert({
+                user_id: userId,
+                profile_id: profile?.id || null,
+                extension_id: extensionId,
+                status: "active",
+                start_date: new Date().toISOString(),
+                expiry_date: expiryDate.toISOString(),
+                auto_renew: true,
+                stripe_subscription_id: subscriptionId,
+              });
+
+            if (insertError) {
+              console.error("Error creating user extension:", insertError);
+            } else {
+              console.log("Extension activated successfully for user:", userId);
+            }
           }
         }
         break;
