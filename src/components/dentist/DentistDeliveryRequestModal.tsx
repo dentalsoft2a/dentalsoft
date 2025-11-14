@@ -88,23 +88,48 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
 
     setUploadingFiles(true);
     try {
-      for (const file of stlFiles) {
+      console.log('=== Starting STL upload ===');
+      console.log('Delivery Note ID:', deliveryNoteId);
+      console.log('Dentist Record ID:', dentistRecordId);
+      console.log('Laboratory ID:', selectedLab);
+      console.log('Number of files:', stlFiles.length);
+
+      for (let i = 0; i < stlFiles.length; i++) {
+        const file = stlFiles[i];
+        console.log(`\n--- Uploading file ${i + 1}/${stlFiles.length} ---`);
+        console.log('File name:', file.name);
+        console.log('File size:', file.size);
+        console.log('File type:', file.type);
+
         // Create unique path for the file
         const timestamp = Date.now();
         const filePath = `${selectedLab}/${deliveryNoteId}/${timestamp}_${file.name}`;
+        console.log('File path:', filePath);
 
-        // Upload file to Supabase Storage
-        const { error: uploadError } = await supabase.storage
+        // Determine MIME type - STL files often don't have a type set
+        const mimeType = file.type || 'application/octet-stream';
+        console.log('MIME type used:', mimeType);
+
+        // Upload file to Supabase Storage with explicit content type
+        console.log('Uploading to storage...');
+        const { data: uploadData, error: uploadError } = await supabase.storage
           .from('stl-files')
-          .upload(filePath, file);
+          .upload(filePath, file, {
+            contentType: mimeType,
+            upsert: false
+          });
 
         if (uploadError) {
-          console.error('Error uploading file:', uploadError);
-          throw uploadError;
+          console.error('❌ Storage upload error:', uploadError);
+          console.error('Error details:', JSON.stringify(uploadError, null, 2));
+          throw new Error(`Erreur d'upload du fichier "${file.name}": ${uploadError.message}`);
         }
 
+        console.log('✅ Storage upload successful:', uploadData);
+
         // Create metadata record in stl_files table
-        const { error: metadataError } = await supabase
+        console.log('Creating metadata record...');
+        const { data: metadataData, error: metadataError } = await supabase
           .from('stl_files')
           .insert({
             delivery_note_id: deliveryNoteId,
@@ -113,17 +138,24 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
             file_name: file.name,
             file_path: filePath,
             file_size: file.size,
-            mime_type: file.type || 'application/octet-stream',
+            mime_type: mimeType,
             notes: null
-          });
+          })
+          .select();
 
         if (metadataError) {
-          console.error('Error creating file metadata:', metadataError);
-          throw metadataError;
+          console.error('❌ Metadata insert error:', metadataError);
+          console.error('Error details:', JSON.stringify(metadataError, null, 2));
+          throw new Error(`Erreur de création des métadonnées pour "${file.name}": ${metadataError.message}`);
         }
+
+        console.log('✅ Metadata created successfully:', metadataData);
       }
-    } catch (error) {
-      console.error('Error uploading STL files:', error);
+
+      console.log('\n=== All files uploaded successfully ===');
+    } catch (error: any) {
+      console.error('❌ Error uploading STL files:', error);
+      console.error('Error stack:', error.stack);
       throw error;
     } finally {
       setUploadingFiles(false);
@@ -313,10 +345,11 @@ export default function DentistDeliveryRequestModal({ onClose, dentistId }: Dent
       if (stlFiles.length > 0) {
         try {
           await uploadStlFiles(deliveryNote.id, dentistData.id);
-        } catch (uploadError) {
+        } catch (uploadError: any) {
           console.error('Error uploading STL files:', uploadError);
           // Don't fail the whole request if file upload fails
-          alert('La demande a été créée mais l\'upload des fichiers STL a échoué. Vous pouvez les envoyer plus tard.');
+          const errorMessage = uploadError?.message || 'Erreur inconnue';
+          alert(`La demande a été créée mais l'upload des fichiers STL a échoué.\n\nErreur: ${errorMessage}\n\nConsultez la console (F12) pour plus de détails. Vous pouvez contacter le support avec ces informations.`);
         }
       }
 
