@@ -21,7 +21,7 @@ export function useEmployeeQuota() {
     try {
       setLoading(true);
       const { count, error } = await supabase
-        .from('employees')
+        .from('laboratory_employees')
         .select('*', { count: 'exact', head: true })
         .eq('laboratory_id', user?.id)
         .eq('is_active', true);
