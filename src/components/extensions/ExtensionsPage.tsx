@@ -157,29 +157,36 @@ export default function ExtensionsPage() {
   };
 
   const handleCancelSubscription = async (extensionId: string) => {
-    if (!confirm('Êtes-vous sûr de vouloir annuler cet abonnement?')) return;
+    if (!confirm('Êtes-vous sûr de vouloir annuler cet abonnement? Cela résiliera également votre abonnement sur Stripe.')) return;
 
     setProcessingExtension(extensionId);
     try {
       const userExt = getUserExtension(extensionId);
       if (!userExt) return;
 
-      const { error } = await supabase
-        .from('user_extensions')
-        .update({
-          status: 'cancelled',
-          auto_renew: false,
-          cancelled_at: new Date().toISOString()
+      // Appeler la fonction Edge pour annuler l'abonnement Stripe
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-stripe-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          userExtensionId: userExt.id
         })
-        .eq('id', userExt.id);
+      });
 
-      if (error) throw error;
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(errorData.error || 'Erreur lors de l\'annulation de l\'abonnement');
+      }
 
-      alert('Abonnement annulé avec succès');
+      alert('Abonnement annulé avec succès sur Stripe');
       reloadExtensions();
     } catch (error) {
       console.error('Error cancelling subscription:', error);
-      alert('Erreur lors de l\'annulation de l\'abonnement');
+      alert(`Erreur lors de l'annulation de l'abonnement: ${(error as Error).message}`);
     } finally {
       setProcessingExtension(null);
     }
