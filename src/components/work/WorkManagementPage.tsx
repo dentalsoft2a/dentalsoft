@@ -169,6 +169,7 @@ export default function WorkManagementPage() {
         `)
         .eq('user_id', userId)
         .neq('status', 'completed')
+        .neq('status', 'refused')
         .order('created_at', { ascending: false });
 
       if (error) throw error;

@@ -61,6 +61,7 @@ export default function CalendarPage() {
           dentist:dentists(*)
         `)
         .eq('user_id', user.id)
+        .neq('status', 'refused')
         .gte('date', startOfMonth.toISOString().split('T')[0])
         .lte('date', endOfMonth.toISOString().split('T')[0])
         .order('date');

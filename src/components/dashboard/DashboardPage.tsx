@@ -223,6 +223,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
           .select('id, date, status', { count: 'exact', head: true })
           .eq('user_id', user.id)
           .neq('status', 'completed')
+          .neq('status', 'refused')
           .gte('date', now.toISOString().split('T')[0])
           .lte('date', twoDaysFromNow.toISOString().split('T')[0]),
       ]);
