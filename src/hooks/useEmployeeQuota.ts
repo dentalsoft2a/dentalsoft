@@ -6,24 +6,26 @@ import { useExtensions } from './useExtensions';
 const FREE_EMPLOYEE_LIMIT = 3;
 
 export function useEmployeeQuota() {
-  const { user } = useAuth();
+  const { laboratoryId } = useAuth();
   const { hasFeatureAccess } = useExtensions();
   const [employeeCount, setEmployeeCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
+    if (laboratoryId) {
       loadEmployeeCount();
     }
-  }, [user]);
+  }, [laboratoryId]);
 
   const loadEmployeeCount = async () => {
+    if (!laboratoryId) return;
+
     try {
       setLoading(true);
       const { count, error } = await supabase
         .from('laboratory_employees')
         .select('*', { count: 'exact', head: true })
-        .eq('laboratory_id', user?.id)
+        .eq('laboratory_profile_id', laboratoryId)
         .eq('is_active', true);
 
       if (error) throw error;
