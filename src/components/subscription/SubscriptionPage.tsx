@@ -22,6 +22,8 @@ interface SubscriptionPlan {
   description: string;
   price_monthly: number;
   features: string[];
+  plan_type: 'standard' | 'premium_complete';
+  unlocks_all_extensions: boolean;
 }
 
 interface SubscriptionInvoice {
@@ -40,7 +42,7 @@ interface SubscriptionInvoice {
 export function SubscriptionPage() {
   const { user } = useAuth();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [plan, setPlan] = useState<SubscriptionPlan | null>(null);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [invoices, setInvoices] = useState<SubscriptionInvoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [showRedeemModal, setShowRedeemModal] = useState(false);
@@ -75,14 +77,14 @@ export function SubscriptionPage() {
   const loadData = async () => {
     if (!user) return;
 
-    const [profileRes, planRes, invoicesRes] = await Promise.all([
+    const [profileRes, plansRes, invoicesRes] = await Promise.all([
       supabase.from('user_profiles').select('*').eq('id', user.id).single(),
-      supabase.from('subscription_plans').select('*').eq('is_active', true).single(),
+      supabase.from('subscription_plans').select('*').eq('is_active', true).order('display_order'),
       supabase.from('subscription_invoices').select('*').eq('user_id', user.id).order('issued_at', { ascending: false })
     ]);
 
     if (profileRes.data) setProfile(profileRes.data);
-    if (planRes.data) setPlan(planRes.data);
+    if (plansRes.data) setPlans(plansRes.data);
     if (invoicesRes.data) setInvoices(invoicesRes.data);
 
     setLoading(false);
@@ -245,7 +247,7 @@ export function SubscriptionPage() {
     );
   }
 
-  if (!profile || !plan) {
+  if (!profile || plans.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-slate-600">Erreur de chargement</div>
@@ -314,49 +316,77 @@ export function SubscriptionPage() {
             </div>
           )}
 
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="bg-slate-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600 mb-1">Plan actuel</p>
-              <p className="text-lg font-bold text-slate-900">{plan.name}</p>
-            </div>
-
-            <div className="bg-slate-50 rounded-lg p-4">
-              <p className="text-sm text-slate-600 mb-1">Tarif mensuel</p>
-              <p className="text-lg font-bold text-slate-900">{plan.price_monthly.toFixed(2)}€ / mois</p>
-            </div>
-          </div>
+          <button
+            onClick={() => setShowRedeemModal(true)}
+            className="w-full mt-4 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:shadow-lg transition-all font-medium flex items-center justify-center gap-2"
+          >
+            <Key className="w-5 h-5" />
+            Utiliser un code d'accès
+          </button>
         </div>
 
-        <div className="bg-white rounded-xl shadow-lg border border-slate-200 p-6 mb-6">
-          <div className="flex items-center gap-3 mb-6">
-            <DollarSign className="w-6 h-6 text-primary-600" />
-            <h3 className="text-xl font-bold text-slate-900">Détails du plan</h3>
-          </div>
+        <div className="space-y-6 mb-6">
+          <div>
+            <h3 className="text-xl font-bold text-slate-900 mb-4">Plans disponibles</h3>
+            <div className="grid md:grid-cols-2 gap-6">
+              {plans.map((plan) => (
+                <div
+                  key={plan.id}
+                  className={`bg-white rounded-xl shadow-lg border-2 overflow-hidden transition-all hover:shadow-xl ${
+                    plan.plan_type === 'premium_complete'
+                      ? 'border-amber-400 ring-2 ring-amber-200'
+                      : 'border-slate-200'
+                  }`}
+                >
+                  <div
+                    className={`p-6 ${
+                      plan.plan_type === 'premium_complete'
+                        ? 'bg-gradient-to-br from-amber-500 to-orange-600'
+                        : 'bg-gradient-to-br from-primary-500 to-cyan-600'
+                    }`}
+                  >
+                    <h4 className="text-2xl font-bold text-white mb-1">{plan.name}</h4>
+                    <p className="text-white/90 text-sm mb-4">{plan.description}</p>
+                    <div className="text-3xl font-bold text-white">
+                      {plan.price_monthly.toFixed(2)}€
+                      <span className="text-lg font-normal opacity-80">/mois</span>
+                    </div>
+                  </div>
 
-          <div className="space-y-3 mb-6">
-            {plan.features.map((feature, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                <span className="text-slate-700">{feature}</span>
-              </div>
-            ))}
-          </div>
+                  <div className="p-6">
+                    <div className="space-y-3 mb-6">
+                      {plan.features.map((feature, index) => (
+                        <div key={index} className="flex items-center gap-3">
+                          <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                          <span className="text-slate-700 text-sm">{feature}</span>
+                        </div>
+                      ))}
+                    </div>
 
-          {(profile.subscription_status === 'trial' || profile.subscription_status === 'inactive' || profile.subscription_status === 'expired') && (
-            <button
-              onClick={handleSubscribe}
-              className="w-full px-6 py-4 bg-gradient-to-r from-primary-500 to-cyan-500 text-white rounded-lg hover:shadow-lg transition-all font-semibold text-lg"
-            >
-              S'abonner maintenant pour {plan.price_monthly.toFixed(2)}€/mois
-            </button>
-          )}
+                    {(profile.subscription_status === 'trial' || profile.subscription_status === 'inactive' || profile.subscription_status === 'expired') && (
+                      <button
+                        onClick={handleSubscribe}
+                        className={`w-full px-4 py-3 rounded-lg text-white font-medium transition-all hover:shadow-lg ${
+                          plan.plan_type === 'premium_complete'
+                            ? 'bg-gradient-to-r from-amber-500 to-orange-600'
+                            : 'bg-gradient-to-r from-primary-500 to-cyan-500'
+                        }`}
+                      >
+                        S'abonner pour {plan.price_monthly.toFixed(2)}€/mois
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {profile.subscription_status === 'active' && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-4">
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6">
               <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-emerald-900 mb-1">Abonnement actif</h4>
+                  <h4 className="font-medium text-emerald-900 mb-2 text-lg">Abonnement actif</h4>
                   <p className="text-sm text-emerald-700">
                     Vous avez accès à toutes les fonctionnalités de DentalCloud. Pour toute question, contactez notre support.
                   </p>
@@ -364,22 +394,6 @@ export function SubscriptionPage() {
               </div>
             </div>
           )}
-        </div>
-
-        <div className="bg-gradient-to-br from-primary-50 to-cyan-50 rounded-xl border border-primary-200 p-6 mb-6">
-          <div className="flex items-center gap-3 mb-4">
-            <Key className="w-6 h-6 text-primary-600" />
-            <h3 className="font-bold text-slate-900">Vous avez un code d'accès ?</h3>
-          </div>
-          <p className="text-slate-600 mb-4">
-            Activez un code d'accès pour prolonger votre abonnement.
-          </p>
-          <button
-            onClick={() => setShowRedeemModal(true)}
-            className="px-6 py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-lg hover:shadow-lg transition-all font-medium"
-          >
-            Activer un code
-          </button>
         </div>
 
         <div className="bg-gradient-to-br from-slate-100 to-slate-50 rounded-xl border border-slate-200 p-6">
