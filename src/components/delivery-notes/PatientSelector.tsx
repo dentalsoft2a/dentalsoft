@@ -18,6 +18,7 @@ export default function PatientSelector({ value, onChange }: PatientSelectorProp
   const [newPatient, setNewPatient] = useState({
     first_name: '',
     last_name: '',
+    patient_code: '',
     date_of_birth: '',
     phone: '',
     email: '',
@@ -65,6 +66,7 @@ export default function PatientSelector({ value, onChange }: PatientSelectorProp
       setNewPatient({
         first_name: '',
         last_name: '',
+        patient_code: '',
         date_of_birth: '',
         phone: '',
         email: '',
@@ -92,7 +94,7 @@ export default function PatientSelector({ value, onChange }: PatientSelectorProp
             <option value="">Sélectionner un patient</option>
             {patients.map((patient) => (
               <option key={patient.id} value={patient.id}>
-                {patient.last_name} {patient.first_name}
+                {(patient as any).patient_code ? `[${(patient as any).patient_code}] ` : ''}{patient.last_name} {patient.first_name}
               </option>
             ))}
           </select>
@@ -112,6 +114,19 @@ export default function PatientSelector({ value, onChange }: PatientSelectorProp
         <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
           <h3 className="font-medium text-slate-900 mb-3">Nouveau patient</h3>
           <form onSubmit={handleCreatePatient} className="space-y-3">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-1">
+                Code Patient
+              </label>
+              <input
+                type="text"
+                value={newPatient.patient_code}
+                onChange={(e) => setNewPatient({ ...newPatient, patient_code: e.target.value })}
+                className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                placeholder="Ex: P001, PAT-123"
+              />
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-700 mb-1">

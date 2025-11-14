@@ -10,6 +10,7 @@ import CatalogItemSelector from './CatalogItemSelector';
 import ResourceVariantSelector from './ResourceVariantSelector';
 import VisualToothSelector from './VisualToothSelector';
 import BatchSelector from './BatchSelector';
+import MultiShadeSelector from './MultiShadeSelector';
 import DatePicker from '../common/DatePicker';
 import CustomSelect from '../common/CustomSelect';
 import DeliveryNoteDetail from './DeliveryNoteDetail';
@@ -713,6 +714,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
   const [formData, setFormData] = useState({
     dentist_id: '',
     patient_name: '',
+    patient_code: '',
     delivery_number: '',
     date: new Date().toISOString().split('T')[0],
     prescription_date: new Date().toISOString().split('T')[0],
@@ -725,8 +727,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
     description: string;
     quantity: number;
     unit_price: number;
-    unit: string;
-    shade: string;
+    shade: string | string[];
     tooth_number: string;
     tooth_numbers?: string[]; // Multiple teeth selection
     catalog_item_id?: string;
@@ -814,6 +815,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
       setFormData({
         dentist_id: data.dentist_id,
         patient_name: (data as any).patient_name || '',
+        patient_code: (data as any).patient_code || '',
         delivery_number: data.delivery_number,
         date: data.date,
         prescription_date: data.prescription_date || '',
@@ -828,9 +830,10 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
         itemsData.length > 0
           ? itemsData.map((item: any) => ({
               ...item,
-              tooth_numbers: item.tooth_number ? item.tooth_number.split(',').map((t: string) => t.trim()).filter(Boolean) : []
+              tooth_numbers: item.tooth_number ? item.tooth_number.split(',').map((t: string) => t.trim()).filter(Boolean) : [],
+              shade: typeof item.shade === 'string' && item.shade.includes(',') ? item.shade.split(',').map((s: string) => s.trim()) : item.shade || ''
             }))
-          : [{ description: '', quantity: 1, unit_price: 0, unit: '', shade: '', tooth_number: '', tooth_numbers: [], catalog_item_id: undefined, resource_variants: {} }]
+          : [{ description: '', quantity: 1, unit_price: 0, shade: '', tooth_number: '', tooth_numbers: [], catalog_item_id: undefined, resource_variants: {} }]
       );
     } catch (error) {
       console.error('Error loading delivery note:', error);
@@ -838,7 +841,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
   };
 
   const addItem = () => {
-    setItems([...items, { description: '', quantity: 1, unit_price: 0, unit: '', shade: '', tooth_number: '', tooth_numbers: [], catalog_item_id: undefined, resource_variants: {} }]);
+    setItems([...items, { description: '', quantity: 1, unit_price: 0, shade: '', tooth_number: '', tooth_numbers: [], catalog_item_id: undefined, resource_variants: {} }]);
   };
 
   const removeItem = (index: number) => {
@@ -992,6 +995,20 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                     className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-slate-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-primary-500/50 focus:border-primary-400 outline-none transition-all duration-300 hover:border-primary-300 placeholder:text-slate-400 bg-white shadow-sm"
                   />
                 </div>
+
+                <div className="group">
+                  <label className="block text-xs md:text-sm font-bold text-slate-700 mb-2 transition-colors group-focus-within:text-cyan-600 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-cyan-500 group-focus-within:scale-150 transition-transform"></span>
+                    Code Patient
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.patient_code}
+                    onChange={(e) => setFormData({ ...formData, patient_code: e.target.value })}
+                    placeholder="Ex: P001, PAT-123"
+                    className="w-full px-3 py-2 md:px-4 md:py-3 text-sm border border-slate-200 rounded-lg md:rounded-xl focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-400 outline-none transition-all duration-300 hover:border-cyan-300 placeholder:text-slate-400 bg-white shadow-sm"
+                  />
+                </div>
               </div>
             </div>
 
@@ -1123,7 +1140,6 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                   description: item.description,
                   quantity: 1,
                   unit_price: item.unit_price,
-                  unit: item.unit,
                   shade: '',
                   tooth_number: '',
                   tooth_numbers: [],
@@ -1189,27 +1205,20 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                           className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white/80 shadow-sm"
                         />
                       </div>
-                      <div className="group/item">
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
-                          <span className="w-1 h-1 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
-                          Unité
-                        </label>
-                        <input
-                          type="text"
-                          placeholder="Ex: unité, set"
-                          value={item.unit}
-                          onChange={(e) => updateItem(index, 'unit', e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white/80 shadow-sm"
-                        />
-                      </div>
-                      <div className="group/item">
-                        <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
-                          <span className="w-1 h-1 rounded-full bg-primary-500 group-focus-within/item:scale-150 transition-transform"></span>
-                          Teinte
-                        </label>
+                      <MultiShadeSelector
+                        selectedShades={Array.isArray(item.shade) ? item.shade : (item.shade ? [item.shade as string] : [])}
+                        onChange={(shades) => {
+                          const newItems = [...items];
+                          newItems[index] = {
+                            ...newItems[index],
+                            shade: shades
+                          };
+                          setItems(newItems);
+                        }}
+                      />
+                      <div className="hidden">
                         <select
-                          value={item.shade}
-                          onChange={(e) => updateItem(index, 'shade', e.target.value)}
+                          value=""
                           className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-primary-400/50 focus:border-primary-400 outline-none transition-all hover:border-primary-300 bg-white/80 shadow-sm"
                         >
                         <option value="">Sélectionner une teinte</option>
@@ -1278,7 +1287,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
                           <option value="5M3">5M3</option>
                         </optgroup>
                       </select>
-                    </div>
+                      </div>
                     <div className="md:col-span-2 group/item">
                       <label className="block text-xs font-bold text-slate-700 mb-1.5 transition-colors group-focus-within/item:text-primary-600 flex items-center gap-1.5">
                         <span className="w-1 h-1 rounded-full bg-cyan-500 group-focus-within/item:scale-150 transition-transform"></span>
