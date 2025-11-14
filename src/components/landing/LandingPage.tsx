@@ -901,7 +901,7 @@ export function LandingPage() {
                   </div>
                   <p className="text-xs sm:text-sm text-white/90 mt-1 sm:mt-2">Sans engagement</p>
 
-                  {pricesLoaded && totalExtensionsPrice > 0 && (
+                  {pricesLoaded && (
                     <div className="mt-4 bg-white/20 backdrop-blur rounded-lg p-4">
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between items-center text-white/90">
@@ -932,12 +932,14 @@ export function LandingPage() {
                           </div>
                         </div>
 
-                        <div className="mt-3 pt-3 border-t border-white/30">
-                          <div className="flex justify-between items-center">
-                            <span className="font-bold text-white">Économie avec Premium</span>
-                            <span className="font-bold text-2xl text-emerald-300">{(price + totalExtensionsPrice - premiumPrice).toFixed(2)}€/mois</span>
+                        {totalExtensionsPrice > 0 && (
+                          <div className="mt-3 pt-3 border-t border-white/30">
+                            <div className="flex justify-between items-center">
+                              <span className="font-bold text-white">Économie avec Premium</span>
+                              <span className="font-bold text-2xl text-emerald-300">{(price + totalExtensionsPrice - premiumPrice).toFixed(2)}€/mois</span>
+                            </div>
                           </div>
-                        </div>
+                        )}
                       </div>
                     </div>
                   )}
