@@ -857,11 +857,27 @@ export function LandingPage() {
                   <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
                     <div className="flex items-start gap-2 sm:gap-3">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700">Toutes les fonctionnalités de base</span>
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion complète des bons de livraison</span>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700">Documents illimités</span>
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Factures et devis professionnels</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion des dentistes et patients</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Catalogue produits et ressources</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion des stocks et lots</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700">Portail dentiste avec photos</span>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
@@ -869,11 +885,11 @@ export function LandingPage() {
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700">Support standard</span>
+                      <span className="text-xs sm:text-sm text-slate-700">Support par email</span>
                     </div>
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <div className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-500 italic">Extensions payantes en supplément</span>
+                    <div className="flex items-start gap-2 sm:gap-3 mt-4 pt-4 border-t border-slate-200">
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 text-slate-400">+</div>
+                      <span className="text-xs sm:text-sm text-slate-500 italic">Extensions disponibles à la carte</span>
                     </div>
                   </div>
 
@@ -948,14 +964,42 @@ export function LandingPage() {
                 <div className="p-4 sm:p-6 lg:p-8 bg-white">
                   <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
                     <div className="flex items-start gap-2 sm:gap-3">
-                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">TOUTES les extensions incluses</span>
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion complète des bons de livraison</span>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700">Tout du Plan Standard</span>
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Factures et devis professionnels</span>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion des dentistes et patients</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Catalogue produits et ressources</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion des stocks et lots</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700">Portail dentiste avec photos</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3 mt-4 pt-4 border-t border-amber-200">
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-bold">Gestion des Travaux (29.99€)</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-bold">Scan STL (19.99€)</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-bold">Gestion des Employés (24.99€)</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3 mt-4 pt-4 border-t border-amber-200">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                       <span className="text-xs sm:text-sm text-slate-700">Employés illimités</span>
                     </div>
@@ -964,11 +1008,11 @@ export function LandingPage() {
                       <span className="text-xs sm:text-sm text-slate-700">Support prioritaire</span>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700">Futures extensions gratuites</span>
+                      <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Futures extensions gratuites</span>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
-                      <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                       <span className="text-xs sm:text-sm text-slate-700 font-semibold">Accès anticipé aux nouveautés</span>
                     </div>
                   </div>
