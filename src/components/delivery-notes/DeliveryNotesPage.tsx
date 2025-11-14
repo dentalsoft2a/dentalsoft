@@ -85,7 +85,24 @@ export default function DeliveryNotesPage() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setDeliveryNotes(data || []);
+
+      // Get all delivery note IDs that are in proforma_items
+      const { data: usedDeliveryNotes, error: usedError } = await supabase
+        .from('proforma_items')
+        .select('delivery_note_id')
+        .not('delivery_note_id', 'is', null);
+
+      if (usedError) throw usedError;
+
+      // Create a Set of delivery note IDs that are already in proformas
+      const usedDeliveryNoteIds = new Set(
+        usedDeliveryNotes?.map(item => item.delivery_note_id).filter(Boolean) || []
+      );
+
+      // Filter out delivery notes that are already in proformas
+      const availableDeliveryNotes = (data || []).filter(note => !usedDeliveryNoteIds.has(note.id));
+
+      setDeliveryNotes(availableDeliveryNotes);
     } catch (error) {
       console.error('Error loading delivery notes:', error);
     } finally {
