@@ -13,11 +13,24 @@ interface AccessCode {
   used_at: string | null;
   created_at: string;
   expires_at: string | null;
+  subscription_plan_id: string | null;
+  subscription_plan?: {
+    name: string;
+    plan_type: string;
+  };
+}
+
+interface SubscriptionPlan {
+  id: string;
+  name: string;
+  plan_type: string;
+  price_monthly: number;
 }
 
 export function AccessCodesManagement() {
   const { user } = useAuth();
   const [codes, setCodes] = useState<AccessCode[]>([]);
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
@@ -25,27 +38,42 @@ export function AccessCodesManagement() {
     duration_days: 30,
     quantity: 1,
     expires_in_days: 0,
+    subscription_plan_id: '',
   });
 
   useLockScroll(showCreateModal);
 
   useEffect(() => {
-    loadCodes();
+    loadData();
   }, [user]);
 
-  const loadCodes = async () => {
+  const loadData = async () => {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase
-        .from('access_codes')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const [codesRes, plansRes] = await Promise.all([
+        supabase
+          .from('access_codes')
+          .select('*, subscription_plan:subscription_plans(name, plan_type)')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('subscription_plans')
+          .select('id, name, plan_type, price_monthly')
+          .eq('is_active', true)
+          .order('display_order')
+      ]);
 
-      if (error) throw error;
-      setCodes(data || []);
+      if (codesRes.error) throw codesRes.error;
+      if (plansRes.error) throw plansRes.error;
+
+      setCodes(codesRes.data || []);
+      setPlans(plansRes.data || []);
+
+      if (plansRes.data && plansRes.data.length > 0 && !formData.subscription_plan_id) {
+        setFormData(prev => ({ ...prev, subscription_plan_id: plansRes.data[0].id }));
+      }
     } catch (error) {
-      console.error('Error loading codes:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -77,6 +105,7 @@ export function AccessCodesManagement() {
           duration_days: formData.duration_days,
           created_by: user.id,
           expires_at: expiresAt,
+          subscription_plan_id: formData.subscription_plan_id || null,
         });
       }
 
@@ -87,8 +116,13 @@ export function AccessCodesManagement() {
       if (error) throw error;
 
       setShowCreateModal(false);
-      setFormData({ duration_days: 30, quantity: 1, expires_in_days: 0 });
-      loadCodes();
+      setFormData({
+        duration_days: 30,
+        quantity: 1,
+        expires_in_days: 0,
+        subscription_plan_id: plans.length > 0 ? plans[0].id : ''
+      });
+      loadData();
     } catch (error) {
       console.error('Error creating codes:', error);
       alert('Erreur lors de la création des codes');
@@ -105,7 +139,7 @@ export function AccessCodesManagement() {
         .eq('id', id);
 
       if (error) throw error;
-      loadCodes();
+      loadData();
     } catch (error) {
       console.error('Error deleting code:', error);
       alert('Erreur lors de la suppression du code');
@@ -191,6 +225,7 @@ export function AccessCodesManagement() {
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Code</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Plan</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Durée</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Statut</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Expire le</th>
@@ -222,6 +257,19 @@ export function AccessCodesManagement() {
                           )}
                         </button>
                       </div>
+                    </td>
+                    <td className="py-3 px-4">
+                      {code.subscription_plan ? (
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          code.subscription_plan.plan_type === 'premium_complete'
+                            ? 'bg-amber-100 text-amber-700'
+                            : 'bg-blue-100 text-blue-700'
+                        }`}>
+                          {code.subscription_plan.name}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-slate-500 italic">Non défini</span>
+                      )}
                     </td>
                     <td className="py-3 px-4 text-sm text-slate-700">
                       {code.duration_days} jours
@@ -275,6 +323,26 @@ export function AccessCodesManagement() {
             <h3 className="text-xl font-bold text-slate-900 mb-4">Générer des codes d'accès</h3>
 
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Plan d'abonnement
+                </label>
+                <select
+                  value={formData.subscription_plan_id}
+                  onChange={(e) => setFormData({ ...formData, subscription_plan_id: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  {plans.map(plan => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.name} - {plan.price_monthly.toFixed(2)}€/mois
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Le code donnera accès à ce plan d'abonnement
+                </p>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
                   Durée de l'abonnement

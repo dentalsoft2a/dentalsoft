@@ -140,7 +140,7 @@ export function SubscriptionPage() {
     try {
       const { data: codeData, error: codeError } = await supabase
         .from('access_codes')
-        .select('*')
+        .select('*, subscription_plan:subscription_plans(id, name, plan_type, unlocks_all_extensions)')
         .eq('code', accessCode.trim().toUpperCase())
         .eq('is_used', false)
         .maybeSingle();
@@ -180,13 +180,19 @@ export function SubscriptionPage() {
       const newEndDate = new Date(currentEndDate);
       newEndDate.setDate(newEndDate.getDate() + codeData.duration_days);
 
+      const updateData: any = {
+        subscription_start_date: profile?.subscription_start_date || new Date().toISOString(),
+        subscription_end_date: newEndDate.toISOString(),
+        subscription_status: 'active'
+      };
+
+      if (codeData.subscription_plan_id) {
+        updateData.subscription_plan_id = codeData.subscription_plan_id;
+      }
+
       const { error: updateError } = await supabase
         .from('user_profiles')
-        .update({
-          subscription_start_date: profile?.subscription_start_date || new Date().toISOString(),
-          subscription_end_date: newEndDate.toISOString(),
-          subscription_status: 'active'
-        })
+        .update(updateData)
         .eq('id', user.id);
 
       if (updateError) throw updateError;
@@ -218,7 +224,10 @@ export function SubscriptionPage() {
         // Non-critical, continue
       }
 
-      alert(`Code activé avec succès! ${codeData.duration_days} jours ajoutés à votre abonnement.`);
+      const planInfo = codeData.subscription_plan
+        ? ` Vous avez maintenant accès au plan ${codeData.subscription_plan.name}.`
+        : '';
+      alert(`Code activé avec succès! ${codeData.duration_days} jours ajoutés à votre abonnement.${planInfo}`);
       setShowRedeemModal(false);
       setAccessCode('');
       loadData();
