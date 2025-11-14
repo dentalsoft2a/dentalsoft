@@ -11,6 +11,7 @@ import { useLockScroll } from '../../hooks/useLockScroll';
 import { useEmployeePermissions } from '../../hooks/useEmployeePermissions';
 import WorkDetailModal from './WorkDetailModal';
 import WorkKanbanView from './WorkKanbanView';
+import { ExtensionGuard } from '../common/ExtensionGuard';
 
 interface DeliveryNote {
   id: string;
@@ -324,12 +325,16 @@ export default function WorkManagementPage() {
   }
 
   return (
-    <div className="space-y-4 md:space-y-6">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 md:gap-4">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Gestion des Travaux</h1>
-          <p className="text-sm md:text-base text-slate-600 mt-1">Suivez l'avancement de vos bons de livraison en temps réel</p>
-        </div>
+    <ExtensionGuard
+      featureKey="work_management"
+      fallbackMessage="La gestion avancée des travaux avec Kanban, affectation des employés et suivi de progression nécessite l'extension Gestion des Travaux."
+    >
+      <div className="space-y-4 md:space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 md:gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Gestion des Travaux</h1>
+            <p className="text-sm md:text-base text-slate-600 mt-1">Suivez l'avancement de vos bons de livraison en temps réel</p>
+          </div>
         <button
           onClick={() => setSelectedNote('new')}
           className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl text-sm md:text-base"
@@ -660,6 +665,7 @@ export default function WorkManagementPage() {
           }}
         />
       )}
-    </div>
+      </div>
+    </ExtensionGuard>
   );
 }

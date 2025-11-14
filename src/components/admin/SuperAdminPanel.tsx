@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell, Settings, ChevronDown, Gift, Building2, Database, Scale } from 'lucide-react';
+import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell, Settings, ChevronDown, Gift, Building2, Database, Scale, Package } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { UsersManagement } from './UsersManagement';
 import { SubscriptionSettings } from './SubscriptionSettings';
@@ -12,8 +12,9 @@ import { ReferralManagement } from './ReferralManagement';
 import { CompanySettings } from './CompanySettings';
 import { CompanyLegalSettings } from './CompanyLegalSettings';
 import DatabaseOptimization from './DatabaseOptimization';
+import ExtensionsManagement from './ExtensionsManagement';
 
-type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit' | 'alerts' | 'referrals' | 'company' | 'legal' | 'database';
+type TabType = 'users' | 'subscriptions' | 'codes' | 'smtp' | 'support' | 'audit' | 'alerts' | 'referrals' | 'company' | 'legal' | 'database' | 'extensions';
 type CategoryType = 'gestion' | 'configuration' | 'suivi';
 
 interface SuperAdminPanelProps {
@@ -60,6 +61,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
       items: [
         { id: 'users' as TabType, label: 'Utilisateurs', icon: Users },
         { id: 'subscriptions' as TabType, label: 'Abonnements', icon: DollarSign },
+        { id: 'extensions' as TabType, label: 'Extensions', icon: Package },
         { id: 'referrals' as TabType, label: 'Affiliations', icon: Gift },
         { id: 'codes' as TabType, label: 'Codes d\'accès', icon: Key }
       ]
@@ -244,6 +246,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
             <div className="bg-white/95 backdrop-blur-sm rounded-xl border border-slate-200/50 shadow-sm p-4 sm:p-6">
               {activeTab === 'users' && <UsersManagement onStatsUpdate={loadStats} />}
               {activeTab === 'subscriptions' && <SubscriptionSettings />}
+              {activeTab === 'extensions' && <ExtensionsManagement />}
               {activeTab === 'referrals' && <ReferralManagement />}
               {activeTab === 'company' && <CompanySettings />}
               {activeTab === 'legal' && <CompanyLegalSettings />}

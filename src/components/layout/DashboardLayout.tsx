@@ -114,6 +114,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
 
   const allBottomNavigation = [
     { name: 'Centre d\'aide', icon: HelpCircle, page: 'help-center', menuKey: 'help-center' },
+    { name: 'Extensions', icon: Cloud, page: 'extensions' },
     { name: 'Mon abonnement', icon: CreditCard, page: 'subscription' },
     { name: 'Support', icon: MessageSquare, page: 'support' },
     ...(isSuperAdmin && !isEmployee ? [{ name: 'Admin', icon: Shield, page: 'admin' }] : [])

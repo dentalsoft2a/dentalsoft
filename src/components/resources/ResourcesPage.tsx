@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
 import ResourceVariantManager from './ResourceVariantManager';
 import ResourceBatchLinkManager from '../batch/ResourceBatchLinkManager';
+import { ExtensionGuard } from '../common/ExtensionGuard';
 
 interface Resource {
   id: string;
@@ -374,15 +375,19 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
   };
 
   return (
-    <div>
-      <div className="mb-6 md:mb-8 animate-fade-in">
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Ressources</h1>
-              <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez vos matières premières (disques, blocs, etc.)</p>
+    <ExtensionGuard
+      featureKey="resource_management"
+      fallbackMessage="La gestion avancée des ressources et matériaux avec variantes et suivi de stock nécessite l'extension Gestion des Ressources."
+    >
+      <div>
+        <div className="mb-6 md:mb-8 animate-fade-in">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Ressources</h1>
+                <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez vos matières premières (disques, blocs, etc.)</p>
+              </div>
             </div>
-          </div>
           <div className="flex gap-2 md:gap-3 md:justify-end">
             <button
               onClick={handleExport}
@@ -1181,6 +1186,7 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </ExtensionGuard>
   );
 }

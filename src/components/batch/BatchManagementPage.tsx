@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2, Search, Save, X, Package, Star, Tag, Archive, Check
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import { ExtensionGuard } from '../common/ExtensionGuard';
 
 interface BatchBrand {
   id: string;
@@ -493,13 +494,17 @@ export default function BatchManagementPage() {
   };
 
   return (
-    <div>
-      <div className="mb-6 md:mb-8 animate-fade-in">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl md:text-3xl font-bold text-slate-900">N° Lot</h1>
-            <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez les numéros de lot de vos matériaux</p>
-          </div>
+    <ExtensionGuard
+      featureKey="batch_management"
+      fallbackMessage="La gestion des lots de matériaux avec traçabilité et dates de péremption nécessite l'extension Gestion des Lots."
+    >
+      <div>
+        <div className="mb-6 md:mb-8 animate-fade-in">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900">N° Lot</h1>
+              <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez les numéros de lot de vos matériaux</p>
+            </div>
           <div className="flex gap-2">
             <button
               onClick={() => {
@@ -1269,6 +1274,7 @@ export default function BatchManagementPage() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </ExtensionGuard>
   );
 }

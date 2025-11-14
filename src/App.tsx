@@ -18,6 +18,7 @@ import { SuperAdminPanel } from './components/admin/SuperAdminPanel';
 import { SupportPage } from './components/support/SupportPage';
 import { SubscriptionPage } from './components/subscription/SubscriptionPage';
 import HelpCenterPage from './components/help-center/HelpCenterPage';
+import ExtensionsPage from './components/extensions/ExtensionsPage';
 import DentistRegisterPage from './components/dentist/DentistRegisterPage';
 import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
@@ -317,6 +318,8 @@ function AppContent() {
         return <SupportPage />;
       case 'subscription':
         return <SubscriptionPage />;
+      case 'extensions':
+        return <ExtensionsPage />;
       case 'help-center':
         return <HelpCenterPage />;
       case 'photos':

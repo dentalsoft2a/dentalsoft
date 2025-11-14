@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
 import { Users, Plus, Edit, Trash2, Shield, Save, X, Briefcase, Eye, EyeOff, Lock } from 'lucide-react';
+import { ExtensionGuard } from '../common/ExtensionGuard';
 
 interface Employee {
   id: string;
@@ -411,15 +412,19 @@ export default function EmployeeManagement() {
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8">
-      <div>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="p-2 sm:p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg sm:rounded-xl">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Employés</h2>
+    <ExtensionGuard
+      featureKey="employee_management"
+      fallbackMessage="Le module complet de gestion des employés avec permissions, affectations et suivi d'activité nécessite l'extension Gestion des Employés."
+    >
+      <div className="space-y-6 sm:space-y-8">
+        <div>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="p-2 sm:p-3 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg sm:rounded-xl">
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              </div>
+              <div>
+                <h2 className="text-xl sm:text-2xl font-bold text-slate-900">Employés</h2>
               <p className="text-xs sm:text-sm text-slate-600">Gérez les comptes employés de votre laboratoire</p>
             </div>
           </div>
@@ -908,6 +913,7 @@ export default function EmployeeManagement() {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </ExtensionGuard>
   );
 }
