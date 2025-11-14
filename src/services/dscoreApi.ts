@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { PKCEGenerator } from '../utils/pkce';
 
 export interface DScoreCredentials {
   accessToken: string;
@@ -28,14 +29,24 @@ export interface DScoreDentist {
 }
 
 class DScoreApiService {
-  private baseUrl: string;
-  private authUrl: string;
+  private baseHost: string;
+  private authHost: string;
+  private globalHost: string;
   private clientId: string;
   private clientSecret: string;
 
   constructor() {
-    this.baseUrl = import.meta.env.VITE_DSCORE_API_URL || 'https://api.dscore.com';
-    this.authUrl = import.meta.env.VITE_DSCORE_AUTH_URL || 'https://auth.dscore.com';
+    const environment = import.meta.env.VITE_DSCORE_ENVIRONMENT || 'sandbox';
+
+    if (environment === 'sandbox') {
+      this.baseHost = import.meta.env.VITE_DSCORE_SANDBOX_BASE_HOST || 'https://api.r2.dscore.com';
+      this.authHost = import.meta.env.VITE_DSCORE_SANDBOX_AUTH_HOST || 'https://r2.dscore.com';
+    } else {
+      this.baseHost = import.meta.env.VITE_DSCORE_PRODUCTION_BASE_HOST || 'https://api.r2.dscore.com';
+      this.authHost = import.meta.env.VITE_DSCORE_PRODUCTION_AUTH_HOST || 'https://r2.dscore.com';
+    }
+
+    this.globalHost = import.meta.env.VITE_DSCORE_GLOBAL_HOST || 'https://api.dscore.com';
     this.clientId = import.meta.env.VITE_DSCORE_CLIENT_ID || '';
     this.clientSecret = import.meta.env.VITE_DSCORE_CLIENT_SECRET || '';
   }
@@ -44,40 +55,51 @@ class DScoreApiService {
     const redirectUri = import.meta.env.VITE_DSCORE_CALLBACK_URL;
     const state = btoa(JSON.stringify({ userId, timestamp: Date.now() }));
 
+    const codeVerifier = PKCEGenerator.generateCodeVerifier();
+    const codeChallenge = await PKCEGenerator.generateCodeChallenge(codeVerifier);
+
+    PKCEGenerator.storeVerifier(codeVerifier);
+
     const params = new URLSearchParams({
       client_id: this.clientId,
-      response_type: 'code',
+      code_challenge: codeChallenge,
       redirect_uri: redirectUri,
-      state: state,
-      scope: 'read:files read:patients read:dentists',
     });
 
-    return `${this.authUrl}/oauth/authorize?${params.toString()}`;
+    return `${this.authHost}/secureLogin?${params.toString()}`;
   }
 
   async exchangeCodeForTokens(code: string): Promise<DScoreCredentials> {
     const redirectUri = import.meta.env.VITE_DSCORE_CALLBACK_URL;
+    const codeVerifier = PKCEGenerator.getVerifier();
 
-    const response = await fetch(`${this.authUrl}/oauth/token`, {
+    if (!codeVerifier) {
+      throw new Error('Code verifier not found. Please restart the authorization flow.');
+    }
+
+    const response = await fetch(`${this.globalHost}/v1beta/auth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        grant_type: 'authorization_code',
         code,
         client_id: this.clientId,
-        client_secret: this.clientSecret,
         redirect_uri: redirectUri,
+        code_verifier: codeVerifier,
+        client_secret: this.clientSecret,
       }),
     });
 
     if (!response.ok) {
       const error = await response.text();
+      PKCEGenerator.clearVerifier();
       throw new Error(`Failed to exchange code for tokens: ${error}`);
     }
 
     const data = await response.json();
+
+    PKCEGenerator.clearVerifier();
 
     return {
       accessToken: data.access_token,
@@ -87,7 +109,7 @@ class DScoreApiService {
   }
 
   async refreshAccessToken(refreshToken: string): Promise<DScoreCredentials> {
-    const response = await fetch(`${this.authUrl}/oauth/token`, {
+    const response = await fetch(`${this.globalHost}/v1beta/auth/token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -156,7 +178,7 @@ class DScoreApiService {
     }
     params.append('limit', '100');
 
-    const response = await fetch(`${this.baseUrl}/v1/files/new?${params.toString()}`, {
+    const response = await fetch(`${this.baseHost}/v1/files/new?${params.toString()}`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
@@ -204,7 +226,7 @@ class DScoreApiService {
   async getDentists(userId: string): Promise<DScoreDentist[]> {
     const accessToken = await this.getValidAccessToken(userId);
 
-    const response = await fetch(`${this.baseUrl}/v1/dentists`, {
+    const response = await fetch(`${this.baseHost}/v1beta/accounts`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
