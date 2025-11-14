@@ -1,7 +1,7 @@
 #!/bin/bash
 
-echo "🚀 Déploiement en production de GB Dental avec DS-Core"
-echo "========================================================"
+echo "🚀 Déploiement en production de GB Dental"
+echo "=========================================="
 echo ""
 
 # Vérifier que .env existe
@@ -15,20 +15,18 @@ fi
 export $(cat .env | grep -v '^#' | xargs)
 
 # Vérifier les variables critiques
-if [ -z "$VITE_DSCORE_CLIENT_ID" ]; then
-    echo "❌ Erreur: VITE_DSCORE_CLIENT_ID n'est pas défini dans .env"
+if [ -z "$VITE_SUPABASE_URL" ]; then
+    echo "❌ Erreur: VITE_SUPABASE_URL n'est pas défini dans .env"
     exit 1
 fi
 
-if [ -z "$VITE_DSCORE_CALLBACK_URL" ]; then
-    echo "❌ Erreur: VITE_DSCORE_CALLBACK_URL n'est pas défini dans .env"
+if [ -z "$VITE_SUPABASE_ANON_KEY" ]; then
+    echo "❌ Erreur: VITE_SUPABASE_ANON_KEY n'est pas défini dans .env"
     exit 1
 fi
 
 echo "📋 Configuration détectée:"
-echo "   - Client ID: ${VITE_DSCORE_CLIENT_ID:0:8}..."
-echo "   - Callback URL: $VITE_DSCORE_CALLBACK_URL"
-echo "   - Environment: ${VITE_DSCORE_ENVIRONMENT:-sandbox}"
+echo "   - Supabase URL: $VITE_SUPABASE_URL"
 echo ""
 
 read -p "⚠️  Voulez-vous continuer le déploiement? (y/N) " -n 1 -r
@@ -52,20 +50,6 @@ echo "🔨 Construction de la nouvelle image Docker..."
 docker build \
   --build-arg VITE_SUPABASE_URL="$VITE_SUPABASE_URL" \
   --build-arg VITE_SUPABASE_ANON_KEY="$VITE_SUPABASE_ANON_KEY" \
-  --build-arg VITE_DSCORE_CLIENT_ID="$VITE_DSCORE_CLIENT_ID" \
-  --build-arg VITE_DSCORE_CLIENT_SECRET="$VITE_DSCORE_CLIENT_SECRET" \
-  --build-arg VITE_DSCORE_ENVIRONMENT="$VITE_DSCORE_ENVIRONMENT" \
-  --build-arg VITE_DSCORE_SANDBOX_BASE_HOST="$VITE_DSCORE_SANDBOX_BASE_HOST" \
-  --build-arg VITE_DSCORE_SANDBOX_AUTH_HOST="$VITE_DSCORE_SANDBOX_AUTH_HOST" \
-  --build-arg VITE_DSCORE_PRODUCTION_BASE_HOST="$VITE_DSCORE_PRODUCTION_BASE_HOST" \
-  --build-arg VITE_DSCORE_PRODUCTION_AUTH_HOST="$VITE_DSCORE_PRODUCTION_AUTH_HOST" \
-  --build-arg VITE_DSCORE_GLOBAL_HOST="$VITE_DSCORE_GLOBAL_HOST" \
-  --build-arg VITE_DSCORE_CALLBACK_URL="$VITE_DSCORE_CALLBACK_URL" \
-  --build-arg VITE_3SHAPE_CLIENT_ID="$VITE_3SHAPE_CLIENT_ID" \
-  --build-arg VITE_3SHAPE_CLIENT_SECRET="$VITE_3SHAPE_CLIENT_SECRET" \
-  --build-arg VITE_3SHAPE_API_URL="$VITE_3SHAPE_API_URL" \
-  --build-arg VITE_3SHAPE_AUTH_URL="$VITE_3SHAPE_AUTH_URL" \
-  --build-arg VITE_3SHAPE_CALLBACK_URL="$VITE_3SHAPE_CALLBACK_URL" \
   --no-cache \
   -t gb-dental:latest .
 
@@ -111,8 +95,4 @@ echo "   - Voir les logs:     docker logs -f gb-dental"
 echo "   - Arrêter:           docker stop gb-dental"
 echo "   - Redémarrer:        docker restart gb-dental"
 echo "   - Supprimer:         docker rm -f gb-dental"
-echo ""
-echo "⚠️  N'oubliez pas de configurer le Redirect URL dans DS-Core Developer Portal:"
-echo "   - URL: $VITE_DSCORE_CALLBACK_URL"
-echo "   - Portal: https://open.dscore.com"
 echo ""

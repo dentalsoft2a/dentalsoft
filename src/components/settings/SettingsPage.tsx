@@ -1,16 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users, Shield, Cloud, Link as LinkIcon, Copy, Check, Gift, UserPlus, UserCheck, MessageSquare, ShoppingCart, FileQuestion } from 'lucide-react';
+import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users, Shield, Link as LinkIcon, Copy, Check, Gift, UserPlus, UserCheck, MessageSquare, ShoppingCart, FileQuestion } from 'lucide-react';
 import EmployeeManagement from './EmployeeManagement';
-import DScoreConnection from './DScoreConnection';
-import ThreeShapeConnection from './ThreeShapeConnection';
 import { FiscalPeriodsManager } from '../compliance/FiscalPeriodsManager';
 import { AuditLogViewer } from '../compliance/AuditLogViewer';
 import { ComplianceCertificate } from '../compliance/ComplianceCertificate';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'employees' | 'integrations' | 'referral' | 'compliance'>('profile');
-  const [integrationsSubTab, setIntegrationsSubTab] = useState<'dscore' | '3shape'>('dscore');
+  const [activeTab, setActiveTab] = useState<'profile' | 'employees' | 'referral' | 'compliance'>('profile');
   const [complianceSubTab, setComplianceSubTab] = useState<'certificate' | 'periods' | 'audit'>('certificate');
   const { profile, updateProfile, userEmail, user } = useAuth();
   const [formData, setFormData] = useState({
@@ -186,17 +183,6 @@ export default function SettingsPage() {
               Employés
             </button>
             <button
-              onClick={() => setActiveTab('integrations')}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3 font-semibold transition-all whitespace-nowrap text-sm sm:text-base ${
-                activeTab === 'integrations'
-                  ? 'text-blue-600 border-b-2 border-blue-600'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              <LinkIcon className="w-4 h-4 sm:w-5 sm:h-5" />
-              Intégrations
-            </button>
-            <button
               onClick={() => setActiveTab('referral')}
               className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3 font-semibold transition-all whitespace-nowrap text-sm sm:text-base ${
                 activeTab === 'referral'
@@ -221,39 +207,7 @@ export default function SettingsPage() {
           </div>
         </div>
 
-        {activeTab === 'integrations' ? (
-          <div className="space-y-6">
-            <div className="bg-white rounded-lg border border-slate-200 p-2">
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setIntegrationsSubTab('dscore')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
-                    integrationsSubTab === 'dscore'
-                      ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-md'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  <Cloud className="w-5 h-5" />
-                  DS-Core
-                </button>
-                <button
-                  onClick={() => setIntegrationsSubTab('3shape')}
-                  className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg font-semibold transition-all ${
-                    integrationsSubTab === '3shape'
-                      ? 'bg-gradient-to-r from-green-600 to-teal-600 text-white shadow-md'
-                      : 'text-slate-600 hover:bg-slate-50'
-                  }`}
-                >
-                  <Cloud className="w-5 h-5" />
-                  3Shape Communicate
-                </button>
-              </div>
-            </div>
-
-            {integrationsSubTab === 'dscore' && <DScoreConnection />}
-            {integrationsSubTab === '3shape' && <ThreeShapeConnection />}
-          </div>
-        ) : activeTab === 'compliance' ? (
+        {activeTab === 'compliance' ? (
           <div className="space-y-6">
             {/* Sous-onglets de conformité */}
             <div className="bg-white rounded-lg border border-slate-200 p-2">
