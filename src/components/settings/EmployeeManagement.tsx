@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
-import { Users, Plus, Edit, Trash2, Shield, Save, X, Briefcase, Eye, EyeOff, Lock } from 'lucide-react';
+import { useEmployeeQuota } from '../../hooks/useEmployeeQuota';
+import { Users, Plus, Edit, Trash2, Shield, Save, X, Briefcase, Eye, EyeOff, Lock, AlertTriangle, Crown } from 'lucide-react';
 import { ExtensionGuard } from '../common/ExtensionGuard';
+import { useNavigate } from 'react-router-dom';
 
 interface Employee {
   id: string;
@@ -53,6 +55,8 @@ const AVAILABLE_MENUS = [
 
 export default function EmployeeManagement() {
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const employeeQuota = useEmployeeQuota();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [roles, setRoles] = useState<RolePermission[]>([]);
   const [productionStages, setProductionStages] = useState<ProductionStage[]>([]);
@@ -279,6 +283,7 @@ export default function EmployeeManagement() {
 
       setShowEmployeeModal(false);
       loadData();
+      employeeQuota.reloadCount();
     } catch (error: any) {
       console.error('Error saving employee:', error);
       alert('Erreur: ' + error.message);
@@ -311,6 +316,7 @@ export default function EmployeeManagement() {
 
       if (error) throw error;
       loadData();
+      employeeQuota.reloadCount();
     } catch (error: any) {
       console.error('Error deleting employee:', error);
       alert('Erreur: ' + error.message);
@@ -429,13 +435,77 @@ export default function EmployeeManagement() {
             </div>
           </div>
           <button
-            onClick={() => openEmployeeModal()}
-            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-lg font-medium hover:from-blue-600 hover:to-cyan-600 transition w-full sm:w-auto justify-center"
+            onClick={() => {
+              if (!employeeQuota.canAddEmployee()) {
+                alert(`Vous avez atteint la limite de ${employeeQuota.freeLimit} employés gratuits. Souscrivez à l'extension "Gestion des Employés" pour ajouter plus d'employés.`);
+                navigate('/extensions');
+                return;
+              }
+              openEmployeeModal();
+            }}
+            className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 text-sm sm:text-base rounded-lg font-medium transition w-full sm:w-auto justify-center ${
+              employeeQuota.canAddEmployee()
+                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white hover:from-blue-600 hover:to-cyan-600'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
           >
-            <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
-            Ajouter un employé
+            {employeeQuota.isAtLimit() && !employeeQuota.hasExtensionAccess ? <Lock className="w-4 h-4 sm:w-5 sm:h-5" /> : <Plus className="w-4 h-4 sm:w-5 sm:h-5" />}
+            {employeeQuota.isAtLimit() && !employeeQuota.hasExtensionAccess ? 'Limite atteinte' : 'Ajouter un employé'}
           </button>
         </div>
+
+        {/* Bandeau d'avertissement quota */}
+        {!employeeQuota.hasExtensionAccess && (
+          <div className={`rounded-lg p-4 ${
+            employeeQuota.isAtLimit()
+              ? 'bg-red-50 border border-red-200'
+              : employeeQuota.isNearLimit()
+              ? 'bg-orange-50 border border-orange-200'
+              : 'bg-blue-50 border border-blue-200'
+          }`}>
+            <div className="flex items-start gap-3">
+              {employeeQuota.isAtLimit() ? (
+                <Lock className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              ) : employeeQuota.isNearLimit() ? (
+                <AlertTriangle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-0.5" />
+              ) : (
+                <Crown className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+              )}
+              <div className="flex-1">
+                <p className={`text-sm font-semibold ${
+                  employeeQuota.isAtLimit()
+                    ? 'text-red-900'
+                    : employeeQuota.isNearLimit()
+                    ? 'text-orange-900'
+                    : 'text-blue-900'
+                }`}>
+                  {employeeQuota.isAtLimit()
+                    ? 'Limite gratuite atteinte'
+                    : employeeQuota.isNearLimit()
+                    ? 'Approche de la limite gratuite'
+                    : 'Employés gratuits disponibles'}
+                </p>
+                <p className={`text-xs mt-1 ${
+                  employeeQuota.isAtLimit()
+                    ? 'text-red-700'
+                    : employeeQuota.isNearLimit()
+                    ? 'text-orange-700'
+                    : 'text-blue-700'
+                }`}>
+                  {employeeQuota.isAtLimit()
+                    ? `Vous avez atteint la limite de ${employeeQuota.freeLimit} employés gratuits. `
+                    : `${employeeQuota.getRemainingFreeSlots()} employé(s) gratuit(s) restant(s) sur ${employeeQuota.freeLimit}. `}
+                  <button
+                    onClick={() => navigate('/extensions')}
+                    className="underline font-semibold hover:no-underline"
+                  >
+                    Débloquez des employés illimités avec l'extension "Gestion des Employés"
+                  </button>
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Vue mobile en cartes */}
         <div className="sm:hidden space-y-3">
