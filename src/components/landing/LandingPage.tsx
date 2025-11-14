@@ -917,45 +917,18 @@ export function LandingPage() {
                   </div>
                   <p className="text-xs sm:text-sm text-white/90 mt-1 sm:mt-2">Sans engagement</p>
 
-                  {pricesLoaded && (
-                    <div className="mt-4 bg-white/20 backdrop-blur rounded-lg p-4">
-                      <div className="space-y-2 text-sm">
-                        <div className="flex justify-between items-center text-white/90">
-                          <span>Abonnement Standard</span>
-                          <span className="font-semibold">{price.toFixed(2)}€</span>
+                  {pricesLoaded && totalExtensionsPrice > 0 && (
+                    <div className="mt-4 bg-white/20 backdrop-blur rounded-lg p-3">
+                      <div className="text-center mb-3">
+                        <div className="text-xs text-white/80 mb-1">Économisez en passant au Premium</div>
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-white/90 line-through text-sm">{(price + totalExtensionsPrice).toFixed(2)}€</span>
+                          <span className="text-2xl font-bold text-emerald-300">{premiumPrice.toFixed(2)}€</span>
                         </div>
-                        <div className="flex justify-between items-center text-white/90">
-                          <span>+ Toutes les extensions</span>
-                          <span className="font-semibold">{totalExtensionsPrice.toFixed(2)}€</span>
+                        <div className="inline-flex items-center gap-1 mt-1 px-2 py-0.5 bg-emerald-500/20 rounded-full">
+                          <TrendingDown className="w-3 h-3 text-emerald-300" />
+                          <span className="text-xs font-bold text-emerald-300">-{(price + totalExtensionsPrice - premiumPrice).toFixed(2)}€/mois</span>
                         </div>
-                        <div className="border-t border-white/30 pt-2 flex justify-between items-center text-white">
-                          <span className="font-semibold">Total</span>
-                          <span className="font-bold text-lg">{(price + totalExtensionsPrice).toFixed(2)}€/mois</span>
-                        </div>
-
-                        <div className="my-3 text-center">
-                          <div className="inline-flex items-center gap-2 text-white/80 text-xs">
-                            <div className="h-px flex-1 bg-white/30 w-16"></div>
-                            <span>VS</span>
-                            <div className="h-px flex-1 bg-white/30 w-16"></div>
-                          </div>
-                        </div>
-
-                        <div className="bg-white/10 rounded-lg p-3 border border-amber-300/30">
-                          <div className="flex justify-between items-center">
-                            <span className="font-semibold text-white">Plan Premium Complet</span>
-                            <span className="font-bold text-xl text-amber-200">{premiumPrice.toFixed(2)}€/mois</span>
-                          </div>
-                        </div>
-
-                        {totalExtensionsPrice > 0 && (
-                          <div className="mt-3 pt-3 border-t border-white/30">
-                            <div className="flex justify-between items-center">
-                              <span className="font-bold text-white">Économie avec Premium</span>
-                              <span className="font-bold text-2xl text-emerald-300">{(price + totalExtensionsPrice - premiumPrice).toFixed(2)}€/mois</span>
-                            </div>
-                          </div>
-                        )}
                       </div>
                     </div>
                   )}
@@ -989,15 +962,33 @@ export function LandingPage() {
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3 mt-4 pt-4 border-t border-amber-200">
                       <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700 font-bold">Gestion des Travaux (29.99€)</span>
+                      <div className="flex-1 flex items-center justify-between">
+                        <span className="text-xs sm:text-sm text-slate-700 font-bold">Gestion des Travaux</span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
+                          <CheckCircle className="w-3 h-3" />
+                          Inclus
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
                       <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700 font-bold">Scan STL (19.99€)</span>
+                      <div className="flex-1 flex items-center justify-between">
+                        <span className="text-xs sm:text-sm text-slate-700 font-bold">Scan STL</span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
+                          <CheckCircle className="w-3 h-3" />
+                          Inclus
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
                       <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700 font-bold">Gestion des Employés (24.99€)</span>
+                      <div className="flex-1 flex items-center justify-between">
+                        <span className="text-xs sm:text-sm text-slate-700 font-bold">Gestion des Employés</span>
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-700 rounded-full text-xs font-semibold">
+                          <CheckCircle className="w-3 h-3" />
+                          Inclus
+                        </span>
+                      </div>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3 mt-4 pt-4 border-t border-amber-200">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
