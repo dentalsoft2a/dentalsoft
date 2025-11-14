@@ -28,6 +28,7 @@ interface DeliveryNoteData {
   dentist_name: string;
   dentist_address: string;
   patient_name: string;
+  patient_code?: string;
   compliance_text: string;
 }
 
@@ -307,6 +308,7 @@ interface ProformaDeliveryNote {
   date: string;
   prescription_date?: string;
   patient_name: string;
+  patient_code?: string;
   items: DeliveryNoteItem[];
 }
 
@@ -510,12 +512,13 @@ export async function generateProformaPDF(data: ProformaData) {
     doc.text(deliveryDateText, 17, yPos + 4);
 
     const patientLabel = 'Patient';
+    const patientDisplay = note.patient_code || note.patient_name;
     const patientLabelWidth = doc.getTextWidth(patientLabel);
-    const patientNameWidth = doc.getTextWidth(note.patient_name);
+    const patientNameWidth = doc.getTextWidth(patientDisplay);
     const totalPatientWidth = patientLabelWidth + patientNameWidth + 2;
 
     doc.text(patientLabel, pageWidth - 17 - totalPatientWidth, yPos + 4);
-    doc.text(note.patient_name, pageWidth - 17, yPos + 4, { align: 'right' });
+    doc.text(patientDisplay, pageWidth - 17, yPos + 4, { align: 'right' });
 
     if (note.prescription_date) {
       const prescriptionText = `Prescription du ${new Date(note.prescription_date).toLocaleDateString('fr-FR', {
@@ -811,12 +814,13 @@ export async function generateProformaPDFBase64(data: ProformaData): Promise<str
     doc.text(deliveryDateText, 17, yPos + 4);
 
     const patientLabel = 'Patient';
+    const patientDisplay = note.patient_code || note.patient_name;
     const patientLabelWidth = doc.getTextWidth(patientLabel);
-    const patientNameWidth = doc.getTextWidth(note.patient_name);
+    const patientNameWidth = doc.getTextWidth(patientDisplay);
     const totalPatientWidth = patientLabelWidth + patientNameWidth + 2;
 
     doc.text(patientLabel, pageWidth - 17 - totalPatientWidth, yPos + 4);
-    doc.text(note.patient_name, pageWidth - 17, yPos + 4, { align: 'right' });
+    doc.text(patientDisplay, pageWidth - 17, yPos + 4, { align: 'right' });
 
     if (note.prescription_date) {
       const prescriptionText = `Prescription du ${new Date(note.prescription_date).toLocaleDateString('fr-FR', {
@@ -1382,7 +1386,8 @@ function generateCertificatePage(doc: jsPDF, data: DeliveryNoteData) {
   doc.setFontSize(8);
   doc.setFont('helvetica', 'normal');
 
-  const declarationText = `assure et déclare sous sa seule responsabilité, que le dispositif médical sur mesure destiné à l'usage exclusif du patient ${data.patient_name}, bon de livraison n° ${data.delivery_number} mis sur le marché et fabriqué conformément à la prescription du ${data.prescription_date ? new Date(data.prescription_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '___________'} établie par`;
+  const patientDisplay = data.patient_code || data.patient_name;
+  const declarationText = `assure et déclare sous sa seule responsabilité, que le dispositif médical sur mesure destiné à l'usage exclusif du patient ${patientDisplay}, bon de livraison n° ${data.delivery_number} mis sur le marché et fabriqué conformément à la prescription du ${data.prescription_date ? new Date(data.prescription_date).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '___________'} établie par`;
 
   const declarationLines = doc.splitTextToSize(declarationText, pageWidth - 2 * margin);
   declarationLines.forEach((line: string) => {
@@ -1456,9 +1461,10 @@ function generateCertificatePage(doc: jsPDF, data: DeliveryNoteData) {
   doc.rect(margin, yPos, pageWidth - 2 * margin, 8, 'S');
 
   yPos += 6;
+  const patientDisplayText = data.patient_code || data.patient_name;
   doc.setFont('helvetica', 'bold');
   doc.text(`Docteur ${data.dentist_name}`, leftColumnX, yPos);
-  doc.text(`Patient : ${data.patient_name}`, rightColumnX, yPos);
+  doc.text(`Patient : ${patientDisplayText}`, rightColumnX, yPos);
 
   yPos += 8;
 
@@ -1524,7 +1530,7 @@ function generateCertificatePage(doc: jsPDF, data: DeliveryNoteData) {
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'bold');
-  const patientText = data.patient_name;
+  const patientText = data.patient_code || data.patient_name;
   doc.text(patientText, pageWidth - 15 - doc.getTextWidth(patientText), footerY);
 
   doc.setFontSize(8);

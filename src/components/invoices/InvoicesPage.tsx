@@ -181,6 +181,7 @@ export default function InvoicesPage() {
         date: note.date,
         prescription_date: note.prescription_date,
         patient_name: note.patient_name || '',
+        patient_code: (note as any).patient_code || '',
         items: Array.isArray(note.items) ? note.items : []
       }));
 

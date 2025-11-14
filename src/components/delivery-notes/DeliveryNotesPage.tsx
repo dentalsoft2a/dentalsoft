@@ -399,6 +399,7 @@ export default function DeliveryNotesPage() {
         dentist_name: dentistData.name,
         dentist_address: dentistData.address || '',
         patient_name: patientName,
+        patient_code: (note as any).patient_code || '',
         compliance_text: note.compliance_text || '',
       });
     } catch (error) {
@@ -866,6 +867,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
           .update({
             dentist_id: formData.dentist_id,
             patient_name: formData.patient_name || null,
+          patient_code: formData.patient_code || null,
             delivery_number: formData.delivery_number,
             date: formData.date,
             prescription_date: formData.prescription_date || null,
@@ -884,6 +886,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
           user_id: user.id,
           dentist_id: formData.dentist_id,
           patient_name: formData.patient_name || null,
+          patient_code: formData.patient_code || null,
           delivery_number: formData.delivery_number,
           date: formData.date,
           prescription_date: formData.prescription_date || null,
