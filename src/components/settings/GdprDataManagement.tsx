@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Download, Trash2, FileText, AlertTriangle, Check, Loader2, Shield } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCompanyLegalInfo } from '../../hooks/useCompanyLegalInfo';
 
 export function GdprDataManagement() {
   const { user, profile } = useAuth();
+  const { info: companyInfo } = useCompanyLegalInfo();
   const [loading, setLoading] = useState(false);
   const [exportLoading, setExportLoading] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState(false);
@@ -237,7 +239,7 @@ export function GdprDataManagement() {
                 consultez notre <a href="/privacy-policy" className="text-sky-600 hover:text-sky-700 underline">Politique de Confidentialité</a>.
               </p>
               <p className="text-sm text-gray-500">
-                Pour toute question : <a href="mailto:[dpo@votresociete.fr]" className="text-sky-600 hover:text-sky-700 underline">[dpo@votresociete.fr]</a>
+                Pour toute question : <a href={`mailto:${companyInfo.dpo_email}`} className="text-sky-600 hover:text-sky-700 underline">{companyInfo.dpo_email}</a>
               </p>
             </div>
           </div>
@@ -369,14 +371,14 @@ export function GdprDataManagement() {
             <div>
               <p className="font-medium mb-1">Droit à la limitation du traitement (Article 18)</p>
               <p className="text-gray-600">
-                Contactez-nous : <a href="mailto:[dpo@votresociete.fr]" className="text-sky-600 hover:text-sky-700 underline">[dpo@votresociete.fr]</a>
+                Contactez-nous : <a href={`mailto:${companyInfo.dpo_email}`} className="text-sky-600 hover:text-sky-700 underline">{companyInfo.dpo_email}</a>
               </p>
             </div>
 
             <div>
               <p className="font-medium mb-1">Droit d'opposition (Article 21)</p>
               <p className="text-gray-600">
-                Contactez-nous : <a href="mailto:[dpo@votresociete.fr]" className="text-sky-600 hover:text-sky-700 underline">[dpo@votresociete.fr]</a>
+                Contactez-nous : <a href={`mailto:${companyInfo.dpo_email}`} className="text-sky-600 hover:text-sky-700 underline">{companyInfo.dpo_email}</a>
               </p>
             </div>
 
@@ -398,8 +400,8 @@ export function GdprDataManagement() {
             contactez notre Délégué à la Protection des Données (DPO) :
           </p>
           <p className="mt-2">
-            <a href="mailto:[dpo@votresociete.fr]" className="text-sky-600 hover:text-sky-700 underline font-medium">
-              [dpo@votresociete.fr]
+            <a href={`mailto:${companyInfo.dpo_email}`} className="text-sky-600 hover:text-sky-700 underline font-medium">
+              {companyInfo.dpo_email}
             </a>
           </p>
           <p className="mt-2">
