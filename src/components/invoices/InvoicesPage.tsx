@@ -1443,23 +1443,54 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
     calculateMaxAvailableAmount();
   }, []);
 
+  useEffect(() => {
+    calculateMaxAvailableAmount();
+  }, [creditNoteType]);
+
   const calculateMaxAvailableAmount = async () => {
     try {
       // Get all credit notes created from this specific invoice
       const { data: creditNotes, error } = await supabase
         .from('credit_notes')
-        .select('total')
+        .select('total, type')
         .eq('source_invoice_id', invoice.id);
 
       if (error) throw error;
 
-      // Calculate total credit notes already created for this invoice
+      // Calculate total credit notes already created for this invoice by type
       const totalCreditNotesCreated = creditNotes?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
 
-      // Maximum available is invoice total minus credit notes already created
-      const available = Number(invoice.total) - totalCreditNotesCreated;
-      setMaxAvailableAmount(Math.max(0, available));
-      setAmount(available > 0 ? available.toFixed(2) : '0');
+      // For refund type, limit to amount paid
+      if (creditNoteType === 'refund') {
+        // Get all payments for this invoice
+        const { data: payments, error: paymentsError } = await supabase
+          .from('invoice_payments')
+          .select('amount')
+          .eq('invoice_id', invoice.id);
+
+        if (paymentsError) throw paymentsError;
+
+        // Calculate total amount paid
+        const totalPaid = payments?.reduce((sum, p) => sum + Number(p.amount), 0) || 0;
+
+        // Calculate total refund credit notes already created
+        const totalRefundsCreated = creditNotes?.filter(cn => cn.type === 'refund')
+          .reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+
+        // Maximum available for refund is amount paid minus refunds already created
+        const available = totalPaid - totalRefundsCreated;
+        setMaxAvailableAmount(Math.max(0, available));
+        setAmount(available > 0 ? available.toFixed(2) : '0');
+      } else {
+        // For correction type, limit to invoice total
+        const totalCorrectionsCreated = creditNotes?.filter(cn => cn.type === 'correction')
+          .reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+
+        // Maximum available is invoice total minus corrections already created
+        const available = Number(invoice.total) - totalCorrectionsCreated;
+        setMaxAvailableAmount(Math.max(0, available));
+        setAmount(available > 0 ? available.toFixed(2) : '0');
+      }
     } catch (error) {
       console.error('Error calculating max available amount:', error);
       setMaxAvailableAmount(Number(invoice.total));
@@ -1654,11 +1685,17 @@ function CreditNoteModal({ invoice, onClose, onSave }: CreditNoteModalProps) {
                 className="w-full px-4 py-3 border border-slate-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
               />
               <p className="text-xs text-slate-500 mt-1">
-                Montant maximum disponible: {maxAvailableAmount.toFixed(2)} €
+                {creditNoteType === 'refund'
+                  ? `Montant maximum disponible pour remboursement (basé sur le montant payé): ${maxAvailableAmount.toFixed(2)} €`
+                  : `Montant maximum disponible pour correction: ${maxAvailableAmount.toFixed(2)} €`
+                }
               </p>
               {maxAvailableAmount === 0 && (
                 <p className="text-xs text-red-600 mt-1 font-semibold">
-                  ⚠️ Le montant total d'avoirs a déjà été atteint pour cette facture
+                  ⚠️ {creditNoteType === 'refund'
+                    ? 'Aucun montant payé disponible pour remboursement'
+                    : 'Le montant total d\'avoirs a déjà été atteint pour cette facture'
+                  }
                 </p>
               )}
             </div>
