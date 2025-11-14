@@ -896,10 +896,40 @@ export function LandingPage() {
                     <li>FAQ</li>
                   </ul>
                 </div>
+
+                <div className="sm:col-span-2 md:col-span-1">
+                  <h4 className="text-sm sm:text-base font-semibold mb-3 sm:mb-4">Légal</h4>
+                  <ul className="space-y-1.5 sm:space-y-2 text-xs sm:text-sm text-slate-400">
+                    <li>
+                      <a href="/legal-notice" className="hover:text-white transition-colors">
+                        Mentions légales
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/privacy-policy" className="hover:text-white transition-colors">
+                        Politique de confidentialité
+                      </a>
+                    </li>
+                    <li>
+                      <a href="/terms-of-service" className="hover:text-white transition-colors">
+                        CGU/CGV
+                      </a>
+                    </li>
+                  </ul>
+                </div>
               </div>
 
               <div className="border-t border-slate-800 mt-6 sm:mt-8 pt-6 sm:pt-8 text-center text-xs sm:text-sm text-slate-400">
-                <p>&copy; 2024 DentalCloud. Tous droits réservés.</p>
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                  <p>&copy; 2024 DentalCloud. Tous droits réservés.</p>
+                  <div className="flex gap-4">
+                    <a href="/legal-notice" className="hover:text-white transition-colors">Mentions légales</a>
+                    <span className="text-slate-600">•</span>
+                    <a href="/privacy-policy" className="hover:text-white transition-colors">Confidentialité</a>
+                    <span className="text-slate-600">•</span>
+                    <a href="/terms-of-service" className="hover:text-white transition-colors">CGU</a>
+                  </div>
+                </div>
               </div>
             </div>
           </footer>

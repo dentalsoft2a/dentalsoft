@@ -23,6 +23,11 @@ import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { ImpersonationBanner } from './components/common/ImpersonationBanner';
+import { CookieConsent } from './components/common/CookieConsent';
+import { LegalNotice } from './components/legal/LegalNotice';
+import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
+import { TermsOfService } from './components/legal/TermsOfService';
+import QuoteRequestsPage from './components/quotes/QuoteRequestsPage';
 import { supabase } from './lib/supabase';
 import { usePermissions } from './hooks/usePermissions';
 
@@ -218,12 +223,24 @@ function AppContent() {
   }
 
   if (!user) {
+    // Allow access to legal pages without authentication
+    if (currentPath === 'legal-notice') {
+      return <LegalNotice />;
+    }
+    if (currentPath === 'privacy-policy') {
+      return <PrivacyPolicy />;
+    }
+    if (currentPath === 'terms-of-service') {
+      return <TermsOfService />;
+    }
+
     if (currentPath !== '' && currentPath !== 'register-dentist' && currentPath !== 'dashboard') {
       return <Navigate to="/" replace />;
     }
     return (
       <>
         {isImpersonating && <ImpersonationBanner />}
+        <CookieConsent />
         {currentPath === 'register-dentist' ? <DentistRegisterPage onNavigate={(page) => navigate(`/${page}`)} /> : <LandingPage />}
       </>
     );
@@ -304,6 +321,14 @@ function AppContent() {
         return <HelpCenterPage />;
       case 'photos':
         return <PhotoSubmissionsPage />;
+      case 'quotes':
+        return <QuoteRequestsPage />;
+      case 'legal-notice':
+        return <LegalNotice />;
+      case 'privacy-policy':
+        return <PrivacyPolicy />;
+      case 'terms-of-service':
+        return <TermsOfService />;
       default:
         return <Navigate to="/dashboard" replace />;
     }
@@ -313,6 +338,7 @@ function AppContent() {
     <>
       {showServerMonitor && <ServerStatusMonitor />}
       {isImpersonating && <ImpersonationBanner />}
+      <CookieConsent />
       <DashboardLayout
         currentPage={currentPath}
         onNavigate={(page) => {

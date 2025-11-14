@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
-import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users, Shield, Link as LinkIcon, Copy, Check, Gift, UserPlus, UserCheck, MessageSquare, ShoppingCart, FileQuestion } from 'lucide-react';
+import { Save, Upload, X, User, Building2, Mail, Phone, MapPin, Image, FileText, Users, Shield, Link as LinkIcon, Copy, Check, Gift, UserPlus, UserCheck, MessageSquare, ShoppingCart, FileQuestion, Database } from 'lucide-react';
 import EmployeeManagement from './EmployeeManagement';
 import { FiscalPeriodsManager } from '../compliance/FiscalPeriodsManager';
 import { AuditLogViewer } from '../compliance/AuditLogViewer';
 import { ComplianceCertificate } from '../compliance/ComplianceCertificate';
+import { GdprDataManagement } from './GdprDataManagement';
 
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<'profile' | 'employees' | 'referral' | 'compliance'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'employees' | 'referral' | 'compliance' | 'gdpr'>('profile');
   const [complianceSubTab, setComplianceSubTab] = useState<'certificate' | 'periods' | 'audit'>('certificate');
   const { profile, updateProfile, userEmail, user } = useAuth();
   const [formData, setFormData] = useState({
@@ -204,10 +205,23 @@ export default function SettingsPage() {
               <Shield className="w-4 h-4 sm:w-5 sm:h-5" />
               Conformité
             </button>
+            <button
+              onClick={() => setActiveTab('gdpr')}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-6 py-2.5 sm:py-3 font-semibold transition-all whitespace-nowrap text-sm sm:text-base ${
+                activeTab === 'gdpr'
+                  ? 'text-green-600 border-b-2 border-green-600'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Database className="w-4 h-4 sm:w-5 sm:h-5" />
+              Mes données RGPD
+            </button>
           </div>
         </div>
 
-        {activeTab === 'compliance' ? (
+        {activeTab === 'gdpr' ? (
+          <GdprDataManagement />
+        ) : activeTab === 'compliance' ? (
           <div className="space-y-6">
             {/* Sous-onglets de conformité */}
             <div className="bg-white rounded-lg border border-slate-200 p-2">
