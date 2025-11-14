@@ -45,6 +45,7 @@ export interface ExtensionWithFeatures extends Extension {
 export function useExtensions() {
   const [extensions, setExtensions] = useState<ExtensionWithFeatures[]>([]);
   const [userExtensions, setUserExtensions] = useState<UserExtension[]>([]);
+  const [hasUnlockAllAccess, setHasUnlockAllAccess] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -76,6 +77,24 @@ export function useExtensions() {
 
       if (userExtensionsError) throw userExtensionsError;
 
+      const { data: userData } = await supabase.auth.getUser();
+
+      let unlocksAll = false;
+      if (userData.user) {
+        const { data: userProfileData } = await supabase
+          .from('user_profiles')
+          .select(`
+            subscription_plan_id,
+            subscription_plans!inner(unlocks_all_extensions)
+          `)
+          .eq('id', userData.user.id)
+          .maybeSingle();
+
+        if (userProfileData?.subscription_plans?.unlocks_all_extensions) {
+          unlocksAll = true;
+        }
+      }
+
       const extensionsWithFeatures = extensionsData?.map(ext => ({
         ...ext,
         features: featuresData?.filter(f => f.extension_id === ext.id) || []
@@ -83,6 +102,7 @@ export function useExtensions() {
 
       setExtensions(extensionsWithFeatures);
       setUserExtensions(userExtensionsData || []);
+      setHasUnlockAllAccess(unlocksAll);
     } catch (err) {
       console.error('Error loading extensions:', err);
       setError(err instanceof Error ? err.message : 'Failed to load extensions');
@@ -92,6 +112,10 @@ export function useExtensions() {
   };
 
   const hasFeatureAccess = (featureKey: string): boolean => {
+    if (hasUnlockAllAccess) {
+      return true;
+    }
+
     const extensionForFeature = extensions.find(ext =>
       ext.features.some(f => f.feature_key === featureKey)
     );
@@ -137,6 +161,7 @@ export function useExtensions() {
   return {
     extensions,
     userExtensions,
+    hasUnlockAllAccess,
     loading,
     error,
     hasFeatureAccess,
