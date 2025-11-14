@@ -71,7 +71,6 @@ export default function ExtensionsManagement() {
         supabase.from('extension_features').select('*'),
         supabase.from('user_extensions').select(`
           *,
-          user_profiles:profiles!user_extensions_profile_id_fkey(email),
           extensions(name)
         `).order('created_at', { ascending: false })
       ]);
@@ -80,9 +79,24 @@ export default function ExtensionsManagement() {
       if (featuresRes.error) throw featuresRes.error;
       if (subscriptionsRes.error) throw subscriptionsRes.error;
 
+      const subscriptionsWithEmails = await Promise.all(
+        (subscriptionsRes.data || []).map(async (sub) => {
+          const { data: userProfile } = await supabase
+            .from('user_profiles')
+            .select('email')
+            .eq('id', sub.user_id)
+            .maybeSingle();
+
+          return {
+            ...sub,
+            user_profiles: userProfile
+          };
+        })
+      );
+
       setExtensions(extensionsRes.data || []);
       setFeatures(featuresRes.data || []);
-      setUserSubscriptions(subscriptionsRes.data || []);
+      setUserSubscriptions(subscriptionsWithEmails);
     } catch (error) {
       console.error('Error loading extensions data:', error);
     } finally {
