@@ -84,145 +84,258 @@ export async function generateSubscriptionInvoicePDF(invoiceId: string) {
 
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
     const margin = 20;
     let yPos = 20;
 
-    pdf.setFontSize(24);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(37, 99, 235);
-    pdf.text('FACTURE D\'ABONNEMENT', margin, yPos);
-    yPos += 15;
+    // Header background
+    pdf.setFillColor(249, 250, 251);
+    pdf.rect(0, 0, pageWidth, 50, 'F');
 
+    // Logo area with accent color
+    pdf.setFillColor(59, 130, 246);
+    pdf.roundedRect(margin, yPos, 8, 8, 2, 2, 'F');
+
+    // Company name next to logo
+    pdf.setFontSize(16);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(15, 23, 42);
+    pdf.text(company.company_name || 'DentalCloud', margin + 12, yPos + 6);
+
+    // Invoice title and number aligned to right
     pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(100, 116, 139);
-    pdf.text(`N° ${invoice.invoice_number}`, margin, yPos);
+    pdf.text('FACTURE D\'ABONNEMENT', pageWidth - margin, yPos + 2, { align: 'right' });
+
+    pdf.setFontSize(14);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(59, 130, 246);
+    pdf.text(invoice.invoice_number, pageWidth - margin, yPos + 9, { align: 'right' });
+
+    yPos = 60;
+
+    // Invoice details card
+    pdf.setFillColor(255, 255, 255);
+    pdf.setDrawColor(229, 231, 235);
+    pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 25, 3, 3, 'FD');
+
+    yPos += 8;
+
+    // Date
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(107, 114, 128);
+    pdf.text('Date d\'émission', margin + 5, yPos);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(31, 41, 55);
+    pdf.text(new Date(invoice.issued_at).toLocaleDateString('fr-FR', {
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric'
+    }), margin + 5, yPos + 5);
+
+    // Period
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(107, 114, 128);
+    pdf.text('Période de facturation', pageWidth / 2, yPos);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(31, 41, 55);
+    const periodText = `${new Date(invoice.period_start).toLocaleDateString('fr-FR')} - ${new Date(invoice.period_end).toLocaleDateString('fr-FR')}`;
+    pdf.text(periodText, pageWidth / 2, yPos + 5);
+
+    yPos = 95;
+
+    // Two columns for company and customer info
+    // Left column - Company
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(107, 114, 128);
+    pdf.text('DE', margin, yPos);
     yPos += 5;
-    pdf.text(`Date: ${new Date(invoice.issued_at).toLocaleDateString('fr-FR')}`, margin, yPos);
-    yPos += 15;
 
-    pdf.setDrawColor(226, 232, 240);
-    pdf.line(margin, yPos, pageWidth - margin, yPos);
-    yPos += 10;
-
-    pdf.setFontSize(11);
+    pdf.setFontSize(10);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(15, 23, 42);
-    pdf.text('ÉMETTEUR', margin, yPos);
+    pdf.text(company.company_name, margin, yPos);
+    yPos += 5;
 
-    pdf.text('CLIENT', pageWidth / 2 + 10, yPos);
-    yPos += 7;
-
-    pdf.setFont('helvetica', 'normal');
     pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
     pdf.setTextColor(71, 85, 105);
 
     const emitterLines = [
-      company.company_name,
       company.company_address,
       `${company.company_postal_code} ${company.company_city}`,
       company.company_country,
-      `Tél: ${company.company_phone || 'N/A'}`,
-      `Email: ${company.company_email || 'N/A'}`,
-      company.company_rcs ? `RCS: ${company.company_rcs}` : '',
-      company.company_siret ? `SIRET: ${company.company_siret}` : '',
-      company.company_vat ? `TVA: ${company.company_vat}` : ''
-    ].filter(line => line);
+      '',
+      company.company_phone ? `Tél. ${company.company_phone}` : '',
+      company.company_email ? company.company_email : '',
+      '',
+      company.company_rcs ? `RCS ${company.company_rcs}` : '',
+      company.company_siret ? `SIRET ${company.company_siret}` : '',
+      company.company_vat ? `N° TVA ${company.company_vat}` : ''
+    ].filter(line => line !== '');
 
     emitterLines.forEach(line => {
-      pdf.text(line, margin, yPos);
-      yPos += 5;
+      if (line === '') {
+        yPos += 3;
+      } else {
+        pdf.text(line, margin, yPos);
+        yPos += 4;
+      }
     });
 
-    yPos = 75;
-    const clientLines = [
-      customer.laboratory_name || 'N/A',
-      customer.laboratory_address || 'N/A',
-      customer.laboratory_email || 'N/A',
-      customer.laboratory_phone || 'N/A',
-      customer.laboratory_rcs ? `RCS: ${customer.laboratory_rcs}` : ''
-    ].filter(line => line);
+    // Right column - Customer
+    yPos = 95;
+    const rightColX = pageWidth / 2 + 5;
 
-    clientLines.forEach(line => {
-      pdf.text(line, pageWidth / 2 + 10, yPos);
-      yPos += 5;
-    });
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(107, 114, 128);
+    pdf.text('À', rightColX, yPos);
+    yPos += 5;
 
-    yPos = Math.max(yPos, 130);
+    pdf.setFillColor(249, 250, 251);
+    pdf.roundedRect(rightColX - 3, yPos - 3, (pageWidth / 2) - margin - 2, 35, 2, 2, 'F');
 
-    pdf.setDrawColor(226, 232, 240);
-    pdf.line(margin, yPos, pageWidth - margin, yPos);
-    yPos += 10;
-
-    pdf.setFontSize(11);
+    pdf.setFontSize(10);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(15, 23, 42);
-    pdf.text('DÉTAILS DE L\'ABONNEMENT', margin, yPos);
-    yPos += 10;
-
-    pdf.setFillColor(241, 245, 249);
-    pdf.rect(margin, yPos - 5, pageWidth - 2 * margin, 8, 'F');
+    pdf.text(customer.laboratory_name || 'Client', rightColX, yPos);
+    yPos += 5;
 
     pdf.setFontSize(9);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('Description', margin + 2, yPos);
-    pdf.text('Période', pageWidth / 2, yPos);
-    pdf.text('Montant HT', pageWidth - margin - 30, yPos, { align: 'right' });
-    yPos += 10;
-
     pdf.setFont('helvetica', 'normal');
-    pdf.text('Abonnement mensuel DentalCloud', margin + 2, yPos);
-    pdf.text(
-      `${new Date(invoice.period_start).toLocaleDateString('fr-FR')} - ${new Date(invoice.period_end).toLocaleDateString('fr-FR')}`,
-      pageWidth / 2,
-      yPos
-    );
-    pdf.text(`${invoice.amount_ht.toFixed(2)} €`, pageWidth - margin - 30, yPos, { align: 'right' });
+    pdf.setTextColor(71, 85, 105);
+
+    const clientLines = [
+      customer.laboratory_address || '',
+      '',
+      customer.laboratory_email || '',
+      customer.laboratory_phone || '',
+      '',
+      customer.laboratory_rcs ? `RCS ${customer.laboratory_rcs}` : ''
+    ].filter(line => line !== '');
+
+    clientLines.forEach(line => {
+      if (line === '') {
+        yPos += 3;
+      } else {
+        pdf.text(line, rightColX, yPos);
+        yPos += 4;
+      }
+    });
+
+    yPos = 165;
+
+    // Services section
+    pdf.setFontSize(10);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(15, 23, 42);
+    pdf.text('Détails de l\'abonnement', margin, yPos);
+    yPos += 8;
+
+    // Table header
+    pdf.setFillColor(249, 250, 251);
+    pdf.roundedRect(margin, yPos - 2, pageWidth - 2 * margin, 8, 1, 1, 'F');
+
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'bold');
+    pdf.setTextColor(107, 114, 128);
+    pdf.text('DESCRIPTION', margin + 3, yPos + 3);
+    pdf.text('MONTANT HT', pageWidth - margin - 5, yPos + 3, { align: 'right' });
+    yPos += 12;
+
+    // Service line
+    pdf.setFontSize(9);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(31, 41, 55);
+    pdf.text('Abonnement mensuel DentalCloud', margin + 3, yPos);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`${invoice.amount_ht.toFixed(2)} €`, pageWidth - margin - 5, yPos, { align: 'right' });
+    yPos += 5;
+
+    pdf.setFontSize(8);
+    pdf.setFont('helvetica', 'normal');
+    pdf.setTextColor(107, 114, 128);
+    pdf.text(`Période du ${new Date(invoice.period_start).toLocaleDateString('fr-FR')} au ${new Date(invoice.period_end).toLocaleDateString('fr-FR')}`, margin + 3, yPos);
     yPos += 15;
 
-    pdf.setDrawColor(226, 232, 240);
-    pdf.line(margin, yPos, pageWidth - margin, yPos);
-    yPos += 10;
+    // Totals section with modern card design
+    const totalsX = pageWidth - margin - 70;
 
+    // Subtotal
+    pdf.setFontSize(9);
     pdf.setFont('helvetica', 'normal');
-    pdf.text('Total HT', pageWidth - margin - 50, yPos);
-    pdf.text(`${invoice.amount_ht.toFixed(2)} €`, pageWidth - margin - 10, yPos, { align: 'right' });
-    yPos += 7;
+    pdf.setTextColor(71, 85, 105);
+    pdf.text('Sous-total HT', totalsX, yPos);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`${invoice.amount_ht.toFixed(2)} €`, pageWidth - margin - 5, yPos, { align: 'right' });
+    yPos += 6;
 
-    pdf.text(`TVA (${invoice.tax_rate}%)`, pageWidth - margin - 50, yPos);
+    // VAT
+    pdf.setFont('helvetica', 'normal');
     const tvaAmount = invoice.amount_ttc - invoice.amount_ht;
-    pdf.text(`${tvaAmount.toFixed(2)} €`, pageWidth - margin - 10, yPos, { align: 'right' });
+    pdf.text(`TVA (${invoice.tax_rate}%)`, totalsX, yPos);
+    pdf.setFont('helvetica', 'bold');
+    pdf.text(`${tvaAmount.toFixed(2)} €`, pageWidth - margin - 5, yPos, { align: 'right' });
     yPos += 10;
 
-    pdf.setFont('helvetica', 'bold');
+    // Total with gradient background
+    pdf.setFillColor(59, 130, 246);
+    pdf.roundedRect(totalsX - 5, yPos - 5, 75, 12, 2, 2, 'F');
+
     pdf.setFontSize(11);
-    pdf.setFillColor(37, 99, 235);
-    pdf.rect(pageWidth - margin - 60, yPos - 6, 60, 10, 'F');
+    pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(255, 255, 255);
-    pdf.text('TOTAL TTC', pageWidth - margin - 50, yPos);
-    pdf.text(`${invoice.amount_ttc.toFixed(2)} €`, pageWidth - margin - 10, yPos, { align: 'right' });
+    pdf.text('TOTAL TTC', totalsX, yPos + 2);
+    pdf.text(`${invoice.amount_ttc.toFixed(2)} €`, pageWidth - margin - 5, yPos + 2, { align: 'right' });
     yPos += 20;
 
+    // Payment info section if available
     if (company.company_iban || company.company_bic) {
-      pdf.setTextColor(71, 85, 105);
-      pdf.setFontSize(9);
+      pdf.setFillColor(249, 250, 251);
+      pdf.roundedRect(margin, yPos, pageWidth - 2 * margin, 20, 2, 2, 'F');
+
+      yPos += 6;
+      pdf.setFontSize(8);
       pdf.setFont('helvetica', 'bold');
-      pdf.text('INFORMATIONS BANCAIRES', margin, yPos);
-      yPos += 7;
+      pdf.setTextColor(107, 114, 128);
+      pdf.text('COORDONNÉES BANCAIRES', margin + 5, yPos);
+      yPos += 5;
+
+      pdf.setFontSize(9);
       pdf.setFont('helvetica', 'normal');
+      pdf.setTextColor(31, 41, 55);
       if (company.company_iban) {
-        pdf.text(`IBAN: ${company.company_iban}`, margin, yPos);
-        yPos += 5;
+        pdf.text(`IBAN: ${company.company_iban}`, margin + 5, yPos);
+        yPos += 4;
       }
       if (company.company_bic) {
-        pdf.text(`BIC: ${company.company_bic}`, margin, yPos);
-        yPos += 10;
+        pdf.text(`BIC: ${company.company_bic}`, margin + 5, yPos);
       }
     }
 
+    // Footer
+    pdf.setDrawColor(229, 231, 235);
+    pdf.line(margin, pageHeight - 20, pageWidth - margin, pageHeight - 20);
+
     pdf.setFontSize(8);
-    pdf.setTextColor(148, 163, 184);
-    pdf.text('Facture générée automatiquement par DentalCloud', margin, pdf.internal.pageSize.getHeight() - 10);
+    pdf.setTextColor(156, 163, 175);
+    pdf.setFont('helvetica', 'normal');
+    pdf.text(
+      'Document généré automatiquement - Aucune signature requise',
+      pageWidth / 2,
+      pageHeight - 12,
+      { align: 'center' }
+    );
+    pdf.text(
+      `${company.company_name} - ${company.company_email}`,
+      pageWidth / 2,
+      pageHeight - 8,
+      { align: 'center' }
+    );
 
     pdf.save(`Facture_Abonnement_${invoice.invoice_number}.pdf`);
 
