@@ -172,34 +172,6 @@ export default function ProformasPage() {
 
       if (invoiceError) throw invoiceError;
 
-      // Get proforma items before deleting
-      const { data: proformaItems, error: itemsError } = await supabase
-        .from('proforma_items')
-        .select('*')
-        .eq('proforma_id', proforma.id);
-
-      if (itemsError) throw itemsError;
-
-      // Copy proforma items to invoice items
-      if (proformaItems && proformaItems.length > 0) {
-        const invoiceItems = proformaItems.map(item => ({
-          invoice_id: invoiceData.id,
-          delivery_note_id: item.delivery_note_id || null,
-          catalog_item_id: null,
-          description: item.description || '',
-          quantity: item.quantity || 1,
-          unit_price: item.unit_price || 0,
-          discount_percentage: 0,
-          subtotal: item.total || 0,
-        }));
-
-        const { error: invoiceItemsError } = await supabase
-          .from('invoice_items')
-          .insert(invoiceItems);
-
-        if (invoiceItemsError) throw invoiceItemsError;
-      }
-
       const { error: linkError } = await supabase
         .from('invoice_proformas')
         .insert({
@@ -209,15 +181,14 @@ export default function ProformasPage() {
 
       if (linkError) throw linkError;
 
-      // Delete the proforma after converting to invoice
-      const { error: deleteError } = await supabase
+      const { error: updateError } = await supabase
         .from('proformas')
-        .delete()
+        .update({ status: 'invoiced' })
         .eq('id', proforma.id);
 
-      if (deleteError) throw deleteError;
+      if (updateError) throw updateError;
 
-      alert(`Facture ${invoiceNumber} créée avec succès! La proforma a été supprimée.`);
+      alert(`Facture ${invoiceNumber} créée avec succès!`);
       await loadProformas();
     } catch (error) {
       console.error('Error converting to invoice:', error);

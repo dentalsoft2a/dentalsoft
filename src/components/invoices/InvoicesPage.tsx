@@ -136,21 +136,29 @@ export default function InvoicesPage() {
 
       if (dentistError) throw dentistError;
 
-      // Get invoice items directly instead of proforma items
-      const { data: invoiceItems, error: itemsError } = await supabase
-        .from('invoice_items')
-        .select('*')
+      const { data: invoiceProformas, error: ipError } = await supabase
+        .from('invoice_proformas')
+        .select('proforma_id')
         .eq('invoice_id', invoice.id);
 
-      if (itemsError) throw itemsError;
+      if (ipError) throw ipError;
 
-      if (!invoiceItems || invoiceItems.length === 0) {
-        alert('Aucun article associé à cette facture');
+      if (!invoiceProformas || invoiceProformas.length === 0) {
+        alert('Aucun proforma associé à cette facture');
         return;
       }
 
+      const proformaIds = invoiceProformas.map(ip => ip.proforma_id);
+
+      const { data: proformaItems, error: itemsError } = await supabase
+        .from('proforma_items')
+        .select('*')
+        .in('proforma_id', proformaIds);
+
+      if (itemsError) throw itemsError;
+
       const deliveryNoteIds = [...new Set(
-        invoiceItems
+        proformaItems
           .map(item => item.delivery_note_id)
           .filter(id => id != null)
       )];
