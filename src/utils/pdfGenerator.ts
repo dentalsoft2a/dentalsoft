@@ -1114,6 +1114,15 @@ export async function generateInvoicePDF(data: InvoiceData, returnBase64 = false
 
     doc.text(deliveryDateText, 17, yPos + 4);
 
+    const patientLabel = 'Patient';
+    const patientDisplay = note.patient_code || note.patient_name;
+    const patientLabelWidth = doc.getTextWidth(patientLabel);
+    const patientNameWidth = doc.getTextWidth(patientDisplay);
+    const totalPatientWidth = patientLabelWidth + patientNameWidth + 2;
+
+    doc.text(patientLabel, pageWidth - 17 - totalPatientWidth, yPos + 4);
+    doc.text(patientDisplay, pageWidth - 17, yPos + 4, { align: 'right' });
+
     if (note.prescription_date) {
       const prescriptionText = `Prescription du ${new Date(note.prescription_date).toLocaleDateString('fr-FR', {
         day: 'numeric',
