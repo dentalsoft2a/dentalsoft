@@ -50,6 +50,7 @@ export function SubscriptionPage() {
   const [redeeming, setRedeeming] = useState(false);
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
   const [cancellingSubscription, setCancellingSubscription] = useState(false);
+  const [subscriptionWillCancel, setSubscriptionWillCancel] = useState(false);
 
   useLockScroll(showRedeemModal);
 
@@ -85,11 +86,38 @@ export function SubscriptionPage() {
       supabase.from('subscription_invoices').select('*').eq('user_id', user.id).order('issued_at', { ascending: false })
     ]);
 
-    if (profileRes.data) setProfile(profileRes.data);
+    if (profileRes.data) {
+      setProfile(profileRes.data);
+
+      // Check if subscription will be cancelled at period end
+      if (profileRes.data.stripe_subscription_id && profileRes.data.subscription_status === 'active') {
+        checkSubscriptionCancellation(profileRes.data.stripe_subscription_id);
+      }
+    }
     if (plansRes.data) setPlans(plansRes.data);
     if (invoicesRes.data) setInvoices(invoicesRes.data);
 
     setLoading(false);
+  };
+
+  const checkSubscriptionCancellation = async (subscriptionId: string) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-subscription-status`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({ subscriptionId })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setSubscriptionWillCancel(data.cancel_at_period_end || false);
+      }
+    } catch (error) {
+      console.error('Error checking subscription status:', error);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -184,6 +212,7 @@ export function SubscriptionPage() {
       }
 
       alert('Votre abonnement a été résilié avec succès. Vous conserverez l\'accès jusqu\'à la fin de la période payée.');
+      setSubscriptionWillCancel(true);
       loadData();
     } catch (error) {
       console.error('Error cancelling subscription:', error);
@@ -471,31 +500,51 @@ export function SubscriptionPage() {
           </div>
 
           {profile.subscription_status === 'active' && profile.stripe_subscription_id && (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6">
+            <div className={`border rounded-lg p-6 ${
+              subscriptionWillCancel
+                ? 'bg-orange-50 border-orange-200'
+                : 'bg-emerald-50 border-emerald-200'
+            }`}>
               <div className="flex items-start gap-3 mb-4">
-                <CheckCircle className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
+                {subscriptionWillCancel ? (
+                  <AlertCircle className="w-6 h-6 text-orange-600 flex-shrink-0 mt-0.5" />
+                ) : (
+                  <CheckCircle className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
+                )}
                 <div className="flex-1">
-                  <h4 className="font-medium text-emerald-900 mb-2 text-lg">Abonnement actif</h4>
-                  <p className="text-sm text-emerald-700 mb-4">
-                    Vous avez accès à toutes les fonctionnalités de DentalCloud. Pour toute question, contactez notre support.
-                  </p>
-                  <button
-                    onClick={handleCancelSubscription}
-                    disabled={cancellingSubscription}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {cancellingSubscription ? (
-                      <span className="flex items-center gap-2">
-                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Résiliation en cours...
-                      </span>
+                  <h4 className={`font-medium mb-2 text-lg ${
+                    subscriptionWillCancel ? 'text-orange-900' : 'text-emerald-900'
+                  }`}>
+                    {subscriptionWillCancel ? 'Abonnement actif (annulation programmée)' : 'Abonnement actif'}
+                  </h4>
+                  <p className={`text-sm mb-4 ${
+                    subscriptionWillCancel ? 'text-orange-700' : 'text-emerald-700'
+                  }`}>
+                    {subscriptionWillCancel ? (
+                      `Votre abonnement restera actif jusqu'au ${profile.subscription_end_date ? new Date(profile.subscription_end_date).toLocaleDateString('fr-FR') : 'fin de la période'}. Après cette date, vous n'aurez plus accès aux fonctionnalités premium.`
                     ) : (
-                      'Résilier mon abonnement'
+                      'Vous avez accès à toutes les fonctionnalités de DentalCloud. Pour toute question, contactez notre support.'
                     )}
-                  </button>
+                  </p>
+                  {!subscriptionWillCancel && (
+                    <button
+                      onClick={handleCancelSubscription}
+                      disabled={cancellingSubscription}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {cancellingSubscription ? (
+                        <span className="flex items-center gap-2">
+                          <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Résiliation en cours...
+                        </span>
+                      ) : (
+                        'Résilier mon abonnement'
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

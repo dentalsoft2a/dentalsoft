@@ -165,14 +165,14 @@ Deno.serve(async (req: Request) => {
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         console.log("Subscription updated:", subscription);
-        
+
         if (subscription.metadata?.user_id && subscription.metadata?.extension_id) {
-          const status = subscription.status === "active" ? "active" : 
+          const status = subscription.status === "active" ? "active" :
                         subscription.status === "canceled" ? "cancelled" : "expired";
 
           const { error: updateError } = await supabase
             .from("user_extensions")
-            .update({ 
+            .update({
               status,
               cancelled_at: status === "cancelled" ? new Date().toISOString() : null,
             })
@@ -182,23 +182,48 @@ Deno.serve(async (req: Request) => {
             console.error("Error updating extension status:", updateError);
           }
         }
+        else if (subscription.metadata?.user_id && subscription.metadata?.plan_id) {
+          if (subscription.status === "canceled") {
+            const { error: updateError } = await supabase
+              .from("user_profiles")
+              .update({
+                subscription_status: "cancelled",
+              })
+              .eq("stripe_subscription_id", subscription.id);
+
+            if (updateError) {
+              console.error("Error updating profile subscription status:", updateError);
+            }
+          }
+        }
         break;
       }
 
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
         console.log("Subscription deleted:", subscription);
-        
-        const { error: deleteError } = await supabase
+
+        const { error: extensionDeleteError } = await supabase
           .from("user_extensions")
-          .update({ 
+          .update({
             status: "cancelled",
             cancelled_at: new Date().toISOString(),
           })
           .eq("stripe_subscription_id", subscription.id);
 
-        if (deleteError) {
-          console.error("Error cancelling extension:", deleteError);
+        if (extensionDeleteError) {
+          console.error("Error cancelling extension:", extensionDeleteError);
+        }
+
+        const { error: profileDeleteError } = await supabase
+          .from("user_profiles")
+          .update({
+            subscription_status: "cancelled",
+          })
+          .eq("stripe_subscription_id", subscription.id);
+
+        if (profileDeleteError) {
+          console.error("Error cancelling profile subscription:", profileDeleteError);
         }
         break;
       }
@@ -221,6 +246,18 @@ Deno.serve(async (req: Request) => {
           if (renewError) {
             console.error("Error renewing extension:", renewError);
           }
+
+          const { error: profileRenewError } = await supabase
+            .from("user_profiles")
+            .update({ 
+              subscription_end_date: nextBillingDate.toISOString(),
+              subscription_status: "active",
+            })
+            .eq("stripe_subscription_id", invoice.subscription as string);
+
+          if (profileRenewError) {
+            console.error("Error renewing profile subscription:", profileRenewError);
+          }
         }
         break;
       }
@@ -237,6 +274,15 @@ Deno.serve(async (req: Request) => {
 
           if (failError) {
             console.error("Error updating extension after payment failure:", failError);
+          }
+
+          const { error: profileFailError } = await supabase
+            .from("user_profiles")
+            .update({ subscription_status: "expired" })
+            .eq("stripe_subscription_id", invoice.subscription as string);
+
+          if (profileFailError) {
+            console.error("Error updating profile after payment failure:", profileFailError);
           }
         }
         break;

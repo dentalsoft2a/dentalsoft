@@ -43,7 +43,6 @@ Deno.serve(async (req: Request) => {
 
     let stripeSubscriptionId: string | null = null;
 
-    // Handle extension subscription cancellation
     if (userExtensionId) {
       const { data: userExtension, error: extensionError } = await supabase
         .from("user_extensions")
@@ -79,7 +78,6 @@ Deno.serve(async (req: Request) => {
         console.error("Error updating user extension:", updateError);
       }
     }
-    // Handle plan subscription cancellation
     else if (subscriptionId) {
       const { data: profile, error: profileError } = await supabase
         .from("user_profiles")
@@ -95,15 +93,15 @@ Deno.serve(async (req: Request) => {
         throw new Error("Subscription ID does not match user profile");
       }
 
-      console.log("Cancelling plan Stripe subscription:", subscriptionId);
+      console.log("Cancelling plan Stripe subscription at period end:", subscriptionId);
 
-      await stripe.subscriptions.cancel(subscriptionId);
+      await stripe.subscriptions.update(subscriptionId, {
+        cancel_at_period_end: true,
+      });
 
       const { error: updateError } = await supabase
         .from("user_profiles")
-        .update({
-          subscription_status: "cancelled",
-        })
+        .update({})
         .eq("id", userData.user.id);
 
       if (updateError) {
