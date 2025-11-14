@@ -120,8 +120,36 @@ export function SubscriptionPage() {
     }
   };
 
-  const handleSubscribe = () => {
-    alert('L\'intégration Stripe sera disponible prochainement. Contactez le support pour activer votre abonnement.');
+  const handleSubscribe = async (planId: string) => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          planId: planId
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(errorData.error || 'Erreur lors de la création de la session de paiement');
+      }
+
+      const { url } = await response.json();
+
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('URL de paiement non reçue');
+      }
+    } catch (error) {
+      console.error('Error subscribing to plan:', error);
+      alert(`Erreur lors de la création de la session de paiement: ${(error as Error).message}`);
+    }
   };
 
   const handleDownloadInvoice = async (invoiceId: string) => {
@@ -374,7 +402,7 @@ export function SubscriptionPage() {
 
                     {(profile.subscription_status === 'trial' || profile.subscription_status === 'inactive' || profile.subscription_status === 'expired') && (
                       <button
-                        onClick={handleSubscribe}
+                        onClick={() => handleSubscribe(plan.id)}
                         className={`w-full px-4 py-3 rounded-lg text-white font-medium transition-all hover:shadow-lg ${
                           plan.plan_type === 'premium_complete'
                             ? 'bg-gradient-to-r from-amber-500 to-orange-600'

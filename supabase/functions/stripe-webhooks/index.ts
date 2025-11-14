@@ -64,15 +64,40 @@ Deno.serve(async (req: Request) => {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         console.log("Checkout session completed:", session);
-        
-        if (session.metadata?.type === "extension_subscription") {
+
+        if (session.metadata?.type === "subscription_plan") {
+          const userId = session.metadata.user_id;
+          const planId = session.metadata.plan_id;
+          const subscriptionId = session.subscription as string;
+
+          console.log("Processing subscription plan for user:", userId, "plan:", planId);
+
+          const subscriptionEndDate = new Date();
+          subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
+
+          const { error: updateError } = await supabase
+            .from("user_profiles")
+            .update({
+              subscription_status: "active",
+              subscription_plan_id: planId,
+              subscription_start_date: new Date().toISOString(),
+              subscription_end_date: subscriptionEndDate.toISOString(),
+              stripe_subscription_id: subscriptionId,
+            })
+            .eq("id", userId);
+
+          if (updateError) {
+            console.error("Error activating subscription plan:", updateError);
+          } else {
+            console.log("Subscription plan activated successfully for user:", userId);
+          }
+        } else if (session.metadata?.type === "extension_subscription") {
           const userId = session.metadata.user_id;
           const extensionId = session.metadata.extension_id;
           const subscriptionId = session.subscription as string;
 
           console.log("Processing extension subscription for user:", userId, "extension:", extensionId);
 
-          // Get profile_id from profiles table
           const { data: profile, error: profileError } = await supabase
             .from("profiles")
             .select("id")
@@ -86,7 +111,6 @@ Deno.serve(async (req: Request) => {
           const expiryDate = new Date();
           expiryDate.setMonth(expiryDate.getMonth() + 1);
 
-          // Check if user_extension already exists to avoid duplicates
           const { data: existingExtension } = await supabase
             .from("user_extensions")
             .select("id")
