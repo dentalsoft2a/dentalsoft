@@ -39,42 +39,78 @@ Deno.serve(async (req: Request) => {
       throw new Error("Unauthorized");
     }
 
-    const { userExtensionId } = await req.json();
+    const { userExtensionId, subscriptionId } = await req.json();
 
-    if (!userExtensionId) {
-      throw new Error("userExtensionId is required");
+    let stripeSubscriptionId: string | null = null;
+
+    // Handle extension subscription cancellation
+    if (userExtensionId) {
+      const { data: userExtension, error: extensionError } = await supabase
+        .from("user_extensions")
+        .select("stripe_subscription_id, user_id")
+        .eq("id", userExtensionId)
+        .eq("user_id", userData.user.id)
+        .maybeSingle();
+
+      if (extensionError || !userExtension) {
+        throw new Error("Extension subscription not found");
+      }
+
+      if (!userExtension.stripe_subscription_id) {
+        throw new Error("No Stripe subscription found for this extension");
+      }
+
+      stripeSubscriptionId = userExtension.stripe_subscription_id;
+
+      console.log("Cancelling extension Stripe subscription:", stripeSubscriptionId);
+
+      await stripe.subscriptions.cancel(stripeSubscriptionId);
+
+      const { error: updateError } = await supabase
+        .from("user_extensions")
+        .update({
+          status: "cancelled",
+          auto_renew: false,
+          cancelled_at: new Date().toISOString(),
+        })
+        .eq("id", userExtensionId);
+
+      if (updateError) {
+        console.error("Error updating user extension:", updateError);
+      }
     }
+    // Handle plan subscription cancellation
+    else if (subscriptionId) {
+      const { data: profile, error: profileError } = await supabase
+        .from("user_profiles")
+        .select("stripe_subscription_id")
+        .eq("id", userData.user.id)
+        .maybeSingle();
 
-    const { data: userExtension, error: extensionError } = await supabase
-      .from("user_extensions")
-      .select("stripe_subscription_id, user_id")
-      .eq("id", userExtensionId)
-      .eq("user_id", userData.user.id)
-      .maybeSingle();
+      if (profileError || !profile) {
+        throw new Error("Profile not found");
+      }
 
-    if (extensionError || !userExtension) {
-      throw new Error("Extension subscription not found");
-    }
+      if (profile.stripe_subscription_id !== subscriptionId) {
+        throw new Error("Subscription ID does not match user profile");
+      }
 
-    if (!userExtension.stripe_subscription_id) {
-      throw new Error("No Stripe subscription found for this extension");
-    }
+      console.log("Cancelling plan Stripe subscription:", subscriptionId);
 
-    console.log("Cancelling Stripe subscription:", userExtension.stripe_subscription_id);
+      await stripe.subscriptions.cancel(subscriptionId);
 
-    await stripe.subscriptions.cancel(userExtension.stripe_subscription_id);
+      const { error: updateError } = await supabase
+        .from("user_profiles")
+        .update({
+          subscription_status: "cancelled",
+        })
+        .eq("id", userData.user.id);
 
-    const { error: updateError } = await supabase
-      .from("user_extensions")
-      .update({
-        status: "cancelled",
-        auto_renew: false,
-        cancelled_at: new Date().toISOString(),
-      })
-      .eq("id", userExtensionId);
-
-    if (updateError) {
-      console.error("Error updating user extension:", updateError);
+      if (updateError) {
+        console.error("Error updating user profile:", updateError);
+      }
+    } else {
+      throw new Error("Either userExtensionId or subscriptionId is required");
     }
 
     return new Response(

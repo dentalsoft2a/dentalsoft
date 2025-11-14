@@ -48,6 +48,8 @@ export function SubscriptionPage() {
   const [showRedeemModal, setShowRedeemModal] = useState(false);
   const [accessCode, setAccessCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
+  const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
+  const [cancellingSubscription, setCancellingSubscription] = useState(false);
 
   useLockScroll(showRedeemModal);
 
@@ -121,6 +123,7 @@ export function SubscriptionPage() {
   };
 
   const handleSubscribe = async (planId: string) => {
+    setSubscribingPlanId(planId);
     try {
       const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-subscription-checkout`, {
         method: 'POST',
@@ -149,6 +152,44 @@ export function SubscriptionPage() {
     } catch (error) {
       console.error('Error subscribing to plan:', error);
       alert(`Erreur lors de la création de la session de paiement: ${(error as Error).message}`);
+      setSubscribingPlanId(null);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Êtes-vous sûr de vouloir résilier votre abonnement? Vous perdrez l\'accès à toutes les fonctionnalités premium à la fin de la période en cours.')) {
+      return;
+    }
+
+    setCancellingSubscription(true);
+    try {
+      if (!profile?.stripe_subscription_id) {
+        throw new Error('Aucun abonnement Stripe trouvé');
+      }
+
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-stripe-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          subscriptionId: profile.stripe_subscription_id
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de la résiliation de l\'abonnement');
+      }
+
+      alert('Votre abonnement a été résilié avec succès. Vous conserverez l\'accès jusqu\'à la fin de la période payée.');
+      loadData();
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      alert(`Erreur lors de la résiliation: ${(error as Error).message}`);
+    } finally {
+      setCancellingSubscription(false);
     }
   };
 
@@ -403,13 +444,24 @@ export function SubscriptionPage() {
                     {(profile.subscription_status === 'trial' || profile.subscription_status === 'inactive' || profile.subscription_status === 'expired') && (
                       <button
                         onClick={() => handleSubscribe(plan.id)}
-                        className={`w-full px-4 py-3 rounded-lg text-white font-medium transition-all hover:shadow-lg ${
+                        disabled={subscribingPlanId === plan.id}
+                        className={`w-full px-4 py-3 rounded-lg text-white font-medium transition-all hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed ${
                           plan.plan_type === 'premium_complete'
                             ? 'bg-gradient-to-r from-amber-500 to-orange-600'
                             : 'bg-gradient-to-r from-primary-500 to-cyan-500'
                         }`}
                       >
-                        S'abonner pour {plan.price_monthly.toFixed(2)}€/mois
+                        {subscribingPlanId === plan.id ? (
+                          <span className="flex items-center justify-center gap-2">
+                            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Redirection vers le paiement...
+                          </span>
+                        ) : (
+                          `S'abonner pour ${plan.price_monthly.toFixed(2)}€/mois`
+                        )}
                       </button>
                     )}
                   </div>
@@ -418,7 +470,38 @@ export function SubscriptionPage() {
             </div>
           </div>
 
-          {profile.subscription_status === 'active' && (
+          {profile.subscription_status === 'active' && profile.stripe_subscription_id && (
+            <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6">
+              <div className="flex items-start gap-3 mb-4">
+                <CheckCircle className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
+                <div className="flex-1">
+                  <h4 className="font-medium text-emerald-900 mb-2 text-lg">Abonnement actif</h4>
+                  <p className="text-sm text-emerald-700 mb-4">
+                    Vous avez accès à toutes les fonctionnalités de DentalCloud. Pour toute question, contactez notre support.
+                  </p>
+                  <button
+                    onClick={handleCancelSubscription}
+                    disabled={cancellingSubscription}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {cancellingSubscription ? (
+                      <span className="flex items-center gap-2">
+                        <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Résiliation en cours...
+                      </span>
+                    ) : (
+                      'Résilier mon abonnement'
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {profile.subscription_status === 'active' && !profile.stripe_subscription_id && (
             <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-6">
               <div className="flex items-start gap-3">
                 <CheckCircle className="w-6 h-6 text-emerald-600 flex-shrink-0 mt-0.5" />
