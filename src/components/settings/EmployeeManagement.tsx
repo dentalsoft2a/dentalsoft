@@ -4,7 +4,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
 import { useEmployeeQuota } from '../../hooks/useEmployeeQuota';
 import { Users, Plus, Edit, Trash2, Shield, Save, X, Briefcase, Eye, EyeOff, Lock, AlertTriangle, Crown } from 'lucide-react';
-import { ExtensionGuard } from '../common/ExtensionGuard';
 import { useNavigate } from 'react-router-dom';
 
 interface Employee {
@@ -418,11 +417,7 @@ export default function EmployeeManagement() {
   }
 
   return (
-    <ExtensionGuard
-      featureKey="employee_management"
-      fallbackMessage="Le module complet de gestion des employés avec permissions, affectations et suivi d'activité nécessite l'extension Gestion des Employés."
-    >
-      <div className="space-y-6 sm:space-y-8">
+    <div className="space-y-6 sm:space-y-8">
         <div>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
             <div className="flex items-center gap-2 sm:gap-3">
@@ -983,7 +978,6 @@ export default function EmployeeManagement() {
           </div>
         </div>
       )}
-      </div>
-    </ExtensionGuard>
+    </div>
   );
 }
