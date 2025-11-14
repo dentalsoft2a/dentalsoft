@@ -18,6 +18,7 @@ export function LandingPage() {
   const [premiumPrice, setPremiumPrice] = useState<number>(99.99);
   const [totalExtensionsPrice, setTotalExtensionsPrice] = useState<number>(0);
   const [contactPhone, setContactPhone] = useState<string>('');
+  const [pricesLoaded, setPricesLoaded] = useState<boolean>(false);
 
   useEffect(() => {
     loadPrices();
@@ -64,6 +65,8 @@ export function LandingPage() {
       console.log('Total extensions price:', total, 'from', extensionsRes.data.length, 'extensions');
       setTotalExtensionsPrice(total);
     }
+
+    setPricesLoaded(true);
   };
 
   const loadContactPhone = async () => {
@@ -898,44 +901,46 @@ export function LandingPage() {
                   </div>
                   <p className="text-xs sm:text-sm text-white/90 mt-1 sm:mt-2">Sans engagement</p>
 
-                  <div className="mt-4 bg-white/20 backdrop-blur rounded-lg p-4">
-                    <div className="space-y-2 text-sm">
-                      <div className="flex justify-between items-center text-white/90">
-                        <span>Abonnement Standard</span>
-                        <span className="font-semibold">{price.toFixed(2)}€</span>
-                      </div>
-                      <div className="flex justify-between items-center text-white/90">
-                        <span>+ Toutes les extensions</span>
-                        <span className="font-semibold">{totalExtensionsPrice.toFixed(2)}€</span>
-                      </div>
-                      <div className="border-t border-white/30 pt-2 flex justify-between items-center text-white">
-                        <span className="font-semibold">Total</span>
-                        <span className="font-bold text-lg">{(price + totalExtensionsPrice).toFixed(2)}€/mois</span>
-                      </div>
-
-                      <div className="my-3 text-center">
-                        <div className="inline-flex items-center gap-2 text-white/80 text-xs">
-                          <div className="h-px flex-1 bg-white/30 w-16"></div>
-                          <span>VS</span>
-                          <div className="h-px flex-1 bg-white/30 w-16"></div>
+                  {pricesLoaded && totalExtensionsPrice > 0 && (
+                    <div className="mt-4 bg-white/20 backdrop-blur rounded-lg p-4">
+                      <div className="space-y-2 text-sm">
+                        <div className="flex justify-between items-center text-white/90">
+                          <span>Abonnement Standard</span>
+                          <span className="font-semibold">{price.toFixed(2)}€</span>
                         </div>
-                      </div>
-
-                      <div className="bg-white/10 rounded-lg p-3 border border-amber-300/30">
-                        <div className="flex justify-between items-center">
-                          <span className="font-semibold text-white">Plan Premium Complet</span>
-                          <span className="font-bold text-xl text-amber-200">{premiumPrice.toFixed(2)}€/mois</span>
+                        <div className="flex justify-between items-center text-white/90">
+                          <span>+ Toutes les extensions</span>
+                          <span className="font-semibold">{totalExtensionsPrice.toFixed(2)}€</span>
                         </div>
-                      </div>
+                        <div className="border-t border-white/30 pt-2 flex justify-between items-center text-white">
+                          <span className="font-semibold">Total</span>
+                          <span className="font-bold text-lg">{(price + totalExtensionsPrice).toFixed(2)}€/mois</span>
+                        </div>
 
-                      <div className="mt-3 pt-3 border-t border-white/30">
-                        <div className="flex justify-between items-center">
-                          <span className="font-bold text-white">Économie avec Premium</span>
-                          <span className="font-bold text-2xl text-emerald-300">{(price + totalExtensionsPrice - premiumPrice).toFixed(2)}€/mois</span>
+                        <div className="my-3 text-center">
+                          <div className="inline-flex items-center gap-2 text-white/80 text-xs">
+                            <div className="h-px flex-1 bg-white/30 w-16"></div>
+                            <span>VS</span>
+                            <div className="h-px flex-1 bg-white/30 w-16"></div>
+                          </div>
+                        </div>
+
+                        <div className="bg-white/10 rounded-lg p-3 border border-amber-300/30">
+                          <div className="flex justify-between items-center">
+                            <span className="font-semibold text-white">Plan Premium Complet</span>
+                            <span className="font-bold text-xl text-amber-200">{premiumPrice.toFixed(2)}€/mois</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 pt-3 border-t border-white/30">
+                          <div className="flex justify-between items-center">
+                            <span className="font-bold text-white">Économie avec Premium</span>
+                            <span className="font-bold text-2xl text-emerald-300">{(price + totalExtensionsPrice - premiumPrice).toFixed(2)}€/mois</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 <div className="p-4 sm:p-6 lg:p-8 bg-white">
