@@ -94,7 +94,8 @@ export default function ProformasPage() {
       proforma.proforma_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
       proforma.dentists?.name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || proforma.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const notInvoiced = proforma.status !== 'invoiced';
+    return matchesSearch && matchesStatus && notInvoiced;
   });
 
   const handleDelete = async (id: string) => {
@@ -402,7 +403,6 @@ export default function ProformasPage() {
               <option value="all">Tous les statuts</option>
               <option value="pending">En attente</option>
               <option value="validated">Validé</option>
-              <option value="invoiced">Facturé</option>
             </select>
           </div>
           <div className="relative bg-gradient-to-br from-orange-50/80 to-amber-50/80 border border-orange-200/50 rounded-xl p-4 overflow-hidden">
