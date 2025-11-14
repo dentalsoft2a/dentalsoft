@@ -184,13 +184,13 @@ export default function ProformasPage() {
       if (proformaItems && proformaItems.length > 0) {
         const invoiceItems = proformaItems.map(item => ({
           invoice_id: invoiceData.id,
-          delivery_note_id: item.delivery_note_id,
-          catalog_item_id: item.catalog_item_id,
-          description: item.description,
-          quantity: item.quantity,
-          unit_price: item.unit_price,
-          discount_percentage: item.discount_percentage,
-          subtotal: item.subtotal,
+          delivery_note_id: item.delivery_note_id || null,
+          catalog_item_id: null,
+          description: item.description || '',
+          quantity: item.quantity || 1,
+          unit_price: item.unit_price || 0,
+          discount_percentage: 0,
+          subtotal: item.total || 0,
         }));
 
         const { error: invoiceItemsError } = await supabase
