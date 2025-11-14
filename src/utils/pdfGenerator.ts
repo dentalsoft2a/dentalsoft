@@ -512,7 +512,7 @@ export async function generateProformaPDF(data: ProformaData) {
     doc.text(deliveryDateText, 17, yPos + 4);
 
     const patientLabel = 'Patient';
-    const patientDisplay = note.patient_code || note.patient_name;
+    const patientDisplay = note.patient_name;
     const patientLabelWidth = doc.getTextWidth(patientLabel);
     const patientNameWidth = doc.getTextWidth(patientDisplay);
     const totalPatientWidth = patientLabelWidth + patientNameWidth + 2;
@@ -814,7 +814,7 @@ export async function generateProformaPDFBase64(data: ProformaData): Promise<str
     doc.text(deliveryDateText, 17, yPos + 4);
 
     const patientLabel = 'Patient';
-    const patientDisplay = note.patient_code || note.patient_name;
+    const patientDisplay = note.patient_name;
     const patientLabelWidth = doc.getTextWidth(patientLabel);
     const patientNameWidth = doc.getTextWidth(patientDisplay);
     const totalPatientWidth = patientLabelWidth + patientNameWidth + 2;
