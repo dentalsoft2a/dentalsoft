@@ -10,6 +10,8 @@ interface Extension {
   is_active: boolean;
   icon: string;
   sort_order: number;
+  stripe_price_id?: string | null;
+  stripe_product_id?: string | null;
 }
 
 interface ExtensionFeature {
@@ -576,6 +578,46 @@ export default function ExtensionsManagement() {
                 <label htmlFor="is_active" className="ml-2 text-sm text-gray-700">
                   Extension active
                 </label>
+              </div>
+
+              <div className="border-t border-gray-200 pt-4">
+                <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <DollarSign className="w-4 h-4" />
+                  Configuration Stripe
+                </h4>
+                <div className="space-y-3 bg-gray-50 p-4 rounded-lg">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Stripe Price ID (récurrent)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingExtension.stripe_price_id || ''}
+                      onChange={(e) => setEditingExtension({ ...editingExtension, stripe_price_id: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      placeholder="price_xxxxxxxxxxxxx"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      ID du prix récurrent depuis votre tableau de bord Stripe
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Stripe Product ID
+                    </label>
+                    <input
+                      type="text"
+                      value={editingExtension.stripe_product_id || ''}
+                      onChange={(e) => setEditingExtension({ ...editingExtension, stripe_product_id: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 font-mono text-sm"
+                      placeholder="prod_xxxxxxxxxxxxx"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      ID du produit depuis votre tableau de bord Stripe
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div>

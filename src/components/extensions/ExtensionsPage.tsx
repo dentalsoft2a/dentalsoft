@@ -42,7 +42,24 @@ export default function ExtensionsPage() {
 
   useEffect(() => {
     loadFeatures();
+    checkPaymentStatus();
   }, []);
+
+  const checkPaymentStatus = () => {
+    const params = new URLSearchParams(window.location.hash.split('?')[1]);
+    const success = params.get('success');
+    const extensionName = params.get('extension');
+    const canceled = params.get('canceled');
+
+    if (success && extensionName) {
+      alert(`Abonnement à l'extension "${decodeURIComponent(extensionName)}" activé avec succès! Vous pouvez maintenant profiter de toutes ses fonctionnalités.`);
+      window.history.replaceState({}, '', '/#/extensions');
+      reloadExtensions();
+    } else if (canceled) {
+      alert('Paiement annulé. Vous pouvez réessayer quand vous le souhaitez.');
+      window.history.replaceState({}, '', '/#/extensions');
+    }
+  };
 
   const loadFeatures = async () => {
     const { data, error } = await supabase
@@ -80,14 +97,58 @@ export default function ExtensionsPage() {
     const extension = extensions.find(e => e.id === extensionId);
     if (!extension) return;
 
-    alert(
-      `Pour activer l'extension "${extension.name}" (${extension.monthly_price.toFixed(2)}€/mois), veuillez contacter notre équipe support.\n\n` +
-      `Vous pouvez également passer au Plan Premium Complet (99.99€/mois) qui débloque automatiquement TOUTES les extensions actuelles et futures.`
-    );
+    setProcessingExtension(extensionId);
 
-    // Rediriger vers la page d'abonnement
-    if (confirm('Voulez-vous voir le Plan Premium Complet?')) {
-      window.location.href = '/#/subscription';
+    try {
+      // Vérifier si l'extension a un stripe_price_id configuré
+      const { data: extensionData, error: extError } = await supabase
+        .from('extensions')
+        .select('stripe_price_id, stripe_product_id')
+        .eq('id', extensionId)
+        .maybeSingle();
+
+      if (extError) throw extError;
+
+      if (!extensionData?.stripe_price_id) {
+        alert(
+          `Pour activer l'extension "${extension.name}" (${extension.monthly_price.toFixed(2)}€/mois), veuillez contacter notre équipe support.\n\n` +
+          `Vous pouvez également passer au Plan Premium Complet (99.99€/mois) qui débloque automatiquement TOUTES les extensions actuelles et futures.`
+        );
+
+        if (confirm('Voulez-vous voir le Plan Premium Complet?')) {
+          window.location.href = '/#/subscription';
+        }
+        setProcessingExtension(null);
+        return;
+      }
+
+      // Créer une session Stripe Checkout
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/stripe-checkout-extension`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          extensionId: extensionId,
+          priceId: extensionData.stripe_price_id
+        })
+      });
+
+      if (!response.ok) throw new Error('Erreur lors de la création de la session de paiement');
+
+      const { url } = await response.json();
+
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('URL de paiement non reçue');
+      }
+    } catch (error) {
+      console.error('Error subscribing to extension:', error);
+      alert('Erreur lors de la création de la session de paiement. Veuillez réessayer.');
+    } finally {
+      setProcessingExtension(null);
     }
   };
 
