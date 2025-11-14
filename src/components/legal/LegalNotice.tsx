@@ -1,8 +1,18 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useCompanyLegalInfo } from '../../hooks/useCompanyLegalInfo';
 
 export function LegalNotice() {
   const navigate = useNavigate();
+  const { info, loading } = useCompanyLegalInfo();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-sky-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
@@ -22,23 +32,23 @@ export function LegalNotice() {
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">1. Éditeur du site</h2>
               <div className="space-y-2">
-                <p><strong>Raison sociale :</strong> [Nom de votre société]</p>
-                <p><strong>Forme juridique :</strong> [SAS / SARL / SA]</p>
-                <p><strong>Capital social :</strong> [Montant] €</p>
-                <p><strong>Siège social :</strong> [Adresse complète]</p>
-                <p><strong>SIRET :</strong> [Numéro SIRET]</p>
-                <p><strong>Numéro de TVA intracommunautaire :</strong> [Numéro TVA]</p>
-                <p><strong>Code APE :</strong> [Code APE]</p>
-                <p><strong>RCS :</strong> [RCS Ville]</p>
-                <p><strong>Téléphone :</strong> [Numéro de téléphone]</p>
-                <p><strong>Email :</strong> [contact@votresociete.fr]</p>
+                <p><strong>Raison sociale :</strong> {info.company_name}</p>
+                <p><strong>Forme juridique :</strong> {info.legal_form}</p>
+                <p><strong>Capital social :</strong> {info.capital.toLocaleString('fr-FR')} €</p>
+                <p><strong>Siège social :</strong> {info.address}</p>
+                <p><strong>SIRET :</strong> {info.siret}</p>
+                <p><strong>Numéro de TVA intracommunautaire :</strong> {info.vat_number}</p>
+                <p><strong>Code APE :</strong> {info.ape_code}</p>
+                <p><strong>RCS :</strong> {info.rcs}</p>
+                <p><strong>Téléphone :</strong> {info.phone}</p>
+                <p><strong>Email :</strong> <a href={`mailto:${info.email}`} className="text-sky-600 hover:text-sky-700">{info.email}</a></p>
               </div>
             </section>
 
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">2. Directeur de la publication</h2>
-              <p><strong>Nom :</strong> [Nom et Prénom du directeur]</p>
-              <p><strong>Fonction :</strong> [Président / Gérant / Directeur Général]</p>
+              <p><strong>Nom :</strong> {info.director_name}</p>
+              <p><strong>Fonction :</strong> {info.director_title}</p>
             </section>
 
             <section>
@@ -57,12 +67,12 @@ export function LegalNotice() {
               <h2 className="text-xl font-semibold text-gray-900 mb-4">4. Propriété intellectuelle</h2>
               <p className="mb-4">
                 L'ensemble du contenu de ce site (structure, textes, logos, images, éléments graphiques, etc.)
-                est la propriété exclusive de [Nom de votre société], sauf mentions particulières.
+                est la propriété exclusive de {info.company_name}, sauf mentions particulières.
               </p>
               <p className="mb-4">
                 Toute reproduction, distribution, modification, adaptation, retransmission ou publication,
                 même partielle, de ces différents éléments est strictement interdite sans l'accord écrit préalable
-                de [Nom de votre société].
+                de {info.company_name}.
               </p>
               <p>
                 Cette interdiction s'étend aux contenus mis à disposition des utilisateurs.
@@ -83,8 +93,8 @@ export function LegalNotice() {
                 veuillez consulter notre <a href="/privacy-policy" className="text-sky-600 hover:text-sky-700 underline">Politique de Confidentialité</a>.
               </p>
               <p>
-                <strong>Responsable du traitement :</strong> [Nom de votre société]<br />
-                <strong>Délégué à la Protection des Données (DPO) :</strong> [Email DPO ou contact]
+                <strong>Responsable du traitement :</strong> {info.company_name}<br />
+                <strong>Délégué à la Protection des Données (DPO) :</strong> {info.dpo_name} - <a href={`mailto:${info.dpo_email}`} className="text-sky-600 hover:text-sky-700">{info.dpo_email}</a>
               </p>
             </section>
 
@@ -99,12 +109,12 @@ export function LegalNotice() {
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">7. Limitations de responsabilité</h2>
               <p className="mb-4">
-                [Nom de votre société] s'efforce d'assurer l'exactitude et la mise à jour des informations
-                diffusées sur ce site. Toutefois, [Nom de votre société] ne peut garantir l'exactitude,
+                {info.company_name} s'efforce d'assurer l'exactitude et la mise à jour des informations
+                diffusées sur ce site. Toutefois, {info.company_name} ne peut garantir l'exactitude,
                 la précision ou l'exhaustivité des informations mises à disposition sur ce site.
               </p>
               <p className="mb-4">
-                [Nom de votre société] ne pourra être tenu responsable des dommages directs ou indirects
+                {info.company_name} ne pourra être tenu responsable des dommages directs ou indirects
                 résultant de l'utilisation de ce site ou d'autres sites qui lui sont liés.
               </p>
               <p>
@@ -129,9 +139,9 @@ export function LegalNotice() {
                 Pour toute question concernant les présentes mentions légales, vous pouvez nous contacter :
               </p>
               <ul className="list-disc list-inside space-y-2">
-                <li>Par email : <a href="mailto:[contact@votresociete.fr]" className="text-sky-600 hover:text-sky-700">[contact@votresociete.fr]</a></li>
-                <li>Par téléphone : [Numéro de téléphone]</li>
-                <li>Par courrier : [Adresse complète]</li>
+                <li>Par email : <a href={`mailto:${info.email}`} className="text-sky-600 hover:text-sky-700">{info.email}</a></li>
+                <li>Par téléphone : {info.phone}</li>
+                <li>Par courrier : {info.address}</li>
               </ul>
             </section>
 

@@ -1,8 +1,18 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useCompanyLegalInfo } from '../../hooks/useCompanyLegalInfo';
 
 export function PrivacyPolicy() {
   const navigate = useNavigate();
+  const { info, loading } = useCompanyLegalInfo();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-sky-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
@@ -22,7 +32,7 @@ export function PrivacyPolicy() {
             <section>
               <h2 className="text-xl font-semibold text-gray-900 mb-4">1. Introduction</h2>
               <p className="mb-4">
-                La présente politique de confidentialité décrit comment [Nom de votre société] collecte,
+                La présente politique de confidentialité décrit comment {info.company_name} collecte,
                 utilise, partage et protège vos données personnelles dans le cadre de l'utilisation de
                 DentalCloud, notre application de gestion pour laboratoires dentaires.
               </p>
@@ -32,9 +42,9 @@ export function PrivacyPolicy() {
                 et à la loi Informatique et Libertés modifiée.
               </p>
               <p>
-                <strong>Responsable du traitement :</strong> [Nom de votre société]<br />
-                <strong>Contact :</strong> [contact@votresociete.fr]<br />
-                <strong>Délégué à la Protection des Données (DPO) :</strong> [dpo@votresociete.fr]
+                <strong>Responsable du traitement :</strong> {info.company_name}<br />
+                <strong>Contact :</strong> <a href={`mailto:${info.email}`} className="text-sky-600 hover:text-sky-700">{info.email}</a><br />
+                <strong>Délégué à la Protection des Données (DPO) :</strong> <a href={`mailto:${info.dpo_email}`} className="text-sky-600 hover:text-sky-700">{info.dpo_email}</a>
               </p>
             </section>
 
@@ -152,7 +162,7 @@ export function PrivacyPolicy() {
                 <p>Vos données personnelles sont destinées :</p>
 
                 <ul className="list-disc list-inside space-y-2 ml-4">
-                  <li><strong>Personnels autorisés de [Nom de votre société]</strong> : Équipes techniques, support client, service commercial</li>
+                  <li><strong>Personnels autorisés de {info.company_name}</strong> : Équipes techniques, support client, service commercial</li>
                   <li><strong>Supabase Inc.</strong> : Hébergement et infrastructure (données hébergées en Union Européenne)</li>
                   <li><strong>Prestataires de paiement</strong> : Stripe (si applicable) pour le traitement des paiements</li>
                   <li><strong>Autorités fiscales</strong> : En cas de contrôle fiscal (obligation légale)</li>
@@ -327,8 +337,8 @@ export function PrivacyPolicy() {
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-sm ml-4">
                   <li>Accéder à l&apos;interface &quot;Paramètres&quot; &gt; &quot;Mes données RGPD&quot; dans votre compte</li>
-                  <li>Nous contacter par email : <a href="mailto:[dpo@votresociete.fr]" className="text-sky-600 hover:text-sky-700">[dpo@votresociete.fr]</a></li>
-                  <li>Nous écrire : [Adresse postale complète]</li>
+                  <li>Nous contacter par email : <a href={`mailto:${info.dpo_email}`} className="text-sky-600 hover:text-sky-700">{info.dpo_email}</a></li>
+                  <li>Nous écrire : {info.address}</li>
                 </ul>
                 <p className="text-sm mt-3 text-gray-600">
                   Nous vous répondrons dans un délai maximum d'un mois à compter de la réception de votre demande.
@@ -377,12 +387,12 @@ export function PrivacyPolicy() {
               </p>
 
               <div className="p-4 bg-gray-50 rounded-lg">
-                <p><strong>Responsable du traitement :</strong> [Nom de votre société]</p>
-                <p><strong>Délégué à la Protection des Données :</strong> [Nom du DPO]</p>
-                <p><strong>Email DPO :</strong> <a href="mailto:[dpo@votresociete.fr]" className="text-sky-600 hover:text-sky-700">[dpo@votresociete.fr]</a></p>
-                <p><strong>Email général :</strong> <a href="mailto:[contact@votresociete.fr]" className="text-sky-600 hover:text-sky-700">[contact@votresociete.fr]</a></p>
-                <p><strong>Téléphone :</strong> [Numéro de téléphone]</p>
-                <p><strong>Adresse :</strong> [Adresse postale complète]</p>
+                <p><strong>Responsable du traitement :</strong> {info.company_name}</p>
+                <p><strong>Délégué à la Protection des Données :</strong> {info.dpo_name}</p>
+                <p><strong>Email DPO :</strong> <a href={`mailto:${info.dpo_email}`} className="text-sky-600 hover:text-sky-700">{info.dpo_email}</a></p>
+                <p><strong>Email général :</strong> <a href={`mailto:${info.email}`} className="text-sky-600 hover:text-sky-700">{info.email}</a></p>
+                <p><strong>Téléphone :</strong> {info.phone}</p>
+                <p><strong>Adresse :</strong> {info.address}</p>
               </div>
             </section>
 

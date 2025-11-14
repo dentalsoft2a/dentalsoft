@@ -6,6 +6,7 @@ import {
   generateConformiteLegalePDF,
   generateGuideUtilisateurPDF
 } from '../../utils/documentationPdfGenerator';
+import { useCompanyLegalInfo } from '../../hooks/useCompanyLegalInfo';
 
 interface Profile {
   laboratory_name: string;
@@ -19,6 +20,7 @@ export function ComplianceCertificate() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [certificate, setCertificate] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const { info: companyInfo } = useCompanyLegalInfo();
 
   useEffect(() => {
     loadData();
@@ -80,6 +82,28 @@ Email: ${profile?.laboratory_email || '[À compléter]'}
 Téléphone: ${profile?.laboratory_phone || '[À compléter]'}
 
 Date de souscription: ${currentDate}
+
+═══════════════════════════════════════════════════════════════
+
+IDENTIFICATION DE L'ÉDITEUR
+
+Raison sociale: ${companyInfo.company_name}
+Forme juridique: ${companyInfo.legal_form}
+Capital social: ${companyInfo.capital.toLocaleString('fr-FR')} €
+SIRET: ${companyInfo.siret}
+RCS: ${companyInfo.rcs}
+Numéro TVA: ${companyInfo.vat_number}
+Code APE: ${companyInfo.ape_code}
+Adresse: ${companyInfo.address}
+Téléphone: ${companyInfo.phone}
+Email: ${companyInfo.email}
+
+Directeur de publication: ${companyInfo.director_name}
+Fonction: ${companyInfo.director_title}
+
+Délégué à la Protection des Données:
+Nom: ${companyInfo.dpo_name}
+Email: ${companyInfo.dpo_email}
 
 ═══════════════════════════════════════════════════════════════
 
@@ -172,8 +196,10 @@ Cette attestation est valable pour:
 CONTACT ÉDITEUR
 
 Support conformité:
-Email: conformite@dentalcloud.fr
-Téléphone: [Support]
+Email: ${companyInfo.email}
+Téléphone: ${companyInfo.phone}
+
+Siège social: ${companyInfo.address}
 
 ═══════════════════════════════════════════════════════════════
 

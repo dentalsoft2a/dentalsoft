@@ -1,8 +1,18 @@
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useCompanyLegalInfo } from '../../hooks/useCompanyLegalInfo';
 
 export function TermsOfService() {
   const navigate = useNavigate();
+  const { info, loading } = useCompanyLegalInfo();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-sky-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-white to-blue-50">
@@ -24,7 +34,7 @@ export function TermsOfService() {
               <p className="mb-4">
                 Les présentes Conditions Générales d'Utilisation (ci-après "CGU") ont pour objet de définir
                 les modalités et conditions d'utilisation du service DentalCloud (ci-après "le Service")
-                proposé par [Nom de votre société] (ci-après "l'Éditeur").
+                proposé par {info.company_name} (ci-après "l'Éditeur").
               </p>
               <p className="mb-4">
                 DentalCloud est une application web de gestion destinée aux laboratoires de prothèses dentaires,
@@ -411,7 +421,7 @@ export function TermsOfService() {
                   </p>
                   <p>
                     À défaut d'accord amiable dans un délai de 60 jours, le litige sera porté devant
-                    les tribunaux compétents de [Ville du siège social de l'Éditeur].
+                    les tribunaux compétents de {info.address.split(',')[info.address.split(',').length - 1].trim()} conformément aux règles de compétence en vigueur.
                   </p>
                 </div>
 
@@ -431,9 +441,9 @@ export function TermsOfService() {
 
               <div className="p-4 bg-gray-50 rounded-lg">
                 <p className="mb-2">Pour toute question concernant les présentes CGU ou le Service :</p>
-                <p><strong>Email :</strong> <a href="mailto:[support@votresociete.fr]" className="text-sky-600 hover:text-sky-700">[support@votresociete.fr]</a></p>
-                <p><strong>Téléphone :</strong> [Numéro de téléphone]</p>
-                <p><strong>Adresse :</strong> [Adresse postale complète]</p>
+                <p><strong>Email :</strong> <a href={`mailto:${info.email}`} className="text-sky-600 hover:text-sky-700">{info.email}</a></p>
+                <p><strong>Téléphone :</strong> {info.phone}</p>
+                <p><strong>Adresse :</strong> {info.address}</p>
                 <p><strong>Horaires du support :</strong> Lundi au vendredi, 9h-18h (hors jours fériés)</p>
               </div>
             </section>
