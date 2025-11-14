@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useExtensions } from '../../hooks/useExtensions';
-import { Package, Check, X, Calendar, CreditCard, ChevronRight, Sparkles, Lock } from 'lucide-react';
+import { Package, Check, X, Calendar, CreditCard, ChevronRight, Sparkles, Lock, AlertCircle } from 'lucide-react';
 import * as Icons from 'lucide-react';
 
 interface Extension {
@@ -32,6 +32,7 @@ interface UserExtension {
   expiry_date: string | null;
   auto_renew: boolean;
   cancelled_at: string | null;
+  stripe_subscription_id?: string | null;
 }
 
 export default function ExtensionsPage() {
@@ -39,11 +40,13 @@ export default function ExtensionsPage() {
   const { extensions, userExtensions, loading, reloadExtensions, hasUnlockAllAccess } = useExtensions();
   const [features, setFeatures] = useState<ExtensionFeature[]>([]);
   const [processingExtension, setProcessingExtension] = useState<string | null>(null);
+  const [extensionsWillCancel, setExtensionsWillCancel] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadFeatures();
     checkPaymentStatus();
-  }, []);
+    checkExtensionsCancellation();
+  }, [userExtensions]);
 
   const checkPaymentStatus = () => {
     const params = new URLSearchParams(window.location.hash.split('?')[1]);
@@ -69,6 +72,38 @@ export default function ExtensionsPage() {
     if (!error && data) {
       setFeatures(data);
     }
+  };
+
+  const checkExtensionsCancellation = async () => {
+    const activeExtensionsWithStripe = userExtensions.filter(
+      ue => ue.status === 'active' && ue.stripe_subscription_id
+    );
+
+    const cancellationStatus: Record<string, boolean> = {};
+
+    for (const userExt of activeExtensionsWithStripe) {
+      try {
+        const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-subscription-status`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+          },
+          body: JSON.stringify({ subscriptionId: userExt.stripe_subscription_id })
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.cancel_at_period_end) {
+            cancellationStatus[userExt.extension_id] = true;
+          }
+        }
+      } catch (error) {
+        console.error('Error checking extension cancellation:', error);
+      }
+    }
+
+    setExtensionsWillCancel(cancellationStatus);
   };
 
   const getIconComponent = (iconName: string) => {
@@ -182,7 +217,8 @@ export default function ExtensionsPage() {
         throw new Error(errorData.error || 'Erreur lors de l\'annulation de l\'abonnement');
       }
 
-      alert('Abonnement annulé avec succès sur Stripe');
+      alert('Votre abonnement à cette extension a été résilié avec succès. Vous conserverez l\'accès jusqu\'à la fin de la période payée.');
+      await checkExtensionsCancellation();
       reloadExtensions();
     } catch (error) {
       console.error('Error cancelling subscription:', error);
@@ -276,27 +312,44 @@ export default function ExtensionsPage() {
 
               const IconComponent = getIconComponent(extension.icon);
               const expiryDate = userExt.expiry_date ? new Date(userExt.expiry_date) : null;
+              const willCancel = extensionsWillCancel[userExt.extension_id] || false;
 
               return (
-                <div key={userExt.id} className="bg-white rounded-lg p-4 shadow-sm border border-blue-200">
+                <div key={userExt.id} className={`rounded-lg p-4 shadow-sm border-2 ${
+                  willCancel ? 'bg-orange-50 border-orange-200' : 'bg-white border-blue-200'
+                }`}>
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <IconComponent className="w-5 h-5 text-blue-600" />
+                    <div className={`p-2 rounded-lg ${
+                      willCancel ? 'bg-orange-100' : 'bg-blue-100'
+                    }`}>
+                      {willCancel ? (
+                        <AlertCircle className="w-5 h-5 text-orange-600" />
+                      ) : (
+                        <IconComponent className="w-5 h-5 text-blue-600" />
+                      )}
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{extension.name}</h3>
-                      <p className="text-xs text-gray-500">
-                        {expiryDate ? `Expire le ${expiryDate.toLocaleDateString('fr-FR')}` : 'Actif'}
+                      <p className={`text-xs ${
+                        willCancel ? 'text-orange-700' : 'text-gray-500'
+                      }`}>
+                        {willCancel ? (
+                          `Actif jusqu'au ${expiryDate?.toLocaleDateString('fr-FR') || 'fin de période'} (annulation programmée)`
+                        ) : (
+                          expiryDate ? `Expire le ${expiryDate.toLocaleDateString('fr-FR')}` : 'Actif'
+                        )}
                       </p>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleCancelSubscription(extension.id)}
-                    disabled={processingExtension === extension.id}
-                    className="w-full mt-2 px-3 py-1.5 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 disabled:opacity-50"
-                  >
-                    Annuler l'abonnement
-                  </button>
+                  {!willCancel && (
+                    <button
+                      onClick={() => handleCancelSubscription(extension.id)}
+                      disabled={processingExtension === extension.id}
+                      className="w-full mt-2 px-3 py-1.5 text-sm text-red-600 bg-red-50 rounded-lg hover:bg-red-100 disabled:opacity-50"
+                    >
+                      Annuler l'abonnement
+                    </button>
+                  )}
                 </div>
               );
             })}

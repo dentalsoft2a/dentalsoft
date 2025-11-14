@@ -61,16 +61,16 @@ Deno.serve(async (req: Request) => {
 
       stripeSubscriptionId = userExtension.stripe_subscription_id;
 
-      console.log("Cancelling extension Stripe subscription:", stripeSubscriptionId);
+      console.log("Cancelling extension Stripe subscription at period end:", stripeSubscriptionId);
 
-      await stripe.subscriptions.cancel(stripeSubscriptionId);
+      await stripe.subscriptions.update(stripeSubscriptionId, {
+        cancel_at_period_end: true,
+      });
 
       const { error: updateError } = await supabase
         .from("user_extensions")
         .update({
-          status: "cancelled",
           auto_renew: false,
-          cancelled_at: new Date().toISOString(),
         })
         .eq("id", userExtensionId);
 
