@@ -1,21 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { AlertTriangle } from 'lucide-react';
 
 export function ServerStatusMonitor() {
   const [isOffline, setIsOffline] = useState(false);
-  const [checkCount, setCheckCount] = useState(0);
-  const [retryInterval, setRetryInterval] = useState(10000);
+  const checkCountRef = useRef(0);
+  const intervalIdRef = useRef<NodeJS.Timeout | null>(null);
+  const isOfflineRef = useRef(false);
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
-    let timeoutId: NodeJS.Timeout;
-
     const checkServerStatus = async () => {
       let hasError = false;
+      let timeoutId: NodeJS.Timeout;
 
       try {
-        // Check Supabase connection with timeout
         const timeoutPromise = new Promise((_, reject) => {
           timeoutId = setTimeout(() => reject(new Error('Connection timeout')), 8000);
         });
@@ -26,7 +24,8 @@ export function ServerStatusMonitor() {
           .limit(1);
 
         const { error } = await Promise.race([supabaseCheck, timeoutPromise]) as any;
-        clearTimeout(timeoutId);
+
+        if (timeoutId) clearTimeout(timeoutId);
 
         if (error) {
           console.error('Supabase check error:', error);
@@ -38,59 +37,69 @@ export function ServerStatusMonitor() {
       }
 
       if (hasError) {
-        setCheckCount(prev => {
-          const newCount = prev + 1;
-          if (newCount >= 2) {
-            setIsOffline(true);
-            setRetryInterval(5000);
-          }
-          return newCount;
-        });
-      } else {
-        const wasOffline = isOffline;
-        setIsOffline(false);
-        setCheckCount(0);
-        setRetryInterval(10000);
+        checkCountRef.current += 1;
+        console.log(`❌ Échec de connexion ${checkCountRef.current}/2`);
 
-        if (wasOffline) {
+        if (checkCountRef.current >= 2 && !isOfflineRef.current) {
+          console.log('🚨 Affichage du message de maintenance');
+          isOfflineRef.current = true;
+          setIsOffline(true);
+
+          if (intervalIdRef.current) {
+            clearInterval(intervalIdRef.current);
+          }
+          intervalIdRef.current = setInterval(checkServerStatus, 5000);
+        }
+      } else {
+        if (isOfflineRef.current) {
           console.log('✅ Connexion rétablie avec succès');
         }
+
+        checkCountRef.current = 0;
+        isOfflineRef.current = false;
+        setIsOffline(false);
+
+        if (intervalIdRef.current) {
+          clearInterval(intervalIdRef.current);
+        }
+        intervalIdRef.current = setInterval(checkServerStatus, 10000);
       }
     };
 
     const handleOnline = () => {
       console.log('🌐 Connexion réseau détectée');
+      checkCountRef.current = 0;
+      isOfflineRef.current = false;
       setIsOffline(false);
-      setCheckCount(0);
-      setRetryInterval(10000);
       checkServerStatus();
     };
 
     const handleOffline = () => {
       console.log('❌ Perte de connexion réseau détectée');
-      setCheckCount(prev => prev + 1);
+      checkCountRef.current = 2;
+      isOfflineRef.current = true;
       setIsOffline(true);
-      setRetryInterval(5000);
+
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
+      }
+      intervalIdRef.current = setInterval(checkServerStatus, 5000);
     };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
 
     checkServerStatus();
-
-    intervalId = setInterval(checkServerStatus, retryInterval);
+    intervalIdRef.current = setInterval(checkServerStatus, 10000);
 
     return () => {
-      if (intervalId) {
-        clearInterval(intervalId);
-      }
-      if (timeoutId) {
-        clearTimeout(timeoutId);
+      if (intervalIdRef.current) {
+        clearInterval(intervalIdRef.current);
       }
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
-  }, [retryInterval, isOffline]);
+  }, []);
 
   if (!isOffline) return null;
 

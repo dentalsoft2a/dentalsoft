@@ -4,6 +4,12 @@
 
 Le système de surveillance de connexion détecte automatiquement les pertes de connexion avec la base de données et affiche un message de maintenance professionnel.
 
+## ⚠️ Correctif appliqué (Version finale)
+
+Le composant a été refactoré pour utiliser des `useRef` au lieu de dépendances dans `useEffect`, éliminant ainsi les problèmes de re-render infinis et garantissant que le message reste affiché jusqu'à ce que la connexion soit vraiment rétablie.
+
+**Problème résolu**: Le message ne disparaît plus après 1 seconde - il reste affiché jusqu'à ce que la connexion soit vraiment rétablie.
+
 ## Fonctionnalités
 
 ### Détection automatique
@@ -11,11 +17,13 @@ Le système de surveillance de connexion détecte automatiquement les pertes de 
 - ✅ Vérifie toutes les 5 secondes en cas de perte de connexion (mode récupération)
 - ✅ Timeout de 8 secondes pour détecter les connexions lentes
 - ✅ Nécessite 2 échecs consécutifs avant d'afficher le message (évite les faux positifs)
+- ✅ **Corrigé**: Le message reste affiché de manière stable sans disparaître prématurément
 
 ### Reconnexion automatique
-- ✅ Le message disparaît automatiquement quand la connexion est rétablie
+- ✅ Le message disparaît automatiquement UNIQUEMENT quand la connexion est vraiment rétablie
 - ✅ Écoute les événements réseau du navigateur (online/offline)
 - ✅ Aucune action manuelle requise de l'utilisateur
+- ✅ Logs console pour suivre l'état de la connexion
 
 ### Interface utilisateur
 - ✅ Message en plein écran avec fond flou
