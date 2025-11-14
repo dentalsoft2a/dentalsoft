@@ -172,6 +172,34 @@ export default function ProformasPage() {
 
       if (invoiceError) throw invoiceError;
 
+      // Get proforma items before deleting
+      const { data: proformaItems, error: itemsError } = await supabase
+        .from('proforma_items')
+        .select('*')
+        .eq('proforma_id', proforma.id);
+
+      if (itemsError) throw itemsError;
+
+      // Copy proforma items to invoice items
+      if (proformaItems && proformaItems.length > 0) {
+        const invoiceItems = proformaItems.map(item => ({
+          invoice_id: invoiceData.id,
+          delivery_note_id: item.delivery_note_id,
+          catalog_item_id: item.catalog_item_id,
+          description: item.description,
+          quantity: item.quantity,
+          unit_price: item.unit_price,
+          discount_percentage: item.discount_percentage,
+          subtotal: item.subtotal,
+        }));
+
+        const { error: invoiceItemsError } = await supabase
+          .from('invoice_items')
+          .insert(invoiceItems);
+
+        if (invoiceItemsError) throw invoiceItemsError;
+      }
+
       const { error: linkError } = await supabase
         .from('invoice_proformas')
         .insert({
