@@ -135,7 +135,11 @@ export default function ExtensionsPage() {
         })
       });
 
-      if (!response.ok) throw new Error('Erreur lors de la création de la session de paiement');
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(errorData.error || 'Erreur lors de la création de la session de paiement');
+      }
 
       const { url } = await response.json();
 
@@ -146,7 +150,7 @@ export default function ExtensionsPage() {
       }
     } catch (error) {
       console.error('Error subscribing to extension:', error);
-      alert('Erreur lors de la création de la session de paiement. Veuillez réessayer.');
+      alert(`Erreur lors de la création de la session de paiement: ${(error as Error).message}`);
     } finally {
       setProcessingExtension(null);
     }
