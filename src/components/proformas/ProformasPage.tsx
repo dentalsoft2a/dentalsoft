@@ -181,14 +181,15 @@ export default function ProformasPage() {
 
       if (linkError) throw linkError;
 
-      const { error: updateError } = await supabase
+      // Delete the proforma after converting to invoice
+      const { error: deleteError } = await supabase
         .from('proformas')
-        .update({ status: 'invoiced' })
+        .delete()
         .eq('id', proforma.id);
 
-      if (updateError) throw updateError;
+      if (deleteError) throw deleteError;
 
-      alert(`Facture ${invoiceNumber} créée avec succès!`);
+      alert(`Facture ${invoiceNumber} créée avec succès! La proforma a été supprimée.`);
       await loadProformas();
     } catch (error) {
       console.error('Error converting to invoice:', error);
