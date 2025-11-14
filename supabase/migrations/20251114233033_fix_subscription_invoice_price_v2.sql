@@ -1,18 +1,18 @@
 /*
-  # Fix Subscription Invoice Price
+  # Fix Subscription Invoice Price V2
 
-  Corrects the subscription invoice trigger to use the correct plan price
-  instead of always taking the first plan found.
+  Corrects the subscription invoice calculation - the price_monthly is TTC not HT.
+  We need to calculate HT from TTC.
 
   ## Changes
-  - Update `create_subscription_invoice()` function to use the user's actual subscription_plan_id
-  - Ensures invoices are generated with the correct plan price
+  - Update calculation: amount_ttc = subscription_price (which is already TTC)
+  - Update calculation: amount_ht = amount_ttc / (1 + tax_rate/100)
 */
 
 -- Drop existing trigger
 DROP TRIGGER IF EXISTS trigger_create_subscription_invoice ON user_profiles;
 
--- Update function to use the correct subscription plan price
+-- Update function to calculate HT from TTC price
 CREATE OR REPLACE FUNCTION create_subscription_invoice()
 RETURNS trigger
 LANGUAGE plpgsql
