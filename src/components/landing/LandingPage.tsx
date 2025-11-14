@@ -15,22 +15,53 @@ export function LandingPage() {
     isPWA ? 'login' : 'landing'
   );
   const [price, setPrice] = useState<number>(59.99);
+  const [premiumPrice, setPremiumPrice] = useState<number>(99.99);
+  const [totalExtensionsPrice, setTotalExtensionsPrice] = useState<number>(0);
   const [contactPhone, setContactPhone] = useState<string>('');
 
   useEffect(() => {
-    loadPrice();
+    loadPrices();
     loadContactPhone();
   }, []);
 
-  const loadPrice = async () => {
-    const { data } = await supabase
-      .from('subscription_plans')
-      .select('price_monthly')
-      .eq('is_active', true)
-      .maybeSingle();
+  const loadPrices = async () => {
+    const [plansRes, extensionsRes] = await Promise.all([
+      supabase
+        .from('subscription_plans')
+        .select('plan_type, price_monthly')
+        .eq('is_active', true)
+        .order('price_monthly'),
+      supabase
+        .from('extensions')
+        .select('monthly_price')
+        .eq('is_active', true)
+    ]);
 
-    if (data && data.price_monthly) {
-      setPrice(typeof data.price_monthly === 'string' ? parseFloat(data.price_monthly) : data.price_monthly);
+    if (plansRes.data) {
+      const standardPlan = plansRes.data.find(p => p.plan_type === 'standard');
+      const premiumPlan = plansRes.data.find(p => p.plan_type === 'premium_complete');
+
+      if (standardPlan) {
+        setPrice(typeof standardPlan.price_monthly === 'string'
+          ? parseFloat(standardPlan.price_monthly)
+          : standardPlan.price_monthly);
+      }
+
+      if (premiumPlan) {
+        setPremiumPrice(typeof premiumPlan.price_monthly === 'string'
+          ? parseFloat(premiumPlan.price_monthly)
+          : premiumPlan.price_monthly);
+      }
+    }
+
+    if (extensionsRes.data) {
+      const total = extensionsRes.data.reduce((sum, ext) => {
+        const price = typeof ext.monthly_price === 'string'
+          ? parseFloat(ext.monthly_price)
+          : ext.monthly_price;
+        return sum + price;
+      }, 0);
+      setTotalExtensionsPrice(total);
     }
   };
 
@@ -800,57 +831,119 @@ export function LandingPage() {
           <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
             <div className="text-center mb-6 sm:mb-8 lg:mb-12 px-4">
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 text-slate-900">
-                Tarif unique
+                Choisissez votre plan
               </h2>
               <p className="text-sm sm:text-base lg:text-lg text-slate-600">
-                Un seul prix, toutes les fonctionnalités
+                Standard ou Premium Complet - À vous de décider
               </p>
             </div>
 
-            <div className="max-w-md mx-auto">
+            <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto mb-12">
               <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
                 <div className="bg-gradient-to-br from-slate-50 to-white p-4 sm:p-6 lg:p-8 text-center border-b border-slate-200">
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-3">Plan Standard</h3>
                   <div className="inline-flex items-baseline gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                    <span className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-slate-900">{price.toFixed(2)}€</span>
-                    <span className="text-base sm:text-lg lg:text-xl text-slate-600">/mois</span>
+                    <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900">{price.toFixed(2)}€</span>
+                    <span className="text-base sm:text-lg text-slate-600">/mois</span>
                   </div>
-                  <p className="text-xs sm:text-sm lg:text-base text-slate-600 mt-1 sm:mt-2">Sans engagement</p>
+                  <p className="text-xs sm:text-sm text-slate-600 mt-1 sm:mt-2">Sans engagement</p>
                 </div>
 
                 <div className="p-4 sm:p-6 lg:p-8">
-                  <div className="space-y-2.5 sm:space-y-3 lg:space-y-4 mb-6 sm:mb-8">
+                  <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
                     <div className="flex items-start gap-2 sm:gap-3">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm lg:text-base text-slate-700">Documents illimités</span>
+                      <span className="text-xs sm:text-sm text-slate-700">Toutes les fonctionnalités de base</span>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm lg:text-base text-slate-700">Gestion des stocks</span>
+                      <span className="text-xs sm:text-sm text-slate-700">Documents illimités</span>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm lg:text-base text-slate-700">Tableau de bord</span>
+                      <span className="text-xs sm:text-sm text-slate-700">3 employés inclus</span>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm lg:text-base text-slate-700">Export PDF</span>
+                      <span className="text-xs sm:text-sm text-slate-700">Support standard</span>
                     </div>
                     <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm lg:text-base text-slate-700">Support prioritaire</span>
-                    </div>
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm lg:text-base text-slate-700">Mises à jour auto</span>
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-500 italic">Extensions payantes en supplément</span>
                     </div>
                   </div>
 
                   <button
                     onClick={() => setCurrentView('register')}
-                    className="w-full px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-gradient-to-r from-primary-500 to-cyan-500 text-white text-sm sm:text-base font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 group"
+                    className="w-full px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-gradient-to-r from-slate-600 to-slate-700 text-white text-sm sm:text-base font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 group"
                   >
-                    <span className="hidden sm:inline">Commencer l'essai gratuit</span>
-                    <span className="sm:hidden">Essai gratuit</span>
+                    <span>Commencer</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-amber-50 rounded-2xl sm:rounded-3xl shadow-2xl border-2 border-amber-300 overflow-hidden relative">
+                <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-1 rounded-bl-xl text-xs sm:text-sm font-bold flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 sm:w-4 sm:h-4" />
+                  RECOMMANDÉ
+                </div>
+
+                <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-4 sm:p-6 lg:p-8 text-center border-b border-amber-400">
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Plan Premium Complet</h3>
+                  <div className="inline-flex items-baseline gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                    <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">{premiumPrice.toFixed(2)}€</span>
+                    <span className="text-base sm:text-lg text-white/90">/mois</span>
+                  </div>
+                  <p className="text-xs sm:text-sm text-white/90 mt-1 sm:mt-2">Sans engagement</p>
+
+                  {totalExtensionsPrice > 0 && (
+                    <div className="mt-4 bg-white/20 backdrop-blur rounded-lg p-3">
+                      <p className="text-xs sm:text-sm text-white/90 mb-1">Économisez jusqu'à</p>
+                      <p className="text-2xl sm:text-3xl font-bold text-white">
+                        {(price + totalExtensionsPrice - premiumPrice).toFixed(2)}€/mois
+                      </p>
+                      <p className="text-xs text-white/80 mt-1">
+                        vs {(price + totalExtensionsPrice).toFixed(2)}€ Standard + Toutes les extensions
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="p-4 sm:p-6 lg:p-8 bg-white">
+                  <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">TOUTES les extensions incluses</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700">Tout du Plan Standard</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700">Employés illimités</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700">Support prioritaire</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700">Futures extensions gratuites</span>
+                    </div>
+                    <div className="flex items-start gap-2 sm:gap-3">
+                      <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Accès anticipé aux nouveautés</span>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setCurrentView('register')}
+                    className="w-full px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white text-sm sm:text-base font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 group"
+                  >
+                    <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span>Commencer en Premium</span>
                     <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform" />
                   </button>
                   <p className="text-center text-xs sm:text-sm text-slate-500 mt-3 sm:mt-4">
