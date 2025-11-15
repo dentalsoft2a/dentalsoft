@@ -1,11 +1,19 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { Plus, Edit, Trash2, Search, Save, X, Package, Tag, Euro, CheckCircle2, XCircle, Filter, Archive, AlertTriangle, HelpCircle, BookOpen, Download, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Save, X, Package, Tag, Euro, CheckCircle2, XCircle, Filter, Archive, AlertTriangle, HelpCircle, BookOpen, Download, Upload, List } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
 import type { Database } from '../../lib/database.types';
 
 type CatalogItem = Database['public']['Tables']['catalog_items']['Row'];
+type PredefinedItem = {
+  id: string;
+  name: string;
+  description: string;
+  category: string;
+  default_unit: string;
+  is_active: boolean;
+};
 
 export default function CatalogPage() {
   const { user } = useAuth();
@@ -20,8 +28,12 @@ export default function CatalogPage() {
   const [editingItem, setEditingItem] = useState<CatalogItem | null>(null);
   const [showQuickFill, setShowQuickFill] = useState<{ id: string; name: string; currentStock: number } | null>(null);
   const [quickFillQuantity, setQuickFillQuantity] = useState<number>(0);
+  const [showPredefinedModal, setShowPredefinedModal] = useState(false);
+  const [predefinedItems, setPredefinedItems] = useState<PredefinedItem[]>([]);
+  const [predefinedSearchTerm, setPredefinedSearchTerm] = useState('');
+  const [predefinedCategory, setPredefinedCategory] = useState<string>('all');
 
-  useLockScroll(showModal || showTutorial);
+  useLockScroll(showModal || showTutorial || showPredefinedModal);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -39,6 +51,7 @@ export default function CatalogPage() {
   useEffect(() => {
     loadItems();
     loadResources();
+    loadPredefinedItems();
   }, [user]);
 
   const loadItems = async () => {
@@ -89,6 +102,21 @@ export default function CatalogPage() {
       setItemResources(data || []);
     } catch (error) {
       console.error('Error loading item resources:', error);
+    }
+  };
+
+  const loadPredefinedItems = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('predefined_catalog_items')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setPredefinedItems(data || []);
+    } catch (error) {
+      console.error('Error loading predefined items:', error);
     }
   };
 
@@ -366,6 +394,52 @@ export default function CatalogPage() {
     }
   };
 
+  const handleAddPredefinedItem = async (predefinedItem: PredefinedItem, price: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.from('catalog_items').insert({
+        user_id: user.id,
+        name: predefinedItem.name,
+        description: predefinedItem.description,
+        default_unit: predefinedItem.default_unit,
+        default_price: price,
+        category: predefinedItem.category,
+        is_active: true,
+        track_stock: false,
+        stock_quantity: 0,
+        low_stock_threshold: 10,
+        stock_unit: predefinedItem.default_unit,
+      });
+
+      if (error) throw error;
+      await loadItems();
+    } catch (error) {
+      console.error('Error adding predefined item:', error);
+      alert('Erreur lors de l\'ajout de l\'article');
+    }
+  };
+
+  const predefinedCategories = useMemo(() => {
+    const cats = new Set<string>();
+    predefinedItems.forEach(item => {
+      if (item.category) {
+        cats.add(item.category);
+      }
+    });
+    return Array.from(cats).sort();
+  }, [predefinedItems]);
+
+  const filteredPredefinedItems = predefinedItems.filter((item) => {
+    const matchesSearch = item.name.toLowerCase().includes(predefinedSearchTerm.toLowerCase()) ||
+      item.description?.toLowerCase().includes(predefinedSearchTerm.toLowerCase()) ||
+      item.category?.toLowerCase().includes(predefinedSearchTerm.toLowerCase());
+
+    const matchesCategory = predefinedCategory === 'all' || item.category === predefinedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <div>
       <div className="mb-6 md:mb-8 animate-fade-in">
@@ -377,6 +451,13 @@ export default function CatalogPage() {
             </div>
           </div>
           <div className="flex gap-2 md:gap-3 md:justify-end">
+            <button
+              onClick={() => setShowPredefinedModal(true)}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 md:px-5 md:py-3 bg-white border-2 border-sky-300 text-sky-700 rounded-lg md:rounded-xl hover:bg-sky-50 hover:border-sky-400 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
+            >
+              <List className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+              <span className="hidden sm:inline">Articles prédéfinis</span>
+            </button>
             <button
               onClick={handleExport}
               disabled={items.length === 0}
@@ -1222,6 +1303,142 @@ export default function CatalogPage() {
           </div>
         </div>
       )}
+
+      {showPredefinedModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-sky-600 to-cyan-600 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <List className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Articles prédéfinis</h2>
+                  <p className="text-sky-100 text-sm">Ajoutez rapidement des articles standards</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowPredefinedModal(false);
+                  setPredefinedSearchTerm('');
+                  setPredefinedCategory('all');
+                }}
+                className="text-white/80 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 border-b border-slate-200">
+              <div className="flex flex-col md:flex-row gap-3">
+                <div className="flex-1 relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <input
+                    type="text"
+                    placeholder="Rechercher un article..."
+                    value={predefinedSearchTerm}
+                    onChange={(e) => setPredefinedSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                  />
+                </div>
+                <div className="relative min-w-[200px]">
+                  <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <select
+                    value={predefinedCategory}
+                    onChange={(e) => setPredefinedCategory(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent appearance-none bg-white"
+                  >
+                    <option value="all">Toutes catégories</option>
+                    {predefinedCategories.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <p className="text-sm text-slate-600 mt-3">
+                {filteredPredefinedItems.length} article{filteredPredefinedItems.length > 1 ? 's' : ''} disponible{filteredPredefinedItems.length > 1 ? 's' : ''}
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid gap-3">
+                {filteredPredefinedItems.map((item) => (
+                  <PredefinedItemCard
+                    key={item.id}
+                    item={item}
+                    onAdd={handleAddPredefinedItem}
+                  />
+                ))}
+                {filteredPredefinedItems.length === 0 && (
+                  <div className="text-center py-12">
+                    <Package className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500 text-lg">Aucun article trouvé</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PredefinedItemCard({ item, onAdd }: { item: PredefinedItem; onAdd: (item: PredefinedItem, price: number) => void }) {
+  const [price, setPrice] = useState<number>(0);
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAdd = async () => {
+    if (price < 0) {
+      alert('Le prix ne peut pas être négatif');
+      return;
+    }
+    setIsAdding(true);
+    await onAdd(item, price);
+    setIsAdding(false);
+    setPrice(0);
+  };
+
+  return (
+    <div className="flex items-center gap-4 p-4 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="font-semibold text-slate-900">{item.name}</h3>
+          {item.category && (
+            <span className="px-2 py-0.5 bg-sky-100 text-sky-700 text-xs font-medium rounded-full">
+              {item.category}
+            </span>
+          )}
+        </div>
+        {item.description && (
+          <p className="text-sm text-slate-600">{item.description}</p>
+        )}
+        <p className="text-xs text-slate-500 mt-1">Unité: {item.default_unit}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={price}
+            onChange={(e) => setPrice(Number(e.target.value))}
+            placeholder="Prix"
+            className="w-24 px-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
+          />
+          <Euro className="w-4 h-4 text-slate-500" />
+        </div>
+        <button
+          onClick={handleAdd}
+          disabled={isAdding}
+          className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg hover:from-sky-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4" />
+          Ajouter
+        </button>
+      </div>
     </div>
   );
 }
