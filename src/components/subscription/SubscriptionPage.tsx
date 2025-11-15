@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CreditCard, CheckCircle, Clock, AlertCircle, DollarSign, Key, FileText, Download } from 'lucide-react';
+import { CreditCard, CheckCircle, Clock, AlertCircle, Euro, Key, FileText, Download } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, MessageSquare, DollarSign, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell, Settings, ChevronDown, Gift, Building2, Database, Scale, Package } from 'lucide-react';
+import { Users, MessageSquare, Euro, Activity, Shield, Key, Mail, ArrowLeft, TrendingUp, AlertCircle, Bell, Settings, ChevronDown, Gift, Building2, Database, Scale, Package } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { UsersManagement } from './UsersManagement';
 import { SubscriptionSettings } from './SubscriptionSettings';
@@ -60,7 +60,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
       icon: Users,
       items: [
         { id: 'users' as TabType, label: 'Utilisateurs', icon: Users },
-        { id: 'subscriptions' as TabType, label: 'Abonnements', icon: DollarSign },
+        { id: 'subscriptions' as TabType, label: 'Abonnements', icon: Euro },
         { id: 'extensions' as TabType, label: 'Extensions', icon: Package },
         { id: 'referrals' as TabType, label: 'Affiliations', icon: Gift },
         { id: 'codes' as TabType, label: 'Codes d\'accès', icon: Key }
@@ -117,7 +117,7 @@ export function SuperAdminPanel({ onNavigate }: SuperAdminPanelProps = {}) {
     {
       label: 'Revenus mensuels',
       value: `${stats.monthlyRevenue.toFixed(2)}€`,
-      icon: DollarSign,
+      icon: Euro,
       color: 'from-violet-500 to-violet-600',
       bgColor: 'bg-violet-50',
       trend: '+15%'

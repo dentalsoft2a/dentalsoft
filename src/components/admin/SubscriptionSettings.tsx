@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, DollarSign, CreditCard, Webhook, Copy, CheckCircle, ExternalLink, Crown, Star } from 'lucide-react';
+import { Save, Euro, CreditCard, Webhook, Copy, CheckCircle, ExternalLink, Crown, Star } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 
 interface SubscriptionPlan {
@@ -125,7 +125,7 @@ export function SubscriptionSettings() {
     <div className="space-y-8">
       <div className="bg-gradient-to-br from-primary-50 to-cyan-50 rounded-xl p-6 border border-primary-200">
         <div className="flex items-center gap-3 mb-4">
-          <DollarSign className="w-8 h-8 text-primary-600" />
+          <Euro className="w-8 h-8 text-primary-600" />
           <div>
             <h2 className="text-xl font-bold text-slate-900">Gestion des Abonnements</h2>
             <p className="text-sm text-slate-600">Configurez vos plans d'abonnement et l'intégration Stripe</p>
