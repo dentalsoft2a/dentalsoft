@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import { Plus, Edit, Trash2, Search, Save, X, Box, AlertTriangle, TrendingUp, RefreshCw, Palette, BookOpen, ChevronDown, ChevronUp, HelpCircle, Package, CheckCircle2, Tag, Layers, Download, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Save, X, Box, AlertTriangle, TrendingUp, RefreshCw, Palette, BookOpen, ChevronDown, ChevronUp, HelpCircle, Package, CheckCircle2, Tag, Layers, Download, Upload, List } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -21,6 +21,15 @@ interface Resource {
   updated_at: string;
 }
 
+type PredefinedResource = {
+  id: string;
+  name: string;
+  description: string;
+  unit: string;
+  has_variants: boolean;
+  is_active: boolean;
+};
+
 interface ResourceWithVariantStock extends Resource {
   total_variant_stock?: number;
 }
@@ -41,8 +50,11 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
   const [showBatchLinkManager, setShowBatchLinkManager] = useState<{ id: string; name: string; type: 'resource' | 'variant' } | null>(null);
   const [lowStockVariants, setLowStockVariants] = useState<any[]>([]);
   const [showQuickFill, setShowQuickFill] = useState<{ id: string; name: string; currentStock: number; type: 'resource' | 'variant' } | null>(null);
+  const [showPredefinedModal, setShowPredefinedModal] = useState(false);
+  const [predefinedResources, setPredefinedResources] = useState<PredefinedResource[]>([]);
+  const [predefinedSearchTerm, setPredefinedSearchTerm] = useState('');
 
-  useLockScroll(showModal || !!showVariantManager || !!showBatchLinkManager || !!showQuickFill);
+  useLockScroll(showModal || !!showVariantManager || !!showBatchLinkManager || !!showQuickFill || showPredefinedModal);
   const [quickFillQuantity, setQuickFillQuantity] = useState<number>(0);
   const [showTutorial, setShowTutorial] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,6 +70,7 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
 
   useEffect(() => {
     loadResources();
+    loadPredefinedResources();
 
     const interval = setInterval(() => {
       loadResources();
@@ -128,6 +141,21 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
     }
   };
 
+  const loadPredefinedResources = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('predefined_resources')
+        .select('*')
+        .eq('is_active', true)
+        .order('name', { ascending: true });
+
+      if (error) throw error;
+      setPredefinedResources(data || []);
+    } catch (error) {
+      console.error('Error loading predefined resources:', error);
+    }
+  };
+
   const handleRefresh = () => {
     loadResources(true);
   };
@@ -142,6 +170,11 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
   const filteredResources = resources.filter((resource) =>
     resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     resource.description?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredPredefinedResources = predefinedResources.filter((resource) =>
+    resource.name.toLowerCase().includes(predefinedSearchTerm.toLowerCase()) ||
+    resource.description?.toLowerCase().includes(predefinedSearchTerm.toLowerCase())
   );
 
   const handleOpenModal = (resource?: Resource) => {
@@ -337,6 +370,31 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
     }
   };
 
+  const handleAddPredefinedResource = async (predefinedResource: PredefinedResource, costPerUnit: number) => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase.from('resources').insert({
+        user_id: user.id,
+        name: predefinedResource.name,
+        description: predefinedResource.description,
+        unit: predefinedResource.unit,
+        stock_quantity: 0,
+        low_stock_threshold: 5,
+        cost_per_unit: costPerUnit,
+        is_active: true,
+        track_stock: true,
+        has_variants: predefinedResource.has_variants,
+      });
+
+      if (error) throw error;
+      await loadResources();
+    } catch (error) {
+      console.error('Error adding predefined resource:', error);
+      alert('Erreur lors de l\'ajout de la ressource');
+    }
+  };
+
   const handleQuickFill = async () => {
     if (!showQuickFill || !user) return;
 
@@ -389,6 +447,13 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
               </div>
             </div>
           <div className="flex gap-2 md:gap-3 md:justify-end">
+            <button
+              onClick={() => setShowPredefinedModal(true)}
+              className="flex items-center justify-center gap-1.5 px-3 py-2 md:px-5 md:py-3 bg-white border-2 border-sky-300 text-sky-700 rounded-lg md:rounded-xl hover:bg-sky-50 hover:border-sky-400 transition-all duration-200 hover:scale-105 active:scale-95 text-sm md:text-base font-medium"
+            >
+              <List className="w-4 h-4 md:w-5 md:h-5 flex-shrink-0" />
+              <span className="hidden sm:inline">Ressources prédéfinies</span>
+            </button>
             <button
               onClick={handleExport}
               disabled={resources.length === 0}
@@ -1186,7 +1251,125 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
           </div>
         </div>
       )}
+
+      {showPredefinedModal && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="bg-gradient-to-r from-sky-600 to-cyan-600 px-6 py-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                  <List className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold text-white">Ressources prédéfinies</h2>
+                  <p className="text-sky-100 text-sm">Ajoutez rapidement des ressources standards</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowPredefinedModal(false);
+                  setPredefinedSearchTerm('');
+                }}
+                className="text-white/80 hover:text-white transition-colors"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <div className="p-6 border-b border-slate-200">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Rechercher une ressource..."
+                  value={predefinedSearchTerm}
+                  onChange={(e) => setPredefinedSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                />
+              </div>
+              <p className="text-sm text-slate-600 mt-3">
+                {filteredPredefinedResources.length} ressource{filteredPredefinedResources.length > 1 ? 's' : ''} disponible{filteredPredefinedResources.length > 1 ? 's' : ''}
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="grid gap-3">
+                {filteredPredefinedResources.map((resource) => (
+                  <PredefinedResourceCard
+                    key={resource.id}
+                    resource={resource}
+                    onAdd={handleAddPredefinedResource}
+                  />
+                ))}
+                {filteredPredefinedResources.length === 0 && (
+                  <div className="text-center py-12">
+                    <Box className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                    <p className="text-slate-500 text-lg">Aucune ressource trouvée</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </ExtensionGuard>
+  );
+}
+
+function PredefinedResourceCard({ resource, onAdd }: { resource: PredefinedResource; onAdd: (resource: PredefinedResource, costPerUnit: number) => void }) {
+  const [costPerUnit, setCostPerUnit] = useState<number>(0);
+  const [isAdding, setIsAdding] = useState(false);
+
+  const handleAdd = async () => {
+    if (costPerUnit < 0) {
+      alert('Le coût ne peut pas être négatif');
+      return;
+    }
+    setIsAdding(true);
+    await onAdd(resource, costPerUnit);
+    setIsAdding(false);
+    setCostPerUnit(0);
+  };
+
+  return (
+    <div className="flex items-center gap-4 p-4 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-1">
+          <h3 className="font-semibold text-slate-900">{resource.name}</h3>
+          {resource.has_variants && (
+            <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded-full">
+              Avec variantes
+            </span>
+          )}
+        </div>
+        {resource.description && (
+          <p className="text-sm text-slate-600">{resource.description}</p>
+        )}
+        <p className="text-xs text-slate-500 mt-1">Unité: {resource.unit}</p>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1">
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={costPerUnit}
+            onChange={(e) => setCostPerUnit(Number(e.target.value))}
+            placeholder="Coût"
+            className="w-24 px-3 py-1.5 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 text-sm"
+          />
+          <span className="text-slate-500 text-sm">€</span>
+        </div>
+        <button
+          onClick={handleAdd}
+          disabled={isAdding}
+          className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-sky-600 to-cyan-600 text-white rounded-lg hover:from-sky-700 hover:to-cyan-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium whitespace-nowrap"
+        >
+          <Plus className="w-4 h-4" />
+          Ajouter
+        </button>
+      </div>
+    </div>
   );
 }
