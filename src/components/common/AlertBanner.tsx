@@ -65,27 +65,43 @@ export default function AlertBanner() {
     switch (alert.type) {
       case 'info':
         return {
-          bg: 'bg-blue-50 border-blue-200',
-          text: 'text-blue-800',
-          icon: <Info className="w-5 h-5 text-blue-600 flex-shrink-0" />,
+          bg: 'bg-gradient-to-r from-blue-50 to-blue-50/50',
+          border: 'border-blue-200/60',
+          text: 'text-blue-900',
+          iconBg: 'bg-blue-100',
+          iconColor: 'text-blue-600',
+          closeHover: 'hover:bg-blue-100',
+          icon: <Info className="w-5 h-5" />,
         };
       case 'warning':
         return {
-          bg: 'bg-yellow-50 border-yellow-200',
-          text: 'text-yellow-800',
-          icon: <AlertTriangle className="w-5 h-5 text-yellow-600 flex-shrink-0" />,
+          bg: 'bg-gradient-to-r from-amber-50 to-amber-50/50',
+          border: 'border-amber-200/60',
+          text: 'text-amber-900',
+          iconBg: 'bg-amber-100',
+          iconColor: 'text-amber-600',
+          closeHover: 'hover:bg-amber-100',
+          icon: <AlertTriangle className="w-5 h-5" />,
         };
       case 'error':
         return {
-          bg: 'bg-red-50 border-red-200',
-          text: 'text-red-800',
-          icon: <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />,
+          bg: 'bg-gradient-to-r from-red-50 to-red-50/50',
+          border: 'border-red-200/60',
+          text: 'text-red-900',
+          iconBg: 'bg-red-100',
+          iconColor: 'text-red-600',
+          closeHover: 'hover:bg-red-100',
+          icon: <AlertCircle className="w-5 h-5" />,
         };
       case 'success':
         return {
-          bg: 'bg-green-50 border-green-200',
-          text: 'text-green-800',
-          icon: <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />,
+          bg: 'bg-gradient-to-r from-emerald-50 to-emerald-50/50',
+          border: 'border-emerald-200/60',
+          text: 'text-emerald-900',
+          iconBg: 'bg-emerald-100',
+          iconColor: 'text-emerald-600',
+          closeHover: 'hover:bg-emerald-100',
+          icon: <CheckCircle className="w-5 h-5" />,
         };
     }
   };
@@ -93,19 +109,25 @@ export default function AlertBanner() {
   const styles = getAlertStyles();
 
   return (
-    <div className={`${styles.bg} border ${styles.text} rounded-lg p-4 mb-6`}>
-      <div className="flex items-start gap-3">
-        {styles.icon}
-        <div className="flex-1">
-          <h3 className="font-semibold mb-1">{alert.title}</h3>
-          <p className="text-sm">{alert.message}</p>
+    <div className={`${styles.bg} ${styles.border} border backdrop-blur-sm rounded-xl shadow-sm p-4 mb-6 transition-all duration-300 hover:shadow-md`}>
+      <div className="flex items-start gap-4">
+        <div className={`${styles.iconBg} ${styles.iconColor} p-2 rounded-lg flex-shrink-0`}>
+          {styles.icon}
+        </div>
+        <div className="flex-1 min-w-0">
+          <h3 className={`font-semibold text-base mb-1 ${styles.text}`}>
+            {alert.title}
+          </h3>
+          <p className={`text-sm ${styles.text} opacity-90 leading-relaxed`}>
+            {alert.message}
+          </p>
         </div>
         <button
           onClick={() => setDismissed(true)}
-          className="p-1 hover:bg-white/50 rounded transition-colors"
+          className={`${styles.closeHover} ${styles.iconColor} p-2 rounded-lg transition-colors flex-shrink-0`}
           aria-label="Fermer"
         >
-          <X className="w-5 h-5" />
+          <X className="w-4 h-4" />
         </button>
       </div>
     </div>
