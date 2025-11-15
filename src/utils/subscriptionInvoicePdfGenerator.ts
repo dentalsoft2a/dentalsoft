@@ -1,6 +1,22 @@
 import jsPDF from 'jspdf';
 import { supabase } from '../lib/supabase';
 
+async function loadLogoAsBase64(): Promise<string> {
+  try {
+    const response = await fetch('/logo.png');
+    const blob = await response.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch (error) {
+    console.error('Error loading logo:', error);
+    return '';
+  }
+}
+
 interface CompanyInfo {
   company_name: string;
   company_address: string;
@@ -82,6 +98,8 @@ export async function generateSubscriptionInvoicePDF(invoiceId: string) {
       laboratory_rcs: 'N/A'
     };
 
+    const logoBase64 = await loadLogoAsBase64();
+
     const pdf = new jsPDF();
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
@@ -92,15 +110,25 @@ export async function generateSubscriptionInvoicePDF(invoiceId: string) {
     pdf.setFillColor(249, 250, 251);
     pdf.rect(0, 0, pageWidth, 50, 'F');
 
-    // Logo area with accent color
-    pdf.setFillColor(59, 130, 246);
-    pdf.roundedRect(margin, yPos, 8, 8, 2, 2, 'F');
+    // Logo
+    if (logoBase64) {
+      try {
+        pdf.addImage(logoBase64, 'PNG', margin, yPos - 2, 12, 12);
+      } catch (error) {
+        console.error('Error adding logo to PDF:', error);
+        pdf.setFillColor(59, 130, 246);
+        pdf.roundedRect(margin, yPos, 8, 8, 2, 2, 'F');
+      }
+    } else {
+      pdf.setFillColor(59, 130, 246);
+      pdf.roundedRect(margin, yPos, 8, 8, 2, 2, 'F');
+    }
 
     // Company name next to logo
     pdf.setFontSize(16);
     pdf.setFont('helvetica', 'bold');
     pdf.setTextColor(15, 23, 42);
-    pdf.text(company.company_name || 'DentalCloud', margin + 12, yPos + 6);
+    pdf.text(company.company_name || 'DentalCloud', margin + 15, yPos + 6);
 
     // Invoice title and number aligned to right
     pdf.setFontSize(10);

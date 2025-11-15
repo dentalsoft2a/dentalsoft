@@ -87,7 +87,7 @@
     </div>
 
     <script>
-        function generateTestInvoice() {
+        async function generateTestInvoice() {
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF();
             const pageWidth = pdf.internal.pageSize.getWidth();
@@ -99,15 +99,27 @@
             pdf.setFillColor(249, 250, 251);
             pdf.rect(0, 0, pageWidth, 50, 'F');
 
-            // Logo area with accent color
-            pdf.setFillColor(59, 130, 246);
-            pdf.roundedRect(margin, yPos, 8, 8, 2, 2, 'F');
+            // Try to load and add logo
+            try {
+                const response = await fetch('/logo.png');
+                const blob = await response.blob();
+                const logoBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onloadend = () => resolve(reader.result);
+                    reader.readAsDataURL(blob);
+                });
+                pdf.addImage(logoBase64, 'PNG', margin, yPos - 2, 12, 12);
+            } catch (error) {
+                console.error('Could not load logo, using fallback', error);
+                pdf.setFillColor(59, 130, 246);
+                pdf.roundedRect(margin, yPos, 8, 8, 2, 2, 'F');
+            }
 
             // Company name next to logo
             pdf.setFontSize(16);
             pdf.setFont('helvetica', 'bold');
             pdf.setTextColor(15, 23, 42);
-            pdf.text('DentalCloud SAS', margin + 12, yPos + 6);
+            pdf.text('DentalCloud SAS', margin + 15, yPos + 6);
 
             // Invoice title and number aligned to right
             pdf.setFontSize(10);
