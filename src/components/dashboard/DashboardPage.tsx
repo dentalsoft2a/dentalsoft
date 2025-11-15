@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User, Calendar, CheckCircle, Download, BarChart3, Filter, X, AlertTriangle, Archive, Save, DollarSign, Check, Play } from 'lucide-react';
+import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User, Calendar, CheckCircle, Download, BarChart3, Filter, X, AlertTriangle, Archive, Save, Euro, Check, Play } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -1206,7 +1206,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
         <div className="mb-8 bg-white rounded-2xl shadow-lg border border-red-200/50 p-6 hover:shadow-xl transition-all duration-300 animate-slide-in">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2.5 rounded-xl bg-gradient-to-br from-red-500 to-orange-500 shadow-lg">
-              <DollarSign className="w-6 h-6 text-white" />
+              <Euro className="w-6 h-6 text-white" />
             </div>
             <div>
               <h2 className="text-xl font-bold text-slate-900">Factures impayées</h2>
