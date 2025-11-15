@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, useRef } from 'react';
-import { Plus, Edit, Trash2, Search, Save, X, Package, Tag, DollarSign, CheckCircle2, XCircle, Filter, Archive, AlertTriangle, HelpCircle, BookOpen, Download, Upload } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, Save, X, Package, Tag, Euro, CheckCircle2, XCircle, Filter, Archive, AlertTriangle, HelpCircle, BookOpen, Download, Upload } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -586,7 +586,7 @@ export default function CatalogPage() {
                 <div className="pt-4 border-t border-slate-100 space-y-3">
                   <div className="flex items-center gap-2">
                     <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-500 rounded-lg flex items-center justify-center">
-                      <DollarSign className="w-4 h-4 text-white" />
+                      <Euro className="w-4 h-4 text-white" />
                     </div>
                     <div>
                       <p className="text-xs text-slate-500">Prix par défaut</p>
@@ -1068,7 +1068,7 @@ export default function CatalogPage() {
 
               <section className="bg-slate-50 border border-slate-200 rounded-lg p-5">
                 <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-slate-600" />
+                  <Euro className="w-5 h-5 text-slate-600" />
                   Configuration des ressources
                 </h3>
                 <div className="space-y-3">
