@@ -52,11 +52,20 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
 
   const loadBothLists = async () => {
     setLoading(true);
-    await Promise.all([loadUsers(), loadDentists()]);
+    // Charger d'abord les dentistes, puis les laboratoires pour pouvoir filtrer correctement
+    await loadDentists();
+    await loadUsers();
     setLoading(false);
   };
 
   const loadUsers = async () => {
+    // Charger d'abord les IDs des dentistes pour les exclure
+    const { data: dentistData } = await supabase
+      .from('dentist_accounts')
+      .select('id');
+
+    const dentistIds = (dentistData || []).map(d => d.id);
+
     let query = supabase
       .from('user_profiles')
       .select('*')
@@ -71,11 +80,8 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
     if (error) {
       console.error('Error loading users:', error);
     } else {
-      // Filtrer pour exclure les dentistes (au cas où ils seraient dans user_profiles)
-      const filteredData = (data || []).filter(user => {
-        // Exclure les utilisateurs qui ont un compte dentiste
-        return !dentists.some(dentist => dentist.id === user.id);
-      });
+      // Filtrer pour exclure les dentistes
+      const filteredData = (data || []).filter(user => !dentistIds.includes(user.id));
       setUsers(filteredData);
     }
   };
