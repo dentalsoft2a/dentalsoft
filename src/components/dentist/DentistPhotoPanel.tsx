@@ -302,11 +302,11 @@ export default function DentistPhotoPanel() {
 
       {/* Photo Counter Badge */}
       {capturedPhotos.length > 0 && (
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10">
-          <div className="bg-white/20 backdrop-blur-md rounded-full px-6 py-3 border-2 border-white/40 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <Images className="w-6 h-6 text-white" />
-              <span className="text-white font-bold text-xl">{capturedPhotos.length} / {MAX_PHOTOS}</span>
+        <div className="absolute top-24 left-1/2 -translate-x-1/2 z-10">
+          <div className="bg-white/20 backdrop-blur-md rounded-full px-4 py-2 border border-white/40 shadow-xl">
+            <div className="flex items-center gap-2">
+              <Images className="w-4 h-4 text-white" />
+              <span className="text-white font-semibold text-sm">{capturedPhotos.length} / {MAX_PHOTOS}</span>
             </div>
           </div>
         </div>
