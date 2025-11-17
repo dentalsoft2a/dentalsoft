@@ -64,6 +64,25 @@ Deno.serve(async (req: Request) => {
       throw new Error("Cannot delete your own account");
     }
 
+    // Vérifier si c'est un laboratoire ou un dentiste
+    const { data: profile } = await supabaseAdmin
+      .from("profiles")
+      .select("laboratory_name")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const { data: dentist } = await supabaseAdmin
+      .from("dentist_accounts")
+      .select("name, email")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const accountType = profile ? "laboratory" : dentist ? "dentist" : "unknown";
+    const accountName = profile?.laboratory_name || dentist?.name || "Unknown";
+
+    console.log(`Deleting ${accountType} account:`, { userId, accountName });
+
+    // Supprimer le compte auth - la cascade DELETE s'occupera du reste
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
       userId
     );
@@ -72,8 +91,15 @@ Deno.serve(async (req: Request) => {
       throw deleteError;
     }
 
+    console.log(`Successfully deleted ${accountType} account:`, { userId, accountName });
+
     return new Response(
-      JSON.stringify({ success: true, message: "User deleted successfully" }),
+      JSON.stringify({
+        success: true,
+        message: `${accountType === "laboratory" ? "Laboratoire" : "Dentiste"} supprimé avec succès`,
+        accountType,
+        accountName
+      }),
       {
         headers: {
           ...corsHeaders,

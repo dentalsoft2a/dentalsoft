@@ -212,29 +212,51 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
   };
 
   const deleteDentist = async (dentistId: string, dentistName: string) => {
-    if (!confirm(`Êtes-vous sûr de vouloir supprimer le dentiste ${dentistName} ?\n\nCette action supprimera également toutes les soumissions de photos associées.`)) {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer le dentiste ${dentistName} ?\n\nCette action est irréversible et supprimera :\n- Le compte dentiste\n- Le compte d'authentification\n- Toutes les soumissions de photos\n- Toutes les demandes de devis\n- Tous les bons de livraison\n- Tous les fichiers STL\n- Tous les autres enregistrements`)) {
       return;
     }
 
-    const { error } = await supabase
-      .from('dentist_accounts')
-      .delete()
-      .eq('id', dentistId);
+    try {
+      const currentUser = (await supabase.auth.getUser()).data.user;
 
-    if (error) {
+      if (currentUser?.id === dentistId) {
+        alert('Vous ne pouvez pas supprimer votre propre compte');
+        return;
+      }
+
+      await supabase.from('admin_audit_log').insert({
+        admin_id: currentUser?.id,
+        action: 'delete_dentist',
+        target_user_id: dentistId,
+        details: { dentist_name: dentistName }
+      });
+
+      const { data: { session } } = await supabase.auth.getSession();
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session?.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId: dentistId }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Erreur lors de la suppression');
+      }
+
+      alert('Dentiste supprimé avec succès');
+      await loadDentists();
+      onStatsUpdate();
+    } catch (error: any) {
       alert('Erreur lors de la suppression: ' + error.message);
-      return;
     }
-
-    const currentUser = (await supabase.auth.getUser()).data.user;
-    await supabase.from('admin_audit_log').insert({
-      admin_id: currentUser?.id,
-      action: 'delete_dentist',
-      details: { dentist_name: dentistName }
-    });
-
-    alert('Dentiste supprimé avec succès');
-    await loadDentists();
   };
 
   const filteredUsers = users.filter(user =>
