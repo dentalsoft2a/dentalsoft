@@ -353,26 +353,25 @@ export default function DentistPhotoPanel() {
       )}
 
       {/* Action Buttons */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/80 to-transparent p-8">
-        <div className="flex items-center justify-center gap-6">
-          {/* Send Button - Left */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/80 to-transparent p-6">
+        <div className="relative flex items-center justify-center">
+          {/* Send Button - Minimaliste à gauche */}
           {capturedPhotos.length > 0 && (
             <button
               onClick={openSendModal}
               disabled={!canSend}
-              className={`px-8 py-4 rounded-full flex items-center justify-center gap-3 shadow-2xl transition-all font-bold text-lg ${
+              className={`absolute left-4 p-4 rounded-full flex items-center justify-center shadow-2xl transition-all ${
                 canSend
-                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white hover:scale-105 active:scale-95'
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white hover:scale-110 active:scale-95'
                   : 'bg-white/30 text-white/50 cursor-not-allowed'
               }`}
               title={canSend ? 'Envoyer les photos' : `Prenez au moins ${MIN_PHOTOS} photo`}
             >
               <Send className="w-6 h-6" />
-              Envoyer ({capturedPhotos.length})
             </button>
           )}
 
-          {/* Capture Button - Center */}
+          {/* Capture Button - Centre (Principal) */}
           <button
             onClick={capturePhoto}
             disabled={!canCaptureMore}
