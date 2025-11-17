@@ -19,8 +19,11 @@ export default function DentistLoginPage({ onNavigate }: DentistLoginPageProps) 
     setLoading(true);
 
     try {
+      // Normaliser l'email (lowercase et trim)
+      const normalizedEmail = email.trim().toLowerCase();
+
       const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
+        email: normalizedEmail,
         password,
       });
 

@@ -25,9 +25,12 @@ export default function DentistRegisterPage({ onNavigate }: DentistRegisterPageP
       // Importer supabase pour vérifier l'email
       const { supabase } = await import('../../lib/supabase');
 
+      // Normaliser l'email (lowercase et trim)
+      const normalizedEmail = email.trim().toLowerCase();
+
       // Vérifier si l'email existe déjà avant de créer le compte
       const { data: validationData, error: validationError } = await supabase
-        .rpc('validate_dentist_registration', { p_email: email.trim().toLowerCase() });
+        .rpc('validate_dentist_registration', { p_email: normalizedEmail });
 
       if (validationError) {
         throw new Error('Erreur lors de la validation de l\'email');
@@ -37,8 +40,8 @@ export default function DentistRegisterPage({ onNavigate }: DentistRegisterPageP
         throw new Error(validationData.message || 'Cet email est déjà utilisé');
       }
 
-      // Procéder à l'inscription
-      const { error } = await signUp(email, password, name, phone, '', true);
+      // Procéder à l'inscription avec l'email normalisé
+      const { error } = await signUp(normalizedEmail, password, name, phone, '', true);
       if (error) throw error;
     } catch (err: any) {
       setError(err.message || 'Une erreur est survenue');
