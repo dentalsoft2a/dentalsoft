@@ -1,0 +1,31 @@
+{
+  "welcome": {
+    "subject": "Bienvenue sur DentalCloud !",
+    "greeting": "Bonjour {{name}},",
+    "body": "Bienvenue sur DentalCloud. Votre compte a été créé avec succès.",
+    "cta": "Commencer",
+    "footer": "Merci de nous faire confiance."
+  },
+  "invoiceNotification": {
+    "subject": "Nouvelle facture disponible",
+    "body": "Une nouvelle facture N°{{number}} d'un montant de {{amount}}€ est disponible.",
+    "cta": "Voir la facture"
+  },
+  "deliveryNotification": {
+    "subject": "Nouveau bon de livraison",
+    "body": "Un nouveau bon de livraison N°{{number}} a été créé pour le patient {{patient}}.",
+    "cta": "Voir le bon de livraison"
+  },
+  "passwordReset": {
+    "subject": "Réinitialisation de votre mot de passe",
+    "body": "Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le lien ci-dessous pour continuer.",
+    "cta": "Réinitialiser le mot de passe",
+    "ignore": "Si vous n'avez pas demandé cette réinitialisation, ignorez ce message."
+  },
+  "common": {
+    "regards": "Cordialement,",
+    "team": "L'équipe DentalCloud",
+    "needHelp": "Besoin d'aide ?",
+    "contactUs": "Contactez-nous"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "invoice": {
+    "title": "INVOICE",
+    "number": "Invoice No.",
+    "date": "Date",
+    "dueDate": "Due Date",
+    "billTo": "Bill To",
+    "items": "Items",
+    "description": "Description",
+    "quantity": "Qty",
+    "unitPrice": "Unit Price",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "discount": "Discount",
+    "totalAmount": "Total Amount",
+    "paid": "Paid",
+    "unpaid": "Unpaid",
+    "paymentMethod": "Payment Method",
+    "notes": "Notes",
+    "terms": "Terms",
+    "footer": "Thank you for your business"
+  },
+  "proforma": {
+    "title": "PROFORMA INVOICE",
+    "number": "Proforma No.",
+    "validUntil": "Valid Until"
+  },
+  "deliveryNote": {
+    "title": "DELIVERY NOTE",
+    "number": "DN No.",
+    "dentist": "Dentist",
+    "patient": "Patient",
+    "deliveryDate": "Delivery Date",
+    "items": "Delivered Items",
+    "signature": "Signature"
+  },
+  "common": {
+    "page": "Page",
+    "of": "of",
+    "laboratory": "Laboratory",
+    "siret": "Company ID",
+    "vat": "VAT",
+    "address": "Address",
+    "phone": "Phone",
+    "email": "Email"
+  }
+}

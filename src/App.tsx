@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { LandingPage } from './components/landing/LandingPage';
 import DashboardLayout from './components/layout/DashboardLayout';
@@ -33,6 +34,7 @@ import { supabase } from './lib/supabase';
 import { usePermissions } from './hooks/usePermissions';
 
 function AppContent() {
+  const { t } = useTranslation('common');
   const { user, loading, isEmployee, isImpersonating } = useAuth();
   const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
@@ -217,7 +219,7 @@ function AppContent() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-          <span className="text-slate-600 font-medium">Chargement...</span>
+          <span className="text-slate-600 font-medium">{t('messages.loading')}</span>
         </div>
       </div>
     );

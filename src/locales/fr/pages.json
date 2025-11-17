@@ -1,0 +1,130 @@
+{
+  "landing": {
+    "hero": {
+      "badge": "Solution complète pour laboratoires dentaires",
+      "title": "Gérez votre laboratoire dentaire en toute simplicité",
+      "subtitle": "De la création des bons de livraison à la facturation finale, DentalCloud centralise toute votre gestion administrative.",
+      "cta": "Commencer - 1 mois offert",
+      "pricePerMonth": "/mois",
+      "freeTrial": "1 mois offert",
+      "noCommitment": "Sans engagement",
+      "supportIncluded": "Support inclus",
+      "freeUpdates": "Mises à jour gratuites"
+    },
+    "dentistBanner": {
+      "title": "Pour les dentistes : Totalement gratuit !",
+      "badge": "100% Gratuit",
+      "description": "Envoyez vos photos de travaux directement au laboratoire de votre choix. Créez simplement votre compte gratuit et commencez à communiquer en quelques secondes."
+    },
+    "features": {
+      "title": "Fonctionnalités complètes",
+      "subtitle": "Tout ce dont vous avez besoin pour gérer votre laboratoire",
+      "dentistPhotos": {
+        "title": "Envoi de photos pour dentistes",
+        "description": "Application gratuite pour les dentistes ! Envoyez des photos directement au laboratoire de votre choix. Inscription simple et rapide."
+      },
+      "deliveryNotes": {
+        "title": "Bons de livraison",
+        "description": "Créez et gérez vos bons de livraison en quelques clics. Suivi complet de chaque livraison avec historique détaillé."
+      },
+      "kanban": {
+        "title": "Gestion de travaux Kanban",
+        "description": "Visualisez et suivez l'avancement de vos travaux en temps réel. Organisez par étapes de production avec drag & drop intuitif."
+      },
+      "proformas": {
+        "title": "Proformas intelligents",
+        "description": "Générez des proformas professionnels à partir de vos bons de livraison. Conversion automatique en factures."
+      },
+      "invoices": {
+        "title": "Facturation simplifiée",
+        "description": "Transformez vos proformas en factures définitives. Export PDF automatique et numérotation intelligente."
+      },
+      "dentistManagement": {
+        "title": "Gestion des dentistes",
+        "description": "Base de données complète de vos clients dentistes avec historique des prestations et statistiques."
+      },
+      "analytics": {
+        "title": "Tableau de bord analytique",
+        "description": "Visualisez votre activité en temps réel : CA mensuel, articles les plus facturés, proformas en attente."
+      }
+    },
+    "workflow": {
+      "badge": "Comment ça marche ?",
+      "title": "Workflow simple",
+      "subtitle": "Suivez vos travaux en quelques clics",
+      "step1": {
+        "title": "Bon de livraison",
+        "description": "Créez un bon avec dentiste, patient et articles"
+      },
+      "step2": {
+        "title": "Suivi Kanban",
+        "description": "Organisez les travaux par étapes de production"
+      },
+      "step3": {
+        "title": "Conversion proforma",
+        "description": "Convertissez en proforma avec calcul automatique"
+      },
+      "step4": {
+        "title": "Génération facture",
+        "description": "Transformez en facture avec export PDF"
+      },
+      "step5": {
+        "title": "Suivi & Analytics",
+        "description": "Visualisez votre CA et statistiques"
+      }
+    },
+    "benefits": {
+      "title": "Pourquoi DentalCloud ?",
+      "timeGain": {
+        "title": "Gain de temps",
+        "description": "Automatisez votre gestion administrative et concentrez-vous sur votre métier"
+      },
+      "secure": {
+        "title": "Sécurisé",
+        "description": "Vos données sont protégées et sauvegardées automatiquement"
+      },
+      "fast": {
+        "title": "Rapide & fluide",
+        "description": "Interface moderne et intuitive pour une productivité maximale"
+      }
+    },
+    "pricing": {
+      "title": "Choisissez votre plan",
+      "subtitle": "Standard ou Premium Complet - À vous de décider",
+      "standard": {
+        "name": "Plan Standard",
+        "perMonth": "/mois",
+        "noCommitment": "Sans engagement",
+        "cta": "Commencer"
+      },
+      "premium": {
+        "name": "Plan Premium Complet",
+        "badge": "RECOMMANDÉ",
+        "perMonth": "/mois",
+        "noCommitment": "Sans engagement",
+        "savings": "Économisez en passant au Premium",
+        "cta": "Commencer en Premium",
+        "trial": "30 jours d'essai gratuit"
+      }
+    }
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue",
+    "statistics": {
+      "monthlyRevenue": "CA du mois",
+      "pendingProformas": "Proformas en attente",
+      "deliveryNotes": "Bons de livraison",
+      "topProducts": "Articles les plus facturés"
+    }
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": "Profil",
+    "company": "Entreprise",
+    "preferences": "Préférences",
+    "security": "Sécurité",
+    "language": "Langue",
+    "languageDescription": "Choisissez votre langue préférée pour l'interface"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "invoice": {
+    "title": "FACTURE",
+    "number": "Facture N°",
+    "date": "Date",
+    "dueDate": "Date d'échéance",
+    "billTo": "Facturé à",
+    "items": "Articles",
+    "description": "Description",
+    "quantity": "Qté",
+    "unitPrice": "Prix unitaire",
+    "total": "Total",
+    "subtotal": "Sous-total",
+    "tax": "TVA",
+    "discount": "Remise",
+    "totalAmount": "Montant total",
+    "paid": "Payé",
+    "unpaid": "Impayé",
+    "paymentMethod": "Méthode de paiement",
+    "notes": "Notes",
+    "terms": "Conditions",
+    "footer": "Merci pour votre confiance"
+  },
+  "proforma": {
+    "title": "PROFORMA",
+    "number": "Proforma N°",
+    "validUntil": "Valable jusqu'au"
+  },
+  "deliveryNote": {
+    "title": "BON DE LIVRAISON",
+    "number": "BL N°",
+    "dentist": "Dentiste",
+    "patient": "Patient",
+    "deliveryDate": "Date de livraison",
+    "items": "Articles livrés",
+    "signature": "Signature"
+  },
+  "common": {
+    "page": "Page",
+    "of": "sur",
+    "laboratory": "Laboratoire",
+    "siret": "SIRET",
+    "vat": "TVA",
+    "address": "Adresse",
+    "phone": "Téléphone",
+    "email": "Email"
+  }
+}
