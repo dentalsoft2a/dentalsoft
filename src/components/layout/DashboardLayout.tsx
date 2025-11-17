@@ -1,5 +1,4 @@
 import { ReactNode, useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
 import {
   LayoutDashboard,
   FileText,
@@ -29,7 +28,6 @@ import { usePermissions } from '../../hooks/usePermissions';
 import { supabase } from '../../lib/supabase';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import PWAInstallPrompt from '../common/PWAInstallPrompt';
-import { LanguageSwitcher } from '../common/LanguageSwitcher';
 
 function getAppVersion(): string {
   const cachedVersion = localStorage.getItem('app_version');
@@ -47,7 +45,6 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, currentPage, onNavigate, isSuperAdmin, lowStockCount = 0, lowStockResourcesCount = 0, hasValidSubscription = true }: DashboardLayoutProps) {
-  const { t } = useTranslation('common');
   const { profile, userProfile, signOut, isEmployee, laboratoryId, employeeInfo } = useAuth();
   const { hasMenuAccess, isOwner, rolePermissions, loading: permissionsLoading } = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -97,18 +94,18 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
   }, [sidebarOpen]);
 
   const allNavigation = [
-    { name: t('nav.dashboard'), icon: LayoutDashboard, page: 'dashboard', allowedForCancelled: true, menuKey: 'dashboard' },
-    { name: t('nav.calendar'), icon: Calendar, page: 'calendar', allowedForCancelled: false, menuKey: 'calendar' },
-    { name: t('nav.proformas'), icon: FileText, page: 'proformas', allowedForCancelled: true, menuKey: 'proformas' },
-    { name: t('nav.invoices'), icon: Receipt, page: 'invoices', allowedForCancelled: true, menuKey: 'invoices' },
-    { name: t('nav.deliveryNotes'), icon: Truck, page: 'delivery-notes', allowedForCancelled: true, menuKey: 'delivery-notes' },
-    { name: t('nav.workManagement'), icon: ClipboardCheck, page: 'work-management', allowedForCancelled: true, menuKey: 'work-management' },
-    { name: t('nav.photos'), icon: Camera, page: 'photos', allowedForCancelled: false, menuKey: 'photos' },
-    { name: t('nav.dentists'), icon: Users, page: 'dentists', allowedForCancelled: false, menuKey: 'dentists' },
-    { name: t('nav.catalog'), icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog' },
-    { name: t('nav.resources'), icon: Box, page: 'resources', allowedForCancelled: false, menuKey: 'resources' },
-    { name: t('nav.batchManagement'), icon: Tag, page: 'batch-management', allowedForCancelled: false, menuKey: 'batch-management' },
-    { name: t('nav.settings'), icon: Settings, page: 'settings', allowedForCancelled: true, menuKey: 'settings' },
+    { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dashboard', allowedForCancelled: true, menuKey: 'dashboard' },
+    { name: 'Calendrier', icon: Calendar, page: 'calendar', allowedForCancelled: false, menuKey: 'calendar' },
+    { name: 'Proformas', icon: FileText, page: 'proformas', allowedForCancelled: true, menuKey: 'proformas' },
+    { name: 'Factures', icon: Receipt, page: 'invoices', allowedForCancelled: true, menuKey: 'invoices' },
+    { name: 'Bons de livraison', icon: Truck, page: 'delivery-notes', allowedForCancelled: true, menuKey: 'delivery-notes' },
+    { name: 'Gestion des travaux', icon: ClipboardCheck, page: 'work-management', allowedForCancelled: true, menuKey: 'work-management' },
+    { name: 'Photos reçues', icon: Camera, page: 'photos', allowedForCancelled: false, menuKey: 'photos' },
+    { name: 'Dentistes', icon: Users, page: 'dentists', allowedForCancelled: false, menuKey: 'dentists' },
+    { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog' },
+    { name: 'Ressources', icon: Box, page: 'resources', allowedForCancelled: false, menuKey: 'resources' },
+    { name: 'N° Lot', icon: Tag, page: 'batch-management', allowedForCancelled: false, menuKey: 'batch-management' },
+    { name: 'Paramètres', icon: Settings, page: 'settings', allowedForCancelled: true, menuKey: 'settings' },
   ];
 
   const navigation = isEmployee
@@ -116,11 +113,11 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     : allNavigation;
 
   const allBottomNavigation = [
-    { name: t('nav.helpCenter'), icon: HelpCircle, page: 'help-center', menuKey: 'help-center' },
-    { name: t('nav.extensions'), icon: Cloud, page: 'extensions' },
-    { name: t('nav.subscription'), icon: CreditCard, page: 'subscription' },
-    { name: t('nav.support'), icon: MessageSquare, page: 'support' },
-    ...(isSuperAdmin && !isEmployee ? [{ name: t('nav.admin'), icon: Shield, page: 'admin' }] : [])
+    { name: 'Centre d\'aide', icon: HelpCircle, page: 'help-center', menuKey: 'help-center' },
+    { name: 'Extensions', icon: Cloud, page: 'extensions' },
+    { name: 'Mon abonnement', icon: CreditCard, page: 'subscription' },
+    { name: 'Support', icon: MessageSquare, page: 'support' },
+    ...(isSuperAdmin && !isEmployee ? [{ name: 'Admin', icon: Shield, page: 'admin' }] : [])
   ];
 
   const bottomNavigation = isEmployee
@@ -251,10 +248,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
             })}
           </div>
 
-          <div className="p-3 border-t border-slate-200/50 space-y-3">
-            <div className="px-2">
-              <LanguageSwitcher variant="compact" showLabel={false} />
-            </div>
+          <div className="p-3 border-t border-slate-200/50">
             <button
               onClick={() => {
                 signOut();
@@ -263,7 +257,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
               className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-all duration-200 active:scale-98 font-medium touch-manipulation"
             >
               <LogOut className="w-[18px] h-[18px]" />
-              <span className="text-[14px]">{t('auth.logout')}</span>
+              <span className="text-[14px]">Déconnexion</span>
             </button>
             <div className="mt-2 text-center">
               <p className="text-[10px] text-slate-400 font-mono">
