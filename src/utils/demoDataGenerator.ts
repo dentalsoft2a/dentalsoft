@@ -45,6 +45,12 @@ function getRandomDate(daysBack: number): string {
   return date.toISOString().split('T')[0];
 }
 
+function getRandomFutureDate(maxDays: number): string {
+  const date = new Date();
+  date.setDate(date.getDate() + Math.floor(Math.random() * maxDays));
+  return date.toISOString().split('T')[0];
+}
+
 function getRandomPrice(min: number, max: number): number {
   return Math.round((Math.random() * (max - min) + min) * 100) / 100;
 }
@@ -191,7 +197,7 @@ export async function generateDemoData(userId: string): Promise<DemoDataResult> 
       const selectedTeeth = getRandomElements(dents, Math.floor(Math.random() * 4) + 1);
       const teinte = getRandomElement(teintes);
       const catalogItem = getRandomElement(catalogItems);
-      const date = getRandomDate(90);
+      const date = getRandomFutureDate(7);
       const status = i < 5 ? 'pending' : i < 10 ? 'in_progress' : getRandomElement(statuses);
 
       const items = [{
