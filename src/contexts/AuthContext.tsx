@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/database.types';
+import { deleteDemoAccount } from '../utils/demoDataGenerator';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
@@ -110,8 +111,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })();
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Détecter la fermeture de l'onglet/fenêtre pour les comptes démo
+    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
+      if (isDemoAccount && user?.id) {
+        // Utiliser sendBeacon pour une requête asynchrone qui survit à la fermeture
+        const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cleanup-demo-accounts`;
+        const data = JSON.stringify({ userId: user.id });
+
+        navigator.sendBeacon(apiUrl, data);
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isDemoAccount, user]);
 
   const loadProfile = async (userId: string) => {
     try {
@@ -294,6 +311,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isImpersonating) {
         await endImpersonation();
         return;
+      }
+
+      // Si c'est un compte démo, le supprimer complètement
+      if (isDemoAccount && user?.id) {
+        console.log('Demo account logout detected, deleting account...');
+        await deleteDemoAccount(user.id);
       }
 
       await supabase.auth.signOut({ scope: 'local' });

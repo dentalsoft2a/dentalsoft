@@ -382,3 +382,49 @@ export async function cleanupDemoData(userId: string): Promise<{ success: boolea
     };
   }
 }
+
+export async function deleteDemoAccount(userId: string): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log('Deleting demo account completely for user:', userId);
+
+    // 1. Nettoyer toutes les données associées
+    await cleanupDemoData(userId);
+
+    // 2. Supprimer la session démo
+    const { data: userProfile } = await supabase
+      .from('user_profiles')
+      .select('demo_session_id')
+      .eq('user_id', userId)
+      .single();
+
+    if (userProfile?.demo_session_id) {
+      await supabase
+        .from('demo_sessions')
+        .delete()
+        .eq('id', userProfile.demo_session_id);
+    }
+
+    // 3. Supprimer le profil utilisateur et le profil laboratoire
+    await supabase.from('user_profiles').delete().eq('user_id', userId);
+    await supabase.from('profiles').delete().eq('id', userId);
+
+    // 4. Supprimer le compte auth via edge function
+    const { error: deleteError } = await supabase.functions.invoke('delete-user', {
+      body: { userId }
+    });
+
+    if (deleteError) {
+      console.error('Error deleting auth user:', deleteError);
+    }
+
+    console.log('Demo account deleted completely');
+
+    return { success: true };
+  } catch (error: any) {
+    console.error('Error deleting demo account:', error);
+    return {
+      success: false,
+      error: error.message || 'Une erreur est survenue lors de la suppression du compte'
+    };
+  }
+}

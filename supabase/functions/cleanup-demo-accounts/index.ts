@@ -37,19 +37,46 @@ Deno.serve(async (req: Request) => {
 
     console.log('Starting demo accounts cleanup...');
 
-    // Trouver toutes les sessions expirées
-    const { data: expiredSessions, error: sessionsError } = await supabase
-      .from('demo_sessions')
-      .select('id, user_id')
-      .eq('is_active', true)
-      .lt('expires_at', new Date().toISOString());
-
-    if (sessionsError) {
-      console.error('Error fetching expired sessions:', sessionsError);
-      throw sessionsError;
+    // Vérifier si un userId spécifique est fourni (pour suppression immédiate)
+    let body = null;
+    try {
+      body = await req.json();
+    } catch {
+      // Pas de body, on nettoie les sessions expirées
     }
 
-    console.log(`Found ${expiredSessions?.length || 0} expired sessions to clean`);
+    let expiredSessions = [];
+
+    if (body?.userId) {
+      // Suppression immédiate d'un utilisateur spécifique
+      console.log(`Immediate cleanup requested for user: ${body.userId}`);
+      const { data: session } = await supabase
+        .from('demo_sessions')
+        .select('id, user_id')
+        .eq('user_id', body.userId)
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (session) {
+        expiredSessions = [session];
+      }
+    } else {
+      // Nettoyage des sessions expirées (cron job)
+      const { data, error: sessionsError } = await supabase
+        .from('demo_sessions')
+        .select('id, user_id')
+        .eq('is_active', true)
+        .lt('expires_at', new Date().toISOString());
+
+      if (sessionsError) {
+        console.error('Error fetching expired sessions:', sessionsError);
+        throw sessionsError;
+      }
+
+      expiredSessions = data || [];
+    }
+
+    console.log(`Found ${expiredSessions.length} sessions to clean`);
 
     const cleanedSessions: string[] = [];
     const errors: string[] = [];
