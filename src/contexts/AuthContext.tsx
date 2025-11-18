@@ -116,15 +116,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // useEffect séparé pour gérer beforeunload
   useEffect(() => {
+    // Ne rien faire si pas de compte démo
+    if (!isDemoAccount || !user?.id) return;
+
     // Détecter la fermeture de l'onglet/fenêtre pour les comptes démo
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (isDemoAccount && user?.id) {
-        // Utiliser sendBeacon pour une requête asynchrone qui survit à la fermeture
-        const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cleanup-demo-accounts`;
-        const data = JSON.stringify({ userId: user.id });
-
-        navigator.sendBeacon(apiUrl, data);
-      }
+      // Note: sendBeacon est commenté car il peut causer des problèmes de performance
+      // La suppression se fera via le nettoyage automatique des sessions expirées
+      // const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cleanup-demo-accounts`;
+      // const data = JSON.stringify({ userId: user.id });
+      // navigator.sendBeacon(apiUrl, data);
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);

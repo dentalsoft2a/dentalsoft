@@ -59,9 +59,9 @@ export async function generateDemoData(userId: string): Promise<DemoDataResult> 
   try {
     console.log('Starting demo data generation for user:', userId);
 
-    // 1. Générer 8 dentistes
+    // 1. Générer 5 dentistes
     const dentists = [];
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < 5; i++) {
       const firstName = getRandomElement(frenchFirstNames);
       const lastName = getRandomElement(frenchLastNames);
       const city = getRandomElement(frenchCities);
@@ -87,9 +87,9 @@ export async function generateDemoData(userId: string): Promise<DemoDataResult> 
 
     console.log('Generated dentists:', dentists.length);
 
-    // 2. Générer 15 patients
+    // 2. Générer 8 patients
     const patients = [];
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 8; i++) {
       const firstName = getRandomElement(frenchFirstNames);
       const lastName = getRandomElement(frenchLastNames);
       const birthYear = 1940 + Math.floor(Math.random() * 60);
@@ -187,11 +187,11 @@ export async function generateDemoData(userId: string): Promise<DemoDataResult> 
 
     console.log('Generated resources:', resources.length);
 
-    // 5. Générer 25 bons de livraison
+    // 5. Générer 10 bons de livraison
     const deliveryNotes = [];
     const statuses = ['pending', 'in_progress', 'completed', 'pending_approval'];
 
-    for (let i = 0; i < 25; i++) {
+    for (let i = 0; i < 10; i++) {
       const dentist = getRandomElement(dentists);
       const patient = getRandomElement(patients);
       const selectedTeeth = getRandomElements(dents, Math.floor(Math.random() * 4) + 1);
