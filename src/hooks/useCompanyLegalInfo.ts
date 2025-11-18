@@ -47,7 +47,7 @@ export function useCompanyLegalInfo() {
     try {
       const { data, error } = await supabase
         .from('company_legal_info')
-        .select('*')
+        .select('company_name, legal_form, capital, siret, rcs, vat_number, ape_code, address, phone, email, dpo_name, dpo_email, director_name, director_title')
         .maybeSingle();
 
       if (error) {

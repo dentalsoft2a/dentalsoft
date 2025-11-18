@@ -60,14 +60,14 @@ export function useExtensions() {
 
       const { data: extensionsData, error: extensionsError } = await supabase
         .from('extensions')
-        .select('*')
+        .select('id, name, description, monthly_price, is_active, icon, sort_order, stripe_price_id, created_at, updated_at')
         .order('sort_order');
 
       if (extensionsError) throw extensionsError;
 
       const { data: featuresData, error: featuresError } = await supabase
         .from('extension_features')
-        .select('*');
+        .select('id, extension_id, feature_key, feature_name, description, created_at');
 
       if (featuresError) throw featuresError;
 

@@ -115,12 +115,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const [profileResult, userProfileResult, employeeResult] = await Promise.all([
         supabase
           .from('profiles')
-          .select('*')
+          .select('id, name, email, phone, address, city, postal_code, country, siret, rcs, vat_number, iban, bic, created_at, updated_at')
           .eq('id', userId)
           .maybeSingle(),
         supabase
           .from('user_profiles')
-          .select('*')
+          .select('id, email, role, subscription_status, trial_ends_at, subscription_ends_at, subscription_plan_id, is_demo, demo_expires_at, language, created_at')
           .eq('id', userId)
           .maybeSingle(),
         supabase
@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Loading laboratory profile for:', employeeResult.data.laboratory_profile_id);
         const { data: labUserProfile } = await supabase
           .from('user_profiles')
-          .select('*')
+          .select('id, email, role, subscription_status, trial_ends_at, subscription_ends_at, subscription_plan_id, is_demo, demo_expires_at, language, created_at')
           .eq('id', employeeResult.data.laboratory_profile_id)
           .maybeSingle();
 

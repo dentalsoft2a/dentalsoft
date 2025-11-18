@@ -112,7 +112,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     try {
       const { data, error } = await supabase
         .from('dentists')
-        .select('*')
+        .select('id, name, email, phone, address')
         .eq('user_id', user.id)
         .order('name');
 
@@ -130,7 +130,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       // Load low stock catalog items
       const { data: catalogData, error: catalogError } = await supabase
         .from('catalog_items')
-        .select('*')
+        .select('id, name, stock_quantity, low_stock_threshold, unit, track_stock')
         .eq('user_id', user.id)
         .eq('track_stock', true);
 
@@ -145,7 +145,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       // Load low stock resources
       const { data: resourcesData, error: resourcesError } = await supabase
         .from('resources')
-        .select('*')
+        .select('id, name, stock_quantity, low_stock_threshold, unit, has_variants, track_stock')
         .eq('user_id', user.id)
         .eq('track_stock', true);
 
