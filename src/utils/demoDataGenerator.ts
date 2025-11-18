@@ -169,6 +169,7 @@ export async function generateDemoData(userId: string): Promise<DemoDataResult> 
             .from('resource_variants')
             .insert({
               resource_id: data.id,
+              user_id: userId,
               variant_name: variantName,
               stock_quantity: Math.floor(Math.random() * 50) + 20,
               low_stock_threshold: 10,
@@ -182,7 +183,7 @@ export async function generateDemoData(userId: string): Promise<DemoDataResult> 
 
     // 5. Générer 25 bons de livraison
     const deliveryNotes = [];
-    const statuses = ['pending', 'in_progress', 'completed', 'validated'];
+    const statuses = ['pending', 'in_progress', 'completed', 'pending_approval'];
 
     for (let i = 0; i < 25; i++) {
       const dentist = getRandomElement(dentists);
