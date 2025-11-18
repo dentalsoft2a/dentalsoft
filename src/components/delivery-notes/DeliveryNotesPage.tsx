@@ -3,6 +3,8 @@ import { Plus, Edit, Trash2, Search, FileDown, User, CheckCircle, Play, Clock, T
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import { usePagination } from '../../hooks/usePagination';
+import { useDebounce } from '../../hooks/useDebounce';
 import type { Database } from '../../lib/database.types';
 import { generateDeliveryNotePDF } from '../../utils/pdfGenerator';
 import { deductStockForDeliveryNote, restoreStockForDeliveryNote } from '../../utils/stockManager';
@@ -14,6 +16,7 @@ import MultiShadeSelector from './MultiShadeSelector';
 import DatePicker from '../common/DatePicker';
 import CustomSelect from '../common/CustomSelect';
 import DeliveryNoteDetail from './DeliveryNoteDetail';
+import PaginationControls from '../common/PaginationControls';
 
 type DeliveryNote = Database['public']['Tables']['delivery_notes']['Row'] & {
   dentists?: { name: string };
@@ -80,7 +83,7 @@ export default function DeliveryNotesPage() {
     try {
       const { data, error } = await supabase
         .from('delivery_notes')
-        .select('*, dentists(name)')
+        .select('id, delivery_number, date, status, patient_name, patient_code, created_at, current_stage_id, progress, rejection_count, created_by_dentist, work_description, tooth_numbers, shade, notes, prescription_date, dentists(name)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -295,15 +298,20 @@ export default function DeliveryNotesPage() {
     }
   };
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const pendingApprovalNotes = deliveryNotes.filter(note => note.status === 'pending_approval');
   const activeNotes = deliveryNotes.filter(note => note.status !== 'pending_approval' && note.status !== 'refused');
 
   const filteredNotes = activeNotes.filter((note) => {
     const matchesSearch =
-      note.delivery_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      note.dentists?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      note.delivery_number.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      note.dentists?.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
     return matchesSearch;
   });
+
+  const pagination = usePagination(filteredNotes, { initialPageSize: 50 });
+  const paginatedNotes = pagination.paginatedItems;
 
   const handleStartWork = async (note: DeliveryNote) => {
     if (!confirm('Démarrer ce travail ?')) return;
@@ -552,7 +560,7 @@ export default function DeliveryNotesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {filteredNotes.map((note) => (
+                  {paginatedNotes.map((note) => (
                     <tr key={note.id} className="hover:bg-slate-50 transition">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-medium text-slate-900">{note.delivery_number}</div>
@@ -627,7 +635,7 @@ export default function DeliveryNotesPage() {
             </div>
 
             <div className="md:hidden divide-y divide-slate-200">
-              {filteredNotes.map((note) => (
+              {paginatedNotes.map((note) => (
                 <div key={note.id} className="p-4 hover:bg-slate-50 transition-colors active:bg-slate-100">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
@@ -698,6 +706,23 @@ export default function DeliveryNotesPage() {
                 </div>
               ))}
             </div>
+
+            {filteredNotes.length > 0 && (
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPrevPage}
+                onNextPage={pagination.nextPage}
+                onPrevPage={pagination.prevPage}
+                onGoToPage={pagination.goToPage}
+                onPageSizeChange={pagination.setPageSize}
+              />
+            )}
           </>
         )}
       </div>
