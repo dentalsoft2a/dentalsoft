@@ -130,7 +130,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       // Load low stock catalog items
       const { data: catalogData, error: catalogError } = await supabase
         .from('catalog_items')
-        .select('id, name, stock_quantity, low_stock_threshold, unit, track_stock')
+        .select('id, name, stock_quantity, low_stock_threshold, stock_unit, track_stock')
         .eq('user_id', user.id)
         .eq('track_stock', true);
 
