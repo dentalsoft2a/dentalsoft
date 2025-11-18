@@ -112,9 +112,10 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     try {
       const { data, error } = await supabase
         .from('dentists')
-        .select('*')
+        .select('id, name, email, phone, address, city')
         .eq('user_id', user.id)
-        .order('name');
+        .order('name')
+        .limit(100);
 
       if (error) throw error;
       setDentists(data || []);
@@ -130,9 +131,10 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       // Load low stock catalog items
       const { data: catalogData, error: catalogError } = await supabase
         .from('catalog_items')
-        .select('*')
+        .select('id, name, code, stock_quantity, low_stock_threshold, unit')
         .eq('user_id', user.id)
-        .eq('track_stock', true);
+        .eq('track_stock', true)
+        .limit(50);
 
       if (catalogError) throw catalogError;
 
@@ -145,9 +147,10 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       // Load low stock resources
       const { data: resourcesData, error: resourcesError } = await supabase
         .from('resources')
-        .select('*')
+        .select('id, name, category, stock_quantity, low_stock_threshold, has_variants, unit')
         .eq('user_id', user.id)
-        .eq('track_stock', true);
+        .eq('track_stock', true)
+        .limit(50);
 
       if (resourcesError) throw resourcesError;
 
@@ -159,11 +162,12 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
 
       const { data: variantsData, error: variantsError } = await supabase
         .from('resource_variants')
-        .select('*, resource:resources!inner(name, user_id)')
+        .select('id, resource_id, variant_name, subcategory, stock_quantity, low_stock_threshold, unit, resource:resources!inner(name, user_id)')
         .eq('resource.user_id', user.id)
         .eq('is_active', true)
         .order('subcategory', { ascending: true })
-        .order('variant_name', { ascending: true });
+        .order('variant_name', { ascending: true })
+        .limit(50);
 
       if (variantsError) throw variantsError;
 
@@ -230,21 +234,30 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
 
       // Calculate monthly revenue taking into account correction credit notes
       let monthlyRevenue = 0;
-      if (revenueRes.data) {
-        for (const invoice of revenueRes.data) {
-          let invoiceAmount = Number(invoice.total);
+      if (revenueRes.data && revenueRes.data.length > 0) {
+        const invoiceIds = revenueRes.data.map(inv => inv.id);
 
-          // Get correction credit notes for this invoice
-          const { data: corrections } = await supabase
-            .from('credit_notes')
-            .select('total')
-            .eq('corrects_invoice_id', invoice.id)
-            .eq('type', 'correction')
-            .eq('is_correction', true);
+        // Fetch all corrections in a single query
+        const { data: corrections } = await supabase
+          .from('credit_notes')
+          .select('corrects_invoice_id, total')
+          .in('corrects_invoice_id', invoiceIds)
+          .eq('type', 'correction')
+          .eq('is_correction', true);
 
-          const correctionsTotal = corrections?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+        // Create a map of corrections by invoice ID
+        const correctionsMap = new Map<string, number>();
+        corrections?.forEach(cn => {
+          const current = correctionsMap.get(cn.corrects_invoice_id) || 0;
+          correctionsMap.set(cn.corrects_invoice_id, current + Number(cn.total));
+        });
+
+        // Calculate revenue
+        revenueRes.data.forEach(invoice => {
+          const invoiceAmount = Number(invoice.total);
+          const correctionsTotal = correctionsMap.get(invoice.id) || 0;
           monthlyRevenue += (invoiceAmount - correctionsTotal);
-        }
+        });
       }
 
       setStats({
@@ -338,11 +351,12 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
       const { data: allDeliveries, error } = await supabase
         .from('delivery_notes')
         .select(`
-          *,
-          dentist:dentists(*)
+          id, date, delivery_number, patient_name, status, due_date,
+          dentist:dentists(id, name, email, phone)
         `)
         .eq('user_id', user.id)
-        .order('date', { ascending: true });
+        .order('date', { ascending: true })
+        .limit(100);
 
       if (error) throw error;
 
@@ -372,10 +386,11 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     try {
       const { data, error } = await supabase
         .from('invoices')
-        .select('*, dentists(name)')
+        .select('id, invoice_number, date, total, status, dentist_id, dentists(name)')
         .eq('user_id', user.id)
         .in('status', ['draft', 'partial'])
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
+        .limit(10);
 
       if (error) throw error;
       setUnpaidInvoices(data || []);

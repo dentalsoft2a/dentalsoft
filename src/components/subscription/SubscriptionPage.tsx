@@ -61,19 +61,16 @@ export function SubscriptionPage() {
   }, [user]);
 
   useEffect(() => {
-    const subscription = supabase
-      .channel('subscription_plans_changes')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'subscription_plans'
-      }, () => {
-        loadData();
-      })
-      .subscribe();
+    // Removed Realtime subscription - use polling instead for less frequent updates
+    // Subscription plans rarely change, so polling every 60s is sufficient
+    if (!user) return;
+
+    const interval = setInterval(() => {
+      loadData();
+    }, 60000); // Poll every 60 seconds
 
     return () => {
-      subscription.unsubscribe();
+      clearInterval(interval);
     };
   }, [user]);
 
@@ -81,9 +78,9 @@ export function SubscriptionPage() {
     if (!user) return;
 
     const [profileRes, plansRes, invoicesRes] = await Promise.all([
-      supabase.from('user_profiles').select('*').eq('id', user.id).single(),
-      supabase.from('subscription_plans').select('*').eq('is_active', true).order('display_order'),
-      supabase.from('subscription_invoices').select('*').eq('user_id', user.id).order('issued_at', { ascending: false })
+      supabase.from('user_profiles').select('subscription_status, subscription_plan_id, trial_ends_at, subscription_ends_at, subscription_start_date, subscription_end_date, trial_used, stripe_customer_id, stripe_subscription_id').eq('id', user.id).single(),
+      supabase.from('subscription_plans').select('id, name, description, price_monthly, features, plan_type, unlocks_all_extensions, is_active, display_order, stripe_price_id').eq('is_active', true).order('display_order'),
+      supabase.from('subscription_invoices').select('id, invoice_number, amount_ht, tax_rate, amount_ttc, period_start, period_end, payment_status, issued_at, paid_at').eq('user_id', user.id).order('issued_at', { ascending: false }).limit(50)
     ]);
 
     if (profileRes.data) {

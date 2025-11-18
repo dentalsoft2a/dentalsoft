@@ -83,23 +83,33 @@ export default function InvoicesPage() {
     try {
       const { data, error } = await supabase
         .from('invoices')
-        .select('*, dentists(name)')
+        .select('id, invoice_number, date, total, status, dentist_id, month, year, payment_method, payment_date, paid_at, notes, items, tax_rate, dentists(name)')
         .eq('user_id', user.id)
-        .order('date', { ascending: false });
+        .order('date', { ascending: false })
+        .limit(200);
 
       if (error) throw error;
 
-      // Load correction amounts for each invoice
-      const invoicesWithCorrections = await Promise.all(
-        (data || []).map(async (invoice) => {
-          const { data: corrections } = await supabase
-            .from('credit_notes')
-            .select('total')
-            .eq('corrects_invoice_id', invoice.id)
-            .eq('type', 'correction')
-            .eq('is_correction', true);
+      // Load all corrections in a single query to avoid N+1
+      if (data && data.length > 0) {
+        const invoiceIds = data.map(inv => inv.id);
+        const { data: corrections } = await supabase
+          .from('credit_notes')
+          .select('corrects_invoice_id, total')
+          .in('corrects_invoice_id', invoiceIds)
+          .eq('type', 'correction')
+          .eq('is_correction', true);
 
-          const correction_amount = corrections?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
+        // Create a map of corrections by invoice ID
+        const correctionsMap = new Map<string, number>();
+        corrections?.forEach(cn => {
+          const current = correctionsMap.get(cn.corrects_invoice_id) || 0;
+          correctionsMap.set(cn.corrects_invoice_id, current + Number(cn.total));
+        });
+
+        // Calculate correction amounts
+        const invoicesWithCorrections = data.map(invoice => {
+          const correction_amount = correctionsMap.get(invoice.id) || 0;
           const net_amount = Number(invoice.total) - correction_amount;
 
           return {
@@ -107,10 +117,12 @@ export default function InvoicesPage() {
             correction_amount,
             net_amount
           };
-        })
-      );
+        });
 
-      setInvoices(invoicesWithCorrections);
+        setInvoices(invoicesWithCorrections);
+      } else {
+        setInvoices([]);
+      }
     } catch (error) {
       console.error('Error loading invoices:', error);
     } finally {
@@ -130,7 +142,7 @@ export default function InvoicesPage() {
     try {
       const { data: dentistData, error: dentistError } = await supabase
         .from('dentists')
-        .select('*')
+        .select('id, name, address, email')
         .eq('id', invoice.dentist_id)
         .single();
 
@@ -152,7 +164,7 @@ export default function InvoicesPage() {
 
       const { data: proformaItems, error: itemsError } = await supabase
         .from('proforma_items')
-        .select('*')
+        .select('id, proforma_id, delivery_note_id, description, quantity, unit_price')
         .in('proforma_id', proformaIds);
 
       if (itemsError) throw itemsError;
@@ -170,7 +182,7 @@ export default function InvoicesPage() {
 
       const { data: deliveryNotesData, error: notesError } = await supabase
         .from('delivery_notes')
-        .select('*')
+        .select('id, delivery_number, date, prescription_date, patient_name, patient_code, items')
         .in('id', deliveryNoteIds)
         .order('date', { ascending: true });
 
@@ -262,10 +274,11 @@ export default function InvoicesPage() {
     try {
       const { data, error } = await supabase
         .from('credit_notes')
-        .select('*')
+        .select('id, credit_note_number, date, total, subtotal, tax_rate, tax_amount, reason, used, type, is_correction, source_invoice_id, dentist_id')
         .eq('user_id', user.id)
         .eq('dentist_id', dentistId)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(100);
 
       if (error) throw error;
 

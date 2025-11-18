@@ -1,3 +1,68 @@
+// Simple in-memory cache for static data
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  ttl: number; // Time to live in milliseconds
+}
+
+const cache = new Map<string, CacheEntry<any>>();
+
+/**
+ * Get data from cache if not expired
+ */
+export function getCached<T>(key: string): T | null {
+  const entry = cache.get(key);
+  if (!entry) return null;
+
+  const now = Date.now();
+  if (now - entry.timestamp > entry.ttl) {
+    cache.delete(key);
+    return null;
+  }
+
+  return entry.data as T;
+}
+
+/**
+ * Set data in cache with TTL
+ */
+export function setCache<T>(key: string, data: T, ttl: number = 300000): void {
+  cache.set(key, {
+    data,
+    timestamp: Date.now(),
+    ttl
+  });
+}
+
+/**
+ * Clear specific cache entry or all cache
+ */
+export function clearCache(key?: string): void {
+  if (key) {
+    cache.delete(key);
+  } else {
+    cache.clear();
+  }
+}
+
+/**
+ * Cache wrapper for async functions
+ */
+export async function withCache<T>(
+  key: string,
+  fn: () => Promise<T>,
+  ttl: number = 300000
+): Promise<T> {
+  const cached = getCached<T>(key);
+  if (cached !== null) {
+    return cached;
+  }
+
+  const data = await fn();
+  setCache(key, data, ttl);
+  return data;
+}
+
 export async function checkAndClearCache() {
   try {
     // Vérifier uniquement toutes les 5 minutes (pas à chaque chargement)
