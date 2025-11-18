@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus, Camera, Phone, Layers, Scale, FileCheck, Play } from 'lucide-react';
+import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus, Camera, Phone, Layers, Scale, FileCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import { supabase } from '../../lib/supabase';
@@ -6,7 +6,6 @@ import LoginPage from '../auth/LoginPage';
 import RegisterPage from '../auth/RegisterPage';
 import DentistLoginPage from '../dentist/DentistLoginPage';
 import DentistRegisterPage from '../dentist/DentistRegisterPage';
-import { DemoWelcomeModal } from '../demo/DemoWelcomeModal';
 
 export function LandingPage() {
   const isPWA = window.matchMedia('(display-mode: standalone)').matches ||
@@ -20,7 +19,6 @@ export function LandingPage() {
   const [totalExtensionsPrice, setTotalExtensionsPrice] = useState<number>(0);
   const [contactPhone, setContactPhone] = useState<string>('');
   const [pricesLoaded, setPricesLoaded] = useState<boolean>(false);
-  const [showDemoModal, setShowDemoModal] = useState<boolean>(false);
 
   useEffect(() => {
     loadPrices();
@@ -267,14 +265,6 @@ export function LandingPage() {
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-primary-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                   <span className="relative z-10">Commencer - 1 mois offert</span>
                   <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 group-hover:translate-x-1 transition-transform relative z-10" />
-                </button>
-
-                <button
-                  onClick={() => setShowDemoModal(true)}
-                  className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 rounded-lg sm:rounded-xl bg-white text-primary-600 text-sm sm:text-base font-semibold hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center justify-center gap-2 border-2 border-primary-300 group relative overflow-hidden"
-                >
-                  <Play className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-                  <span>Essayer la Démo</span>
                 </button>
 
                 <div className="relative">
@@ -1107,10 +1097,6 @@ export function LandingPage() {
             </div>
           </footer>
       </>
-
-      {showDemoModal && (
-        <DemoWelcomeModal onClose={() => setShowDemoModal(false)} />
-      )}
     </div>
   );
 }

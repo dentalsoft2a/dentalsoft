@@ -2,7 +2,6 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/database.types';
-import { deleteDemoAccount } from '../utils/demoDataGenerator';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
@@ -34,15 +33,12 @@ interface AuthContextType {
   userEmail: string | null;
   isImpersonating: boolean;
   impersonationSession: ImpersonationSession | null;
-  isDemoAccount: boolean;
-  demoExpiresAt: string | null;
   signUp: (email: string, password: string, firstName: string, lastName: string, laboratoryName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
   impersonateUser: (targetUserId: string) => Promise<{ error: Error | null }>;
   endImpersonation: () => Promise<{ error: Error | null }>;
-  createDemoAccount: () => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -56,8 +52,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [impersonationSession, setImpersonationSession] = useState<ImpersonationSession | null>(null);
   const [isImpersonating, setIsImpersonating] = useState(false);
-  const [isDemoAccount, setIsDemoAccount] = useState(false);
-  const [demoExpiresAt, setDemoExpiresAt] = useState<string | null>(null);
 
   useEffect(() => {
     if (employeeInfo) {
@@ -114,27 +108,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // useEffect séparé pour gérer beforeunload
-  useEffect(() => {
-    // Ne rien faire si pas de compte démo
-    if (!isDemoAccount || !user?.id) return;
-
-    // Détecter la fermeture de l'onglet/fenêtre pour les comptes démo
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      // Note: sendBeacon est commenté car il peut causer des problèmes de performance
-      // La suppression se fera via le nettoyage automatique des sessions expirées
-      // const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cleanup-demo-accounts`;
-      // const data = JSON.stringify({ userId: user.id });
-      // navigator.sendBeacon(apiUrl, data);
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-    };
-  }, [isDemoAccount, user]);
-
   const loadProfile = async (userId: string) => {
     try {
       console.log('Loading profile for userId:', userId);
@@ -168,25 +141,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(profileResult.data);
       setUserProfile(userProfileResult.data);
       setEmployeeInfo(employeeResult.data);
-
-      // Vérifier si c'est un compte démo
-      if (userProfileResult.data?.is_demo_account) {
-        setIsDemoAccount(true);
-        // Charger la session démo pour obtenir la date d'expiration
-        const { data: demoSession } = await supabase
-          .from('demo_sessions')
-          .select('expires_at')
-          .eq('user_id', userId)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (demoSession) {
-          setDemoExpiresAt(demoSession.expires_at);
-        }
-      } else {
-        setIsDemoAccount(false);
-        setDemoExpiresAt(null);
-      }
 
       if (employeeResult.data?.laboratory_profile_id) {
         console.log('Loading laboratory profile for:', employeeResult.data.laboratory_profile_id);
@@ -316,12 +270,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isImpersonating) {
         await endImpersonation();
         return;
-      }
-
-      // Si c'est un compte démo, le supprimer complètement
-      if (isDemoAccount && user?.id) {
-        console.log('Demo account logout detected, deleting account...');
-        await deleteDemoAccount(user.id);
       }
 
       await supabase.auth.signOut({ scope: 'local' });
@@ -489,135 +437,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const createDemoAccount = async () => {
-    try {
-      // Générer un email et mot de passe uniques pour le compte démo
-      const timestamp = Date.now();
-      const randomString = Math.random().toString(36).substring(2, 8);
-      const demoEmail = `demo-${timestamp}-${randomString}@dentalcloud.temp`;
-      const demoPassword = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2).toUpperCase() + '123!';
-
-      console.log('Creating demo account with email:', demoEmail);
-
-      // Créer le compte auth
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: demoEmail,
-        password: demoPassword,
-        options: {
-          data: {
-            is_demo: true,
-            first_name: 'Démo',
-            last_name: 'Laboratoire',
-            laboratory_name: 'Laboratoire Démo'
-          }
-        }
-      });
-
-      if (authError) throw authError;
-      if (!authData.user) throw new Error('Échec de la création du compte démo');
-
-      const userId = authData.user.id;
-      console.log('Demo user created:', userId);
-
-      // Se connecter immédiatement pour obtenir une session active
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: demoEmail,
-        password: demoPassword
-      });
-
-      if (signInError) {
-        console.error('Sign in error:', signInError);
-        throw signInError;
-      }
-
-      console.log('Demo user signed in successfully');
-
-      // Créer le profil profiles
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: userId,
-          first_name: 'Démo',
-          last_name: 'Laboratoire',
-          laboratory_name: 'Laboratoire Démo',
-          laboratory_address: '123 Rue de la Démo, 75001 Paris',
-          laboratory_phone: '01 23 45 67 89',
-          laboratory_email: demoEmail
-        }, {
-          onConflict: 'id'
-        });
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError);
-        throw profileError;
-      }
-
-      // Créer le profil user_profiles avec marqueur démo
-      const { error: userProfileError } = await supabase
-        .from('user_profiles')
-        .upsert({
-          id: userId,
-          email: demoEmail,
-          role: 'user',
-          subscription_status: 'trial',
-          trial_ends_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-          is_demo_account: true
-        }, {
-          onConflict: 'id'
-        });
-
-      if (userProfileError) {
-        console.error('User profile creation error:', userProfileError);
-        throw userProfileError;
-      }
-
-      // Créer la session démo
-      const expiresAt = new Date();
-      expiresAt.setMinutes(expiresAt.getMinutes() + 30);
-
-      const { data: sessionData, error: sessionError } = await supabase
-        .from('demo_sessions')
-        .insert({
-          user_id: userId,
-          session_token: `demo-${timestamp}-${randomString}`,
-          expires_at: expiresAt.toISOString(),
-          is_active: true,
-          completed_tutorial_steps: []
-        })
-        .select()
-        .single();
-
-      if (sessionError) {
-        console.error('Session creation error:', sessionError);
-        throw sessionError;
-      }
-
-      console.log('Demo session created:', sessionData.id);
-
-      // Importer la fonction de génération de données
-      const { generateDemoData } = await import('../utils/demoDataGenerator');
-
-      // Générer les données de test
-      console.log('Generating demo data...');
-      const dataResult = await generateDemoData(userId);
-
-      if (!dataResult.success) {
-        console.error('Data generation error:', dataResult.error);
-        throw new Error(dataResult.error || 'Échec de la génération des données de test');
-      }
-
-      console.log('Demo data generated successfully');
-
-      // Charger le profil pour mettre à jour l'état
-      await loadProfile(userId);
-
-      return { error: null };
-    } catch (error) {
-      console.error('Error creating demo account:', error);
-      return { error: error as Error };
-    }
-  };
-
   const isEmployee = !!employeeInfo && !profile?.laboratory_name;
   const laboratoryId = isEmployee ? employeeInfo.laboratory_profile_id : (profile?.id || null);
   const effectiveUserProfile = isEmployee ? laboratoryUserProfile : userProfile;
@@ -643,15 +462,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userEmail,
       isImpersonating,
       impersonationSession,
-      isDemoAccount,
-      demoExpiresAt,
       signUp,
       signIn,
       signOut,
       updateProfile,
       impersonateUser,
-      endImpersonation,
-      createDemoAccount
+      endImpersonation
     }}>
       {children}
     </AuthContext.Provider>
