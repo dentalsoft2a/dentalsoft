@@ -79,7 +79,22 @@ export default function ProformasPage() {
     try {
       const { data, error } = await supabase
         .from('proformas')
-        .select('*, dentists(name)')
+        .select(`
+          id,
+          user_id,
+          dentist_id,
+          proforma_number,
+          date,
+          status,
+          notes,
+          subtotal,
+          tax_rate,
+          tax_amount,
+          total,
+          created_at,
+          updated_at,
+          dentists(name)
+        `)
         .eq('user_id', user.id)
         .order('date', { ascending: false });
 
@@ -209,7 +224,7 @@ export default function ProformasPage() {
     try {
       const { data: dentistData, error: dentistError } = await supabase
         .from('dentists')
-        .select('*')
+        .select('id, name, email, phone, address')
         .eq('id', proforma.dentist_id)
         .single();
 
@@ -284,7 +299,7 @@ export default function ProformasPage() {
     try {
       const { data: dentistData, error: dentistError } = await supabase
         .from('dentists')
-        .select('*')
+        .select('id, name, email, phone, address')
         .eq('id', proforma.dentist_id)
         .single();
 
