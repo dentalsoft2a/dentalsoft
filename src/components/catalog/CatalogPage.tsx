@@ -3,6 +3,9 @@ import { Plus, Edit, Trash2, Search, Save, X, Package, Tag, Euro, CheckCircle2, 
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import { usePagination } from '../../hooks/usePagination';
+import { useDebounce } from '../../hooks/useDebounce';
+import PaginationControls from '../common/PaginationControls';
 import type { Database } from '../../lib/database.types';
 
 type CatalogItem = Database['public']['Tables']['catalog_items']['Row'];
@@ -138,10 +141,12 @@ export default function CatalogPage() {
     );
   }, [items]);
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const filteredItems = items.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = item.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      item.description?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      item.category?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
 
     const matchesCategory = selectedCategory === 'all' ||
       (selectedCategory === 'uncategorized' && !item.category) ||
@@ -149,6 +154,9 @@ export default function CatalogPage() {
 
     return matchesSearch && matchesCategory;
   });
+
+  const pagination = usePagination(filteredItems, { initialPageSize: 15 });
+  const paginatedItems = pagination.paginatedItems;
 
   const handleOpenModal = async (item?: CatalogItem) => {
     if (item) {
@@ -603,8 +611,9 @@ export default function CatalogPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredItems.map((item) => (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedItems.map((item) => (
             <div
               key={item.id}
               className="bg-white rounded-2xl shadow-md border border-slate-200 hover:shadow-xl hover:border-primary-300 transition-all duration-300 overflow-hidden group"
@@ -732,6 +741,25 @@ export default function CatalogPage() {
             </div>
           ))}
         </div>
+
+        {filteredItems.length > 0 && (
+          <PaginationControls
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            pageSize={pagination.pageSize}
+            startIndex={pagination.startIndex}
+            endIndex={pagination.endIndex}
+            hasNextPage={pagination.hasNextPage}
+            hasPrevPage={pagination.hasPrevPage}
+            onNextPage={pagination.nextPage}
+            onPrevPage={pagination.prevPage}
+            onGoToPage={pagination.goToPage}
+            onPageSizeChange={pagination.setPageSize}
+            pageSizeOptions={[15, 30, 50]}
+          />
+        )}
+        </>
       )}
 
       {showModal && (

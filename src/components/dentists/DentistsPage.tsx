@@ -3,6 +3,9 @@ import { Plus, Edit, Trash2, Search, Mail, Phone, MapPin, User, CheckCircle2, Cl
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import { usePagination } from '../../hooks/usePagination';
+import { useDebounce } from '../../hooks/useDebounce';
+import PaginationControls from '../common/PaginationControls';
 import type { Database } from '../../lib/database.types';
 
 type Dentist = Database['public']['Tables']['dentists']['Row'];
@@ -85,10 +88,15 @@ export default function DentistsPage() {
     }
   };
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const filteredDentists = dentists.filter((dentist) =>
-    dentist.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    dentist.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    dentist.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+    dentist.email?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
+
+  const pagination = usePagination(filteredDentists, { initialPageSize: 15 });
+  const paginatedDentists = pagination.paginatedItems;
 
   const handleEdit = (dentist: Dentist) => {
     setEditingDentist(dentist);
@@ -231,8 +239,9 @@ export default function DentistsPage() {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDentists.map((dentist) => (
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedDentists.map((dentist) => (
             <div
               key={dentist.id}
               className="bg-white rounded-2xl shadow-md border border-slate-200 hover:shadow-xl hover:border-primary-300 transition-all duration-300 overflow-hidden group"
@@ -357,6 +366,25 @@ export default function DentistsPage() {
             </div>
           ))}
         </div>
+
+        {filteredDentists.length > 0 && (
+          <PaginationControls
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            pageSize={pagination.pageSize}
+            startIndex={pagination.startIndex}
+            endIndex={pagination.endIndex}
+            hasNextPage={pagination.hasNextPage}
+            hasPrevPage={pagination.hasPrevPage}
+            onNextPage={pagination.nextPage}
+            onPrevPage={pagination.prevPage}
+            onGoToPage={pagination.goToPage}
+            onPageSizeChange={pagination.setPageSize}
+            pageSizeOptions={[15, 30, 50]}
+          />
+        )}
+        </>
       )}
 
       {showModal && (

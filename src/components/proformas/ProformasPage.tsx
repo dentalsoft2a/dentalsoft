@@ -3,6 +3,9 @@ import { Plus, Eye, CreditCard as Edit, Trash2, Search, FileDown, Receipt, Mail,
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import { usePagination } from '../../hooks/usePagination';
+import { useDebounce } from '../../hooks/useDebounce';
+import PaginationControls from '../common/PaginationControls';
 import type { Database } from '../../lib/database.types';
 import { generateProformaPDF, generateProformaPDFBase64 } from '../../utils/pdfGenerator';
 import DentistSelector from './DentistSelector';
@@ -89,14 +92,19 @@ export default function ProformasPage() {
     }
   };
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const filteredProformas = proformas.filter((proforma) => {
     const matchesSearch =
-      proforma.proforma_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      proforma.dentists?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      proforma.proforma_number.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      proforma.dentists?.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || proforma.status === statusFilter;
     const notInvoiced = proforma.status !== 'invoiced';
     return matchesSearch && matchesStatus && notInvoiced;
   });
+
+  const pagination = usePagination(filteredProformas, { initialPageSize: 15 });
+  const paginatedProformas = pagination.paginatedItems;
 
   const handleDelete = async (id: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer ce proforma ?')) return;
@@ -452,7 +460,7 @@ export default function ProformasPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {filteredProformas.map((proforma) => (
+                  {paginatedProformas.map((proforma) => (
                     <tr key={proforma.id} className="hover:bg-slate-50 transition">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-medium text-slate-900">{proforma.proforma_number}</div>
@@ -522,7 +530,7 @@ export default function ProformasPage() {
             </div>
 
             <div className="md:hidden divide-y divide-slate-200">
-              {filteredProformas.map((proforma) => (
+              {paginatedProformas.map((proforma) => (
                 <div key={proforma.id} className="p-4 hover:bg-slate-50 transition-colors active:bg-slate-100">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
@@ -594,6 +602,24 @@ export default function ProformasPage() {
                 </div>
               ))}
             </div>
+
+            {filteredProformas.length > 0 && (
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPrevPage}
+                onNextPage={pagination.nextPage}
+                onPrevPage={pagination.prevPage}
+                onGoToPage={pagination.goToPage}
+                onPageSizeChange={pagination.setPageSize}
+                pageSizeOptions={[15, 30, 50]}
+              />
+            )}
           </>
         )}
       </div>

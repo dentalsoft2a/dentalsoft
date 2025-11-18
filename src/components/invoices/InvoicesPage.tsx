@@ -3,6 +3,9 @@ import { Plus, Edit, Search, FileDown, CreditCard, Send, FileText, Eye } from 'l
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import { usePagination } from '../../hooks/usePagination';
+import { useDebounce } from '../../hooks/useDebounce';
+import PaginationControls from '../common/PaginationControls';
 import type { Database } from '../../lib/database.types';
 import { generateInvoicePDF } from '../../utils/pdfGenerator';
 import DentistSelector from '../proformas/DentistSelector';
@@ -118,12 +121,17 @@ export default function InvoicesPage() {
     }
   };
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const filteredInvoices = invoices.filter((invoice) => {
     const matchesSearch =
-      invoice.invoice_number.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.dentists?.name.toLowerCase().includes(searchTerm.toLowerCase());
+      invoice.invoice_number.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      invoice.dentists?.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
     return matchesSearch;
   });
+
+  const pagination = usePagination(filteredInvoices, { initialPageSize: 15 });
+  const paginatedInvoices = pagination.paginatedItems;
 
 
   const handleGeneratePDF = async (invoice: Invoice, returnBase64 = false): Promise<string | undefined> => {
@@ -468,7 +476,7 @@ export default function InvoicesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {filteredInvoices.map((invoice) => (
+                  {paginatedInvoices.map((invoice) => (
                     <tr key={invoice.id} className="hover:bg-slate-50 transition">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="font-medium text-slate-900">{invoice.invoice_number}</div>
@@ -551,7 +559,7 @@ export default function InvoicesPage() {
             </div>
 
             <div className="md:hidden divide-y divide-slate-200">
-              {filteredInvoices.map((invoice) => (
+              {paginatedInvoices.map((invoice) => (
                 <div key={invoice.id} className="p-4 hover:bg-slate-50 transition-colors active:bg-slate-100">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
@@ -627,6 +635,24 @@ export default function InvoicesPage() {
                 </div>
               ))}
             </div>
+
+            {filteredInvoices.length > 0 && (
+              <PaginationControls
+                currentPage={pagination.currentPage}
+                totalPages={pagination.totalPages}
+                totalItems={pagination.totalItems}
+                pageSize={pagination.pageSize}
+                startIndex={pagination.startIndex}
+                endIndex={pagination.endIndex}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPrevPage}
+                onNextPage={pagination.nextPage}
+                onPrevPage={pagination.prevPage}
+                onGoToPage={pagination.goToPage}
+                onPageSizeChange={pagination.setPageSize}
+                pageSizeOptions={[15, 30, 50]}
+              />
+            )}
           </>
         )}
       </div>

@@ -3,6 +3,9 @@ import { Plus, Edit, Trash2, Search, Save, X, Box, AlertTriangle, TrendingUp, Re
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import { usePagination } from '../../hooks/usePagination';
+import { useDebounce } from '../../hooks/useDebounce';
+import PaginationControls from '../common/PaginationControls';
 import ResourceVariantManager from './ResourceVariantManager';
 import ResourceBatchLinkManager from '../batch/ResourceBatchLinkManager';
 import { ExtensionGuard } from '../common/ExtensionGuard';
@@ -167,10 +170,15 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
     return r.is_active && currentStock <= r.low_stock_threshold;
   });
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+
   const filteredResources = resources.filter((resource) =>
-    resource.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    resource.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    resource.name.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+    resource.description?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
   );
+
+  const pagination = usePagination(filteredResources, { initialPageSize: 15 });
+  const paginatedResources = pagination.paginatedItems;
 
   const filteredPredefinedResources = predefinedResources.filter((resource) =>
     resource.name.toLowerCase().includes(predefinedSearchTerm.toLowerCase()) ||
@@ -866,8 +874,9 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredResources.map((resource) => {
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {paginatedResources.map((resource) => {
             const currentStock = resource.has_variants && resource.total_variant_stock !== undefined
               ? resource.total_variant_stock
               : resource.stock_quantity;
@@ -994,6 +1003,25 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
             );
           })}
         </div>
+
+        {filteredResources.length > 0 && (
+          <PaginationControls
+            currentPage={pagination.currentPage}
+            totalPages={pagination.totalPages}
+            totalItems={pagination.totalItems}
+            pageSize={pagination.pageSize}
+            startIndex={pagination.startIndex}
+            endIndex={pagination.endIndex}
+            hasNextPage={pagination.hasNextPage}
+            hasPrevPage={pagination.hasPrevPage}
+            onNextPage={pagination.nextPage}
+            onPrevPage={pagination.prevPage}
+            onGoToPage={pagination.goToPage}
+            onPageSizeChange={pagination.setPageSize}
+            pageSizeOptions={[15, 30, 50]}
+          />
+        )}
+        </>
       )}
 
       {showVariantManager && (
