@@ -28,6 +28,8 @@ import { usePermissions } from '../../hooks/usePermissions';
 import { supabase } from '../../lib/supabase';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import PWAInstallPrompt from '../common/PWAInstallPrompt';
+import { DemoBadge } from '../demo/DemoBadge';
+import { DemoTimer } from '../demo/DemoTimer';
 
 function getAppVersion(): string {
   const cachedVersion = localStorage.getItem('app_version');
@@ -45,11 +47,16 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, currentPage, onNavigate, isSuperAdmin, lowStockCount = 0, lowStockResourcesCount = 0, hasValidSubscription = true }: DashboardLayoutProps) {
-  const { profile, userProfile, signOut, isEmployee, laboratoryId, employeeInfo } = useAuth();
+  const { profile, userProfile, signOut, isEmployee, laboratoryId, employeeInfo, isDemoAccount } = useAuth();
   const { hasMenuAccess, isOwner, rolePermissions, loading: permissionsLoading } = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [laboratoryProfile, setLaboratoryProfile] = useState<any>(null);
   const [appVersion, setAppVersion] = useState<string>('');
+
+  const handleDemoExpired = () => {
+    alert('Votre session de démonstration est terminée. Merci d\'avoir essayé DentalCloud !');
+    signOut();
+  };
 
   useEffect(() => {
     setAppVersion(getAppVersion());
@@ -141,14 +148,18 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
               <h1 className="font-bold text-lg bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">DentalCloud</h1>
             </div>
           </div>
-          {(profile || laboratoryProfile) && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-primary-50 to-cyan-50 rounded-full border border-primary-100">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs font-medium text-slate-700 truncate max-w-[100px]">
-                {isEmployee ? laboratoryProfile?.laboratory_name : profile?.first_name}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {isDemoAccount ? (
+              <DemoBadge />
+            ) : (profile || laboratoryProfile) && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-primary-50 to-cyan-50 rounded-full border border-primary-100">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span className="text-xs font-medium text-slate-700 truncate max-w-[100px]">
+                  {isEmployee ? laboratoryProfile?.laboratory_name : profile?.first_name}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -307,6 +318,8 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
           {children}
         </div>
       </main>
+
+      {isDemoAccount && <DemoTimer onExpired={handleDemoExpired} />}
 
       <PWAInstallPrompt />
     </div>
