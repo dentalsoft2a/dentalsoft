@@ -203,6 +203,8 @@ export async function generateDemoData(userId: string): Promise<DemoDataResult> 
         total: selectedTeeth.length * catalogItem.default_price
       }];
 
+      const deliveryNumber = `BL${new Date(date).getFullYear()}${String(i + 1).padStart(4, '0')}`;
+
       const { data, error } = await supabase
         .from('delivery_notes')
         .insert({
@@ -210,6 +212,7 @@ export async function generateDemoData(userId: string): Promise<DemoDataResult> 
           dentist_id: dentist.id,
           patient_id: patient.id,
           patient_name: `${patient.first_name} ${patient.last_name}`,
+          delivery_number: deliveryNumber,
           date: date,
           items: items,
           status: status,
@@ -319,15 +322,6 @@ export async function generateDemoData(userId: string): Promise<DemoDataResult> 
 
     console.log('Generated invoices:', invoices.length);
 
-    // Marquer les données comme étant de démo
-    await supabase
-      .from('demo_data_markers')
-      .insert({
-        user_id: userId,
-        data_type: 'complete_demo_set',
-        created_at: new Date().toISOString()
-      });
-
     console.log('Demo data generation completed successfully');
 
     return {
@@ -369,7 +363,6 @@ export async function cleanupDemoData(userId: string): Promise<{ success: boolea
     await supabase.from('catalog_items').delete().eq('user_id', userId);
     await supabase.from('patients').delete().eq('user_id', userId);
     await supabase.from('dentists').delete().eq('user_id', userId);
-    await supabase.from('demo_data_markers').delete().eq('user_id', userId);
 
     console.log('Demo data cleanup completed');
 
