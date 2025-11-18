@@ -491,6 +491,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userId = authData.user.id;
       console.log('Demo user created:', userId);
 
+      // Se connecter immédiatement pour obtenir une session active
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: demoEmail,
+        password: demoPassword
+      });
+
+      if (signInError) {
+        console.error('Sign in error:', signInError);
+        throw signInError;
+      }
+
+      console.log('Demo user signed in successfully');
+
       // Créer le profil profiles
       const { error: profileError } = await supabase
         .from('profiles')
@@ -509,6 +522,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (profileError) {
         console.error('Profile creation error:', profileError);
         throw profileError;
+      }
+
+      // Créer le profil user_profiles avec marqueur démo
+      const { error: userProfileError } = await supabase
+        .from('user_profiles')
+        .upsert({
+          id: userId,
+          email: demoEmail,
+          role: 'laboratory',
+          subscription_status: 'trial',
+          trial_ends_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+          is_demo_account: true
+        }, {
+          onConflict: 'id'
+        });
+
+      if (userProfileError) {
+        console.error('User profile creation error:', userProfileError);
+        throw userProfileError;
       }
 
       // Créer la session démo
