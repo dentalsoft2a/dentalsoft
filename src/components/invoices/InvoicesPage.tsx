@@ -86,7 +86,24 @@ export default function InvoicesPage() {
     try {
       const { data, error } = await supabase
         .from('invoices')
-        .select('*, dentists(name)')
+        .select(`
+          id,
+          invoice_number,
+          date,
+          due_date,
+          subtotal,
+          tax_amount,
+          total,
+          status,
+          user_id,
+          dentist_id,
+          payment_method,
+          payment_date,
+          notes,
+          created_at,
+          updated_at,
+          dentists(name)
+        `)
         .eq('user_id', user.id)
         .order('date', { ascending: false });
 
@@ -138,7 +155,7 @@ export default function InvoicesPage() {
     try {
       const { data: dentistData, error: dentistError } = await supabase
         .from('dentists')
-        .select('*')
+        .select('id, name, email, phone, address')
         .eq('id', invoice.dentist_id)
         .single();
 
@@ -288,7 +305,7 @@ export default function InvoicesPage() {
     try {
       const { data: dentistData, error: dentistError } = await supabase
         .from('dentists')
-        .select('*')
+        .select('id, name, email, phone, address')
         .eq('id', invoice.dentist_id)
         .single();
 
