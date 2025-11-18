@@ -530,7 +530,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .upsert({
           id: userId,
           email: demoEmail,
-          role: 'laboratory',
+          role: 'user',
           subscription_status: 'trial',
           trial_ends_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
           is_demo_account: true

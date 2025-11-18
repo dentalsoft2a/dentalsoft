@@ -51,7 +51,8 @@ CREATE INDEX idx_user_profiles_demo_account
 
 **Fichier:** `src/contexts/AuthContext.tsx`
 
-**Problème:** L'utilisateur n'était pas authentifié au moment de l'insertion dans `demo_sessions`.
+**Problème 1:** L'utilisateur n'était pas authentifié au moment de l'insertion dans `demo_sessions`.
+**Problème 2:** Le rôle 'laboratory' n'est pas valide (contrainte `user_profiles_role_check`).
 
 **Solution:**
 
@@ -67,7 +68,7 @@ const { error: signInError } = await supabase.auth.signInWithPassword({
 });
 ```
 
-2. **Création explicite du user_profile:**
+2. **Création explicite du user_profile avec le bon rôle:**
 ```typescript
 // Créer le profil user_profiles avec marqueur démo
 await supabase
@@ -75,12 +76,14 @@ await supabase
   .upsert({
     id: userId,
     email: demoEmail,
-    role: 'laboratory',
+    role: 'user', // ✅ Correction: 'user' au lieu de 'laboratory'
     subscription_status: 'trial',
     trial_ends_at: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
     is_demo_account: true
   });
 ```
+
+**Note:** La contrainte accepte uniquement `'user'` ou `'super_admin'`.
 
 ## Ordre des Opérations Corrigé
 
