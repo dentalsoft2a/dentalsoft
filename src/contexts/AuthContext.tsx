@@ -111,8 +111,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })();
     });
 
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // useEffect séparé pour gérer beforeunload
+  useEffect(() => {
     // Détecter la fermeture de l'onglet/fenêtre pour les comptes démo
-    const handleBeforeUnload = async (e: BeforeUnloadEvent) => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDemoAccount && user?.id) {
         // Utiliser sendBeacon pour une requête asynchrone qui survit à la fermeture
         const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cleanup-demo-accounts`;
@@ -125,7 +130,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      subscription.unsubscribe();
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [isDemoAccount, user]);
