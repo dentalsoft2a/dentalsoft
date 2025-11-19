@@ -231,7 +231,7 @@ export default function BatchSelector({
                 <div>
                   <label className="block text-xs text-slate-600 mb-1">Lot</label>
                   <select
-                    value={batch.batch_number_id}
+                    value={batch.batch_number_id || ''}
                     onChange={(e) => updateBatch(index, 'batch_number_id', e.target.value)}
                     className="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
