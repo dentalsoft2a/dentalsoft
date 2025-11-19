@@ -390,24 +390,11 @@ export default function InvoicesPage() {
 
   const currentMonthInvoices = invoices.filter(invoice => {
     const invoiceDate = new Date(invoice.date);
-    const matches = invoiceDate.getMonth() === currentMonth && invoiceDate.getFullYear() === currentYear;
-    console.log('Invoice filter debug:', {
-      invoiceId: invoice.id,
-      invoiceDate: invoice.date,
-      invoiceMonth: invoiceDate.getMonth(),
-      currentMonth,
-      invoiceYear: invoiceDate.getFullYear(),
-      currentYear,
-      matches,
-      status: invoice.status,
-      total: invoice.total,
-      net_amount: invoice.net_amount
-    });
-    return matches;
+    return invoiceDate.getMonth() === currentMonth && invoiceDate.getFullYear() === currentYear;
   });
 
   const totalPaidCurrentMonth = currentMonthInvoices
-    .filter(invoice => invoice.status === 'paid' || invoice.status === 'credit_note_paid')
+    .filter(invoice => invoice.status === 'paid' || invoice.status === 'credit_note_paid' || invoice.status === 'credit_note')
     .reduce((sum, invoice) => sum + Number(invoice.net_amount || invoice.total), 0);
 
   const totalUnpaidCurrentMonth = currentMonthInvoices
@@ -455,7 +442,7 @@ export default function InvoicesPage() {
                 </span>
               </div>
               <p className="text-xs text-slate-600 mt-1 relative">
-                {currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid').length} facture{currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid').length > 1 ? 's' : ''} payée{currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid').length > 1 ? 's' : ''}
+                {currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid' || i.status === 'credit_note').length} facture{currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid' || i.status === 'credit_note').length > 1 ? 's' : ''} payée{currentMonthInvoices.filter(i => i.status === 'paid' || i.status === 'credit_note_paid' || i.status === 'credit_note').length > 1 ? 's' : ''}
               </p>
             </div>
             <div className="relative bg-gradient-to-br from-red-50/80 to-orange-50/80 border border-red-200/50 rounded-xl p-4 overflow-hidden">
