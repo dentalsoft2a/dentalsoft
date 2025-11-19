@@ -126,25 +126,25 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/98 backdrop-blur-xl border-b border-slate-200/80 z-30 px-3 shadow-lg" style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))', paddingBottom: '0.75rem', height: 'calc(64px + env(safe-area-inset-top))' }}>
-        <div className="flex items-center justify-between h-full">
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-30 px-4 shadow-md" style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: '1rem', height: 'calc(72px + env(safe-area-inset-top))' }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="flex-shrink-0 p-2 rounded-xl hover:bg-gradient-to-r hover:from-primary-50 hover:to-cyan-50 transition-all duration-200 active:scale-95 touch-manipulation"
+              className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-primary-50 hover:to-cyan-50 transition-all duration-200 active:scale-95"
               aria-label="Toggle menu"
             >
               {sidebarOpen ? <X className="w-6 h-6 text-slate-700" /> : <Menu className="w-6 h-6 text-slate-700" />}
             </button>
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <DentalCloudLogo size={26} showText={false} />
-              <h1 className="font-bold text-base sm:text-lg bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent truncate">DentalCloud</h1>
+            <div className="flex items-center gap-2">
+              <DentalCloudLogo size={28} showText={false} />
+              <h1 className="font-bold text-lg bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">DentalCloud</h1>
             </div>
           </div>
           {(profile || laboratoryProfile) && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-primary-50 to-cyan-50 rounded-full border border-primary-100 flex-shrink-0 ml-2">
-              <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-[11px] sm:text-xs font-medium text-slate-700 truncate max-w-[80px] sm:max-w-[100px]">
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-primary-50 to-cyan-50 rounded-full border border-primary-100">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-xs font-medium text-slate-700 truncate max-w-[100px]">
                 {isEmployee ? laboratoryProfile?.laboratory_name : profile?.first_name}
               </span>
             </div>
@@ -153,35 +153,35 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
       </div>
 
       <aside className={`
-        fixed top-0 left-0 bottom-0 w-[88vw] max-w-[340px] bg-white/98 backdrop-blur-xl border-r border-slate-200/80 z-40 shadow-2xl
-        transition-all duration-300 ease-out lg:w-64 lg:translate-x-0 lg:z-50 lg:bg-white/95 lg:max-w-none
+        fixed top-0 left-0 bottom-0 w-[85vw] max-w-[320px] bg-white/95 backdrop-blur-xl border-r border-slate-200/50 z-40 shadow-2xl
+        transition-all duration-300 ease-out lg:w-64 lg:translate-x-0 lg:z-50
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `} style={{ paddingTop: 'env(safe-area-inset-top)' }}>
+      `}>
         <div className="flex flex-col h-full">
-          <div className="lg:p-5 p-4 border-b border-slate-200/80">
-            <div className="flex items-center justify-between mb-3 lg:mb-4">
+          <div className="p-5 border-b border-slate-200/50">
+            <div className="flex items-center justify-between mb-4">
               <DentalCloudLogo size={36} showText={true} />
               <button
                 onClick={() => setSidebarOpen(false)}
-                className="lg:hidden p-2 rounded-xl hover:bg-slate-100 transition-colors active:scale-95 touch-manipulation"
+                className="lg:hidden p-2 rounded-lg hover:bg-slate-100 transition-colors active:scale-95"
                 aria-label="Close menu"
               >
-                <X className="w-5 h-5 text-slate-600" />
+                <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
             {(profile || laboratoryProfile) && (
-              <div className="px-3 py-2.5 bg-gradient-to-r from-slate-50 to-slate-100/80 rounded-xl border border-slate-200/80 shadow-sm">
-                <p className="text-xs font-semibold text-slate-900 truncate leading-tight">
+              <div className="px-3 py-2 bg-gradient-to-r from-slate-50 to-slate-100 rounded-lg border border-slate-200">
+                <p className="text-xs font-semibold text-slate-900 truncate">
                   {isEmployee ? laboratoryProfile?.laboratory_name : profile?.laboratory_name}
                 </p>
-                <p className="text-[11px] text-slate-500 mt-1 truncate leading-tight">
+                <p className="text-xs text-slate-500 mt-0.5 truncate">
                   {isEmployee ? profile?.email || userProfile?.email : profile?.email}
                 </p>
               </div>
             )}
           </div>
 
-          <nav className="flex-1 lg:p-3 p-2.5 space-y-1 overflow-y-auto overscroll-contain">
+          <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.page;
@@ -198,21 +198,21 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                   }}
                   disabled={isDisabled}
                   className={`
-                    w-full flex items-center gap-3 lg:gap-2.5 px-3.5 lg:px-3 py-3 lg:py-2.5 rounded-xl transition-all duration-200 relative touch-manipulation
+                    w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 relative touch-manipulation
                     ${isDisabled
                       ? 'opacity-50 cursor-not-allowed text-slate-400'
                       : isActive
                         ? 'bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-semibold shadow-lg shadow-primary-500/30'
-                        : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-[0.98]'
+                        : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
                     }
                   `}
                 >
-                  <Icon className="w-5 h-5 lg:w-[18px] lg:h-[18px] flex-shrink-0" />
-                  <span className="text-[15px] lg:text-[14px] font-medium">{item.name}</span>
+                  <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                  <span className="text-[14px]">{item.name}</span>
                   {(showBadge || showResourceBadge) && (
                     <div className="ml-auto flex items-center gap-1.5">
                       <AlertTriangle className="w-4 h-4 text-orange-500" />
-                      <span className="px-2 py-0.5 bg-orange-500 text-white text-[11px] font-bold rounded-full animate-pulse">
+                      <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full animate-pulse">
                         {badgeCount}
                       </span>
                     </div>
@@ -222,7 +222,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
             })}
           </nav>
 
-          <div className="lg:p-3 p-2.5 border-t border-slate-200/80 space-y-1">
+          <div className="p-3 border-t border-slate-200/50 space-y-0.5">
             {bottomNavigation.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.page;
@@ -234,32 +234,32 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                     setSidebarOpen(false);
                   }}
                   className={`
-                    w-full flex items-center gap-3 lg:gap-2.5 px-3.5 lg:px-3 py-3 lg:py-2.5 rounded-xl transition-all duration-200 touch-manipulation
+                    w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 touch-manipulation
                     ${isActive
                       ? 'bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-semibold shadow-lg'
-                      : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200 active:scale-[0.98]'
+                      : 'text-slate-700 hover:bg-slate-100 active:bg-slate-200 active:scale-98'
                     }
                   `}
                 >
-                  <Icon className="w-5 h-5 lg:w-[18px] lg:h-[18px] flex-shrink-0" />
-                  <span className="text-[14px] lg:text-[13px] font-medium">{item.name}</span>
+                  <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                  <span className="text-[13px]">{item.name}</span>
                 </button>
               );
             })}
           </div>
 
-          <div className="lg:p-3 p-2.5 border-t border-slate-200/80" style={{ paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom))' }}>
+          <div className="p-3 border-t border-slate-200/50">
             <button
               onClick={() => {
                 signOut();
                 setSidebarOpen(false);
               }}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 lg:py-2.5 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-all duration-200 active:scale-[0.98] font-semibold touch-manipulation shadow-sm"
+              className="w-full flex items-center justify-center gap-2.5 px-3 py-2.5 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-all duration-200 active:scale-98 font-medium touch-manipulation"
             >
-              <LogOut className="w-5 h-5 lg:w-[18px] lg:h-[18px]" />
-              <span className="text-[15px] lg:text-[14px]">Déconnexion</span>
+              <LogOut className="w-[18px] h-[18px]" />
+              <span className="text-[14px]">Déconnexion</span>
             </button>
-            <div className="mt-2.5 lg:mt-2 text-center">
+            <div className="mt-2 text-center">
               <p className="text-[10px] text-slate-400 font-mono">
                 v{appVersion}
               </p>
@@ -270,13 +270,13 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
 
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-[35] lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[35] lg:hidden transition-opacity duration-300"
           onClick={() => setSidebarOpen(false)}
           aria-hidden="true"
         />
       )}
 
-      <main className="lg:pl-64 flex-1 overflow-y-auto lg:mt-0" style={{ marginTop: 'calc(64px + env(safe-area-inset-top))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <main className="lg:pl-64 flex-1 overflow-y-auto lg:mt-0" style={{ marginTop: 'calc(72px + env(safe-area-inset-top))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="p-4 sm:p-6 lg:p-8 min-h-full">
           {showSubscriptionWarning && (
             <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg shadow-md">
