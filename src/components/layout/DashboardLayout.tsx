@@ -276,7 +276,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
         />
       )}
 
-      <main className="lg:pl-64 flex-1 overflow-y-auto lg:mt-0" style={{ marginTop: 'calc(72px + env(safe-area-inset-top))' }}>
+      <main className="lg:pl-64 flex-1 overflow-y-auto lg:mt-0" style={{ marginTop: 'calc(72px + env(safe-area-inset-top))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
         <div className="p-4 sm:p-6 lg:p-8 min-h-full">
           {showSubscriptionWarning && (
             <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg shadow-md">

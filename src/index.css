@@ -28,12 +28,22 @@
     overflow-y: auto;
     overscroll-behavior: none;
     -webkit-overflow-scrolling: touch;
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }
 
 @layer utilities {
   .modal-open {
     overflow: hidden !important;
+  }
+
+  /* Safe Area Utilities */
+  .pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .mb-safe {
+    margin-bottom: env(safe-area-inset-bottom);
   }
 
   /* Custom Scrollbar Styles */
