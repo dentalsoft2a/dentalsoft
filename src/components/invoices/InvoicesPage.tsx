@@ -390,7 +390,20 @@ export default function InvoicesPage() {
 
   const currentMonthInvoices = invoices.filter(invoice => {
     const invoiceDate = new Date(invoice.date);
-    return invoiceDate.getMonth() === currentMonth && invoiceDate.getFullYear() === currentYear;
+    const matches = invoiceDate.getMonth() === currentMonth && invoiceDate.getFullYear() === currentYear;
+    console.log('Invoice filter debug:', {
+      invoiceId: invoice.id,
+      invoiceDate: invoice.date,
+      invoiceMonth: invoiceDate.getMonth(),
+      currentMonth,
+      invoiceYear: invoiceDate.getFullYear(),
+      currentYear,
+      matches,
+      status: invoice.status,
+      total: invoice.total,
+      net_amount: invoice.net_amount
+    });
+    return matches;
   });
 
   const totalPaidCurrentMonth = currentMonthInvoices
