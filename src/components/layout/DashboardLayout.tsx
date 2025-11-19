@@ -21,7 +21,9 @@ import {
   Cloud,
   Link as LinkIcon,
   ClipboardCheck,
-  Tag
+  Tag,
+  Home,
+  MoreHorizontal
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -126,29 +128,34 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-md border-b border-slate-200 z-30 px-4 shadow-md" style={{ paddingTop: 'calc(1rem + env(safe-area-inset-top))', paddingBottom: '1rem', height: 'calc(72px + env(safe-area-inset-top))' }}>
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-b border-slate-200/50 z-30 px-4 shadow-sm" style={{ paddingTop: 'calc(0.75rem + env(safe-area-inset-top))', paddingBottom: '0.75rem', height: 'calc(72px + env(safe-area-inset-top))' }}>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="p-2.5 rounded-xl hover:bg-gradient-to-r hover:from-primary-50 hover:to-cyan-50 transition-all duration-200 active:scale-95"
-              aria-label="Toggle menu"
-            >
-              {sidebarOpen ? <X className="w-6 h-6 text-slate-700" /> : <Menu className="w-6 h-6 text-slate-700" />}
-            </button>
-            <div className="flex items-center gap-2">
-              <DentalCloudLogo size={28} showText={false} />
-              <h1 className="font-bold text-lg bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent">DentalCloud</h1>
+          <div className="flex items-center gap-2">
+            <DentalCloudLogo size={32} showText={false} />
+            <div>
+              <h1 className="font-bold text-base bg-gradient-to-r from-primary-600 to-cyan-600 bg-clip-text text-transparent leading-tight">DentalCloud</h1>
+              {(profile || laboratoryProfile) && (
+                <p className="text-[10px] text-slate-500 leading-tight truncate max-w-[150px]">
+                  {isEmployee ? laboratoryProfile?.laboratory_name : profile?.laboratory_name}
+                </p>
+              )}
             </div>
           </div>
-          {(profile || laboratoryProfile) && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-primary-50 to-cyan-50 rounded-full border border-primary-100">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-xs font-medium text-slate-700 truncate max-w-[100px]">
-                {isEmployee ? laboratoryProfile?.laboratory_name : profile?.first_name}
-              </span>
-            </div>
-          )}
+          <div className="flex items-center gap-2">
+            {(lowStockCount > 0 || lowStockResourcesCount > 0) && (
+              <div className="relative">
+                <div className="flex items-center gap-1 px-2 py-1 bg-orange-50 rounded-full border border-orange-200">
+                  <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
+                  <span className="text-[10px] font-bold text-orange-600">{lowStockCount + lowStockResourcesCount}</span>
+                </div>
+              </div>
+            )}
+            {(profile || laboratoryProfile) && (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-500 to-cyan-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
+                {(isEmployee ? laboratoryProfile?.laboratory_name : profile?.first_name)?.charAt(0).toUpperCase()}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -276,7 +283,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
         />
       )}
 
-      <main className="lg:pl-64 flex-1 overflow-y-auto lg:mt-0" style={{ marginTop: 'calc(72px + env(safe-area-inset-top))', paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <main className="lg:pl-64 flex-1 overflow-y-auto lg:mt-0" style={{ marginTop: 'calc(72px + env(safe-area-inset-top))', paddingBottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
         <div className="p-4 sm:p-6 lg:p-8 min-h-full">
           {showSubscriptionWarning && (
             <div className="mb-6 bg-orange-50 border-l-4 border-orange-500 p-4 rounded-lg shadow-md">
@@ -309,6 +316,84 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
       </main>
 
       <PWAInstallPrompt />
+
+      {/* Bottom Navigation - Mobile Only */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-200/50 shadow-2xl z-50" style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)' }}>
+        <div className="grid grid-cols-5 gap-1 px-2 pt-2">
+          <button
+            onClick={() => onNavigate('dashboard')}
+            className={`relative flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 touch-manipulation ${
+              currentPage === 'dashboard'
+                ? 'bg-gradient-to-b from-primary-50 to-cyan-50 text-primary-600 scale-105'
+                : 'text-slate-600 active:bg-slate-50 active:scale-95'
+            }`}
+          >
+            <Home className={`w-5 h-5 transition-all ${currentPage === 'dashboard' ? 'stroke-[2.5]' : 'stroke-[2]'}`} />
+            <span className={`text-[10px] font-medium transition-all ${currentPage === 'dashboard' ? 'font-bold' : ''}`}>Accueil</span>
+            {currentPage === 'dashboard' && (
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-primary-500 to-cyan-500 rounded-full"></div>
+            )}
+          </button>
+
+          <button
+            onClick={() => onNavigate('delivery-notes')}
+            className={`relative flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 touch-manipulation ${
+              currentPage === 'delivery-notes'
+                ? 'bg-gradient-to-b from-primary-50 to-cyan-50 text-primary-600 scale-105'
+                : 'text-slate-600 active:bg-slate-50 active:scale-95'
+            }`}
+          >
+            <Truck className={`w-5 h-5 transition-all ${currentPage === 'delivery-notes' ? 'stroke-[2.5]' : 'stroke-[2]'}`} />
+            <span className={`text-[10px] font-medium transition-all ${currentPage === 'delivery-notes' ? 'font-bold' : ''}`}>Bons</span>
+            {currentPage === 'delivery-notes' && (
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-primary-500 to-cyan-500 rounded-full"></div>
+            )}
+          </button>
+
+          <button
+            onClick={() => onNavigate('invoices')}
+            className={`relative flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 touch-manipulation ${
+              currentPage === 'invoices'
+                ? 'bg-gradient-to-b from-primary-50 to-cyan-50 text-primary-600 scale-105'
+                : 'text-slate-600 active:bg-slate-50 active:scale-95'
+            }`}
+          >
+            <Receipt className={`w-5 h-5 transition-all ${currentPage === 'invoices' ? 'stroke-[2.5]' : 'stroke-[2]'}`} />
+            <span className={`text-[10px] font-medium transition-all ${currentPage === 'invoices' ? 'font-bold' : ''}`}>Factures</span>
+            {currentPage === 'invoices' && (
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-primary-500 to-cyan-500 rounded-full"></div>
+            )}
+          </button>
+
+          <button
+            onClick={() => onNavigate('dentists')}
+            className={`relative flex flex-col items-center gap-1 py-2 px-1 rounded-xl transition-all duration-200 touch-manipulation ${
+              currentPage === 'dentists'
+                ? 'bg-gradient-to-b from-primary-50 to-cyan-50 text-primary-600 scale-105'
+                : 'text-slate-600 active:bg-slate-50 active:scale-95'
+            }`}
+          >
+            <Users className={`w-5 h-5 transition-all ${currentPage === 'dentists' ? 'stroke-[2.5]' : 'stroke-[2]'}`} />
+            <span className={`text-[10px] font-medium transition-all ${currentPage === 'dentists' ? 'font-bold' : ''}`}>Clients</span>
+            {currentPage === 'dentists' && (
+              <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-12 h-1 bg-gradient-to-r from-primary-500 to-cyan-500 rounded-full"></div>
+            )}
+          </button>
+
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="relative flex flex-col items-center gap-1 py-2 px-1 rounded-xl text-slate-600 active:bg-slate-50 active:scale-95 transition-all duration-200 touch-manipulation"
+          >
+            {(lowStockCount > 0 || lowStockResourcesCount > 0) && (
+              <div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-gradient-to-br from-orange-500 to-red-500 rounded-full flex items-center justify-center shadow-md animate-pulse">
+                <span className="text-[8px] font-bold text-white">{lowStockCount + lowStockResourcesCount}</span>
+              </div>
+            )}
+            <MoreHorizontal className="w-5 h-5 stroke-[2]" />
+            <span className="text-[10px] font-medium">Plus</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }
