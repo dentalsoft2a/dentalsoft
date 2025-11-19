@@ -83,7 +83,7 @@ export default function DeliveryNotesPage() {
     try {
       const { data, error } = await supabase
         .from('delivery_notes')
-        .select('id, delivery_number, date, status, patient_name, patient_code, created_at, current_stage_id, progress_percentage, created_by_dentist, work_description, tooth_numbers, shade, notes, prescription_date, rejection_reason, rejected_at, dentists(name)')
+        .select('id, delivery_number, date, status, patient_name, patient_code, dentist_id, created_at, current_stage_id, progress_percentage, created_by_dentist, work_description, tooth_numbers, shade, notes, prescription_date, rejection_reason, rejected_at, dentists(name)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -371,7 +371,7 @@ export default function DeliveryNotesPage() {
     try {
       const { data: dentistData, error: dentistError } = await supabase
         .from('dentists')
-        .select('*')
+        .select('id, name, email, phone, address')
         .eq('id', note.dentist_id)
         .single();
 
@@ -800,7 +800,7 @@ function DeliveryNoteModal({ noteId, onClose, onSave }: DeliveryNoteModalProps) 
     try {
       const { data, error } = await supabase
         .from('dentists')
-        .select('*')
+        .select('id, name, email, phone, address')
         .eq('user_id', user.id)
         .order('name');
 
