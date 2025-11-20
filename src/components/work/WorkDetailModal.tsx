@@ -8,14 +8,9 @@ import {
 import DatePicker from '../common/DatePicker';
 import CustomSelect from '../common/CustomSelect';
 import EmployeeAssignment from './EmployeeAssignment';
+import { DEFAULT_PRODUCTION_STAGES, calculateProgressFromStage, type StandardProductionStage } from '../../config/defaultProductionStages';
 
-interface WorkStage {
-  id: string;
-  name: string;
-  description: string;
-  order_index: number;
-  color: string;
-}
+type WorkStage = StandardProductionStage;
 
 interface WorkDetailModalProps {
   noteId: string | null;
@@ -178,9 +173,25 @@ export default function WorkDetailModal({
 
       if (error) throw error;
 
+      // Only save stages that have actual data (completed, notes, or time spent)
       for (const stage of workStages) {
         const progress = stageProgress[stage.id];
         if (!progress) continue;
+
+        // Skip if stage has no meaningful data
+        const hasData = progress.is_completed ||
+                       (progress.notes && progress.notes.trim() !== '') ||
+                       (progress.time_spent_minutes && progress.time_spent_minutes > 0);
+
+        if (!hasData) {
+          // Delete the record if it exists but has no data
+          await supabase
+            .from('delivery_note_stages')
+            .delete()
+            .eq('delivery_note_id', noteId)
+            .eq('stage_id', stage.id);
+          continue;
+        }
 
         const { data: existing } = await supabase
           .from('delivery_note_stages')
@@ -201,7 +212,8 @@ export default function WorkDetailModal({
               updated_at: new Date().toISOString()
             })
             .eq('id', existing.id);
-        } else if (progress.is_completed || progress.notes || progress.time_spent_minutes > 0) {
+        } else {
+          // Only insert if there's actual data
           await supabase
             .from('delivery_note_stages')
             .insert({

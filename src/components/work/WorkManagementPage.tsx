@@ -12,6 +12,7 @@ import { useEmployeePermissions } from '../../hooks/useEmployeePermissions';
 import WorkDetailModal from './WorkDetailModal';
 import WorkKanbanView from './WorkKanbanView';
 import { ExtensionGuard } from '../common/ExtensionGuard';
+import { DEFAULT_PRODUCTION_STAGES, type StandardProductionStage } from '../../config/defaultProductionStages';
 
 interface DeliveryNote {
   id: string;
@@ -34,13 +35,7 @@ interface DeliveryNote {
   comments_count?: number;
 }
 
-interface WorkStage {
-  id: string;
-  name: string;
-  description: string;
-  order_index: number;
-  color: string;
-}
+type WorkStage = StandardProductionStage;
 
 interface Stats {
   total: number;
@@ -82,7 +77,7 @@ export default function WorkManagementPage() {
 
   useEffect(() => {
     if (user) {
-      loadWorkStages();
+      setWorkStages(DEFAULT_PRODUCTION_STAGES);
       loadDeliveryNotes();
     }
   }, [user]);
@@ -95,7 +90,7 @@ export default function WorkManagementPage() {
         allowedStagesCount: employeePerms.allowedStages.length,
         allowedStages: employeePerms.allowedStages
       });
-      loadWorkStages();
+      setWorkStages(DEFAULT_PRODUCTION_STAGES);
       loadDeliveryNotes();
     }
   }, [employeePerms.loading, employeePerms.allowedStages.join(','), employeePerms.canEditAllStages]);
@@ -104,53 +99,6 @@ export default function WorkManagementPage() {
     applyFilters();
   }, [deliveryNotes, searchTerm, filters, showMyWorksOnly, employeePerms.isEmployee]);
 
-  const loadWorkStages = async () => {
-    if (!user) return;
-
-    try {
-      const userId = employeePerms.isEmployee ? employeePerms.laboratoryId : user.id;
-      if (!userId) return;
-
-      const { data, error } = await supabase
-        .from('production_stages')
-        .select('*')
-        .eq('user_id', userId)
-        .order('order_index');
-
-      if (error) throw error;
-
-      // Filter stages based on employee permissions
-      let stages = data || [];
-      console.log('[WorkManagement] Before filtering:', {
-        totalStages: stages.length,
-        stageNames: stages.map(s => s.name),
-        isEmployee: employeePerms.isEmployee,
-        canEditAllStages: employeePerms.canEditAllStages,
-        allowedStages: employeePerms.allowedStages
-      });
-
-      if (employeePerms.isEmployee && !employeePerms.canEditAllStages) {
-        stages = stages.filter(stage => {
-          const isAllowed = employeePerms.allowedStages.includes(stage.id);
-          console.log('[WorkManagement] Stage filter:', {
-            stageName: stage.name,
-            stageId: stage.id,
-            isAllowed
-          });
-          return isAllowed;
-        });
-      }
-
-      console.log('[WorkManagement] After filtering:', {
-        filteredStagesCount: stages.length,
-        filteredStageNames: stages.map(s => s.name)
-      });
-
-      setWorkStages(stages);
-    } catch (error) {
-      console.error('Error loading work stages:', error);
-    }
-  };
 
   const loadDeliveryNotes = async () => {
     if (!user) return;
@@ -165,8 +113,7 @@ export default function WorkManagementPage() {
         .from('delivery_notes')
         .select(`
           *,
-          dentists(name),
-          current_stage:production_stages(name, color)
+          dentists(name)
         `)
         .eq('user_id', userId)
         .neq('status', 'completed')
@@ -187,10 +134,13 @@ export default function WorkManagementPage() {
             .select('*', { count: 'exact', head: true })
             .eq('delivery_note_id', note.id);
 
+          const currentStage = DEFAULT_PRODUCTION_STAGES.find(s => s.id === note.current_stage_id);
+
           return {
             ...note,
             assignments: assignments || [],
-            comments_count: count || 0
+            comments_count: count || 0,
+            current_stage: currentStage ? { name: currentStage.name, color: currentStage.color } : undefined
           };
         })
       );

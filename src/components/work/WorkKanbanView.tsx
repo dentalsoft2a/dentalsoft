@@ -6,6 +6,7 @@ import {
   User, Calendar, MessageSquare, AlertTriangle, Clock, Tag,
   ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package, CheckCircle, Lock, Eye
 } from 'lucide-react';
+import { DEFAULT_PRODUCTION_STAGES, calculateProgressFromStage, type StandardProductionStage } from '../../config/defaultProductionStages';
 
 interface DeliveryNote {
   id: string;
@@ -26,13 +27,7 @@ interface DeliveryNote {
   comments_count?: number;
 }
 
-interface WorkStage {
-  id: string;
-  name: string;
-  description: string;
-  order_index: number;
-  color: string;
-}
+type WorkStage = StandardProductionStage;
 
 interface WorkKanbanViewProps {
   deliveryNotes: DeliveryNote[];
@@ -105,131 +100,11 @@ export default function WorkKanbanView({
       const note = deliveryNotes.find(n => n.id === draggedNote);
       if (!note) return;
 
-      const targetStageIndex = workStages.findIndex(s => s.id === targetStageId);
+      // Calculate progress based on the target stage position
+      const progressPercentage = calculateProgressFromStage(targetStageId);
 
-      // Mark all previous stages as completed
-      for (let i = 0; i < targetStageIndex; i++) {
-        const stage = workStages[i];
-        const { data: existingStageData } = await supabase
-          .from('delivery_note_stages')
-          .select('*')
-          .eq('delivery_note_id', draggedNote)
-          .eq('stage_id', stage.id)
-          .maybeSingle();
-
-        if (existingStageData) {
-          await supabase
-            .from('delivery_note_stages')
-            .update({
-              is_completed: true,
-              completed_at: new Date().toISOString(),
-              completed_by: user.id,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', existingStageData.id);
-        } else {
-          const { error: insertError } = await supabase
-            .from('delivery_note_stages')
-            .insert({
-              delivery_note_id: draggedNote,
-              stage_id: stage.id,
-              is_completed: true,
-              completed_at: new Date().toISOString(),
-              completed_by: user.id
-            });
-
-          // Ignore permission errors (403/42501) - employee may not have access to this stage
-          if (insertError) {
-            const isPermissionError =
-              insertError.code === '42501' ||
-              insertError.message?.includes('row-level security') ||
-              insertError.message?.includes('permission denied');
-
-            if (!isPermissionError) {
-              throw insertError;
-            }
-          }
-        }
-      }
-
-      // Create or update target stage as current and incomplete
-      const { data: existingStage } = await supabase
-        .from('delivery_note_stages')
-        .select('*')
-        .eq('delivery_note_id', draggedNote)
-        .eq('stage_id', targetStageId)
-        .maybeSingle();
-
-      if (existingStage) {
-        await supabase
-          .from('delivery_note_stages')
-          .update({
-            is_completed: false,
-            completed_at: null,
-            completed_by: null,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existingStage.id);
-      } else {
-        const { error: insertError } = await supabase
-          .from('delivery_note_stages')
-          .insert({
-            delivery_note_id: draggedNote,
-            stage_id: targetStageId,
-            is_completed: false
-          });
-
-        // Ignore permission errors (403/42501) - employee may not have access to this stage
-        if (insertError) {
-          const isPermissionError =
-            insertError.code === '42501' ||
-            insertError.message?.includes('row-level security') ||
-            insertError.message?.includes('permission denied');
-
-          if (!isPermissionError) {
-            throw insertError;
-          }
-        }
-      }
-
-      // Mark all stages after target as incomplete
-      for (let i = targetStageIndex + 1; i < workStages.length; i++) {
-        const stage = workStages[i];
-        const { data: futureStageData } = await supabase
-          .from('delivery_note_stages')
-          .select('*')
-          .eq('delivery_note_id', draggedNote)
-          .eq('stage_id', stage.id)
-          .maybeSingle();
-
-        if (futureStageData) {
-          await supabase
-            .from('delivery_note_stages')
-            .update({
-              is_completed: false,
-              completed_at: null,
-              completed_by: null,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', futureStageData.id);
-        }
-      }
-
-      // Calculate progress based on completed stages
-      const { data: completedStages } = await supabase
-        .from('delivery_note_stages')
-        .select('stage_id, is_completed')
-        .eq('delivery_note_id', draggedNote)
-        .eq('is_completed', true);
-
-      const totalStages = workStages.length;
-      const completedCount = completedStages?.length || 0;
-
-      const progressPercentage = totalStages > 0
-        ? Math.round((completedCount / totalStages) * 100)
-        : 0;
-
-      // Update delivery note with new stage and progress
+      // Simply update delivery note with new stage and calculated progress
+      // No need to create stage records unless they have actual data
       await supabase
         .from('delivery_notes')
         .update({
@@ -296,132 +171,11 @@ export default function WorkKanbanView({
 
       const nextStage = workStages[nextStageIndex];
 
-      // Mark ALL previous stages as completed (up to and including current stage)
-      // This ensures that if a BL jumps stages, all intermediary stages are marked as completed
-      for (let i = 0; i <= currentStageIndex || (currentStageIndex === -1 && i < nextStageIndex); i++) {
-        if (currentStageIndex === -1 && i >= nextStageIndex) break;
+      // Calculate progress based on the next stage position
+      const progressPercentage = calculateProgressFromStage(nextStage.id);
 
-        const stageToComplete = workStages[i];
-        if (!stageToComplete) continue;
-
-        // Skip stages that employee cannot access
-        const canAccessThisStage = !employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.canAccessStage(stageToComplete.id);
-
-        console.log('[WorkKanban] Stage completion access check:', {
-          stageName: stageToComplete.name,
-          stageId: stageToComplete.id,
-          canAccessThisStage,
-          isEmployee: employeePerms.isEmployee,
-          canEditAllStages: employeePerms.canEditAllStages,
-          allowedStages: employeePerms.allowedStages
-        });
-
-        if (!canAccessThisStage) {
-          console.log('[WorkKanban] Skipping stage - no access');
-          continue;
-        }
-
-        try {
-          const { data: existingStage } = await supabase
-            .from('delivery_note_stages')
-            .select('*')
-            .eq('delivery_note_id', noteId)
-            .eq('stage_id', stageToComplete.id)
-            .maybeSingle();
-
-          if (existingStage) {
-            // Only update if not already completed
-            if (!existingStage.is_completed) {
-              await supabase
-                .from('delivery_note_stages')
-                .update({
-                  is_completed: true,
-                  completed_at: new Date().toISOString(),
-                  completed_by: user.id,
-                  updated_at: new Date().toISOString()
-                })
-                .eq('id', existingStage.id);
-            }
-          } else {
-            // Create new completed stage entry
-            await supabase
-              .from('delivery_note_stages')
-              .insert({
-                delivery_note_id: noteId,
-                stage_id: stageToComplete.id,
-                is_completed: true,
-                completed_at: new Date().toISOString(),
-                completed_by: user.id
-              });
-          }
-        } catch (error: any) {
-          // Silently ignore permission errors - employee might not have access to this stage
-          console.log('[WorkKanban] Skipping stage completion due to permissions:', stageToComplete.name);
-        }
-      }
-
-      // Create or update next stage as current and incomplete
-      // Skip if employee doesn't have access to this stage
-      const canAccessNextStage = !employeePerms.isEmployee || employeePerms.canEditAllStages || employeePerms.canAccessStage(nextStage.id);
-
-      console.log('[WorkKanban] Next stage access check:', {
-        nextStageName: nextStage.name,
-        nextStageId: nextStage.id,
-        isEmployee: employeePerms.isEmployee,
-        canEditAllStages: employeePerms.canEditAllStages,
-        canAccessNextStage,
-        allowedStages: employeePerms.allowedStages
-      });
-
-      if (canAccessNextStage) {
-        try {
-          const { data: nextStageData } = await supabase
-            .from('delivery_note_stages')
-            .select('*')
-            .eq('delivery_note_id', noteId)
-            .eq('stage_id', nextStage.id)
-            .maybeSingle();
-
-          if (nextStageData) {
-            await supabase
-              .from('delivery_note_stages')
-              .update({
-                is_completed: false,
-                completed_at: null,
-                completed_by: null,
-                updated_at: new Date().toISOString()
-              })
-              .eq('id', nextStageData.id);
-          } else {
-            await supabase
-              .from('delivery_note_stages')
-              .insert({
-                delivery_note_id: noteId,
-                stage_id: nextStage.id,
-                is_completed: false
-              });
-          }
-        } catch (error: any) {
-          // Silently ignore permission errors - employee might not have access to this stage
-          console.log('[WorkKanban] Skipping next stage creation due to permissions:', nextStage.name);
-        }
-      }
-
-      // Calculate progress based on completed stages count
-      const { data: completedStages } = await supabase
-        .from('delivery_note_stages')
-        .select('stage_id, is_completed')
-        .eq('delivery_note_id', noteId)
-        .eq('is_completed', true);
-
-      const totalStages = workStages.length;
-      const completedCount = completedStages?.length || 0;
-
-      const progressPercentage = totalStages > 0
-        ? Math.round((completedCount / totalStages) * 100)
-        : 0;
-
-      // Update delivery note current stage and progress
+      // Simply update delivery note with next stage and calculated progress
+      // No need to create stage records unless they have actual data
       await supabase
         .from('delivery_notes')
         .update({
@@ -457,42 +211,8 @@ export default function WorkKanbanView({
     if (!user) return;
 
     try {
-      const note = deliveryNotes.find(n => n.id === noteId);
-      if (!note) return;
-
-      // Mark current stage as completed
-      if (note.current_stage_id) {
-        const { data: currentStageData } = await supabase
-          .from('delivery_note_stages')
-          .select('*')
-          .eq('delivery_note_id', noteId)
-          .eq('stage_id', note.current_stage_id)
-          .maybeSingle();
-
-        if (currentStageData) {
-          await supabase
-            .from('delivery_note_stages')
-            .update({
-              is_completed: true,
-              completed_at: new Date().toISOString(),
-              completed_by: user.id,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', currentStageData.id);
-        } else {
-          await supabase
-            .from('delivery_note_stages')
-            .insert({
-              delivery_note_id: noteId,
-              stage_id: note.current_stage_id,
-              is_completed: true,
-              completed_at: new Date().toISOString(),
-              completed_by: user.id
-            });
-        }
-      }
-
-      // Update delivery note to completed status with 100% progress
+      // Simply update delivery note to completed status with 100% progress
+      // No need to create stage records
       await supabase
         .from('delivery_notes')
         .update({
