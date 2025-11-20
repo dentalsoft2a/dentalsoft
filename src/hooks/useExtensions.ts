@@ -1,6 +1,21 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 
+/**
+ * Hook pour gérer les extensions et leurs fonctionnalités
+ *
+ * Comportement:
+ * - Si l'utilisateur est un propriétaire de laboratoire:
+ *   Charge ses propres extensions
+ *
+ * - Si l'utilisateur est un employé actif:
+ *   Charge les extensions du laboratoire auquel il appartient
+ *   Perd l'accès si désactivé (is_active = false)
+ *
+ * - Si l'utilisateur a un plan avec unlocks_all_extensions:
+ *   Toutes les fonctionnalités sont débloquées automatiquement
+ */
+
 export interface Extension {
   id: string;
   name: string;
@@ -48,6 +63,7 @@ export function useExtensions() {
   const [hasUnlockAllAccess, setHasUnlockAllAccess] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEmployee, setIsEmployee] = useState(false);
 
   useEffect(() => {
     loadExtensions();
@@ -71,23 +87,51 @@ export function useExtensions() {
 
       if (featuresError) throw featuresError;
 
+      const { data: userData } = await supabase.auth.getUser();
+
+      let userIsEmployee = false;
+      let laboratoryId = userData.user?.id || null;
+
+      if (userData.user) {
+        const { data: employeeData } = await supabase
+          .from('laboratory_employees')
+          .select('id, laboratory_profile_id, is_active')
+          .eq('user_profile_id', userData.user.id)
+          .eq('is_active', true)
+          .maybeSingle();
+
+        userIsEmployee = !!employeeData;
+        if (employeeData) {
+          laboratoryId = employeeData.laboratory_profile_id;
+        }
+
+        console.log('[useExtensions] User context:', {
+          userId: userData.user.id,
+          isEmployee: userIsEmployee,
+          laboratoryId,
+        });
+      }
+
       const { data: userExtensionsData, error: userExtensionsError } = await supabase
         .from('user_extensions')
         .select('*, extension:extensions(*)');
 
       if (userExtensionsError) throw userExtensionsError;
 
-      const { data: userData } = await supabase.auth.getUser();
+      console.log('[useExtensions] Extensions loaded:', {
+        totalExtensions: extensionsData?.length || 0,
+        activeUserExtensions: userExtensionsData?.length || 0,
+      });
 
       let unlocksAll = false;
-      if (userData.user) {
+      if (userData.user && laboratoryId) {
         const { data: userProfileData } = await supabase
           .from('user_profiles')
           .select(`
             subscription_plan_id,
             subscription_plans!inner(unlocks_all_extensions)
           `)
-          .eq('id', userData.user.id)
+          .eq('id', laboratoryId)
           .maybeSingle();
 
         if (userProfileData?.subscription_plans?.unlocks_all_extensions) {
@@ -103,6 +147,7 @@ export function useExtensions() {
       setExtensions(extensionsWithFeatures);
       setUserExtensions(userExtensionsData || []);
       setHasUnlockAllAccess(unlocksAll);
+      setIsEmployee(userIsEmployee);
     } catch (err) {
       console.error('Error loading extensions:', err);
       setError(err instanceof Error ? err.message : 'Failed to load extensions');
@@ -164,6 +209,7 @@ export function useExtensions() {
     hasUnlockAllAccess,
     loading,
     error,
+    isEmployee,
     hasFeatureAccess,
     hasExtension,
     getActiveExtensions,

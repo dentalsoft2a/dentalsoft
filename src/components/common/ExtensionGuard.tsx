@@ -10,7 +10,7 @@ interface ExtensionGuardProps {
 }
 
 export function ExtensionGuard({ featureKey, children, fallbackMessage }: ExtensionGuardProps) {
-  const { hasFeatureAccess, getExtensionByFeature, loading } = useExtensions();
+  const { hasFeatureAccess, getExtensionByFeature, loading, isEmployee } = useExtensions();
   const navigate = useNavigate();
 
   if (loading) {
@@ -63,30 +63,40 @@ export function ExtensionGuard({ featureKey, children, fallbackMessage }: Extens
 
                 <div className="bg-blue-50 rounded-lg p-4 mb-6">
                   <p className="text-sm text-gray-700">
-                    {fallbackMessage || 'Pour accéder à cette fonctionnalité, vous devez souscrire à l\'extension correspondante.'}
+                    {isEmployee
+                      ? 'Cette fonctionnalité nécessite que votre laboratoire souscrive à l\'extension correspondante. Veuillez contacter le responsable de votre laboratoire.'
+                      : (fallbackMessage || 'Pour accéder à cette fonctionnalité, vous devez souscrire à l\'extension correspondante.')
+                    }
                   </p>
                 </div>
 
-                <button
-                  onClick={() => navigate('/extensions')}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center justify-center gap-2"
-                >
-                  Voir les extensions
-                  <ArrowRight className="w-5 h-5" />
-                </button>
+                {!isEmployee && (
+                  <button
+                    onClick={() => navigate('/extensions')}
+                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center justify-center gap-2"
+                  >
+                    Voir les extensions
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                )}
               </>
             ) : (
               <>
                 <p className="text-gray-600 mb-6">
-                  Cette fonctionnalité nécessite une extension. Veuillez consulter notre catalogue d'extensions pour en savoir plus.
+                  {isEmployee
+                    ? 'Cette fonctionnalité nécessite que votre laboratoire souscrive à une extension. Veuillez contacter le responsable de votre laboratoire.'
+                    : 'Cette fonctionnalité nécessite une extension. Veuillez consulter notre catalogue d\'extensions pour en savoir plus.'
+                  }
                 </p>
-                <button
-                  onClick={() => navigate('/extensions')}
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center justify-center gap-2"
-                >
-                  Voir les extensions
-                  <ArrowRight className="w-5 h-5" />
-                </button>
+                {!isEmployee && (
+                  <button
+                    onClick={() => navigate('/extensions')}
+                    className="w-full py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg hover:from-blue-700 hover:to-cyan-700 transition-all flex items-center justify-center gap-2"
+                  >
+                    Voir les extensions
+                    <ArrowRight className="w-5 h-5" />
+                  </button>
+                )}
               </>
             )}
           </div>
