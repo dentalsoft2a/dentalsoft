@@ -50,11 +50,13 @@ export default function WorkKanbanView({
   console.log('[WorkKanban] Employee permissions loaded:', {
     isEmployee: employeePerms.isEmployee,
     canEditAllStages: employeePerms.canEditAllStages,
-    allowedStages: employeePerms.allowedStages
+    allowedStages: employeePerms.allowedStages,
+    loading: employeePerms.loading
   });
 
-  // Filter stages based on employee permissions
-  const visibleStages = employeePerms.isEmployee && !employeePerms.canEditAllStages
+  // CRITICAL: Wait for permissions to load before filtering
+  // If loading or user is owner/not employee, show all stages
+  const visibleStages = (!employeePerms.loading && employeePerms.isEmployee && !employeePerms.canEditAllStages)
     ? workStages.filter(stage => {
         const canAccess = employeePerms.canAccessStage(stage.id);
         console.log('[WorkKanban] Stage filter:', {
