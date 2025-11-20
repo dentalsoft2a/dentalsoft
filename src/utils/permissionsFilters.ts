@@ -25,7 +25,8 @@ export interface DeliveryNote {
 /**
  * Filter stages based on employee permissions
  * Returns all stages if user is not an employee or has full access
- * Otherwise returns only allowed stages
+ * Otherwise returns only allowed stages (matched by ID)
+ * Note: allowedStages are now normalized to text IDs (stage-*) in AuthContext
  */
 export function filterStagesByPermissions(
   stages: StandardProductionStage[],
@@ -44,7 +45,7 @@ export function filterStagesByPermissions(
     return stages;
   }
 
-  // Filter by allowed stages
+  // Filter by allowed stage IDs (now all normalized to text IDs)
   const filteredStages = stages.filter(stage => {
     const isAllowed = permissions.allowedStages.includes(stage.id);
     console.log('[PermissionsFilter] Stage:', stage.name, 'ID:', stage.id, 'Allowed:', isAllowed);

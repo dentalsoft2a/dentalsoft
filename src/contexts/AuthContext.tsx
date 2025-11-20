@@ -229,8 +229,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         console.log('[AuthContext] Work management permissions:', workManagement);
 
-        const allowedStages = workManagement?.allowed_stages || [];
+        let allowedStages = workManagement?.allowed_stages || [];
         const canEditAllStages = workManagement?.can_edit_all_stages ?? true;
+
+        // Convert UUID stage IDs to default text IDs by querying production_stages
+        if (allowedStages.length > 0 && !canEditAllStages) {
+          const uuidStages = allowedStages.filter(id =>
+            !id.startsWith('stage-') && id.length > 20 // Likely a UUID
+          );
+
+          if (uuidStages.length > 0) {
+            console.log('[AuthContext] Found UUID stage IDs, converting to text IDs:', uuidStages);
+
+            // Query production_stages to get stage names for these UUIDs
+            const { data: stageData } = await supabase
+              .from('production_stages')
+              .select('id, name')
+              .in('id', uuidStages);
+
+            if (stageData) {
+              console.log('[AuthContext] Stage UUID to name mapping:', stageData);
+
+              // Create a mapping of stage names to default text IDs
+              const stageNameToId: Record<string, string> = {
+                'réception': 'stage-reception',
+                'modélisation': 'stage-modelisation',
+                'production': 'stage-production',
+                'finition': 'stage-finition',
+                'contrôle qualité': 'stage-controle',
+                'prêt à livrer': 'stage-pret'
+              };
+
+              // Convert UUID stages to text IDs
+              const textIdStages = stageData
+                .map(s => stageNameToId[s.name.toLowerCase()])
+                .filter(Boolean);
+
+              // Keep existing text IDs and add converted ones
+              const textIds = allowedStages.filter(id => id.startsWith('stage-'));
+              allowedStages = [...new Set([...textIds, ...textIdStages])];
+
+              console.log('[AuthContext] Converted allowed stages:', allowedStages);
+            }
+          }
+        }
 
         const canAccessStage = (stageId: string): boolean => {
           if (canEditAllStages) return true;
