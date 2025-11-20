@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../contexts/AuthContext';
+import { DEFAULT_PRODUCTION_STAGES } from '../config/defaultProductionStages';
 
 interface WorkManagementPermissions {
   view_all_works: boolean;
@@ -49,6 +50,48 @@ export function useEmployeePermissions(): EmployeePermissions {
 
     loadEmployeePermissions();
   }, [user, profile]);
+
+  const convertStageUUIDsToDefaultIds = async (
+    laboratoryId: string,
+    stageUUIDs: string[]
+  ): Promise<string[]> => {
+    try {
+      // Get all production stages for this laboratory
+      const { data: stages, error } = await supabase
+        .from('production_stages')
+        .select('id, name, order_index')
+        .eq('user_id', laboratoryId)
+        .order('order_index');
+
+      if (error) throw error;
+
+      // Create a mapping from UUID to default stage ID based on name
+      const defaultIds: string[] = [];
+
+      for (const uuid of stageUUIDs) {
+        const stage = stages?.find(s => s.id === uuid);
+        if (stage) {
+          // Find matching default stage by name
+          const defaultStage = DEFAULT_PRODUCTION_STAGES.find(
+            ds => ds.name.toLowerCase() === stage.name.toLowerCase()
+          );
+          if (defaultStage) {
+            defaultIds.push(defaultStage.id);
+          }
+        }
+      }
+
+      console.log('[useEmployeePermissions] Converted stage IDs:', {
+        inputUUIDs: stageUUIDs,
+        outputDefaultIds: defaultIds
+      });
+
+      return defaultIds;
+    } catch (error) {
+      console.error('Error converting stage UUIDs:', error);
+      return [];
+    }
+  };
 
   const loadEmployeePermissions = async () => {
     try {
@@ -102,7 +145,13 @@ export function useEmployeePermissions(): EmployeePermissions {
 
       const workManagement = (roleData?.permissions as any)?.work_management as WorkManagementPermissions | undefined;
 
-      const allowedStages = workManagement?.allowed_stages || [];
+      // Convert UUID stage IDs to default stage IDs
+      const allowedStageUUIDs = workManagement?.allowed_stages || [];
+      const allowedStages = await convertStageUUIDsToDefaultIds(
+        employeeData.laboratory_profile_id,
+        allowedStageUUIDs
+      );
+
       const canEditAllStages = workManagement?.can_edit_all_stages ?? true;
 
       const canAccessStage = (stageId: string): boolean => {
