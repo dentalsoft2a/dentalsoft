@@ -30,11 +30,25 @@ interface ProductionStage {
   order_index: number;
 }
 
+interface WorkManagementSections {
+  view_statistics: boolean;
+  view_filters: boolean;
+  create_work: boolean;
+  edit_work: boolean;
+  delete_work: boolean;
+  view_kanban: boolean;
+  view_list: boolean;
+  assign_employees: boolean;
+  change_priority: boolean;
+  add_comments: boolean;
+}
+
 interface WorkManagementPermissions {
   view_all_works: boolean;
   view_assigned_only: boolean;
   allowed_stages: string[];
   can_edit_all_stages: boolean;
+  sections?: WorkManagementSections;
 }
 
 const AVAILABLE_MENUS = [
@@ -81,7 +95,19 @@ export default function EmployeeManagement() {
       view_all_works: true,
       view_assigned_only: false,
       allowed_stages: [] as string[],
-      can_edit_all_stages: true
+      can_edit_all_stages: true,
+      sections: {
+        view_statistics: true,
+        view_filters: true,
+        create_work: true,
+        edit_work: true,
+        delete_work: true,
+        view_kanban: true,
+        view_list: true,
+        assign_employees: true,
+        change_priority: true,
+        add_comments: true,
+      }
     } as WorkManagementPermissions
   });
 
@@ -153,7 +179,19 @@ export default function EmployeeManagement() {
           view_all_works: workPerms?.view_all_works ?? true,
           view_assigned_only: workPerms?.view_assigned_only ?? false,
           allowed_stages: workPerms?.allowed_stages ?? [],
-          can_edit_all_stages: workPerms?.can_edit_all_stages ?? true
+          can_edit_all_stages: workPerms?.can_edit_all_stages ?? true,
+          sections: workPerms?.sections || {
+            view_statistics: true,
+            view_filters: true,
+            create_work: true,
+            edit_work: true,
+            delete_work: true,
+            view_kanban: true,
+            view_list: true,
+            assign_employees: true,
+            change_priority: true,
+            add_comments: true,
+          }
         }
       });
     } else {
@@ -165,7 +203,19 @@ export default function EmployeeManagement() {
           view_all_works: true,
           view_assigned_only: false,
           allowed_stages: [],
-          can_edit_all_stages: true
+          can_edit_all_stages: true,
+          sections: {
+            view_statistics: true,
+            view_filters: true,
+            create_work: true,
+            edit_work: true,
+            delete_work: true,
+            view_kanban: true,
+            view_list: true,
+            assign_employees: true,
+            change_priority: true,
+            add_comments: true,
+          }
         }
       });
     }
@@ -955,6 +1005,202 @@ export default function EmployeeManagement() {
                         )}
                       </div>
                     )}
+                  </div>
+
+                  {/* Sections Access */}
+                  <div className="space-y-2 mt-4">
+                    <p className="text-xs font-semibold text-slate-600 mb-3">Accès aux fonctionnalités:</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <label className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.work_permissions.sections?.view_statistics ?? true}
+                          onChange={(e) => setRoleForm(prev => ({
+                            ...prev,
+                            work_permissions: {
+                              ...prev.work_permissions,
+                              sections: {
+                                ...prev.work_permissions.sections!,
+                                view_statistics: e.target.checked
+                              }
+                            }
+                          }))}
+                          className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-slate-700">Voir les statistiques</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.work_permissions.sections?.view_filters ?? true}
+                          onChange={(e) => setRoleForm(prev => ({
+                            ...prev,
+                            work_permissions: {
+                              ...prev.work_permissions,
+                              sections: {
+                                ...prev.work_permissions.sections!,
+                                view_filters: e.target.checked
+                              }
+                            }
+                          }))}
+                          className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-slate-700">Utiliser les filtres</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.work_permissions.sections?.create_work ?? true}
+                          onChange={(e) => setRoleForm(prev => ({
+                            ...prev,
+                            work_permissions: {
+                              ...prev.work_permissions,
+                              sections: {
+                                ...prev.work_permissions.sections!,
+                                create_work: e.target.checked
+                              }
+                            }
+                          }))}
+                          className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-slate-700">Créer un travail</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.work_permissions.sections?.edit_work ?? true}
+                          onChange={(e) => setRoleForm(prev => ({
+                            ...prev,
+                            work_permissions: {
+                              ...prev.work_permissions,
+                              sections: {
+                                ...prev.work_permissions.sections!,
+                                edit_work: e.target.checked
+                              }
+                            }
+                          }))}
+                          className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-slate-700">Modifier un travail</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.work_permissions.sections?.delete_work ?? true}
+                          onChange={(e) => setRoleForm(prev => ({
+                            ...prev,
+                            work_permissions: {
+                              ...prev.work_permissions,
+                              sections: {
+                                ...prev.work_permissions.sections!,
+                                delete_work: e.target.checked
+                              }
+                            }
+                          }))}
+                          className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-slate-700">Supprimer un travail</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.work_permissions.sections?.view_kanban ?? true}
+                          onChange={(e) => setRoleForm(prev => ({
+                            ...prev,
+                            work_permissions: {
+                              ...prev.work_permissions,
+                              sections: {
+                                ...prev.work_permissions.sections!,
+                                view_kanban: e.target.checked
+                              }
+                            }
+                          }))}
+                          className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-slate-700">Vue Kanban</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.work_permissions.sections?.view_list ?? true}
+                          onChange={(e) => setRoleForm(prev => ({
+                            ...prev,
+                            work_permissions: {
+                              ...prev.work_permissions,
+                              sections: {
+                                ...prev.work_permissions.sections!,
+                                view_list: e.target.checked
+                              }
+                            }
+                          }))}
+                          className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-slate-700">Vue Liste</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.work_permissions.sections?.assign_employees ?? true}
+                          onChange={(e) => setRoleForm(prev => ({
+                            ...prev,
+                            work_permissions: {
+                              ...prev.work_permissions,
+                              sections: {
+                                ...prev.work_permissions.sections!,
+                                assign_employees: e.target.checked
+                              }
+                            }
+                          }))}
+                          className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-slate-700">Assigner des employés</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.work_permissions.sections?.change_priority ?? true}
+                          onChange={(e) => setRoleForm(prev => ({
+                            ...prev,
+                            work_permissions: {
+                              ...prev.work_permissions,
+                              sections: {
+                                ...prev.work_permissions.sections!,
+                                change_priority: e.target.checked
+                              }
+                            }
+                          }))}
+                          className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-slate-700">Changer la priorité</span>
+                      </label>
+
+                      <label className="flex items-center gap-2 p-2 border border-slate-200 rounded-lg hover:bg-amber-50 cursor-pointer transition">
+                        <input
+                          type="checkbox"
+                          checked={roleForm.work_permissions.sections?.add_comments ?? true}
+                          onChange={(e) => setRoleForm(prev => ({
+                            ...prev,
+                            work_permissions: {
+                              ...prev.work_permissions,
+                              sections: {
+                                ...prev.work_permissions.sections!,
+                                add_comments: e.target.checked
+                              }
+                            }
+                          }))}
+                          className="w-4 h-4 text-amber-600 border-slate-300 rounded focus:ring-amber-500"
+                        />
+                        <span className="text-xs text-slate-700">Ajouter des commentaires</span>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>

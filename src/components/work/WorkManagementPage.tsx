@@ -263,15 +263,18 @@ export default function WorkManagementPage() {
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Gestion des Travaux</h1>
             <p className="text-sm md:text-base text-slate-600 mt-1">Suivez l'avancement de vos bons de livraison en temps réel</p>
           </div>
-        <button
-          onClick={() => setSelectedNote('new')}
-          className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl text-sm md:text-base"
-        >
-          <Plus className="w-4 h-4 md:w-5 md:h-5" />
-          Nouveau travail
-        </button>
+        {employeePermissions.workManagementSections.create_work && (
+          <button
+            onClick={() => setSelectedNote('new')}
+            className="flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded-xl hover:from-primary-700 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl text-sm md:text-base"
+          >
+            <Plus className="w-4 h-4 md:w-5 md:h-5" />
+            Nouveau travail
+          </button>
+        )}
       </div>
 
+      {employeePermissions.workManagementSections.view_statistics && (
       <div className="grid grid-cols-2 lg:grid-cols-6 gap-2 md:gap-4">
         <div className="bg-white rounded-lg md:rounded-xl p-3 md:p-4 border border-slate-200/50 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
           <div className="flex items-center justify-between">
@@ -345,6 +348,7 @@ export default function WorkManagementPage() {
           </div>
         </div>
       </div>
+      )}
 
       <div className="bg-white rounded-lg md:rounded-xl shadow-lg border border-slate-200/50 hover:shadow-xl transition-all duration-300">
         <div className="p-3 md:p-4 border-b border-slate-200">
@@ -375,6 +379,7 @@ export default function WorkManagementPage() {
                   <span className="hidden md:inline">Mes travaux</span>
                 </button>
               )}
+              {employeePermissions.workManagementSections.view_filters && (
               <button
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-lg border transition-all text-sm md:text-base ${
@@ -387,8 +392,11 @@ export default function WorkManagementPage() {
                 <span className="hidden sm:inline">Filtres</span>
                 <ChevronDown className={`w-3.5 h-3.5 md:w-4 md:h-4 transition-transform ${showFilters ? 'rotate-180' : ''}`} />
               </button>
+              )}
 
+              {(employeePermissions.workManagementSections.view_kanban || employeePermissions.workManagementSections.view_list) && (
               <div className="flex bg-slate-100 rounded-lg p-0.5 md:p-1">
+                {employeePermissions.workManagementSections.view_kanban && (
                 <button
                   onClick={() => setViewMode('kanban')}
                   className={`flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 rounded-md transition-all ${
@@ -400,6 +408,8 @@ export default function WorkManagementPage() {
                   <LayoutGrid className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   <span className="hidden sm:inline text-xs md:text-sm font-medium">Kanban</span>
                 </button>
+                )}
+                {employeePermissions.workManagementSections.view_list && (
                 <button
                   onClick={() => setViewMode('list')}
                   className={`flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 rounded-md transition-all ${
@@ -411,7 +421,9 @@ export default function WorkManagementPage() {
                   <List className="w-3.5 h-3.5 md:w-4 md:h-4" />
                   <span className="hidden sm:inline text-xs md:text-sm font-medium">Liste</span>
                 </button>
+                )}
               </div>
+              )}
             </div>
           </div>
 
