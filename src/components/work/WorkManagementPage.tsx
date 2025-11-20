@@ -173,44 +173,26 @@ export default function WorkManagementPage() {
   const applyFilters = () => {
     let filtered = [...deliveryNotes];
 
-    // Employee filter: check assignments and allowed stages
+    // Employee filter: show only notes in allowed stages (strict filtering)
     if (employeePerms.isEmployee && !employeePerms.canEditAllStages) {
       filtered = filtered.filter(note => {
-        // Check if this note is assigned to the current employee
-        const isAssignedToMe = note.assignments?.some(
-          assignment => assignment.laboratory_employee_id === employeePerms.employeeId
-        );
-
-        // If assigned to me, always show it (regardless of stage)
-        if (isAssignedToMe) {
-          console.log('[WorkManagement] Note assigned to me:', {
-            deliveryNumber: note.delivery_number,
-            currentStage: note.current_stage_id,
-            isAssignedToMe: true
-          });
-          return true;
-        }
-
-        // If NOT assigned to me, only show if stage is in allowed stages
         // If no stage assigned yet, check if employee has access to first stage
         if (!note.current_stage_id) {
           const firstStage = DEFAULT_PRODUCTION_STAGES[0];
           const canAccessFirstStage = employeePerms.allowedStages.includes(firstStage.id);
           console.log('[WorkManagement] Note without stage:', {
             deliveryNumber: note.delivery_number,
-            canAccessFirstStage,
-            isAssignedToMe: false
+            canAccessFirstStage
           });
           return canAccessFirstStage;
         }
 
-        // Check if current stage is in allowed stages
+        // Only show notes in allowed stages (regardless of assignment)
         const isAllowed = employeePerms.allowedStages.includes(note.current_stage_id);
         console.log('[WorkManagement] Note filter:', {
           deliveryNumber: note.delivery_number,
           currentStageId: note.current_stage_id,
           isAllowed,
-          isAssignedToMe: false,
           allowedStages: employeePerms.allowedStages
         });
 

@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useEmployeePermissions } from '../../hooks/useEmployeePermissions';
 import {
   User, Calendar, MessageSquare, AlertTriangle, Clock, Tag,
-  ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package, CheckCircle, Lock, Eye
+  ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package, CheckCircle, Lock
 } from 'lucide-react';
 import { DEFAULT_PRODUCTION_STAGES, calculateProgressFromStage, type StandardProductionStage } from '../../config/defaultProductionStages';
 
@@ -53,29 +53,17 @@ export default function WorkKanbanView({
   // Filter stages based on employee permissions
   const visibleStages = employeePerms.isEmployee && !employeePerms.canEditAllStages
     ? workStages.filter(stage => {
-        // Stage is visible if:
-        // 1. It's in the allowed stages list, OR
-        // 2. There are notes assigned to this employee in this stage
+        // Stage is visible ONLY if it's in the allowed stages list
         const isAllowedStage = employeePerms.allowedStages.includes(stage.id);
-        const hasAssignedNotesInStage = deliveryNotes.some(note =>
-          note.current_stage_id === stage.id &&
-          note.assignments?.some(
-            assignment => assignment.laboratory_employee_id === employeePerms.employeeId
-          )
-        );
-
-        const canAccess = isAllowedStage || hasAssignedNotesInStage;
         console.log('[WorkKanban] Stage filter:', {
           stageName: stage.name,
           stageId: stage.id,
           isAllowedStage,
-          hasAssignedNotesInStage,
-          canAccess,
           allowedStages: employeePerms.allowedStages,
           isEmployee: employeePerms.isEmployee,
           canEditAllStages: employeePerms.canEditAllStages
         });
-        return canAccess;
+        return isAllowedStage;
       })
     : workStages;
 
@@ -246,18 +234,6 @@ export default function WorkKanbanView({
   };
 
   const renderNoteCard = (note: DeliveryNote) => {
-    // Check if this note is assigned to current employee
-    const isAssignedToMe = employeePerms.isEmployee &&
-      note.assignments?.some(
-        assignment => assignment.laboratory_employee_id === employeePerms.employeeId
-      );
-
-    // Check if current stage is outside allowed stages
-    const isOutsideAllowedStages = employeePerms.isEmployee &&
-      !employeePerms.canEditAllStages &&
-      note.current_stage_id &&
-      !employeePerms.allowedStages.includes(note.current_stage_id);
-
     return (
       <div
         key={note.id}
@@ -271,8 +247,6 @@ export default function WorkKanbanView({
             ? 'border-amber-300 bg-amber-50'
             : isOverdue(note.due_date) && note.status !== 'completed'
             ? 'border-red-300 bg-red-50'
-            : isAssignedToMe && isOutsideAllowedStages
-            ? 'border-blue-300 bg-blue-50'
             : 'border-slate-200 hover:border-primary-300'
         }`}
       >
@@ -281,9 +255,6 @@ export default function WorkKanbanView({
             {note.delivery_number}
           </h4>
           <div className="flex items-center gap-1 flex-shrink-0">
-            {isAssignedToMe && isOutsideAllowedStages && (
-              <Eye className="w-3.5 h-3.5 text-blue-500" title="Travail assigné hors étapes autorisées" />
-            )}
             {getPriorityIcon(note.priority)}
             {note.is_blocked && <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />}
             {isOverdue(note.due_date) && note.status !== 'completed' && (
