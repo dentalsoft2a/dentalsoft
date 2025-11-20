@@ -361,7 +361,7 @@ export default function WorkManagementPage() {
             </div>
 
             <div className="flex gap-2">
-              {employeePerms.isEmployee && employeePerms.canViewAllWorks && (
+              {employeePermissions.isEmployee && employeePermissions.canViewAllWorks && (
                 <button
                   onClick={() => setShowMyWorksOnly(!showMyWorksOnly)}
                   className={`flex items-center gap-2 px-3 md:px-4 py-2 md:py-2.5 rounded-lg border transition-all text-sm md:text-base ${
