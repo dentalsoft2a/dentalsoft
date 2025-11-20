@@ -52,6 +52,8 @@ export function useEmployeePermissions(): EmployeePermissions {
 
   const loadEmployeePermissions = async () => {
     try {
+      console.log('[useEmployeePermissions] Loading permissions for user:', user!.id);
+
       // FIRST check if user is an employee (higher priority)
       const { data: employeeData, error: employeeError } = await supabase
         .from('laboratory_employees')
@@ -61,6 +63,8 @@ export function useEmployeePermissions(): EmployeePermissions {
         .maybeSingle();
 
       if (employeeError) throw employeeError;
+
+      console.log('[useEmployeePermissions] Employee data:', employeeData);
 
       // If user is an employee, load employee permissions
       if (employeeData) {
@@ -102,8 +106,16 @@ export function useEmployeePermissions(): EmployeePermissions {
 
       const workManagement = (roleData?.permissions as any)?.work_management as WorkManagementPermissions | undefined;
 
+      console.log('[useEmployeePermissions] Work management permissions:', workManagement);
+
       const allowedStages = workManagement?.allowed_stages || [];
       const canEditAllStages = workManagement?.can_edit_all_stages ?? true;
+
+      console.log('[useEmployeePermissions] Final permissions:', {
+        allowedStages,
+        canEditAllStages,
+        roleName: employeeData.role_name
+      });
 
       const canAccessStage = (stageId: string): boolean => {
         if (canEditAllStages) return true;
