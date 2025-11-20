@@ -12,25 +12,11 @@ interface EmployeeInfo {
   is_active: boolean;
 }
 
-interface WorkManagementSections {
-  view_statistics: boolean;
-  view_filters: boolean;
-  create_work: boolean;
-  edit_work: boolean;
-  delete_work: boolean;
-  view_kanban: boolean;
-  view_list: boolean;
-  assign_employees: boolean;
-  change_priority: boolean;
-  add_comments: boolean;
-}
-
 interface WorkManagementPermissions {
   view_all_works: boolean;
   view_assigned_only: boolean;
   allowed_stages: string[];
   can_edit_all_stages: boolean;
-  sections?: WorkManagementSections;
 }
 
 interface EmployeePermissions {
@@ -45,7 +31,6 @@ interface EmployeePermissions {
   canEditAllStages: boolean;
   canAccessStage: (stageId: string) => boolean;
   canEditStage: (stageId: string) => boolean;
-  workManagementSections: WorkManagementSections;
 }
 
 interface ImpersonationSession {
@@ -101,18 +86,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     canEditAllStages: false,
     canAccessStage: () => false,
     canEditStage: () => false,
-    workManagementSections: {
-      view_statistics: false,
-      view_filters: false,
-      create_work: false,
-      edit_work: false,
-      delete_work: false,
-      view_kanban: false,
-      view_list: false,
-      assign_employees: false,
-      change_priority: false,
-      add_comments: false,
-    },
   });
   const [impersonationSession, setImpersonationSession] = useState<ImpersonationSession | null>(null);
   const [isImpersonating, setIsImpersonating] = useState(false);
@@ -269,19 +242,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return allowedStages.includes(stageId);
         };
 
-        const sections: WorkManagementSections = workManagement?.sections || {
-          view_statistics: true,
-          view_filters: true,
-          create_work: true,
-          edit_work: true,
-          delete_work: true,
-          view_kanban: true,
-          view_list: true,
-          assign_employees: true,
-          change_priority: true,
-          add_comments: true,
-        };
-
         const permissions: EmployeePermissions = {
           isEmployee: true,
           isLaboratoryOwner: false,
@@ -294,7 +254,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           canEditAllStages,
           canAccessStage,
           canEditStage,
-          workManagementSections: sections,
         };
 
         console.log('[AuthContext] Employee permissions loaded:', permissions);
@@ -313,18 +272,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           canEditAllStages: true,
           canAccessStage: () => true,
           canEditStage: () => true,
-          workManagementSections: {
-            view_statistics: true,
-            view_filters: true,
-            create_work: true,
-            edit_work: true,
-            delete_work: true,
-            view_kanban: true,
-            view_list: true,
-            assign_employees: true,
-            change_priority: true,
-            add_comments: true,
-          },
         };
 
         console.log('[AuthContext] Laboratory owner permissions loaded:', permissions);
@@ -344,18 +291,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           canEditAllStages: false,
           canAccessStage: () => false,
           canEditStage: () => false,
-          workManagementSections: {
-            view_statistics: false,
-            view_filters: false,
-            create_work: false,
-            edit_work: false,
-            delete_work: false,
-            view_kanban: false,
-            view_list: false,
-            assign_employees: false,
-            change_priority: false,
-            add_comments: false,
-          },
         });
       }
     } catch (error) {
