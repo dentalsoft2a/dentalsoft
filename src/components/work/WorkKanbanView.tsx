@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useEmployeePermissions } from '../../hooks/useEmployeePermissions';
 import {
   User, Calendar, MessageSquare, AlertTriangle, Clock, Tag,
-  ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package, CheckCircle, Lock
+  ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package, CheckCircle, Lock, Eye
 } from 'lucide-react';
 import { DEFAULT_PRODUCTION_STAGES, calculateProgressFromStage, type StandardProductionStage } from '../../config/defaultProductionStages';
 
@@ -23,10 +23,7 @@ interface DeliveryNote {
   current_stage_id: string | null;
   dentists?: { name: string };
   current_stage?: { name: string; color: string };
-  assignments?: Array<{
-    laboratory_employee_id: string;
-    employee: { id: string; full_name: string };
-  }>;
+  assignments?: Array<{ employee: { full_name: string } }>;
   comments_count?: number;
 }
 
@@ -53,17 +50,16 @@ export default function WorkKanbanView({
   // Filter stages based on employee permissions
   const visibleStages = employeePerms.isEmployee && !employeePerms.canEditAllStages
     ? workStages.filter(stage => {
-        // Stage is visible ONLY if it's in the allowed stages list
-        const isAllowedStage = employeePerms.allowedStages.includes(stage.id);
+        const canAccess = employeePerms.canAccessStage(stage.id);
         console.log('[WorkKanban] Stage filter:', {
           stageName: stage.name,
           stageId: stage.id,
-          isAllowedStage,
+          canAccess,
           allowedStages: employeePerms.allowedStages,
           isEmployee: employeePerms.isEmployee,
           canEditAllStages: employeePerms.canEditAllStages
         });
-        return isAllowedStage;
+        return canAccess;
       })
     : workStages;
 
@@ -233,32 +229,31 @@ export default function WorkKanbanView({
     }
   };
 
-  const renderNoteCard = (note: DeliveryNote) => {
-    return (
-      <div
-        key={note.id}
-        draggable
-        onDragStart={() => handleDragStart(note.id)}
-        onClick={() => onSelectNote(note.id)}
-        className={`bg-white border-2 rounded-lg p-3 mb-3 cursor-move hover:shadow-lg transition-all group ${
-          draggedNote === note.id ? 'opacity-50 scale-95' : 'opacity-100'
-        } ${
-          note.is_blocked
-            ? 'border-amber-300 bg-amber-50'
-            : isOverdue(note.due_date) && note.status !== 'completed'
-            ? 'border-red-300 bg-red-50'
-            : 'border-slate-200 hover:border-primary-300'
-        }`}
-      >
-        <div className="flex items-start justify-between gap-2 mb-2">
-          <h4 className="font-semibold text-slate-900 text-sm group-hover:text-primary-600 transition-colors truncate">
-            {note.delivery_number}
-          </h4>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {getPriorityIcon(note.priority)}
-            {note.is_blocked && <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />}
-            {isOverdue(note.due_date) && note.status !== 'completed' && (
-              <Clock className="w-3.5 h-3.5 text-red-500" />
+  const renderNoteCard = (note: DeliveryNote) => (
+    <div
+      key={note.id}
+      draggable
+      onDragStart={() => handleDragStart(note.id)}
+      onClick={() => onSelectNote(note.id)}
+      className={`bg-white border-2 rounded-lg p-3 mb-3 cursor-move hover:shadow-lg transition-all group ${
+        draggedNote === note.id ? 'opacity-50 scale-95' : 'opacity-100'
+      } ${
+        note.is_blocked
+          ? 'border-amber-300 bg-amber-50'
+          : isOverdue(note.due_date) && note.status !== 'completed'
+          ? 'border-red-300 bg-red-50'
+          : 'border-slate-200 hover:border-primary-300'
+      }`}
+    >
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <h4 className="font-semibold text-slate-900 text-sm group-hover:text-primary-600 transition-colors truncate">
+          {note.delivery_number}
+        </h4>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {getPriorityIcon(note.priority)}
+          {note.is_blocked && <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />}
+          {isOverdue(note.due_date) && note.status !== 'completed' && (
+            <Clock className="w-3.5 h-3.5 text-red-500" />
           )}
         </div>
       </div>
@@ -347,8 +342,7 @@ export default function WorkKanbanView({
         )}
       </div>
     </div>
-    );
-  };
+  );
 
   return (
     <div className="w-full pb-4">

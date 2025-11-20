@@ -31,10 +31,7 @@ interface DeliveryNote {
   current_stage_id: string | null;
   dentists?: { name: string };
   current_stage?: { name: string; color: string };
-  assignments?: Array<{
-    laboratory_employee_id: string;
-    employee: { id: string; full_name: string };
-  }>;
+  assignments?: Array<{ employee: { full_name: string } }>;
   comments_count?: number;
 }
 
@@ -129,7 +126,7 @@ export default function WorkManagementPage() {
         (data || []).map(async (note) => {
           const { data: assignments } = await supabase
             .from('work_assignments')
-            .select('laboratory_employee_id, employee:laboratory_employees(id, full_name)')
+            .select('employee:laboratory_employees(full_name)')
             .eq('delivery_note_id', note.id);
 
           const { count } = await supabase
@@ -173,21 +170,19 @@ export default function WorkManagementPage() {
   const applyFilters = () => {
     let filtered = [...deliveryNotes];
 
-    // Employee filter: show only notes in allowed stages (strict filtering)
-    if (employeePerms.isEmployee && !employeePerms.canEditAllStages) {
-      filtered = filtered.filter(note => {
-        // If no stage assigned yet, check if employee has access to first stage
-        if (!note.current_stage_id) {
-          const firstStage = DEFAULT_PRODUCTION_STAGES[0];
-          const canAccessFirstStage = employeePerms.allowedStages.includes(firstStage.id);
-          console.log('[WorkManagement] Note without stage:', {
-            deliveryNumber: note.delivery_number,
-            canAccessFirstStage
-          });
-          return canAccessFirstStage;
-        }
+    // Employee filter: show only assigned works if needed
+    if (employeePerms.isEmployee && (employeePerms.canViewAssignedOnly || showMyWorksOnly)) {
+      filtered = filtered.filter(note =>
+        note.assignments && note.assignments.length > 0
+      );
+    }
 
-        // Only show notes in allowed stages (regardless of assignment)
+    // Employee filter: show only works in allowed stages
+    if (employeePerms.isEmployee && !employeePerms.canEditAllStages && employeePerms.allowedStages.length > 0) {
+      filtered = filtered.filter(note => {
+        // If no stage assigned yet, show it
+        if (!note.current_stage_id) return true;
+        // Otherwise, only show if stage is in allowed list
         const isAllowed = employeePerms.allowedStages.includes(note.current_stage_id);
         console.log('[WorkManagement] Note filter:', {
           deliveryNumber: note.delivery_number,
@@ -195,18 +190,8 @@ export default function WorkManagementPage() {
           isAllowed,
           allowedStages: employeePerms.allowedStages
         });
-
         return isAllowed;
       });
-    }
-
-    // Filter by "My Works Only" toggle
-    if (showMyWorksOnly && employeePerms.isEmployee) {
-      filtered = filtered.filter(note =>
-        note.assignments?.some(
-          assignment => assignment.laboratory_employee_id === employeePerms.employeeId
-        )
-      );
     }
 
     if (searchTerm) {
