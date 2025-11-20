@@ -47,6 +47,12 @@ export default function WorkKanbanView({
   const [draggedNote, setDraggedNote] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
 
+  console.log('[WorkKanban] Employee permissions loaded:', {
+    isEmployee: employeePerms.isEmployee,
+    canEditAllStages: employeePerms.canEditAllStages,
+    allowedStages: employeePerms.allowedStages
+  });
+
   // Filter stages based on employee permissions
   const visibleStages = employeePerms.isEmployee && !employeePerms.canEditAllStages
     ? workStages.filter(stage => {
