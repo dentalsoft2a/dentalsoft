@@ -12,6 +12,27 @@ interface EmployeeInfo {
   is_active: boolean;
 }
 
+interface WorkManagementPermissions {
+  view_all_works: boolean;
+  view_assigned_only: boolean;
+  allowed_stages: string[];
+  can_edit_all_stages: boolean;
+}
+
+interface EmployeePermissions {
+  isEmployee: boolean;
+  isLaboratoryOwner: boolean;
+  employeeId: string | null;
+  laboratoryId: string | null;
+  roleName: string | null;
+  canViewAllWorks: boolean;
+  canViewAssignedOnly: boolean;
+  allowedStages: string[];
+  canEditAllStages: boolean;
+  canAccessStage: (stageId: string) => boolean;
+  canEditStage: (stageId: string) => boolean;
+}
+
 interface ImpersonationSession {
   sessionId: string;
   adminUserId: string;
@@ -26,9 +47,11 @@ interface AuthContextType {
   profile: Profile | null;
   userProfile: UserProfile | null;
   loading: boolean;
+  permissionsLoading: boolean;
   hasActiveSubscription: boolean;
   isEmployee: boolean;
   employeeInfo: EmployeeInfo | null;
+  employeePermissions: EmployeePermissions;
   laboratoryId: string | null;
   userEmail: string | null;
   isImpersonating: boolean;
@@ -50,6 +73,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [employeeInfo, setEmployeeInfo] = useState<EmployeeInfo | null>(null);
   const [laboratoryUserProfile, setLaboratoryUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [permissionsLoading, setPermissionsLoading] = useState(true);
+  const [employeePermissions, setEmployeePermissions] = useState<EmployeePermissions>({
+    isEmployee: false,
+    isLaboratoryOwner: false,
+    employeeId: null,
+    laboratoryId: null,
+    roleName: null,
+    canViewAllWorks: false,
+    canViewAssignedOnly: false,
+    allowedStages: [],
+    canEditAllStages: false,
+    canAccessStage: () => false,
+    canEditStage: () => false,
+  });
   const [impersonationSession, setImpersonationSession] = useState<ImpersonationSession | null>(null);
   const [isImpersonating, setIsImpersonating] = useState(false);
 
@@ -153,10 +190,113 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Laboratory user profile:', labUserProfile);
         setLaboratoryUserProfile(labUserProfile);
       }
+
+      // Load employee permissions
+      await loadEmployeePermissions(userId, employeeResult.data, profileResult.data);
     } catch (error) {
       console.error('Error loading profile:', error);
+      setPermissionsLoading(false);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadEmployeePermissions = async (
+    userId: string,
+    employeeData: any,
+    profileData: Profile | null
+  ) => {
+    try {
+      setPermissionsLoading(true);
+      console.log('[AuthContext] Loading employee permissions for user:', userId);
+
+      // If user is an employee, load employee permissions
+      if (employeeData) {
+        // Get role permissions
+        const { data: roleData, error: roleError } = await supabase
+          .from('laboratory_role_permissions')
+          .select('permissions')
+          .eq('laboratory_profile_id', employeeData.laboratory_profile_id)
+          .eq('role_name', employeeData.role_name)
+          .maybeSingle();
+
+        if (roleError) {
+          console.error('[AuthContext] Error loading role permissions:', roleError);
+          throw roleError;
+        }
+
+        const workManagement = (roleData?.permissions as any)?.work_management as WorkManagementPermissions | undefined;
+
+        console.log('[AuthContext] Work management permissions:', workManagement);
+
+        const allowedStages = workManagement?.allowed_stages || [];
+        const canEditAllStages = workManagement?.can_edit_all_stages ?? true;
+
+        const canAccessStage = (stageId: string): boolean => {
+          if (canEditAllStages) return true;
+          return allowedStages.includes(stageId);
+        };
+
+        const canEditStage = (stageId: string): boolean => {
+          if (canEditAllStages) return true;
+          return allowedStages.includes(stageId);
+        };
+
+        const permissions: EmployeePermissions = {
+          isEmployee: true,
+          isLaboratoryOwner: false,
+          employeeId: employeeData.id || null,
+          laboratoryId: employeeData.laboratory_profile_id,
+          roleName: employeeData.role_name,
+          canViewAllWorks: workManagement?.view_all_works ?? false,
+          canViewAssignedOnly: workManagement?.view_assigned_only ?? false,
+          allowedStages,
+          canEditAllStages,
+          canAccessStage,
+          canEditStage,
+        };
+
+        console.log('[AuthContext] Employee permissions loaded:', permissions);
+        setEmployeePermissions(permissions);
+      } else if (profileData?.id === userId) {
+        // User is a laboratory owner
+        const permissions: EmployeePermissions = {
+          isEmployee: false,
+          isLaboratoryOwner: true,
+          employeeId: null,
+          laboratoryId: profileData.id,
+          roleName: null,
+          canViewAllWorks: true,
+          canViewAssignedOnly: false,
+          allowedStages: [],
+          canEditAllStages: true,
+          canAccessStage: () => true,
+          canEditStage: () => true,
+        };
+
+        console.log('[AuthContext] Laboratory owner permissions loaded:', permissions);
+        setEmployeePermissions(permissions);
+      } else {
+        // Not an employee and not a laboratory owner
+        console.log('[AuthContext] No special permissions');
+        setEmployeePermissions({
+          isEmployee: false,
+          isLaboratoryOwner: false,
+          employeeId: null,
+          laboratoryId: null,
+          roleName: null,
+          canViewAllWorks: false,
+          canViewAssignedOnly: false,
+          allowedStages: [],
+          canEditAllStages: false,
+          canAccessStage: () => false,
+          canEditStage: () => false,
+        });
+      }
+    } catch (error) {
+      console.error('[AuthContext] Error loading employee permissions:', error);
+    } finally {
+      setPermissionsLoading(false);
     }
   };
 
@@ -455,9 +595,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       userProfile: effectiveUserProfile,
       loading,
+      permissionsLoading,
       hasActiveSubscription,
       isEmployee,
       employeeInfo,
+      employeePermissions,
       laboratoryId,
       userEmail,
       isImpersonating,

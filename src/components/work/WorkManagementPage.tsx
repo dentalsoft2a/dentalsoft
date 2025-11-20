@@ -8,11 +8,12 @@ import {
   MinusCircle, X, FileText, Edit2, Trash2, Briefcase
 } from 'lucide-react';
 import { useLockScroll } from '../../hooks/useLockScroll';
-import { useEmployeePermissions } from '../../hooks/useEmployeePermissions';
 import WorkDetailModal from './WorkDetailModal';
 import WorkKanbanView from './WorkKanbanView';
 import { ExtensionGuard } from '../common/ExtensionGuard';
+import { PermissionsLoader } from '../common/PermissionsLoader';
 import { DEFAULT_PRODUCTION_STAGES, type StandardProductionStage } from '../../config/defaultProductionStages';
+import { filterWorksByPermissions } from '../../utils/permissionsFilters';
 
 interface DeliveryNote {
   id: string;
@@ -47,8 +48,7 @@ interface Stats {
 }
 
 export default function WorkManagementPage() {
-  const { user } = useAuth();
-  const employeePerms = useEmployeePermissions();
+  const { user, employeePermissions, permissionsLoading } = useAuth();
   const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([]);
   const [filteredNotes, setFilteredNotes] = useState<DeliveryNote[]>([]);
   const [workStages, setWorkStages] = useState<WorkStage[]>([]);
@@ -83,21 +83,21 @@ export default function WorkManagementPage() {
   }, [user]);
 
   useEffect(() => {
-    if (user && !employeePerms.loading) {
+    if (user && !permissionsLoading) {
       console.log('[WorkManagement] Loading data with permissions:', {
-        isEmployee: employeePerms.isEmployee,
-        canEditAllStages: employeePerms.canEditAllStages,
-        allowedStagesCount: employeePerms.allowedStages.length,
-        allowedStages: employeePerms.allowedStages
+        isEmployee: employeePermissions.isEmployee,
+        canEditAllStages: employeePermissions.canEditAllStages,
+        allowedStagesCount: employeePermissions.allowedStages.length,
+        allowedStages: employeePermissions.allowedStages
       });
       setWorkStages(DEFAULT_PRODUCTION_STAGES);
       loadDeliveryNotes();
     }
-  }, [employeePerms.loading, employeePerms.allowedStages.join(','), employeePerms.canEditAllStages]);
+  }, [permissionsLoading, employeePermissions.allowedStages.join(','), employeePermissions.canEditAllStages]);
 
   useEffect(() => {
     applyFilters();
-  }, [deliveryNotes, searchTerm, filters, showMyWorksOnly, employeePerms.isEmployee]);
+  }, [deliveryNotes, searchTerm, filters, showMyWorksOnly, employeePermissions.isEmployee]);
 
 
   const loadDeliveryNotes = async () => {
@@ -106,7 +106,7 @@ export default function WorkManagementPage() {
     try {
       setLoading(true);
 
-      const userId = employeePerms.isEmployee ? employeePerms.laboratoryId : user.id;
+      const userId = employeePermissions.isEmployee ? employeePermissions.laboratoryId : user.id;
       if (!userId) return;
 
       const { data, error } = await supabase
@@ -168,31 +168,8 @@ export default function WorkManagementPage() {
   };
 
   const applyFilters = () => {
-    let filtered = [...deliveryNotes];
-
-    // Employee filter: show only assigned works if needed
-    if (employeePerms.isEmployee && (employeePerms.canViewAssignedOnly || showMyWorksOnly)) {
-      filtered = filtered.filter(note =>
-        note.assignments && note.assignments.length > 0
-      );
-    }
-
-    // Employee filter: show only works in allowed stages
-    if (employeePerms.isEmployee && !employeePerms.canEditAllStages && employeePerms.allowedStages.length > 0) {
-      filtered = filtered.filter(note => {
-        // If no stage assigned yet, show it
-        if (!note.current_stage_id) return true;
-        // Otherwise, only show if stage is in allowed list
-        const isAllowed = employeePerms.allowedStages.includes(note.current_stage_id);
-        console.log('[WorkManagement] Note filter:', {
-          deliveryNumber: note.delivery_number,
-          currentStageId: note.current_stage_id,
-          isAllowed,
-          allowedStages: employeePerms.allowedStages
-        });
-        return isAllowed;
-      });
-    }
+    // Apply permissions-based filtering first
+    let filtered = filterWorksByPermissions(deliveryNotes, employeePermissions, showMyWorksOnly);
 
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
@@ -279,7 +256,8 @@ export default function WorkManagementPage() {
       featureKey="work_management"
       fallbackMessage="La gestion avancée des travaux avec Kanban, affectation des employés et suivi de progression nécessite l'extension Gestion des Travaux."
     >
-      <div className="space-y-4 md:space-y-6">
+      <PermissionsLoader loading={permissionsLoading}>
+        <div className="space-y-4 md:space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 md:gap-4">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Gestion des Travaux</h1>
@@ -615,7 +593,8 @@ export default function WorkManagementPage() {
           }}
         />
       )}
-      </div>
+        </div>
+      </PermissionsLoader>
     </ExtensionGuard>
   );
 }

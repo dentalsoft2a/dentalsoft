@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
-import { useEmployeePermissions } from '../../hooks/useEmployeePermissions';
 import {
   User, Calendar, MessageSquare, AlertTriangle, Clock, Tag,
   ArrowUpCircle, ArrowDownCircle, MinusCircle, ChevronsRight, Package, CheckCircle, Lock, Eye
 } from 'lucide-react';
 import { DEFAULT_PRODUCTION_STAGES, calculateProgressFromStage, type StandardProductionStage } from '../../config/defaultProductionStages';
+import { filterStagesByPermissions } from '../../utils/permissionsFilters';
 
 interface DeliveryNote {
   id: string;
@@ -42,34 +42,18 @@ export default function WorkKanbanView({
   onSelectNote,
   onRefresh
 }: WorkKanbanViewProps) {
-  const { user } = useAuth();
-  const employeePerms = useEmployeePermissions();
+  const { user, employeePermissions } = useAuth();
   const [draggedNote, setDraggedNote] = useState<string | null>(null);
   const [dragOverStage, setDragOverStage] = useState<string | null>(null);
 
   console.log('[WorkKanban] Employee permissions loaded:', {
-    isEmployee: employeePerms.isEmployee,
-    canEditAllStages: employeePerms.canEditAllStages,
-    allowedStages: employeePerms.allowedStages,
-    loading: employeePerms.loading
+    isEmployee: employeePermissions.isEmployee,
+    canEditAllStages: employeePermissions.canEditAllStages,
+    allowedStages: employeePermissions.allowedStages
   });
 
-  // CRITICAL: Wait for permissions to load before filtering
-  // If loading or user is owner/not employee, show all stages
-  const visibleStages = (!employeePerms.loading && employeePerms.isEmployee && !employeePerms.canEditAllStages)
-    ? workStages.filter(stage => {
-        const canAccess = employeePerms.canAccessStage(stage.id);
-        console.log('[WorkKanban] Stage filter:', {
-          stageName: stage.name,
-          stageId: stage.id,
-          canAccess,
-          allowedStages: employeePerms.allowedStages,
-          isEmployee: employeePerms.isEmployee,
-          canEditAllStages: employeePerms.canEditAllStages
-        });
-        return canAccess;
-      })
-    : workStages;
+  // Filter stages based on employee permissions
+  const visibleStages = filterStagesByPermissions(workStages, employeePermissions);
 
   const getNotesForStage = (stageId: string) => {
     return deliveryNotes.filter(note => note.current_stage_id === stageId);
@@ -99,7 +83,7 @@ export default function WorkKanbanView({
     if (!draggedNote || !user) return;
 
     // Check if employee has permission to move to this stage
-    if (employeePerms.isEmployee && !employeePerms.canEditStage(targetStageId)) {
+    if (employeePermissions.isEmployee && !employeePermissions.canEditStage(targetStageId)) {
       alert('Vous n\'avez pas la permission de déplacer ce travail vers cette étape.');
       return;
     }
@@ -354,7 +338,7 @@ export default function WorkKanbanView({
 
   return (
     <div className="w-full pb-4">
-      {employeePerms.isEmployee && !employeePerms.canEditAllStages && visibleStages.length < workStages.length && (
+      {employeePermissions.isEmployee && !employeePermissions.canEditAllStages && visibleStages.length < workStages.length && (
         <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
           <Lock className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1">
