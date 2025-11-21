@@ -398,9 +398,34 @@ export default function EmployeeManagement() {
   const toggleStageAccess = (stageId: string) => {
     setRoleForm(prev => {
       const currentStages = prev.work_permissions.allowed_stages;
-      const newStages = currentStages.includes(stageId)
-        ? currentStages.filter(id => id !== stageId)
-        : [...currentStages, stageId];
+
+      // Find the stage to get its name
+      const stage = productionStages.find(s => s.id === stageId);
+      if (!stage) return prev;
+
+      // Create mapping of stage names to text IDs
+      const stageNameToTextId: Record<string, string> = {
+        'réception': 'stage-reception',
+        'modélisation': 'stage-modelisation',
+        'production': 'stage-production',
+        'finition': 'stage-finition',
+        'contrôle qualité': 'stage-controle',
+        'prêt à livrer': 'stage-pret'
+      };
+
+      const textId = stageNameToTextId[stage.name.toLowerCase()];
+
+      // Check if stage is currently selected (either by UUID or text ID)
+      const isCurrentlySelected = currentStages.includes(stageId) || (textId && currentStages.includes(textId));
+
+      let newStages: string[];
+      if (isCurrentlySelected) {
+        // Remove both UUID and text ID if present
+        newStages = currentStages.filter(id => id !== stageId && id !== textId);
+      } else {
+        // Add the UUID (text IDs will be added by backend if needed)
+        newStages = [...currentStages, stageId];
+      }
 
       return {
         ...prev,
