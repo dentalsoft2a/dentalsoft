@@ -1,4 +1,5 @@
 import type { StandardProductionStage } from '../config/defaultProductionStages';
+import { logger } from './logger';
 
 export interface EmployeePermissions {
   isEmployee: boolean;
@@ -32,7 +33,7 @@ export function filterStagesByPermissions(
   stages: StandardProductionStage[],
   permissions: EmployeePermissions
 ): StandardProductionStage[] {
-  console.log('[PermissionsFilter] Filtering stages with:', {
+  logger.debug('[PermissionsFilter] Filtering stages with:', {
     isEmployee: permissions.isEmployee,
     canEditAllStages: permissions.canEditAllStages,
     allowedStagesCount: permissions.allowedStages.length,
@@ -41,18 +42,18 @@ export function filterStagesByPermissions(
 
   // If not an employee or can edit all stages, return all stages
   if (!permissions.isEmployee || permissions.canEditAllStages) {
-    console.log('[PermissionsFilter] Returning all stages (not employee or full access)');
+    logger.debug('[PermissionsFilter] Returning all stages (not employee or full access)');
     return stages;
   }
 
   // Filter by allowed stage IDs (now all normalized to text IDs)
   const filteredStages = stages.filter(stage => {
     const isAllowed = permissions.allowedStages.includes(stage.id);
-    console.log('[PermissionsFilter] Stage:', stage.name, 'ID:', stage.id, 'Allowed:', isAllowed);
+    logger.debug('[PermissionsFilter] Stage:', stage.name, 'ID:', stage.id, 'Allowed:', isAllowed);
     return isAllowed;
   });
 
-  console.log('[PermissionsFilter] Filtered stages:', filteredStages.map(s => s.name));
+  logger.debug('[PermissionsFilter] Filtered stages:', filteredStages.map(s => s.name));
   return filteredStages;
 }
 
@@ -65,7 +66,7 @@ export function filterWorksByPermissions(
   permissions: EmployeePermissions,
   showMyWorksOnly: boolean = false
 ): DeliveryNote[] {
-  console.log('[PermissionsFilter] Filtering works with:', {
+  logger.debug('[PermissionsFilter] Filtering works with:', {
     isEmployee: permissions.isEmployee,
     canViewAllWorks: permissions.canViewAllWorks,
     canViewAssignedOnly: permissions.canViewAssignedOnly,
@@ -81,10 +82,10 @@ export function filterWorksByPermissions(
   if (permissions.isEmployee && (permissions.canViewAssignedOnly || showMyWorksOnly)) {
     filtered = filtered.filter(work => {
       const hasAssignments = work.assignments && work.assignments.length > 0;
-      console.log('[PermissionsFilter] Work:', work.delivery_number, 'Has assignments:', hasAssignments);
+      logger.debug('[PermissionsFilter] Work:', work.delivery_number, 'Has assignments:', hasAssignments);
       return hasAssignments;
     });
-    console.log('[PermissionsFilter] After assignment filter:', filtered.length, 'works');
+    logger.debug('[PermissionsFilter] After assignment filter:', filtered.length, 'works');
   }
 
   // Filter by allowed stages if employee and doesn't have full access
@@ -92,19 +93,19 @@ export function filterWorksByPermissions(
     filtered = filtered.filter(work => {
       // If no stage assigned yet, show it
       if (!work.current_stage_id) {
-        console.log('[PermissionsFilter] Work:', work.delivery_number, 'No stage assigned, including');
+        logger.debug('[PermissionsFilter] Work:', work.delivery_number, 'No stage assigned, including');
         return true;
       }
 
       // Check if stage is in allowed list
       const isAllowed = permissions.allowedStages.includes(work.current_stage_id);
-      console.log('[PermissionsFilter] Work:', work.delivery_number, 'Stage:', work.current_stage_id, 'Allowed:', isAllowed);
+      logger.debug('[PermissionsFilter] Work:', work.delivery_number, 'Stage:', work.current_stage_id, 'Allowed:', isAllowed);
       return isAllowed;
     });
-    console.log('[PermissionsFilter] After stage filter:', filtered.length, 'works');
+    logger.debug('[PermissionsFilter] After stage filter:', filtered.length, 'works');
   }
 
-  console.log('[PermissionsFilter] Final filtered works:', filtered.length, 'from', works.length);
+  logger.debug('[PermissionsFilter] Final filtered works:', filtered.length, 'from', works.length);
   return filtered;
 }
 

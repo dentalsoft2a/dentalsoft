@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import type { Database } from '../lib/database.types';
+import { logger } from '../utils/logger';
 
 type Profile = Database['public']['Tables']['profiles']['Row'];
 type UserProfile = Database['public']['Tables']['user_profiles']['Row'];
@@ -92,9 +93,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (employeeInfo) {
-      console.log('Employee Info:', employeeInfo);
-      console.log('Laboratory User Profile:', laboratoryUserProfile);
-      console.log('User Profile:', userProfile);
+      logger.debug('Employee Info:', employeeInfo);
+      logger.debug('Laboratory User Profile:', laboratoryUserProfile);
+      logger.debug('User Profile:', userProfile);
     }
   }, [employeeInfo, laboratoryUserProfile, userProfile]);
 
@@ -114,7 +115,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           sessionStorage.removeItem('admin_session');
         }
       } catch (e) {
-        console.error('Failed to parse impersonation session:', e);
+        logger.error('Failed to parse impersonation session:', e);
         sessionStorage.removeItem('impersonation_session');
         sessionStorage.removeItem('admin_session');
       }
@@ -147,7 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const loadProfile = async (userId: string) => {
     try {
-      console.log('Loading profile for userId:', userId);
+      logger.debug('Loading profile for userId:', userId);
 
       const [profileResult, userProfileResult, employeeResult] = await Promise.all([
         supabase
@@ -168,9 +169,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .maybeSingle()
       ]);
 
-      console.log('Profile result:', profileResult.data);
-      console.log('UserProfile result:', userProfileResult.data);
-      console.log('Employee result:', employeeResult.data);
+      logger.debug('Profile result:', profileResult.data);
+      logger.debug('UserProfile result:', userProfileResult.data);
+      logger.debug('Employee result:', employeeResult.data);
 
       if (profileResult.error && profileResult.error.code !== 'PGRST116') throw profileResult.error;
       if (userProfileResult.error && userProfileResult.error.code !== 'PGRST116') throw userProfileResult.error;
@@ -180,21 +181,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setEmployeeInfo(employeeResult.data);
 
       if (employeeResult.data?.laboratory_profile_id) {
-        console.log('Loading laboratory profile for:', employeeResult.data.laboratory_profile_id);
+        logger.debug('Loading laboratory profile for:', employeeResult.data.laboratory_profile_id);
         const { data: labUserProfile } = await supabase
           .from('user_profiles')
           .select('id, email, role, subscription_status, trial_ends_at, subscription_ends_at, subscription_plan_id, is_demo_account, demo_session_id, created_at')
           .eq('id', employeeResult.data.laboratory_profile_id)
           .maybeSingle();
 
-        console.log('Laboratory user profile:', labUserProfile);
+        logger.debug('Laboratory user profile:', labUserProfile);
         setLaboratoryUserProfile(labUserProfile);
       }
 
       // Load employee permissions
       await loadEmployeePermissions(userId, employeeResult.data, profileResult.data);
     } catch (error) {
-      console.error('Error loading profile:', error);
+      logger.error('Error loading profile:', error);
       setPermissionsLoading(false);
     } finally {
       setLoading(false);
@@ -208,7 +209,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   ) => {
     try {
       setPermissionsLoading(true);
-      console.log('[AuthContext] Loading employee permissions for user:', userId);
+      logger.debug('[AuthContext] Loading employee permissions for user:', userId);
 
       // If user is an employee, load employee permissions
       if (employeeData) {
@@ -221,13 +222,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .maybeSingle();
 
         if (roleError) {
-          console.error('[AuthContext] Error loading role permissions:', roleError);
+          logger.error('[AuthContext] Error loading role permissions:', roleError);
           throw roleError;
         }
 
         const workManagement = (roleData?.permissions as any)?.work_management as WorkManagementPermissions | undefined;
 
-        console.log('[AuthContext] Work management permissions:', workManagement);
+        logger.debug('[AuthContext] Work management permissions:', workManagement);
 
         let allowedStages = workManagement?.allowed_stages || [];
         const canEditAllStages = workManagement?.can_edit_all_stages ?? true;
@@ -240,7 +241,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           );
           const textStages = allowedStages.filter(id => id.startsWith('stage-'));
 
-          console.log('[AuthContext] Raw allowed stages:', { uuidStages, textStages });
+          logger.debug('[AuthContext] Raw allowed stages:', { uuidStages, textStages });
 
           // Create a mapping of stage names to default text IDs
           const stageNameToId: Record<string, string> = {
@@ -259,7 +260,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           // Query and convert UUID stages to text IDs
           if (uuidStages.length > 0) {
-            console.log('[AuthContext] Found UUID stage IDs, converting to text IDs:', uuidStages);
+            logger.debug('[AuthContext] Found UUID stage IDs, converting to text IDs:', uuidStages);
 
             const { data: stageData } = await supabase
               .from('production_stages')
@@ -267,7 +268,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               .in('id', uuidStages);
 
             if (stageData) {
-              console.log('[AuthContext] Stage UUID to name mapping:', stageData);
+              logger.debug('[AuthContext] Stage UUID to name mapping:', stageData);
 
               // Convert UUID stages to text IDs
               stageData.forEach(s => {
@@ -280,7 +281,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
 
           allowedStages = Array.from(finalTextIds);
-          console.log('[AuthContext] Final converted allowed stages:', allowedStages);
+          logger.debug('[AuthContext] Final converted allowed stages:', allowedStages);
         }
 
         const canAccessStage = (stageId: string): boolean => {
@@ -307,7 +308,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           canEditStage,
         };
 
-        console.log('[AuthContext] Employee permissions loaded:', permissions);
+        logger.debug('[AuthContext] Employee permissions loaded:', permissions);
         setEmployeePermissions(permissions);
       } else if (profileData?.id === userId) {
         // User is a laboratory owner
@@ -325,11 +326,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           canEditStage: () => true,
         };
 
-        console.log('[AuthContext] Laboratory owner permissions loaded:', permissions);
+        logger.debug('[AuthContext] Laboratory owner permissions loaded:', permissions);
         setEmployeePermissions(permissions);
       } else {
         // Not an employee and not a laboratory owner
-        console.log('[AuthContext] No special permissions');
+        logger.debug('[AuthContext] No special permissions');
         setEmployeePermissions({
           isEmployee: false,
           isLaboratoryOwner: false,
@@ -345,7 +346,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (error) {
-      console.error('[AuthContext] Error loading employee permissions:', error);
+      logger.error('[AuthContext] Error loading employee permissions:', error);
     } finally {
       setPermissionsLoading(false);
     }
@@ -427,7 +428,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Don't throw error if referral processing fails (invalid code, etc.)
             // Just log it silently so user can still sign up
             if (referralError) {
-              console.warn('Referral processing failed:', referralError);
+              logger.warn('Referral processing failed:', referralError);
             }
           }
 
@@ -474,7 +475,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.removeItem('impersonation_session');
       sessionStorage.removeItem('admin_session');
     } catch (error) {
-      console.error('Error signing out:', error);
+      logger.error('Error signing out:', error);
       setUser(null);
       setProfile(null);
       setUserProfile(null);
@@ -515,7 +516,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const result = await response.json();
 
       if (!response.ok || !result.success) {
-        console.error('Impersonation failed:', result);
+        logger.error('Impersonation failed:', result);
 
         if (result.error && result.error.includes('already have an active impersonation session')) {
           sessionStorage.removeItem('impersonation_session');
@@ -552,7 +553,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return { error: null };
     } catch (error) {
-      console.error('Impersonation error:', error);
+      logger.error('Impersonation error:', error);
       sessionStorage.removeItem('admin_session');
       return { error: error as Error };
     }
@@ -605,7 +606,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return { error: null };
     } catch (error) {
-      console.error('End impersonation error:', error);
+      logger.error('End impersonation error:', error);
       return { error: error as Error };
     }
   };
