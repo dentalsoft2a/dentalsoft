@@ -1,83 +1,108 @@
-import { useEffect, useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Camera, User, Calendar, Clock, Eye, CheckCircle, XCircle, AlertCircle, Search, Filter, Download, Info, Trash2, Plus, Upload, RefreshCw, FileCode, File as FileIcon } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
-
-interface PhotoSubmission {
-  id: string;
-  dentist_id: string;
-  laboratory_id: string;
-  patient_name: string;
-  photo_url: string;
-  notes: string | null;
-  status: string;
-  created_at: string;
-  dentist_accounts?: {
-    name: string;
-    email: string;
-    phone: string | null;
-  };
-}
-
-interface StlFile {
-  id: string;
-  delivery_note_id: string | null;
-  dentist_id: string;
-  laboratory_id: string;
-  file_name: string;
-  file_path: string;
-  file_size: number;
-  mime_type: string;
-  uploaded_at: string;
-  notes: string | null;
-  viewed_by_lab: boolean;
-  viewed_at: string | null;
-  dentist_name?: string;
-  delivery_number?: string;
-  patient_name?: string;
-}
-
-interface DentistAccount {
-  id: string;
-  name: string;
-  email: string;
-}
+import { useDebounce } from '../../hooks/useDebounce';
+import {
+  usePhotoSubmissions,
+  useStlFiles,
+  useDentistsList,
+  useUpdatePhotoStatus,
+  useDeletePhoto,
+  useUploadPhoto,
+  useMarkStlViewed,
+  useDownloadStlFile,
+  usePrefetchNextPage,
+} from '../../hooks/usePhotoSubmissions';
+import Pagination from '../common/Pagination';
+import type { PhotoSubmission, StlFile } from '../../services/photosService';
 
 export default function PhotoSubmissionsPage() {
   const { laboratoryId } = useAuth();
+
+  // État UI
   const [activeTab, setActiveTab] = useState<'photos' | 'scans'>('photos');
-  const [submissions, setSubmissions] = useState<PhotoSubmission[]>([]);
-  const [stlFiles, setStlFiles] = useState<StlFile[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoSubmission | null>(null);
   const [selectedStlFile, setSelectedStlFile] = useState<StlFile | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [fullscreenImage, setFullscreenImage] = useState(false);
+
+  // Pagination
+  const [photoPage, setPhotoPage] = useState(1);
+  const [stlPage, setStlPage] = useState(1);
+
+  // Filtres
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [sourceFilter, setSourceFilter] = useState<string>('all');
+  const [viewedFilter, setViewedFilter] = useState<string>('all');
   const [groupBy, setGroupBy] = useState<'dentist' | 'patient'>('dentist');
-  const [showAddModal, setShowAddModal] = useState(false);
 
-  useLockScroll(!!selectedPhoto || showAddModal);
-  const [dentists, setDentists] = useState<DentistAccount[]>([]);
+  // Debounce recherche (300ms)
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  // Upload modal
   const [selectedDentistId, setSelectedDentistId] = useState('');
   const [patientName, setPatientName] = useState('');
   const [notes, setNotes] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [dentistSearchTerm, setDentistSearchTerm] = useState('');
   const [showDentistDropdown, setShowDentistDropdown] = useState(false);
-  const [fullscreenImage, setFullscreenImage] = useState(false);
 
+  useLockScroll(!!selectedPhoto || showAddModal);
+
+  // React Query - Charge seulement 25 photos/fichiers par page !
+  const {
+    data: photosData,
+    isLoading: photosLoading,
+    error: photosError,
+    refetch: refetchPhotos,
+  } = usePhotoSubmissions(
+    laboratoryId,
+    photoPage,
+    { status: statusFilter, search: debouncedSearch }
+  );
+
+  const {
+    data: stlData,
+    isLoading: stlLoading,
+    refetch: refetchStl,
+  } = useStlFiles(laboratoryId, stlPage, viewedFilter);
+
+  const { data: dentists = [] } = useDentistsList();
+
+  // Mutations
+  const updatePhotoStatusMutation = useUpdatePhotoStatus(
+    laboratoryId,
+    photoPage,
+    { status: statusFilter, search: debouncedSearch }
+  );
+  const deletePhotoMutation = useDeletePhoto(laboratoryId);
+  const uploadPhotoMutation = useUploadPhoto(laboratoryId);
+  const markStlViewedMutation = useMarkStlViewed(laboratoryId, stlPage, viewedFilter);
+  const downloadStlMutation = useDownloadStlFile();
+
+  // Préchargement page suivante
+  const prefetchNextPage = usePrefetchNextPage(
+    laboratoryId,
+    photoPage,
+    photosData?.totalPages || 0,
+    { status: statusFilter, search: debouncedSearch }
+  );
+
+  // Extraire les données
+  const submissions = photosData?.photos || [];
+  const stlFiles = stlData?.files || [];
+  const loading = photosLoading || stlLoading;
+
+  // Préchargement automatique de la page suivante
   useEffect(() => {
-    if (activeTab === 'photos') {
-      loadSubmissions();
-    } else if (activeTab === 'scans') {
-      loadStlFiles();
+    if (activeTab === 'photos' && !photosLoading) {
+      prefetchNextPage();
     }
-    loadDentists();
-  }, [laboratoryId, activeTab]);
+  }, [activeTab, photoPage, photosLoading]);
 
+  // Gestion dropdown dentistes
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -90,76 +115,16 @@ export default function PhotoSubmissionsPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const loadDentists = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('dentist_accounts')
-        .select('id, name, email')
-        .order('name');
+  // Reset page quand les filtres changent
+  useEffect(() => {
+    setPhotoPage(1);
+  }, [statusFilter, debouncedSearch]);
 
-      if (error) throw error;
-      setDentists(data || []);
-    } catch (error) {
-      console.error('Error loading dentists:', error);
-    }
-  };
-
-  const loadStlFiles = async () => {
-    if (!laboratoryId) return;
-
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('stl_files_view')
-        .select('*')
-        .eq('laboratory_id', laboratoryId)
-        .order('uploaded_at', { ascending: false });
-
-      if (error) throw error;
-      setStlFiles(data || []);
-    } catch (error) {
-      console.error('Error loading STL files:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadSubmissions = async () => {
-    if (!laboratoryId) return;
-
-    setLoading(true);
-    try {
-      const { data, error} = await supabase
-        .from('photo_submissions')
-        .select(`
-          *,
-          dentist_accounts (
-            name,
-            email,
-            phone
-          )
-        `)
-        .eq('laboratory_id', laboratoryId)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setSubmissions(data || []);
-    } catch (error) {
-      console.error('Error loading submissions:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // TOUTES les fonctions loadXXX sont supprimées - React Query fait tout automatiquement !
 
   const updateStatus = async (id: string, newStatus: string) => {
     try {
-      const { error } = await supabase
-        .from('photo_submissions')
-        .update({ status: newStatus })
-        .eq('id', id);
-
-      if (error) throw error;
-      loadSubmissions();
+      await updatePhotoStatusMutation.mutateAsync({ photoId: id, status: newStatus });
       if (selectedPhoto?.id === id) {
         setSelectedPhoto({ ...selectedPhoto, status: newStatus });
       }
@@ -169,21 +134,14 @@ export default function PhotoSubmissionsPage() {
     }
   };
 
-  const deleteSubmission = async (id: string) => {
+  const deleteSubmission = async (id: string, photoUrl: string) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette photo ?')) {
       return;
     }
 
     try {
-      const { error } = await supabase
-        .from('photo_submissions')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-
+      await deletePhotoMutation.mutateAsync({ photoId: id, photoUrl });
       setSelectedPhoto(null);
-      loadSubmissions();
       alert('Photo supprimée avec succès');
     } catch (error) {
       console.error('Error deleting submission:', error);
@@ -199,34 +157,13 @@ export default function PhotoSubmissionsPage() {
       return;
     }
 
-    setUploading(true);
-
     try {
-      const fileExt = photoFile.name.split('.').pop();
-      const fileName = `${laboratoryId}/${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('dentist-photos')
-        .upload(fileName, photoFile);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('dentist-photos')
-        .getPublicUrl(fileName);
-
-      const { error: insertError } = await supabase
-        .from('photo_submissions')
-        .insert({
-          dentist_id: selectedDentistId,
-          laboratory_id: laboratoryId,
-          patient_name: patientName,
-          photo_url: publicUrl,
-          notes: notes || null,
-          status: 'pending'
-        });
-
-      if (insertError) throw insertError;
+      await uploadPhotoMutation.mutateAsync({
+        file: photoFile,
+        dentistId: selectedDentistId,
+        patientName,
+        notes: notes || undefined,
+      });
 
       alert('Photo ajoutée avec succès');
       setShowAddModal(false);
@@ -235,25 +172,17 @@ export default function PhotoSubmissionsPage() {
       setPatientName('');
       setNotes('');
       setPhotoFile(null);
-      loadSubmissions();
+      setPhotoPage(1); // Retour page 1 pour voir la nouvelle photo
     } catch (error) {
       console.error('Error adding submission:', error);
-      alert('Erreur lors de l\'ajout de la photo');
-    } finally {
-      setUploading(false);
+      alert("Erreur lors de l'ajout de la photo");
     }
   };
 
-  const filteredSubmissions = submissions.filter(sub => {
-    const matchesSearch =
-      sub.patient_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      sub.dentist_accounts?.name.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || sub.status === statusFilter;
-    const matchesSource = sourceFilter === 'all' || (sub as any).source === sourceFilter;
-    return matchesSearch && matchesStatus && matchesSource;
-  });
+  // Le filtrage est maintenant fait côté serveur par la fonction SQL !
+  // Plus besoin de filteredSubmissions
 
-  const groupedSubmissions = filteredSubmissions.reduce((acc, sub) => {
+  const groupedSubmissions = submissions.reduce((acc, sub) => {
     const key = groupBy === 'dentist'
       ? sub.dentist_accounts?.name || 'Inconnu'
       : sub.patient_name;
@@ -332,12 +261,12 @@ export default function PhotoSubmissionsPage() {
           {activeTab === 'photos' && (
             <div className="flex gap-2 md:gap-3">
               <button
-                onClick={loadSubmissions}
-                disabled={loading}
+                onClick={() => refetchPhotos()}
+                disabled={photosLoading}
                 className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-lg md:rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 text-sm md:text-base font-medium"
                 title="Actualiser la liste"
               >
-                <RefreshCw className={`w-5 h-5 flex-shrink-0 ${loading ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`w-5 h-5 flex-shrink-0 ${photosLoading ? 'animate-spin' : ''}`} />
                 <span>Actualiser</span>
               </button>
               <button
@@ -416,7 +345,7 @@ export default function PhotoSubmissionsPage() {
           />
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
@@ -430,15 +359,6 @@ export default function PhotoSubmissionsPage() {
           </select>
 
           <select
-            value={sourceFilter}
-            onChange={(e) => setSourceFilter(e.target.value)}
-            className="px-3 md:px-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="all">Toutes les sources</option>
-            <option value="dentist_app">App Mobile</option>
-          </select>
-
-          <select
             value={groupBy}
             onChange={(e) => setGroupBy(e.target.value as 'dentist' | 'patient')}
             className="px-3 md:px-4 py-2 text-sm md:text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -449,7 +369,7 @@ export default function PhotoSubmissionsPage() {
         </div>
       </div>
 
-      {filteredSubmissions.length === 0 ? (
+      {submissions.length === 0 ? (
         <div className="text-center py-8 md:py-12 bg-white rounded-xl md:rounded-2xl border border-slate-200">
           <Camera className="w-12 h-12 md:w-16 md:h-16 text-slate-300 mx-auto mb-3 md:mb-4" />
           <h3 className="text-base md:text-lg font-semibold text-slate-900 mb-2">Aucune photo reçue</h3>
@@ -491,7 +411,7 @@ export default function PhotoSubmissionsPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              deleteSubmission(submission.id);
+                              deleteSubmission(submission.id, submission.photo_url);
                             }}
                             className="absolute bottom-1.5 md:bottom-2 left-1.5 md:left-2 p-1.5 md:p-2 bg-red-500 text-white rounded-md md:rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 active:scale-95"
                             title="Supprimer la photo"
@@ -537,6 +457,21 @@ export default function PhotoSubmissionsPage() {
           );
           })}
         </div>
+      )}
+
+      {/* Pagination */}
+      {photosData && photosData.totalCount > 0 && (
+        <Pagination
+          currentPage={photoPage}
+          totalPages={photosData.totalPages}
+          totalItems={photosData.totalCount}
+          itemsPerPage={25}
+          onPageChange={(page) => {
+            setPhotoPage(page);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }}
+          isLoading={photosLoading}
+        />
       )}
 
       {selectedPhoto && (
@@ -707,7 +642,7 @@ export default function PhotoSubmissionsPage() {
                   Télécharger
                 </a>
                 <button
-                  onClick={() => deleteSubmission(selectedPhoto.id)}
+                  onClick={() => deleteSubmission(selectedPhoto.id, selectedPhoto.photo_url)}
                   className="flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-2xl font-bold hover:from-red-700 hover:to-rose-700 transition-all duration-300 shadow-lg shadow-red-500/50 hover:shadow-xl hover:scale-[1.02]"
                 >
                   <Trash2 className="w-5 h-5" />
@@ -1010,29 +945,16 @@ export default function PhotoSubmissionsPage() {
                       <button
                         onClick={async () => {
                           try {
-                            const { data, error } = await supabase.storage
-                              .from('stl-files')
-                              .createSignedUrl(file.file_path, 3600);
-
-                            if (error) throw error;
-
-                            if (data?.signedUrl) {
-                              // Mark as viewed
-                              if (!file.viewed_by_lab) {
-                                await supabase.rpc('mark_stl_file_as_viewed', {
-                                  p_file_id: file.id
-                                });
-                                await loadStlFiles();
-                              }
-
-                              // Download the file
-                              const link = document.createElement('a');
-                              link.href = data.signedUrl;
-                              link.download = file.file_name;
-                              document.body.appendChild(link);
-                              link.click();
-                              document.body.removeChild(link);
+                            // Marquer comme vu si pas encore vu
+                            if (!file.viewed_by_lab) {
+                              await markStlViewedMutation.mutateAsync(file.id);
                             }
+
+                            // Télécharger le fichier
+                            await downloadStlMutation.mutateAsync({
+                              filePath: file.file_path,
+                              fileName: file.file_name,
+                            });
                           } catch (error) {
                             console.error('Error downloading file:', error);
                             alert('Erreur lors du téléchargement du fichier');
@@ -1049,6 +971,21 @@ export default function PhotoSubmissionsPage() {
                 </div>
               ))}
             </div>
+          )}
+
+          {/* Pagination STL */}
+          {stlData && stlData.totalCount > 0 && (
+            <Pagination
+              currentPage={stlPage}
+              totalPages={stlData.totalPages}
+              totalItems={stlData.totalCount}
+              itemsPerPage={25}
+              onPageChange={(page) => {
+                setStlPage(page);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              isLoading={stlLoading}
+            />
           )}
         </>
       )}
