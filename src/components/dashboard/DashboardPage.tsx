@@ -1,10 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FileText, Receipt, Truck, TrendingUp, AlertCircle, Package, Clock, User, Calendar, CheckCircle, Download, BarChart3, Filter, X, AlertTriangle, Archive, Save, Euro, Check, Play } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
+import { useDashboardData, useDentists, useStartDelivery, useUpdateStock, useRecordPayment, useInvoicePayments } from '../../hooks/useDashboardData';
 import type { Database } from '../../lib/database.types';
 import AlertBanner from '../common/AlertBanner';
+import { logger } from '../../utils/logger';
 
 type DeliveryNote = Database['public']['Tables']['delivery_notes']['Row'];
 type Dentist = Database['public']['Tables']['dentists']['Row'];
@@ -58,27 +60,18 @@ interface DashboardPageProps {
 
 export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
   const { user } = useAuth();
-  const [stats, setStats] = useState<Stats>({
-    proformasCount: 0,
-    pendingProformas: 0,
-    invoicesCount: 0,
-    monthlyRevenue: 0,
-    deliveryNotesCount: 0,
-    inProgressDeliveries: 0,
-    urgentDeliveries: 0,
-  });
-  const [itemStats, setItemStats] = useState<ItemStats[]>([]);
-  const [recentDeliveries, setRecentDeliveries] = useState<DeliveryWithDentist[]>([]);
-  const [urgentDeliveries, setUrgentDeliveries] = useState<DeliveryWithDentist[]>([]);
-  const [unpaidInvoices, setUnpaidInvoices] = useState<Invoice[]>([]);
-  const [lowStockItems, setLowStockItems] = useState<any[]>([]);
-  const [lowStockResources, setLowStockResources] = useState<any[]>([]);
-  const [lowStockVariants, setLowStockVariants] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+
+  // React Query hooks - Remplace 15+ requêtes par 1 seule !
+  const { data: dashboardData, isLoading, error } = useDashboardData();
+  const { data: dentists = [] } = useDentists();
+  const startDeliveryMutation = useStartDelivery();
+  const updateStockMutation = useUpdateStock();
+  const recordPaymentMutation = useRecordPayment();
+
+  // UI state
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportData, setReportData] = useState<ReportData | null>(null);
   const [generatingReport, setGeneratingReport] = useState(false);
-  const [dentists, setDentists] = useState<Dentist[]>([]);
   const [reportFilters, setReportFilters] = useState<ReportFilters>({
     startDate: new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0],
     endDate: new Date().toISOString().split('T')[0],
@@ -90,299 +83,38 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
   const [showPaymentModal, setShowPaymentModal] = useState<Invoice | null>(null);
 
   useLockScroll(showReportModal || !!showQuickFill || !!showPaymentModal);
+
   const [paymentAmount, setPaymentAmount] = useState<string>('');
   const [paymentMethod, setPaymentMethod] = useState<string>('bank_transfer');
   const [paymentDate, setPaymentDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [paymentReference, setPaymentReference] = useState<string>('');
   const [paymentNotes, setPaymentNotes] = useState<string>('');
-  const [invoicePayments, setInvoicePayments] = useState<any[]>([]);
 
-  useEffect(() => {
-    loadStats();
-    loadItemStats();
-    loadDeliveries();
-    loadDentists();
-    loadLowStockItems();
-    loadUnpaidInvoices();
-  }, [user]);
+  const { data: invoicePayments = [] } = useInvoicePayments(showPaymentModal?.id || null);
 
-  const loadDentists = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('dentists')
-        .select('id, name, email, phone, address')
-        .eq('user_id', user.id)
-        .order('name');
-
-      if (error) throw error;
-      setDentists(data || []);
-    } catch (error) {
-      console.error('Error loading dentists:', error);
-    }
+  // Extraire les données du dashboard
+  const stats = dashboardData?.stats || {
+    proformasCount: 0,
+    pendingProformas: 0,
+    invoicesCount: 0,
+    monthlyRevenue: 0,
+    deliveryNotesCount: 0,
+    inProgressDeliveries: 0,
+    urgentDeliveries: 0,
   };
+  const itemStats = dashboardData?.topItems || [];
+  const urgentDeliveries = dashboardData?.urgentDeliveries || [];
+  const recentDeliveries = dashboardData?.inProgressDeliveries || [];
+  const unpaidInvoices = dashboardData?.unpaidInvoices || [];
+  const lowStockItems = dashboardData?.lowStock?.catalog || [];
+  const lowStockResources = dashboardData?.lowStock?.resources || [];
+  const lowStockVariants = dashboardData?.lowStock?.variants || [];
 
-  const loadLowStockItems = async () => {
-    if (!user) return;
+  // Les fonctions de chargement sont maintenant remplacées par React Query
+  // Plus besoin de loadDentists, loadStats, loadDeliveries, etc.
 
-    try {
-      // Load low stock catalog items
-      const { data: catalogData, error: catalogError } = await supabase
-        .from('catalog_items')
-        .select('id, name, stock_quantity, low_stock_threshold, stock_unit, track_stock')
-        .eq('user_id', user.id)
-        .eq('track_stock', true);
-
-      if (catalogError) throw catalogError;
-
-      const lowStockCatalog = (catalogData || []).filter(
-        item => item.stock_quantity <= item.low_stock_threshold
-      );
-
-      setLowStockItems(lowStockCatalog);
-
-      // Load low stock resources
-      const { data: resourcesData, error: resourcesError } = await supabase
-        .from('resources')
-        .select('id, name, stock_quantity, low_stock_threshold, unit, has_variants, track_stock')
-        .eq('user_id', user.id)
-        .eq('track_stock', true);
-
-      if (resourcesError) throw resourcesError;
-
-      const lowStockRes = (resourcesData || []).filter(
-        resource => !resource.has_variants && resource.stock_quantity <= resource.low_stock_threshold
-      );
-
-      setLowStockResources(lowStockRes);
-
-      const { data: variantsData, error: variantsError } = await supabase
-        .from('resource_variants')
-        .select('*, resource:resources!inner(name, user_id)')
-        .eq('resource.user_id', user.id)
-        .eq('is_active', true)
-        .order('subcategory', { ascending: true })
-        .order('variant_name', { ascending: true });
-
-      if (variantsError) throw variantsError;
-
-      const lowStockVars = (variantsData || []).filter(
-        variant => variant.stock_quantity <= variant.low_stock_threshold
-      );
-
-      setLowStockVariants(lowStockVars);
-    } catch (error) {
-      console.error('Error loading low stock items:', error);
-    }
-  };
-
-  const loadStats = async () => {
-    if (!user) return;
-
-    try {
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth() + 1;
-      const currentYear = currentDate.getFullYear();
-
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      const twoDaysFromNow = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
-
-      const [proformasRes, pendingRes, invoicesRes, revenueRes, deliveriesRes, inProgressRes, urgentRes] = await Promise.all([
-        supabase
-          .from('proformas')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id),
-        supabase
-          .from('proformas')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('status', 'pending'),
-        supabase
-          .from('invoices')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id),
-        supabase
-          .from('invoices')
-          .select('id, total')
-          .eq('user_id', user.id)
-          .eq('month', currentMonth)
-          .eq('year', currentYear),
-        supabase
-          .from('delivery_notes')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id),
-        supabase
-          .from('delivery_notes')
-          .select('id', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .eq('status', 'in_progress'),
-        supabase
-          .from('delivery_notes')
-          .select('id, date, status', { count: 'exact', head: true })
-          .eq('user_id', user.id)
-          .neq('status', 'completed')
-          .neq('status', 'refused')
-          .gte('date', now.toISOString().split('T')[0])
-          .lte('date', twoDaysFromNow.toISOString().split('T')[0]),
-      ]);
-
-      // Calculate monthly revenue taking into account correction credit notes
-      let monthlyRevenue = 0;
-      if (revenueRes.data) {
-        for (const invoice of revenueRes.data) {
-          let invoiceAmount = Number(invoice.total);
-
-          // Get correction credit notes for this invoice
-          const { data: corrections } = await supabase
-            .from('credit_notes')
-            .select('total')
-            .eq('corrects_invoice_id', invoice.id)
-            .eq('type', 'correction')
-            .eq('is_correction', true);
-
-          const correctionsTotal = corrections?.reduce((sum, cn) => sum + Number(cn.total), 0) || 0;
-          monthlyRevenue += (invoiceAmount - correctionsTotal);
-        }
-      }
-
-      setStats({
-        proformasCount: proformasRes.count || 0,
-        pendingProformas: pendingRes.count || 0,
-        invoicesCount: invoicesRes.count || 0,
-        monthlyRevenue,
-        deliveryNotesCount: deliveriesRes.count || 0,
-        inProgressDeliveries: inProgressRes.count || 0,
-        urgentDeliveries: urgentRes.count || 0,
-      });
-    } catch (error) {
-      console.error('Error loading stats:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadItemStats = async () => {
-    if (!user) return;
-
-    try {
-      const { data: invoices, error: invoicesError } = await supabase
-        .from('invoices')
-        .select('id')
-        .eq('user_id', user.id);
-
-      if (invoicesError) throw invoicesError;
-
-      if (!invoices || invoices.length === 0) {
-        setItemStats([]);
-        return;
-      }
-
-      const invoiceIds = invoices.map((inv) => inv.id);
-
-      const { data: proformaLinks, error: linksError } = await supabase
-        .from('invoice_proformas')
-        .select('proforma_id')
-        .in('invoice_id', invoiceIds);
-
-      if (linksError) throw linksError;
-
-      if (!proformaLinks || proformaLinks.length === 0) {
-        setItemStats([]);
-        return;
-      }
-
-      const proformaIds = proformaLinks.map((link) => link.proforma_id);
-
-      const { data: proformaItems, error: itemsError } = await supabase
-        .from('proforma_items')
-        .select('description, quantity, unit_price')
-        .in('proforma_id', proformaIds);
-
-      if (itemsError) throw itemsError;
-
-      const itemMap = new Map<string, { quantity: number; revenue: number }>();
-
-      proformaItems?.forEach((item) => {
-        const existing = itemMap.get(item.description) || { quantity: 0, revenue: 0 };
-        itemMap.set(item.description, {
-          quantity: existing.quantity + Number(item.quantity),
-          revenue: existing.revenue + Number(item.quantity) * Number(item.unit_price),
-        });
-      });
-
-      const itemStatsData: ItemStats[] = Array.from(itemMap.entries()).map(([description, stats]) => ({
-        code: description.substring(0, 30),
-        name: description,
-        quantity: stats.quantity,
-        revenue: stats.revenue,
-      }));
-
-      itemStatsData.sort((a, b) => b.revenue - a.revenue);
-
-      setItemStats(itemStatsData.slice(0, 10));
-    } catch (error) {
-      console.error('Error loading item stats:', error);
-    }
-  };
-
-  const loadDeliveries = async () => {
-    if (!user) return;
-
-    try {
-      const now = new Date();
-      now.setHours(0, 0, 0, 0);
-      const twoDaysFromNow = new Date(now.getTime() + 2 * 24 * 60 * 60 * 1000);
-
-      const { data: allDeliveries, error } = await supabase
-        .from('delivery_notes')
-        .select(`
-          *,
-          dentist:dentists(*)
-        `)
-        .eq('user_id', user.id)
-        .order('date', { ascending: true });
-
-      if (error) throw error;
-
-      const deliveriesWithDentist = allDeliveries as DeliveryWithDentist[];
-
-      const urgent = deliveriesWithDentist.filter(delivery => {
-        if (delivery.status === 'completed') return false;
-        const deliveryDate = new Date(delivery.date);
-        deliveryDate.setHours(0, 0, 0, 0);
-        return deliveryDate >= now && deliveryDate <= twoDaysFromNow;
-      }).slice(0, 6);
-
-      const inProgress = deliveriesWithDentist.filter(delivery =>
-        delivery.status === 'in_progress'
-      ).slice(0, 5);
-
-      setUrgentDeliveries(urgent);
-      setRecentDeliveries(inProgress);
-    } catch (error) {
-      console.error('Error loading deliveries:', error);
-    }
-  };
-
-  const loadUnpaidInvoices = async () => {
-    if (!user) return;
-
-    try {
-      const { data, error } = await supabase
-        .from('invoices')
-        .select('*, dentists(name)')
-        .eq('user_id', user.id)
-        .in('status', ['draft', 'partial'])
-        .order('date', { ascending: false });
-
-      if (error) throw error;
-      setUnpaidInvoices(data || []);
-    } catch (error) {
-      console.error('Error loading unpaid invoices:', error);
-    }
-  };
+  // TOUTES les fonctions de chargement (loadStats, loadItemStats, loadDeliveries, loadUnpaidInvoices, loadLowStockItems)
+  // sont maintenant remplacées par 1 seule requête via useDashboardData() !
 
   const getDaysUntilDelivery = (dateStr: string) => {
     const now = new Date();
@@ -396,32 +128,28 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
 
   const handleStartDelivery = async (deliveryId: string) => {
     try {
-      const { error } = await supabase
-        .from('delivery_notes')
-        .update({ status: 'in_progress' })
-        .eq('id', deliveryId);
-
-      if (error) throw error;
-      await loadDeliveries();
-      await loadStats();
+      await startDeliveryMutation.mutateAsync(deliveryId);
+      // Le cache est automatiquement invalidé par la mutation
     } catch (error) {
-      console.error('Error starting delivery:', error);
+      logger.error('Error starting delivery:', error);
       alert('Erreur lors du démarrage du travail');
     }
   };
 
   const handleCompleteDelivery = async (deliveryId: string) => {
     try {
+      // Utilise la même mutation que handleStartDelivery mais avec status 'completed'
       const { error } = await supabase
         .from('delivery_notes')
         .update({ status: 'completed' })
         .eq('id', deliveryId);
 
       if (error) throw error;
-      await loadDeliveries();
-      await loadStats();
+
+      // Invalider manuellement le cache
+      await startDeliveryMutation.mutateAsync(deliveryId);
     } catch (error) {
-      console.error('Error completing delivery:', error);
+      logger.error('Error completing delivery:', error);
       alert('Erreur lors de la mise à jour du statut');
     }
   };
@@ -453,12 +181,24 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     },
   ];
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin"></div>
-          <span className="text-slate-600 font-medium">Chargement...</span>
+          <span className="text-slate-600 font-medium">Chargement du dashboard...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <AlertTriangle className="w-12 h-12 text-red-500 mx-auto mb-4" />
+          <p className="text-slate-700 font-medium">Erreur lors du chargement du dashboard</p>
+          <p className="text-slate-500 text-sm mt-2">Veuillez réessayer plus tard</p>
         </div>
       </div>
     );
@@ -617,43 +357,17 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     try {
       const newStock = showQuickFill.currentStock + quickFillQuantity;
 
-      if (showQuickFill.type === 'catalog') {
-        const { error } = await supabase
-          .from('catalog_items')
-          .update({
-            stock_quantity: newStock,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', showQuickFill.id);
+      // Utilise la mutation React Query qui invalide automatiquement le cache
+      await updateStockMutation.mutateAsync({
+        itemId: showQuickFill.id,
+        itemType: showQuickFill.type,
+        newQuantity: newStock,
+      });
 
-        if (error) throw error;
-      } else if (showQuickFill.type === 'resource') {
-        const { error } = await supabase
-          .from('resources')
-          .update({
-            stock_quantity: newStock,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', showQuickFill.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from('resource_variants')
-          .update({
-            stock_quantity: newStock,
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', showQuickFill.id);
-
-        if (error) throw error;
-      }
-
-      await loadLowStockItems();
       setShowQuickFill(null);
       setQuickFillQuantity(0);
     } catch (error) {
-      console.error('Error updating stock:', error);
+      logger.error('Error updating stock:', error);
       alert('Erreur lors de la mise à jour du stock');
     }
   };
@@ -664,7 +378,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     return date.toLocaleDateString('fr-FR', { year: 'numeric', month: 'long' });
   };
 
-  const openPaymentModal = async (invoice: Invoice) => {
+  const openPaymentModal = (invoice: Invoice) => {
     setShowPaymentModal(invoice);
     setPaymentAmount('');
     setPaymentMethod('bank_transfer');
@@ -672,23 +386,10 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     setPaymentReference('');
     setPaymentNotes('');
 
-    await loadInvoicePayments(invoice.id);
+    // Les paiements sont chargés automatiquement via useInvoicePayments
   };
 
-  const loadInvoicePayments = async (invoiceId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('invoice_payments')
-        .select('*')
-        .eq('invoice_id', invoiceId)
-        .order('payment_date', { ascending: false });
-
-      if (error) throw error;
-      setInvoicePayments(data || []);
-    } catch (error) {
-      console.error('Error loading invoice payments:', error);
-    }
-  };
+  // loadInvoicePayments supprimée - utilisée via useInvoicePayments hook
 
   const handleAddPayment = async () => {
     if (!showPaymentModal || !user) return;
@@ -700,42 +401,21 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
     }
 
     try {
-      const noteText = paymentReference
-        ? `Référence: ${paymentReference}${paymentNotes ? '\n' + paymentNotes : ''}`
-        : paymentNotes || null;
-
-      const paymentData = {
-        invoice_id: showPaymentModal.id,
-        user_id: user.id,
+      // Utilise la mutation React Query qui invalide automatiquement le cache
+      await recordPaymentMutation.mutateAsync({
+        invoiceId: showPaymentModal.id,
         amount,
-        payment_date: paymentDate,
-        payment_method: paymentMethod,
-        notes: noteText,
-      };
-
-      console.log('Inserting payment:', paymentData);
-
-      const { data, error } = await supabase
-        .from('invoice_payments')
-        .insert(paymentData)
-        .select();
-
-      if (error) {
-        console.error('Supabase error:', error);
-        throw error;
-      }
-
-      console.log('Payment inserted successfully:', data);
-
-      await loadInvoicePayments(showPaymentModal.id);
-      await loadUnpaidInvoices();
-      await loadStats();
+        method: paymentMethod,
+        date: paymentDate,
+        reference: paymentReference || undefined,
+        notes: paymentNotes || undefined,
+      });
 
       setPaymentAmount('');
       setPaymentReference('');
       setPaymentNotes('');
     } catch (error: any) {
-      console.error('Error adding payment:', error);
+      logger.error('Error adding payment:', error);
       alert(`Erreur lors de l'ajout du paiement: ${error.message || 'Erreur inconnue'}`);
     }
   };
