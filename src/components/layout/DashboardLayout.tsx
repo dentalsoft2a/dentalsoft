@@ -28,6 +28,7 @@ import { usePermissions } from '../../hooks/usePermissions';
 import { supabase } from '../../lib/supabase';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import PWAInstallPrompt from '../common/PWAInstallPrompt';
+import AIAssistantChat from '../ai-assistant/AIAssistantChat';
 
 function getAppVersion(): string {
   const cachedVersion = localStorage.getItem('app_version');
@@ -309,6 +310,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
       </main>
 
       <PWAInstallPrompt />
+      <AIAssistantChat currentPage={currentPage} />
     </div>
   );
 }
