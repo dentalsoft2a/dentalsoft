@@ -96,7 +96,7 @@ export async function createConversation(title?: string): Promise<AIConversation
       .from('user_profiles')
       .select('*, profiles(*)')
       .eq('user_id', user.user.id)
-      .single();
+      .maybeSingle();
 
     const laboratoryId = userProfile?.profiles?.id || null;
 
@@ -172,9 +172,9 @@ export async function fetchUsageStats(): Promise<AIUsageStats | null> {
       .from('ai_usage_stats')
       .select('*')
       .eq('date', today)
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       throw error;
     }
 
@@ -190,9 +190,9 @@ export async function fetchUserPreferences(): Promise<AIUserPreferences | null> 
     const { data, error } = await supabase
       .from('ai_user_preferences')
       .select('*')
-      .single();
+      .maybeSingle();
 
-    if (error && error.code !== 'PGRST116') {
+    if (error) {
       throw error;
     }
 

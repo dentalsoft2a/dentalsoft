@@ -490,6 +490,53 @@ Souhaitez-vous plus de détails sur une statistique en particulier ? 📊"
 
 ---
 
+## 🐛 Problèmes résolus
+
+### Erreur 406 "Cannot coerce result to single JSON object"
+
+**Problème :** Les requêtes Supabase utilisaient `.single()` qui lève une erreur si aucun résultat n'est trouvé.
+
+**Solution :** Remplacé par `.maybeSingle()` dans :
+- `fetchUsageStats()` - Stats quotidiennes (peut ne pas exister le 1er jour)
+- `fetchUserPreferences()` - Préférences (peut ne pas exister pour nouveaux users)
+- `createConversation()` - Profil utilisateur (peut ne pas exister)
+- Edge Function `ai-chat` - Profil et stats
+
+**Comportement :**
+- `.single()` : ❌ Erreur 406 si 0 résultat
+- `.maybeSingle()` : ✅ Retourne `null` si 0 résultat (pas d'erreur)
+
+### Erreur 404 "Profil utilisateur non trouvé"
+
+**Problème :** L'Edge Function exigeait un profil `user_profiles` existant.
+
+**Solution :** Profil devenu optionnel avec valeurs par défaut :
+```typescript
+let laboratoryId = null;
+let laboratoryName = 'Votre laboratoire';
+let userName = user.email || 'Utilisateur';
+let userRole = 'user';
+```
+
+**Résultat :** L'IA fonctionne pour TOUS les utilisateurs authentifiés, même sans profil.
+
+### Erreur 404 Edge Function introuvable
+
+**Symptôme :** `POST /functions/v1/ai-chat 404 (Not Found)`
+
+**Causes possibles :**
+1. Cache navigateur → Solution : Ctrl+F5 (hard refresh)
+2. Function pas déployée → Solution : Vérifier avec `list_edge_functions`
+3. URL incorrecte → Solution : Vérifier `VITE_SUPABASE_URL`
+
+**Vérification :**
+```bash
+# Lister les fonctions déployées
+# La fonction 'ai-chat' doit apparaître avec status: ACTIVE
+```
+
+---
+
 ## 🛠️ Configuration requise
 
 ### Variables d'environnement
