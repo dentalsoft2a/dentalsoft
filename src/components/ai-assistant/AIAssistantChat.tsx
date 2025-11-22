@@ -37,18 +37,36 @@ export default function AIAssistantChat({ currentPage, selectedData }: AIAssista
   }, [messages]);
 
   const handleSend = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    console.log('[AIChat] handleSend called', {
+      inputValue: inputValue.substring(0, 20),
+      isLoading,
+      hasMessage: !!inputValue.trim()
+    });
+
+    if (!inputValue.trim()) {
+      console.log('[AIChat] Empty message, returning');
+      return;
+    }
+
+    if (isLoading) {
+      console.log('[AIChat] Already loading, returning');
+      return;
+    }
 
     const message = inputValue.trim();
     setInputValue('');
 
+    console.log('[AIChat] Calling sendMessage...');
+
     try {
-      await sendMessage(message, {
+      const result = await sendMessage(message, {
         currentPage,
         selectedData,
       });
+      console.log('[AIChat] SUCCESS! Result:', result);
     } catch (err) {
-      console.error('Error sending message:', err);
+      console.error('[AIChat] ERROR:', err);
+      alert(`Erreur IA: ${err instanceof Error ? err.message : 'Erreur inconnue'}`);
     }
   };
 

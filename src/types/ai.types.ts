@@ -75,4 +75,5 @@ export interface SendMessageResponse {
   tokensUsed: number;
   messageCount: number;
   dailyLimit: number;
+  toolsExecuted?: number;
 }
