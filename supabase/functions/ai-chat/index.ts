@@ -55,23 +55,23 @@ Deno.serve(async (req: Request) => {
       );
     }
 
+    let laboratoryId = null;
+    let laboratoryName = 'Votre laboratoire';
+    let userName = user.email || 'Utilisateur';
+    let userRole = 'user';
+
     const { data: userProfile } = await supabaseClient
       .from('user_profiles')
-      .select('*, profiles(*)')
+      .select('email, role, profiles(id, company_name)')
       .eq('user_id', user.id)
-      .single();
+      .maybeSingle();
 
-    if (!userProfile) {
-      return new Response(
-        JSON.stringify({ error: 'Profil utilisateur non trouvé' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
+    if (userProfile) {
+      laboratoryId = userProfile.profiles?.id || null;
+      laboratoryName = userProfile.profiles?.company_name || laboratoryName;
+      userName = userProfile.email || userName;
+      userRole = userProfile.role || 'laboratory';
     }
-
-    const laboratoryId = userProfile.profiles?.id || null;
-    const laboratoryName = userProfile.profiles?.company_name || 'Votre laboratoire';
-    const userName = userProfile.email || 'Utilisateur';
-    const userRole = userProfile.role || 'laboratory';
 
     const today = new Date().toISOString().split('T')[0];
     const { data: usageStats } = await supabaseClient
@@ -79,7 +79,7 @@ Deno.serve(async (req: Request) => {
       .select('total_messages')
       .eq('user_id', user.id)
       .eq('date', today)
-      .single();
+      .maybeSingle();
 
     const messageCount = usageStats?.total_messages || 0;
     const dailyLimit = 100;
@@ -106,9 +106,10 @@ Deno.serve(async (req: Request) => {
           title: 'Nouvelle conversation',
         })
         .select()
-        .single();
+        .maybeSingle();
 
       if (convError || !newConv) {
+        console.error('Error creating conversation:', convError);
         throw new Error('Impossible de créer la conversation');
       }
 
@@ -131,25 +132,39 @@ CONTEXTE UTILISATEUR :
 
 PERSONNALITÉ :
 - Amical et professionnel
-- Utilise des emojis avec parcimonie
+- Utilise des emojis avec parcimonie (1-2 max par message)
 - Réponds en français
 - Sois concis mais complet
 - Confirme les actions importantes
 
 CAPACITÉS :
 Tu peux aider l'utilisateur à :
-- Consulter les statistiques du laboratoire
-- Chercher des informations (dentistes, articles, bons de livraison)
-- Expliquer comment utiliser l'application
-- Guider dans la navigation
+- Expliquer comment utiliser l'application GB Dental
+- Guider dans la navigation entre les différentes sections
+- Répondre aux questions sur les fonctionnalités
+- Donner des conseils sur l'organisation du travail
+- Expliquer les concepts du métier (bons de livraison, proformas, factures, catalogue, etc.)
 
-NOTE : Les fonctions avancées (création BL, modification données) seront disponibles prochainement.
+SECTIONS DISPONIBLES :
+- Dashboard : Vue d'ensemble, statistiques
+- Bons de livraison : Création et gestion des BL
+- Proformas : Devis pour les dentistes
+- Factures : Facturation et paiements
+- Catalogue : Articles et tarifs
+- Dentistes : Gestion des clients
+- Ressources : Matières premières et stocks
+- Photos : Photos reçues des dentistes
+- Travail : Suivi de production (Kanban)
+- Paramètres : Configuration du compte
+
+NOTE : Tu es actuellement en mode assistant conversationnel. Les fonctions avancées (création automatique de BL, recherche de données, etc.) seront disponibles dans une prochaine version.
 
 RÈGLES :
 - Reste dans ton rôle d'assistant GB Dental
-- Ne donne pas d'informations médicales
-- Redirige vers les fonctionnalités existantes
-- Sois encourageant et utile`;
+- Ne donne pas d'informations médicales ou dentaires
+- Redirige vers les fonctionnalités existantes de l'app
+- Sois encourageant et utile
+- Si on te demande de faire une action (créer un BL, chercher des données), explique comment le faire manuellement dans l'application`;
 
     const conversationMessages = [
       { role: 'system', content: systemPrompt },
@@ -158,8 +173,12 @@ RÈGLES :
     ];
 
     if (!OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY not configured');
       return new Response(
-        JSON.stringify({ error: 'Configuration OpenAI manquante' }),
+        JSON.stringify({ 
+          error: 'Configuration OpenAI manquante. Contactez l\'administrateur.',
+          debug: 'OPENAI_API_KEY not set'
+        }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -183,7 +202,7 @@ RÈGLES :
     if (!openaiResponse.ok) {
       const error = await openaiResponse.text();
       console.error('OpenAI Error:', error);
-      throw new Error('Erreur lors de l\'appel à OpenAI');
+      throw new Error(`Erreur OpenAI: ${openaiResponse.status} ${openaiResponse.statusText}`);
     }
 
     const openaiData = await openaiResponse.json();
@@ -191,7 +210,7 @@ RÈGLES :
     const tokensUsed = openaiData.usage?.total_tokens || 0;
     const responseTime = Date.now() - startTime;
 
-    await supabaseClient.from('ai_messages').insert([
+    const { error: insertError } = await supabaseClient.from('ai_messages').insert([
       {
         conversation_id: currentConversationId,
         role: 'user',
@@ -208,19 +227,27 @@ RÈGLES :
       },
     ]);
 
-    await supabaseClient.rpc('increment_ai_usage_stats', {
-      p_user_id: user.id,
-      p_laboratory_id: laboratoryId,
-      p_tokens: tokensUsed,
-    }).catch(() => {
-      supabaseClient.from('ai_usage_stats').upsert({
-        user_id: user.id,
-        laboratory_id: laboratoryId,
-        date: today,
-        total_messages: messageCount + 1,
-        total_tokens: tokensUsed,
-      }, { onConflict: 'user_id,date' });
-    });
+    if (insertError) {
+      console.error('Error inserting messages:', insertError);
+    }
+
+    const { error: statsError } = await supabaseClient
+      .from('ai_usage_stats')
+      .upsert(
+        {
+          user_id: user.id,
+          laboratory_id: laboratoryId,
+          date: today,
+          total_messages: messageCount + 1,
+          total_tokens: (usageStats?.total_tokens || 0) + tokensUsed,
+          total_conversations: 1,
+        },
+        { onConflict: 'user_id,date' }
+      );
+
+    if (statsError) {
+      console.error('Error updating usage stats:', statsError);
+    }
 
     return new Response(
       JSON.stringify({
@@ -238,6 +265,7 @@ RÈGLES :
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : 'Erreur interne du serveur',
+        details: error instanceof Error ? error.stack : undefined,
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
