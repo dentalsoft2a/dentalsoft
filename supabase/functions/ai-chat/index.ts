@@ -188,7 +188,7 @@ async function executeToolCall(
   supabaseClient: any,
   laboratoryId: string | null
 ): Promise<any> {
-  console.log(`Executing tool: ${toolName}`, toolArgs);
+  console.log(`[TOOL] Executing: ${toolName}`, JSON.stringify(toolArgs));
 
   try {
     switch (toolName) {
@@ -208,6 +208,7 @@ async function executeToolCall(
 
         const { data, error } = await query;
         if (error) throw error;
+        console.log(`[TOOL] Found ${data?.length || 0} dentists`);
         return { success: true, dentists: data || [] };
       }
 
@@ -265,6 +266,7 @@ async function executeToolCall(
 
       case 'create_delivery_note': {
         const { dentist_id, patient_name, patient_code, prescription_date, items, notes } = toolArgs;
+        console.log('[TOOL] Creating delivery note:', { dentist_id, patient_name, items_count: items?.length });
 
         const { data: deliveryNote, error: dnError } = await supabaseClient
           .from('delivery_notes')
@@ -280,7 +282,12 @@ async function executeToolCall(
           .select()
           .single();
 
-        if (dnError) throw dnError;
+        if (dnError) {
+          console.error('[TOOL] Error creating delivery note:', dnError);
+          throw dnError;
+        }
+
+        console.log('[TOOL] Delivery note created:', deliveryNote.id);
 
         if (items && items.length > 0) {
           const itemsToInsert = items.map((item: any) => ({
@@ -295,7 +302,11 @@ async function executeToolCall(
             .from('delivery_note_items')
             .insert(itemsToInsert);
 
-          if (itemsError) throw itemsError;
+          if (itemsError) {
+            console.error('[TOOL] Error creating items:', itemsError);
+            throw itemsError;
+          }
+          console.log(`[TOOL] ${items.length} items added`);
         }
 
         return {
@@ -340,7 +351,7 @@ async function executeToolCall(
         return { success: false, error: `Fonction inconnue: ${toolName}` };
     }
   } catch (error) {
-    console.error(`Error executing tool ${toolName}:`, error);
+    console.error(`[TOOL] Error in ${toolName}:`, error);
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Erreur inconnue',
@@ -352,6 +363,8 @@ Deno.serve(async (req: Request) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { status: 200, headers: corsHeaders });
   }
+
+  console.log('[AI-CHAT] New request received');
 
   try {
     const supabaseClient = createClient(
@@ -370,11 +383,14 @@ Deno.serve(async (req: Request) => {
     } = await supabaseClient.auth.getUser();
 
     if (authError || !user) {
+      console.error('[AI-CHAT] Auth error:', authError);
       return new Response(
         JSON.stringify({ error: 'Non autorisé' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('[AI-CHAT] User authenticated:', user.id);
 
     const { conversationId, message, context }: ChatRequest = await req.json();
 
@@ -384,6 +400,8 @@ Deno.serve(async (req: Request) => {
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
+    console.log('[AI-CHAT] Message:', message.substring(0, 50));
 
     let laboratoryId = null;
     let laboratoryName = 'Votre laboratoire';
@@ -402,6 +420,8 @@ Deno.serve(async (req: Request) => {
       userName = userProfile.email || userName;
       userRole = userProfile.role || 'laboratory';
     }
+
+    console.log('[AI-CHAT] Laboratory ID:', laboratoryId);
 
     const today = new Date().toISOString().split('T')[0];
     const { data: usageStats } = await supabaseClient
@@ -428,6 +448,7 @@ Deno.serve(async (req: Request) => {
     let currentConversationId = conversationId;
 
     if (!currentConversationId) {
+      console.log('[AI-CHAT] Creating new conversation');
       const { data: newConv, error: convError } = await supabaseClient
         .from('ai_conversations')
         .insert({
@@ -439,11 +460,12 @@ Deno.serve(async (req: Request) => {
         .maybeSingle();
 
       if (convError || !newConv) {
-        console.error('Error creating conversation:', convError);
+        console.error('[AI-CHAT] Error creating conversation:', convError);
         throw new Error('Impossible de créer la conversation');
       }
 
       currentConversationId = newConv.id;
+      console.log('[AI-CHAT] Conversation created:', currentConversationId);
     }
 
     const { data: messages } = await supabaseClient
@@ -528,7 +550,7 @@ RÈGLES :
     ];
 
     if (!OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY not configured');
+      console.error('[AI-CHAT] OPENAI_API_KEY not configured');
       return new Response(
         JSON.stringify({ 
           error: 'Configuration OpenAI manquante. Contactez l\'administrateur.',
@@ -538,6 +560,7 @@ RÈGLES :
       );
     }
 
+    console.log('[AI-CHAT] Calling OpenAI...');
     const startTime = Date.now();
     let totalTokens = 0;
     let assistantMessage = '';
@@ -551,7 +574,7 @@ RÈGLES :
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4-turbo-preview',
+        model: 'gpt-4o-mini',
         messages: conversationMessages,
         temperature: 0.7,
         max_tokens: 1000,
@@ -562,16 +585,18 @@ RÈGLES :
 
     if (!openaiResponse.ok) {
       const error = await openaiResponse.text();
-      console.error('OpenAI Error:', error);
+      console.error('[AI-CHAT] OpenAI Error:', error);
       throw new Error(`Erreur OpenAI: ${openaiResponse.status}`);
     }
 
     let openaiData = await openaiResponse.json();
     totalTokens += openaiData.usage?.total_tokens || 0;
     const responseMessage = openaiData.choices[0]?.message;
+    console.log('[AI-CHAT] OpenAI response received, tool_calls:', responseMessage?.tool_calls?.length || 0);
 
     if (responseMessage?.tool_calls && responseMessage.tool_calls.length > 0) {
       toolCalls = responseMessage.tool_calls;
+      console.log('[AI-CHAT] Executing tools...');
 
       for (const toolCall of toolCalls) {
         const toolName = toolCall.function.name;
@@ -595,6 +620,7 @@ RÈGLES :
       conversationMessages.push(responseMessage);
       conversationMessages.push(...toolResults);
 
+      console.log('[AI-CHAT] Calling OpenAI again with tool results...');
       openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -602,7 +628,7 @@ RÈGLES :
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'gpt-4-turbo-preview',
+          model: 'gpt-4o-mini',
           messages: conversationMessages,
           temperature: 0.7,
           max_tokens: 1000,
@@ -620,6 +646,7 @@ RÈGLES :
     assistantMessage = openaiData.choices[0]?.message?.content || 'Désolé, je n\'ai pas pu générer de réponse.';
     const responseTime = Date.now() - startTime;
 
+    console.log('[AI-CHAT] Saving messages...');
     await supabaseClient.from('ai_messages').insert([
       {
         conversation_id: currentConversationId,
@@ -632,7 +659,7 @@ RÈGLES :
         role: 'assistant',
         content: assistantMessage,
         tokens_used: totalTokens,
-        model_used: 'gpt-4-turbo-preview',
+        model_used: 'gpt-4o-mini',
         response_time_ms: responseTime,
         tool_calls: toolCalls.length > 0 ? toolCalls : null,
         tool_results: toolResults.length > 0 ? toolResults : null,
@@ -653,6 +680,8 @@ RÈGLES :
         { onConflict: 'user_id,date' }
       );
 
+    console.log('[AI-CHAT] Request complete, tokens:', totalTokens);
+
     return new Response(
       JSON.stringify({
         conversationId: currentConversationId,
@@ -666,7 +695,7 @@ RÈGLES :
     );
 
   } catch (error) {
-    console.error('Error in ai-chat function:', error);
+    console.error('[AI-CHAT] Fatal error:', error);
     return new Response(
       JSON.stringify({
         error: error instanceof Error ? error.message : 'Erreur interne du serveur',
