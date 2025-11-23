@@ -576,38 +576,26 @@ export default function PurchaseOrderPage() {
                           <p className="text-sm text-slate-600 mb-3">{item.description}</p>
                         )}
 
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                          <div className="bg-white rounded-lg p-3 border border-slate-200">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="bg-white rounded-lg p-4 border border-slate-200">
                             <p className="text-xs text-slate-500 mb-1">Stock actuel</p>
-                            <p className={`text-lg font-bold ${isUrgent ? 'text-red-600' : 'text-orange-600'}`}>
+                            <p className={`text-2xl font-bold ${isUrgent ? 'text-red-600' : 'text-orange-600'}`}>
                               {item.stock_quantity} {item.unit}
                             </p>
                           </div>
 
-                          <div className="bg-white rounded-lg p-3 border border-slate-200">
-                            <p className="text-xs text-slate-500 mb-1">Seuil d'alerte</p>
-                            <p className="text-lg font-bold text-slate-900">
-                              {item.low_stock_threshold} {item.unit}
-                            </p>
-                          </div>
-
-                          <div className="bg-white rounded-lg p-3 border border-slate-200">
-                            <p className="text-xs text-slate-500 mb-1">Quantité suggérée</p>
-                            <p className="text-lg font-bold text-primary-600">
-                              {item.suggested_quantity} {item.unit}
-                            </p>
-                          </div>
-
-                          <div className="bg-white rounded-lg p-3 border border-slate-200">
-                            <label className="text-xs text-slate-500 mb-1 block">À commander</label>
-                            <input
-                              type="number"
-                              min="1"
-                              value={item.order_quantity}
-                              onChange={(e) => handleQuantityChange(item.id, item.type, parseInt(e.target.value) || 1)}
-                              className="w-full text-lg font-bold text-slate-900 border-0 focus:ring-0 p-0"
-                            />
-                            <span className="text-xs text-slate-500">{item.unit}</span>
+                          <div className="bg-white rounded-lg p-4 border-2 border-primary-300">
+                            <label className="text-xs text-slate-500 mb-2 block font-medium">Quantité à commander</label>
+                            <div className="flex items-center gap-3">
+                              <input
+                                type="number"
+                                min="1"
+                                value={item.order_quantity}
+                                onChange={(e) => handleQuantityChange(item.id, item.type, parseInt(e.target.value) || 1)}
+                                className="w-24 text-2xl font-bold text-slate-900 border-0 focus:ring-0 p-0"
+                              />
+                              <span className="text-lg text-slate-600 font-medium">{item.unit}</span>
+                            </div>
                           </div>
                         </div>
                       </div>
