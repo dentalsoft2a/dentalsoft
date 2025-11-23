@@ -64,7 +64,19 @@ Deno.serve(async (req: Request) => {
       throw new Error("Cannot delete your own account");
     }
 
-    // Vérifier si c'est un laboratoire ou un dentiste
+    console.log('Attempting to delete user:', userId);
+
+    // Vérifier si l'utilisateur existe d'abord
+    const { data: authUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
+
+    if (getUserError || !authUser.user) {
+      console.error('User not found in auth.users:', getUserError);
+      throw new Error("User not found");
+    }
+
+    console.log('User found in auth:', authUser.user.email);
+
+    // Vérifier si c'est un laboratoire ou un dentiste (pour les logs uniquement)
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("laboratory_name")
@@ -78,7 +90,7 @@ Deno.serve(async (req: Request) => {
       .maybeSingle();
 
     const accountType = profile ? "laboratory" : dentist ? "dentist" : "unknown";
-    const accountName = profile?.laboratory_name || dentist?.name || "Unknown";
+    const accountName = profile?.laboratory_name || dentist?.name || authUser.user.email || "Unknown";
 
     console.log(`Deleting ${accountType} account:`, { userId, accountName });
 
@@ -88,6 +100,7 @@ Deno.serve(async (req: Request) => {
     );
 
     if (deleteError) {
+      console.error('Error deleting user from auth:', deleteError);
       throw deleteError;
     }
 
