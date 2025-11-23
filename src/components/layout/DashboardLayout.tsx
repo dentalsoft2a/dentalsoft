@@ -114,10 +114,19 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     { name: 'Gestion des travaux', icon: ClipboardCheck, page: 'work-management', allowedForCancelled: true, menuKey: 'work-management' },
     { name: 'Photos reçues', icon: Camera, page: 'photos', allowedForCancelled: false, menuKey: 'photos' },
     { name: 'Dentistes', icon: Users, page: 'dentists', allowedForCancelled: false, menuKey: 'dentists' },
-    { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog' },
-    { name: 'Ressources', icon: Box, page: 'resources', allowedForCancelled: false, menuKey: 'resources' },
-    { name: 'N° Lot', icon: Tag, page: 'batch-management', allowedForCancelled: false, menuKey: 'batch-management' },
-    { name: 'Bon de commande', icon: ShoppingCart, page: 'purchase-orders', allowedForCancelled: false, menuKey: 'purchase-orders', badge: (lowStockCount + lowStockResourcesCount) > 0 ? (lowStockCount + lowStockResourcesCount) : undefined },
+    {
+      name: 'Stocks',
+      icon: Package,
+      allowedForCancelled: false,
+      isGroup: true,
+      badge: (lowStockCount + lowStockResourcesCount) > 0 ? (lowStockCount + lowStockResourcesCount) : undefined,
+      subItems: [
+        { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog', badge: lowStockCount > 0 ? lowStockCount : undefined },
+        { name: 'Ressources', icon: Box, page: 'resources', allowedForCancelled: false, menuKey: 'resources', badge: lowStockResourcesCount > 0 ? lowStockResourcesCount : undefined },
+        { name: 'N° Lot', icon: Tag, page: 'batch-management', allowedForCancelled: false, menuKey: 'batch-management' },
+        { name: 'Bon de commande', icon: ShoppingCart, page: 'purchase-orders', allowedForCancelled: false, menuKey: 'purchase-orders' },
+      ]
+    },
     { name: 'Paramètres', icon: Settings, page: 'settings', allowedForCancelled: true, menuKey: 'settings' },
   ];
 
@@ -212,6 +221,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
               if (item.isGroup && item.subItems) {
                 const isExpanded = expandedMenus[item.name] ?? false;
                 const hasActiveSubItem = item.subItems.some((sub: any) => currentPage === sub.page);
+                const hasGroupBadge = item.badge && item.badge > 0;
 
                 return (
                   <div key={item.name}>
@@ -227,6 +237,14 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                     >
                       <Icon className="w-[18px] h-[18px] flex-shrink-0" />
                       <span className="text-[14px] flex-1 text-left">{item.name}</span>
+                      {hasGroupBadge && (
+                        <div className="flex items-center gap-1.5">
+                          <AlertTriangle className="w-4 h-4 text-orange-500" />
+                          <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full animate-pulse">
+                            {item.badge}
+                          </span>
+                        </div>
+                      )}
                       {isExpanded ? (
                         <ChevronDown className="w-4 h-4 flex-shrink-0" />
                       ) : (
@@ -240,6 +258,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                           const SubIcon = subItem.icon;
                           const isActive = currentPage === subItem.page;
                           const isDisabled = !hasValidSubscription && !isSuperAdmin && !subItem.allowedForCancelled;
+                          const hasSubBadge = subItem.badge && subItem.badge > 0;
 
                           return (
                             <button
@@ -260,7 +279,15 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                               `}
                             >
                               <SubIcon className="w-4 h-4 flex-shrink-0" />
-                              <span className="text-[13px]">{subItem.name}</span>
+                              <span className="text-[13px] flex-1 text-left">{subItem.name}</span>
+                              {hasSubBadge && (
+                                <div className="flex items-center gap-1.5">
+                                  <AlertTriangle className="w-3.5 h-3.5 text-orange-500" />
+                                  <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full animate-pulse">
+                                    {subItem.badge}
+                                  </span>
+                                </div>
+                              )}
                             </button>
                           );
                         })}
