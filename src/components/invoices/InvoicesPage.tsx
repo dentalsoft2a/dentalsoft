@@ -1087,7 +1087,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
         payment_method: paymentMethod,
         payment_date: paymentDate,
         notes: reference || null,
-        user_id: user!.id,
+        user_id: invoice.user_id,
       });
 
       if (error) throw error;
