@@ -157,13 +157,6 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
         return;
       }
 
-      await supabase.from('admin_audit_log').insert({
-        admin_id: currentUser?.id,
-        action: 'delete_user',
-        target_user_id: userId,
-        details: { email: userEmail }
-      });
-
       const { data: { session } } = await supabase.auth.getSession();
 
       const response = await fetch(
@@ -183,6 +176,13 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
       if (!response.ok) {
         throw new Error(result.error || 'Erreur lors de la suppression');
       }
+
+      await supabase.from('admin_audit_log').insert({
+        admin_id: currentUser?.id,
+        action: 'delete_user',
+        target_user_id: null,
+        details: { user_id: userId, email: userEmail }
+      });
 
       alert('Utilisateur supprimé avec succès');
       await loadUsers();
@@ -224,13 +224,6 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
         return;
       }
 
-      await supabase.from('admin_audit_log').insert({
-        admin_id: currentUser?.id,
-        action: 'delete_dentist',
-        target_user_id: dentistId,
-        details: { dentist_name: dentistName }
-      });
-
       const { data: { session } } = await supabase.auth.getSession();
 
       const response = await fetch(
@@ -250,6 +243,13 @@ export function UsersManagement({ onStatsUpdate }: UsersManagementProps) {
       if (!response.ok) {
         throw new Error(result.error || 'Erreur lors de la suppression');
       }
+
+      await supabase.from('admin_audit_log').insert({
+        admin_id: currentUser?.id,
+        action: 'delete_dentist',
+        target_user_id: null,
+        details: { dentist_id: dentistId, dentist_name: dentistName }
+      });
 
       alert('Dentiste supprimé avec succès');
       await loadDentists();
