@@ -24,6 +24,7 @@ import ExtensionsPage from './components/extensions/ExtensionsPage';
 import DentistRegisterPage from './components/dentist/DentistRegisterPage';
 import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
+import PurchaseOrderPage from './components/purchase-orders/PurchaseOrderPage';
 import OnboardingWizard from './components/onboarding/OnboardingWizard';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { ImpersonationBanner } from './components/common/ImpersonationBanner';
@@ -357,6 +358,8 @@ function AppContent() {
         return <ResourcesPage onStockUpdate={handleStockUpdate} />;
       case 'batch-management':
         return <BatchManagementPage />;
+      case 'purchase-orders':
+        return <PurchaseOrderPage />;
       case 'settings':
         return <SettingsPage />;
       case 'support':

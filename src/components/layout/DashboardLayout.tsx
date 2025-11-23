@@ -21,7 +21,8 @@ import {
   Cloud,
   Link as LinkIcon,
   ClipboardCheck,
-  Tag
+  Tag,
+  ShoppingCart
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -105,6 +106,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog' },
     { name: 'Ressources', icon: Box, page: 'resources', allowedForCancelled: false, menuKey: 'resources' },
     { name: 'N° Lot', icon: Tag, page: 'batch-management', allowedForCancelled: false, menuKey: 'batch-management' },
+    { name: 'Bon de commande', icon: ShoppingCart, page: 'purchase-orders', allowedForCancelled: false, menuKey: 'purchase-orders', badge: (lowStockCount + lowStockResourcesCount) > 0 ? (lowStockCount + lowStockResourcesCount) : undefined },
     { name: 'Paramètres', icon: Settings, page: 'settings', allowedForCancelled: true, menuKey: 'settings' },
   ];
 
