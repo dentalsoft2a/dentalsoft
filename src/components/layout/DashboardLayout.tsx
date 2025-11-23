@@ -129,12 +129,12 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     navigation.forEach((item: any) => {
       if (item.isGroup && item.subItems) {
         const hasActiveSubItem = item.subItems.some((sub: any) => currentPage === sub.page);
-        if (hasActiveSubItem && !expandedMenus[item.name]) {
+        if (hasActiveSubItem && expandedMenus[item.name] === undefined) {
           setExpandedMenus(prev => ({ ...prev, [item.name]: true }));
         }
       }
     });
-  }, [currentPage, navigation]);
+  }, [currentPage]);
 
   const allBottomNavigation = [
     { name: 'Centre d\'aide', icon: HelpCircle, page: 'help-center', menuKey: 'help-center' },
