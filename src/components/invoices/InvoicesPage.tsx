@@ -1084,16 +1084,29 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       return;
     }
 
+    console.log('=== DEBUG ADD PAYMENT ===');
+    console.log('user object:', user);
+    console.log('user.id:', user.id);
+    console.log('invoice object:', invoice);
+    console.log('invoice.id:', invoice.id);
+    console.log('invoice.user_id:', invoice.user_id);
+
     setLoading(true);
     try {
-      const { error } = await supabase.from('invoice_payments').insert({
+      const dataToInsert = {
         invoice_id: invoice.id,
         amount: paymentAmount,
         payment_method: paymentMethod,
         payment_date: paymentDate,
         notes: reference || null,
         user_id: user.id,
-      });
+      };
+
+      console.log('Data to insert:', dataToInsert);
+
+      const { error, data } = await supabase.from('invoice_payments').insert(dataToInsert).select();
+
+      console.log('Insert result:', { error, data });
 
       if (error) throw error;
 
