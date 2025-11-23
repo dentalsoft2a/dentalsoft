@@ -24,6 +24,7 @@ import ExtensionsPage from './components/extensions/ExtensionsPage';
 import DentistRegisterPage from './components/dentist/DentistRegisterPage';
 import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
+import OnboardingWizard from './components/onboarding/OnboardingWizard';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { ImpersonationBanner } from './components/common/ImpersonationBanner';
 import { CookieConsent } from './components/common/CookieConsent';
@@ -35,7 +36,7 @@ import { supabase } from './lib/supabase';
 import { usePermissions } from './hooks/usePermissions';
 
 function AppContent() {
-  const { user, loading, isEmployee, isImpersonating } = useAuth();
+  const { user, loading, isEmployee, isImpersonating, userProfile } = useAuth();
   const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,6 +48,7 @@ function AppContent() {
   const [lowStockCount, setLowStockCount] = useState(0);
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
   const [initialPageSet, setInitialPageSet] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
   // Only show server monitor for authenticated users
   const showServerMonitor = !!user;
@@ -56,12 +58,36 @@ function AppContent() {
       checkSuperAdminAndSubscription();
       loadLowStockCount();
       loadLowStockResourcesCount();
+      checkOnboardingStatus();
     } else {
       setIsDentist(false);
       setIsSuperAdmin(false);
       setInitialPageSet(false);
+      setNeedsOnboarding(false);
     }
   }, [user]);
+
+  const checkOnboardingStatus = async () => {
+    if (!userProfile) return;
+
+    try {
+      const { data, error } = await supabase
+        .from('user_profiles')
+        .select('onboarding_completed, role')
+        .eq('id', userProfile.id)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (data && !data.onboarding_completed && data.role !== 'super_admin' && data.role !== 'dentist_account') {
+        setNeedsOnboarding(true);
+      } else {
+        setNeedsOnboarding(false);
+      }
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+    }
+  };
 
   useEffect(() => {
     if (user && isEmployee && !permissionsLoading && !checkingUserType && !initialPageSet) {
@@ -258,6 +284,23 @@ function AppContent() {
         {showServerMonitor && <ServerStatusMonitor />}
         {isImpersonating && <ImpersonationBanner />}
         <DentistPhotoPanel />
+      </>
+    );
+  }
+
+  if (needsOnboarding && currentPath !== 'onboarding') {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  if (currentPath === 'onboarding') {
+    if (!needsOnboarding) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    return (
+      <>
+        {showServerMonitor && <ServerStatusMonitor />}
+        {isImpersonating && <ImpersonationBanner />}
+        <OnboardingWizard />
       </>
     );
   }
