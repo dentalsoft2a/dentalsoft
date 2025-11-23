@@ -60,7 +60,9 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     console.log('DashboardLayout - employeeInfo:', employeeInfo);
     console.log('DashboardLayout - rolePermissions:', rolePermissions);
     console.log('DashboardLayout - permissionsLoading:', permissionsLoading);
-  }, [isEmployee, employeeInfo, rolePermissions, permissionsLoading]);
+    console.log('DashboardLayout - lowStockCount:', lowStockCount);
+    console.log('DashboardLayout - lowStockResourcesCount:', lowStockResourcesCount);
+  }, [isEmployee, employeeInfo, rolePermissions, permissionsLoading, lowStockCount, lowStockResourcesCount]);
 
   const isSubscriptionInactive = userProfile?.subscription_status !== 'active' && userProfile?.subscription_status !== 'trial';
   const showSubscriptionWarning = isSubscriptionInactive && !isSuperAdmin;

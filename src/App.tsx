@@ -213,6 +213,8 @@ function AppContent() {
 
       if (resourcesError) throw resourcesError;
 
+      console.log('Resources data:', resourcesData);
+
       let lowStockCount = 0;
 
       for (const resource of (resourcesData || [])) {
@@ -228,14 +230,17 @@ function AppContent() {
           const lowStockVariants = (variantsData || []).filter(
             v => v.stock_quantity <= v.low_stock_threshold
           );
+          console.log(`Resource ${resource.id} has ${lowStockVariants.length} low stock variants`);
           lowStockCount += Math.min(lowStockVariants.length, 8 - lowStockCount);
         } else {
           if (resource.stock_quantity <= resource.low_stock_threshold) {
+            console.log(`Resource ${resource.id} is low stock: ${resource.stock_quantity}/${resource.low_stock_threshold}`);
             lowStockCount++;
           }
         }
       }
 
+      console.log('Total low stock resources count:', lowStockCount);
       setLowStockResourcesCount(Math.min(lowStockCount, 8));
     } catch (error) {
       console.error('Error loading low stock resources count:', error);
