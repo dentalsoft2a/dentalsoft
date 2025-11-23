@@ -26,17 +26,19 @@ export function useDashboardData() {
     queryKey: ['dashboard', user?.id],
     queryFn: () => fetchDashboardData(user!.id),
     enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 30 * 1000, // 30 secondes - rafraîchissement automatique
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 2,
+    refetchInterval: 30 * 1000, // Polling toutes les 30 secondes
+    refetchOnWindowFocus: true, // Rafraîchir quand l'utilisateur revient sur la page
   });
 
   // Écouter les changements en temps réel
   useEffect(() => {
     if (!user?.id) return;
 
-    // Tables à surveiller pour actualiser le dashboard
-    const tables = [
+    // Tables principales avec user_id
+    const tablesWithUserId = [
       'delivery_notes',
       'invoices',
       'proformas',
@@ -46,9 +48,9 @@ export function useDashboardData() {
       'invoice_payments'
     ];
 
-    const channels = tables.map(table => {
+    const channelsWithFilter = tablesWithUserId.map(table => {
       const channel = supabase
-        .channel(`dashboard-${table}`)
+        .channel(`dashboard-${table}-${user.id}`)
         .on(
           'postgres_changes',
           {
@@ -58,7 +60,6 @@ export function useDashboardData() {
             filter: `user_id=eq.${user.id}`
           },
           () => {
-            // Invalider le cache pour recharger les données
             queryClient.invalidateQueries({ queryKey: ['dashboard', user.id] });
           }
         )
@@ -68,7 +69,7 @@ export function useDashboardData() {
     });
 
     return () => {
-      channels.forEach(channel => channel.unsubscribe());
+      channelsWithFilter.forEach(channel => channel.unsubscribe());
     };
   }, [user?.id, queryClient]);
 
