@@ -122,19 +122,15 @@ export async function generatePurchaseOrderPDF(data: PurchaseOrderData) {
     doc.setTextColor(60, 60, 60);
 
     const colWidths = {
-      name: 70,
-      stock: 25,
-      threshold: 25,
-      quantity: 25,
-      unit: 20
+      name: 120,
+      quantity: 30,
+      unit: 25
     };
 
     const startX = margin + 2;
     doc.text('Désignation', startX, yPos);
-    doc.text('Stock', startX + colWidths.name, yPos);
-    doc.text('Seuil', startX + colWidths.name + colWidths.stock, yPos);
-    doc.text('Quantité', startX + colWidths.name + colWidths.stock + colWidths.threshold, yPos);
-    doc.text('Unité', startX + colWidths.name + colWidths.stock + colWidths.threshold + colWidths.quantity, yPos);
+    doc.text('Quantité', startX + colWidths.name, yPos);
+    doc.text('Unité', startX + colWidths.name + colWidths.quantity, yPos);
 
     yPos += 2;
     doc.setDrawColor(200, 200, 200);
@@ -150,12 +146,7 @@ export async function generatePurchaseOrderPDF(data: PurchaseOrderData) {
         yPos = margin;
       }
 
-      const isUrgent = item.stock_quantity === 0;
-
-      if (isUrgent) {
-        doc.setFillColor(254, 202, 202);
-        doc.rect(margin, yPos - 4, pageWidth - 2 * margin, 8, 'F');
-      } else if (index % 2 === 0) {
+      if (index % 2 === 0) {
         doc.setFillColor(250, 250, 250);
         doc.rect(margin, yPos - 4, pageWidth - 2 * margin, 8, 'F');
       }
@@ -176,28 +167,24 @@ export async function generatePurchaseOrderPDF(data: PurchaseOrderData) {
       const lineHeight = 5;
       const cellHeight = Math.max(8, nameLines.length * lineHeight);
 
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(0, 0, 0);
       doc.text(nameLines, startX, yPos);
-      doc.text(item.stock_quantity.toString(), startX + colWidths.name, yPos);
-      doc.text(item.low_stock_threshold.toString(), startX + colWidths.name + colWidths.stock, yPos);
 
       doc.setFont('helvetica', 'bold');
-      if (isUrgent) {
-        doc.setTextColor(220, 38, 38);
-      } else {
-        doc.setTextColor(234, 88, 12);
-      }
-      doc.text(item.order_quantity.toString(), startX + colWidths.name + colWidths.stock + colWidths.threshold, yPos);
+      doc.setTextColor(234, 88, 12);
+      doc.text(item.order_quantity.toString(), startX + colWidths.name, yPos);
 
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(0, 0, 0);
-      doc.text(item.unit, startX + colWidths.name + colWidths.stock + colWidths.threshold + colWidths.quantity, yPos);
+      doc.text(item.unit, startX + colWidths.name + colWidths.quantity, yPos);
 
       yPos += Math.max(6, nameLines.length * lineHeight);
 
       if (item.description && nameLines.length === 1) {
         doc.setFontSize(8);
         doc.setTextColor(100, 100, 100);
-        const descLines = doc.splitTextToSize(item.description, colWidths.name + colWidths.stock - 5);
+        const descLines = doc.splitTextToSize(item.description, colWidths.name - 5);
         doc.text(descLines.slice(0, 1), startX, yPos);
         yPos += 4;
         doc.setFontSize(9);

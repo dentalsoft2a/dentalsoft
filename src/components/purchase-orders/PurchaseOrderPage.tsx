@@ -332,8 +332,7 @@ export default function PurchaseOrderPage() {
       text += '=== ARTICLES CATALOGUE ===\n';
       catalog.forEach(item => {
         text += `- ${item.name}${item.category ? ` (${item.category})` : ''}\n`;
-        text += `  Stock actuel: ${item.stock_quantity} ${item.unit} | Seuil: ${item.low_stock_threshold} ${item.unit}\n`;
-        text += `  À commander: ${item.order_quantity} ${item.unit}\n\n`;
+        text += `  Quantité: ${item.order_quantity} ${item.unit}\n\n`;
       });
     }
 
@@ -341,8 +340,7 @@ export default function PurchaseOrderPage() {
       text += '=== RESSOURCES ===\n';
       resourceItems.forEach(item => {
         text += `- ${item.name}${item.category ? ` (${item.category})` : ''}\n`;
-        text += `  Stock actuel: ${item.stock_quantity} ${item.unit} | Seuil: ${item.low_stock_threshold} ${item.unit}\n`;
-        text += `  À commander: ${item.order_quantity} ${item.unit}\n\n`;
+        text += `  Quantité: ${item.order_quantity} ${item.unit}\n\n`;
       });
     }
 
@@ -359,8 +357,7 @@ export default function PurchaseOrderPage() {
           itemName += ` - ${item.subcategory}`;
         }
         text += `- ${itemName}\n`;
-        text += `  Stock actuel: ${item.stock_quantity} ${item.unit} | Seuil: ${item.low_stock_threshold} ${item.unit}\n`;
-        text += `  À commander: ${item.order_quantity} ${item.unit}\n\n`;
+        text += `  Quantité: ${item.order_quantity} ${item.unit}\n\n`;
       });
     }
 
