@@ -20,18 +20,20 @@ const STEPS = [
 export default function OnboardingWizard() {
   const [currentStep, setCurrentStep] = useState(1);
   const [stepData, setStepData] = useState<Record<number, any>>({});
+  const [initialized, setInitialized] = useState(false);
   const { data: progress } = useOnboardingProgress();
   const completeStep = useCompleteOnboardingStep();
   const initializeData = useInitializeUserData();
 
   useEffect(() => {
-    if (progress) {
+    if (progress && !initialized) {
       setCurrentStep(progress.current_step);
       if (progress.completed_steps) {
         setStepData(progress.completed_steps);
       }
+      setInitialized(true);
     }
-  }, [progress]);
+  }, [progress, initialized]);
 
   const handleNext = async (data: any) => {
     setStepData((prev) => ({ ...prev, [currentStep]: data }));
