@@ -576,7 +576,9 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                   </button>
                 </div>
               ))}
-              {lowStockVariants.slice(0, 8).map((variant) => (
+              {lowStockVariants.slice(0, 8).map((variant) => {
+                if (!variant.resource) return null;
+                return (
                 <div
                   key={variant.id}
                   className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-xs md:text-sm transition-colors"
@@ -605,7 +607,8 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     Remplir
                   </button>
                 </div>
-              ))}
+                );
+              })}
               {(lowStockItems.length + lowStockResources.length + lowStockVariants.length > 7) && (
                 <div className="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-2 text-xs md:text-sm font-medium text-slate-700 border border-slate-200">
                   +{lowStockItems.length + lowStockResources.length + lowStockVariants.length - 7} autres
