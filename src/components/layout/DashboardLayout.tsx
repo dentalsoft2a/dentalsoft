@@ -55,9 +55,6 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
     setAppVersion(getAppVersion());
   }, []);
 
-  useEffect(() => {
-  }, [isEmployee, employeeInfo, rolePermissions, permissionsLoading, lowStockCatalogCount, lowStockResourcesCount]);
-
   const isSubscriptionInactive = userProfile?.subscription_status !== 'active' && userProfile?.subscription_status !== 'trial';
   const showSubscriptionWarning = isSubscriptionInactive && !isSuperAdmin;
 
