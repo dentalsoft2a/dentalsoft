@@ -47,6 +47,32 @@ export default function CalendarPage() {
     }
   }, [user, currentDate]);
 
+  // Écouter les changements en temps réel sur les bons de livraison
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('calendar-delivery-notes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'delivery_notes',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          // Recharger les données quand un changement est détecté
+          loadDeliveries();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      channel.unsubscribe();
+    };
+  }, [user]);
+
   const loadDeliveries = async () => {
     if (!user) return;
 
