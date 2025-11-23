@@ -12,10 +12,11 @@ interface ResourceVariant {
   id: string;
   resource_id: string;
   resource_name: string;
+  resource_unit: string;
+  variant_name: string | null;
   subcategory: string | null;
   stock_quantity: number;
   low_stock_threshold: number;
-  stock_unit: string;
 }
 
 interface PurchaseOrderItem {
@@ -31,6 +32,7 @@ interface PurchaseOrderItem {
   selected: boolean;
   category?: string;
   subcategory?: string;
+  variantName?: string;
 }
 
 export default function PurchaseOrderPage() {
@@ -129,14 +131,17 @@ export default function PurchaseOrderPage() {
         .select(`
           id,
           resource_id,
+          variant_name,
           subcategory,
           stock_quantity,
           low_stock_threshold,
-          stock_unit,
+          is_active,
           resources:resource_id (
-            name
+            name,
+            unit
           )
         `)
+        .eq('is_active', true)
         .order('subcategory');
 
       if (variantsError) throw variantsError;
@@ -147,10 +152,11 @@ export default function PurchaseOrderPage() {
           id: v.id,
           resource_id: v.resource_id,
           resource_name: (v.resources as any)?.name || 'Ressource inconnue',
+          resource_unit: (v.resources as any)?.unit || 'unité',
+          variant_name: v.variant_name,
           subcategory: v.subcategory,
           stock_quantity: v.stock_quantity,
-          low_stock_threshold: v.low_stock_threshold,
-          stock_unit: v.stock_unit
+          low_stock_threshold: v.low_stock_threshold
         }));
 
       setCatalogItems(lowStockCatalog);
@@ -191,10 +197,11 @@ export default function PurchaseOrderPage() {
           description: null,
           stock_quantity: variant.stock_quantity,
           low_stock_threshold: variant.low_stock_threshold,
-          unit: variant.stock_unit,
+          unit: variant.resource_unit,
           suggested_quantity: Math.max(1, variant.low_stock_threshold - variant.stock_quantity),
           order_quantity: Math.max(1, variant.low_stock_threshold - variant.stock_quantity),
           selected: true,
+          variantName: variant.variant_name || undefined,
           subcategory: variant.subcategory || undefined
         }))
       ];
@@ -212,7 +219,8 @@ export default function PurchaseOrderPage() {
       const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.category?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.subcategory?.toLowerCase().includes(searchTerm.toLowerCase());
+        item.subcategory?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        item.variantName?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesType = filterType === 'all' || item.type === filterType;
 
@@ -341,7 +349,16 @@ export default function PurchaseOrderPage() {
     if (variantItems.length > 0) {
       text += '=== VARIANTES DE RESSOURCES ===\n';
       variantItems.forEach(item => {
-        text += `- ${item.name}${item.subcategory ? ` - ${item.subcategory}` : ''}\n`;
+        let itemName = item.name;
+        if (item.variantName) {
+          itemName += ` - ${item.variantName}`;
+          if (item.subcategory) {
+            itemName += ` (${item.subcategory})`;
+          }
+        } else if (item.subcategory) {
+          itemName += ` - ${item.subcategory}`;
+        }
+        text += `- ${itemName}\n`;
         text += `  Stock actuel: ${item.stock_quantity} ${item.unit} | Seuil: ${item.low_stock_threshold} ${item.unit}\n`;
         text += `  À commander: ${item.order_quantity} ${item.unit}\n\n`;
       });
@@ -529,7 +546,8 @@ export default function PurchaseOrderPage() {
                             <div>
                               <h3 className="font-bold text-lg text-slate-900">
                                 {item.name}
-                                {item.subcategory && <span className="text-slate-600"> - {item.subcategory}</span>}
+                                {item.variantName && <span className="text-slate-600"> - {item.variantName}</span>}
+                                {item.subcategory && <span className="text-slate-500 text-base"> ({item.subcategory})</span>}
                               </h3>
                               <div className="flex items-center gap-2 mt-1">
                                 <span className={`text-xs font-medium px-2 py-1 rounded ${

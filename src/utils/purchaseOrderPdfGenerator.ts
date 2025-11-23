@@ -10,6 +10,7 @@ interface PurchaseOrderItem {
   order_quantity: number;
   category?: string;
   subcategory?: string;
+  variantName?: string;
 }
 
 interface PurchaseOrderData {
@@ -160,7 +161,12 @@ export async function generatePurchaseOrderPDF(data: PurchaseOrderData) {
       }
 
       let itemName = item.name;
-      if (item.subcategory) {
+      if (item.variantName) {
+        itemName += ` - ${item.variantName}`;
+        if (item.subcategory) {
+          itemName += ` (${item.subcategory})`;
+        }
+      } else if (item.subcategory) {
         itemName += ` - ${item.subcategory}`;
       } else if (item.category) {
         itemName += ` (${item.category})`;
