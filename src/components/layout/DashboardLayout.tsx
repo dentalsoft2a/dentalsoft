@@ -121,7 +121,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
       isGroup: true,
       badge: (lowStockCount + lowStockResourcesCount) > 0 ? (lowStockCount + lowStockResourcesCount) : undefined,
       subItems: [
-        { name: 'Catalogue', icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog', badge: lowStockCount > 0 ? lowStockCount : undefined },
+        { name: 'Articles', icon: Package, page: 'catalog', allowedForCancelled: false, menuKey: 'catalog', badge: lowStockCount > 0 ? lowStockCount : undefined },
         { name: 'Ressources', icon: Box, page: 'resources', allowedForCancelled: false, menuKey: 'resources', badge: lowStockResourcesCount > 0 ? lowStockResourcesCount : undefined },
         { name: 'N° Lot', icon: Tag, page: 'batch-management', allowedForCancelled: false, menuKey: 'batch-management' },
         { name: 'Bon de commande', icon: ShoppingCart, page: 'purchase-orders', allowedForCancelled: false, menuKey: 'purchase-orders' },
