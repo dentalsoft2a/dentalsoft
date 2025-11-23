@@ -22,7 +22,9 @@ import {
   Link as LinkIcon,
   ClipboardCheck,
   Tag,
-  ShoppingCart
+  ShoppingCart,
+  ChevronDown,
+  ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -51,6 +53,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [laboratoryProfile, setLaboratoryProfile] = useState<any>(null);
   const [appVersion, setAppVersion] = useState<string>('');
+  const [expandedMenus, setExpandedMenus] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     setAppVersion(getAppVersion());
@@ -97,9 +100,17 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
   const allNavigation = [
     { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dashboard', allowedForCancelled: true, menuKey: 'dashboard' },
     { name: 'Calendrier', icon: Calendar, page: 'calendar', allowedForCancelled: false, menuKey: 'calendar' },
-    { name: 'Proformas', icon: FileText, page: 'proformas', allowedForCancelled: true, menuKey: 'proformas' },
-    { name: 'Factures', icon: Receipt, page: 'invoices', allowedForCancelled: true, menuKey: 'invoices' },
-    { name: 'Bons de livraison', icon: Truck, page: 'delivery-notes', allowedForCancelled: true, menuKey: 'delivery-notes' },
+    {
+      name: 'Facturation',
+      icon: Receipt,
+      allowedForCancelled: true,
+      isGroup: true,
+      subItems: [
+        { name: 'Bons de livraison', icon: Truck, page: 'delivery-notes', allowedForCancelled: true, menuKey: 'delivery-notes' },
+        { name: 'Proformas', icon: FileText, page: 'proformas', allowedForCancelled: true, menuKey: 'proformas' },
+        { name: 'Factures', icon: Receipt, page: 'invoices', allowedForCancelled: true, menuKey: 'invoices' },
+      ]
+    },
     { name: 'Gestion des travaux', icon: ClipboardCheck, page: 'work-management', allowedForCancelled: true, menuKey: 'work-management' },
     { name: 'Photos reçues', icon: Camera, page: 'photos', allowedForCancelled: false, menuKey: 'photos' },
     { name: 'Dentistes', icon: Users, page: 'dentists', allowedForCancelled: false, menuKey: 'dentists' },
@@ -113,6 +124,17 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
   const navigation = isEmployee
     ? allNavigation.filter(item => hasMenuAccess(item.menuKey))
     : allNavigation;
+
+  useEffect(() => {
+    navigation.forEach((item: any) => {
+      if (item.isGroup && item.subItems) {
+        const hasActiveSubItem = item.subItems.some((sub: any) => currentPage === sub.page);
+        if (hasActiveSubItem && !expandedMenus[item.name]) {
+          setExpandedMenus(prev => ({ ...prev, [item.name]: true }));
+        }
+      }
+    });
+  }, [currentPage, navigation]);
 
   const allBottomNavigation = [
     { name: 'Centre d\'aide', icon: HelpCircle, page: 'help-center', menuKey: 'help-center' },
@@ -184,13 +206,76 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
           </div>
 
           <nav className="flex-1 p-3 space-y-0.5 overflow-y-auto">
-            {navigation.map((item) => {
+            {navigation.map((item: any) => {
               const Icon = item.icon;
+
+              if (item.isGroup && item.subItems) {
+                const isExpanded = expandedMenus[item.name] ?? false;
+                const hasActiveSubItem = item.subItems.some((sub: any) => currentPage === sub.page);
+
+                return (
+                  <div key={item.name}>
+                    <button
+                      onClick={() => setExpandedMenus(prev => ({ ...prev, [item.name]: !isExpanded }))}
+                      className={`
+                        w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 touch-manipulation
+                        ${hasActiveSubItem
+                          ? 'bg-gradient-to-r from-primary-100 to-cyan-100 text-primary-700 font-semibold'
+                          : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
+                        }
+                      `}
+                    >
+                      <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                      <span className="text-[14px] flex-1 text-left">{item.name}</span>
+                      {isExpanded ? (
+                        <ChevronDown className="w-4 h-4 flex-shrink-0" />
+                      ) : (
+                        <ChevronRight className="w-4 h-4 flex-shrink-0" />
+                      )}
+                    </button>
+
+                    {isExpanded && (
+                      <div className="ml-6 mt-1 space-y-0.5">
+                        {item.subItems.map((subItem: any) => {
+                          const SubIcon = subItem.icon;
+                          const isActive = currentPage === subItem.page;
+                          const isDisabled = !hasValidSubscription && !isSuperAdmin && !subItem.allowedForCancelled;
+
+                          return (
+                            <button
+                              key={subItem.page}
+                              onClick={() => {
+                                onNavigate(subItem.page);
+                                setSidebarOpen(false);
+                              }}
+                              disabled={isDisabled}
+                              className={`
+                                w-full flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-200 touch-manipulation
+                                ${isDisabled
+                                  ? 'opacity-50 cursor-not-allowed text-slate-400'
+                                  : isActive
+                                    ? 'bg-gradient-to-r from-primary-500 to-cyan-500 text-white font-semibold shadow-lg shadow-primary-500/30'
+                                    : 'text-slate-600 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
+                                }
+                              `}
+                            >
+                              <SubIcon className="w-4 h-4 flex-shrink-0" />
+                              <span className="text-[13px]">{subItem.name}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+
               const isActive = currentPage === item.page;
               const showBadge = item.page === 'catalog' && lowStockCount > 0;
               const showResourceBadge = item.page === 'resources' && lowStockResourcesCount > 0;
               const badgeCount = item.page === 'catalog' ? lowStockCount : lowStockResourcesCount;
               const isDisabled = !hasValidSubscription && !isSuperAdmin && !item.allowedForCancelled;
+
               return (
                 <button
                   key={item.page}
