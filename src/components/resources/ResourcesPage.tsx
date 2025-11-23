@@ -163,14 +163,12 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
     loadResources(true);
   };
 
-  const lowStockResources = resources
-    .filter((r) => {
-      const currentStock = r.has_variants && r.total_variant_stock !== undefined
-        ? r.total_variant_stock
-        : r.stock_quantity;
-      return r.is_active && currentStock <= r.low_stock_threshold;
-    })
-    .slice(0, 8);
+  const lowStockResources = resources.filter((r) => {
+    const currentStock = r.has_variants && r.total_variant_stock !== undefined
+      ? r.total_variant_stock
+      : r.stock_quantity;
+    return r.is_active && currentStock <= r.low_stock_threshold;
+  });
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
@@ -811,7 +809,7 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                 const aName = `${a.resource_name}${a.subcategory ? ` - ${a.subcategory}` : ''} - ${a.variant_name}`;
                 const bName = `${b.resource_name}${b.subcategory ? ` - ${b.subcategory}` : ''} - ${b.variant_name}`;
                 return aName.localeCompare(bName);
-              }).slice(0, Math.max(0, 8 - lowStockResources.length)).map((variant) => (
+              }).map((variant) => (
                 <div
                   key={variant.id}
                   className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-xs md:text-sm transition-colors"
