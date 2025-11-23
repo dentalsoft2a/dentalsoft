@@ -886,8 +886,10 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
             return (
               <div
                 key={resource.id}
-                className={`bg-white rounded-2xl shadow-md border ${
-                  isLowStock ? 'border-orange-300' : 'border-slate-200'
+                className={`rounded-2xl shadow-md border ${
+                  isLowStock
+                    ? 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-400'
+                    : 'bg-white border-slate-200'
                 } hover:shadow-xl transition-all duration-300 overflow-hidden group`}
               >
                 <div className="p-6">
