@@ -35,6 +35,7 @@ type PredefinedResource = {
 
 interface ResourceWithVariantStock extends Resource {
   total_variant_stock?: number;
+  has_low_stock_variant?: boolean;
 }
 
 interface ResourcesPageProps {
@@ -123,7 +124,11 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
               setLowStockVariants(prev => [...prev.filter(lv => lv.resource_id !== resource.id), ...lowStockVars]);
             }
 
-            return { ...resource, total_variant_stock: totalVariantStock };
+            return {
+              ...resource,
+              total_variant_stock: totalVariantStock,
+              has_low_stock_variant: lowStockVars.length > 0
+            };
           }
           return resource;
         })
@@ -880,7 +885,7 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
             const currentStock = resource.has_variants && resource.total_variant_stock !== undefined
               ? resource.total_variant_stock
               : resource.stock_quantity;
-            const isLowStock = currentStock <= resource.low_stock_threshold;
+            const isLowStock = resource.has_low_stock_variant || currentStock <= resource.low_stock_threshold;
             const totalValue = currentStock * Number(resource.cost_per_unit);
 
             return (
