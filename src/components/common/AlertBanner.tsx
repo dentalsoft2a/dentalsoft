@@ -32,7 +32,7 @@ export default function AlertBanner() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      channel.unsubscribe();
     };
   }, []);
 
