@@ -87,7 +87,8 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
         .from('resources')
         .select('*')
         .eq('user_id', user.id)
-        .order('name', { ascending: true });
+        .order('name', { ascending: true })
+        .returns<Resource[]>();
 
       if (error) throw error;
 
