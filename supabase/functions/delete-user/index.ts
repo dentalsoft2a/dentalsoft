@@ -66,17 +66,7 @@ Deno.serve(async (req: Request) => {
 
     console.log('Attempting to delete user:', userId);
 
-    // Vérifier si l'utilisateur existe d'abord
-    const { data: authUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
-
-    if (getUserError || !authUser.user) {
-      console.error('User not found in auth.users:', getUserError);
-      throw new Error("User not found");
-    }
-
-    console.log('User found in auth:', authUser.user.email);
-
-    // Vérifier si c'est un laboratoire ou un dentiste (pour les logs uniquement)
+    // Vérifier si c'est un laboratoire ou un dentiste (pour les logs)
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("laboratory_name")
@@ -89,22 +79,46 @@ Deno.serve(async (req: Request) => {
       .eq("id", userId)
       .maybeSingle();
 
+    // Vérifier si l'utilisateur existe dans auth.users
+    const { data: authUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
+    const hasAuthAccount = !getUserError && authUser?.user;
+
     const accountType = profile ? "laboratory" : dentist ? "dentist" : "unknown";
-    const accountName = profile?.laboratory_name || dentist?.name || authUser.user.email || "Unknown";
+    const accountName = profile?.laboratory_name || dentist?.name || authUser?.user?.email || "Unknown";
 
-    console.log(`Deleting ${accountType} account:`, { userId, accountName });
+    console.log(`Deleting ${accountType} account:`, {
+      userId,
+      accountName,
+      hasAuthAccount,
+      isDentistAccount: !!dentist
+    });
 
-    // Supprimer le compte auth - la cascade DELETE s'occupera du reste
-    const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(
-      userId
-    );
+    if (hasAuthAccount) {
+      // Supprimer le compte auth - la cascade DELETE s'occupera du reste
+      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
 
-    if (deleteError) {
-      console.error('Error deleting user from auth:', deleteError);
-      throw deleteError;
+      if (deleteError) {
+        console.error('Error deleting user from auth:', deleteError);
+        throw deleteError;
+      }
+
+      console.log(`Successfully deleted auth account and cascaded data:`, { userId, accountName });
+    } else if (dentist) {
+      // C'est un dentist_account sans compte auth, supprimer directement de la table
+      const { error: deleteDentistError } = await supabaseAdmin
+        .from("dentist_accounts")
+        .delete()
+        .eq("id", userId);
+
+      if (deleteDentistError) {
+        console.error('Error deleting dentist account:', deleteDentistError);
+        throw deleteDentistError;
+      }
+
+      console.log(`Successfully deleted dentist account without auth:`, { userId, accountName });
+    } else {
+      throw new Error("User not found in auth.users or dentist_accounts");
     }
-
-    console.log(`Successfully deleted ${accountType} account:`, { userId, accountName });
 
     return new Response(
       JSON.stringify({
