@@ -1,5 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { supabase } from '../lib/supabase';
 import {
   fetchDashboardData,
   fetchDentists,
@@ -14,11 +16,13 @@ import {
  * Hook principal pour récupérer toutes les données du dashboard
  * Cache: 5 minutes (données assez dynamiques)
  * Remplace 15+ requêtes SQL par 1 seule
+ * Avec actualisation en temps réel via Supabase Realtime
  */
 export function useDashboardData() {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
-  return useQuery<DashboardData>({
+  const query = useQuery<DashboardData>({
     queryKey: ['dashboard', user?.id],
     queryFn: () => fetchDashboardData(user!.id),
     enabled: !!user,
@@ -26,6 +30,49 @@ export function useDashboardData() {
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 2,
   });
+
+  // Écouter les changements en temps réel
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // Tables à surveiller pour actualiser le dashboard
+    const tables = [
+      'delivery_notes',
+      'invoices',
+      'proformas',
+      'catalog_items',
+      'resources',
+      'resource_variants',
+      'invoice_payments'
+    ];
+
+    const channels = tables.map(table => {
+      const channel = supabase
+        .channel(`dashboard-${table}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: table,
+            filter: `user_id=eq.${user.id}`
+          },
+          () => {
+            // Invalider le cache pour recharger les données
+            queryClient.invalidateQueries({ queryKey: ['dashboard', user.id] });
+          }
+        )
+        .subscribe();
+
+      return channel;
+    });
+
+    return () => {
+      channels.forEach(channel => channel.unsubscribe());
+    };
+  }, [user?.id, queryClient]);
+
+  return query;
 }
 
 /**
