@@ -759,13 +759,13 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
         <div className="mb-4 md:mb-6 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-red-200/50 overflow-hidden">
           <div className="bg-gradient-to-r from-red-50/80 to-orange-50/80 px-3 md:px-4 py-3 border-b border-red-200/50">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                <AlertTriangle className="w-4 h-4 md:w-5 md:h-5 text-white" />
+              <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-red-500 to-orange-500 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                <AlertTriangle className="w-5 h-5 md:w-6 md:h-6 text-white" />
               </div>
               <div className="flex-1">
-                <h3 className="text-sm md:text-base font-bold text-slate-900 flex items-center gap-1.5 md:gap-2">
+                <h3 className="text-base md:text-lg font-bold text-slate-900 flex items-center gap-2">
                   Alerte stock faible
-                  <span className="px-1.5 md:px-2 py-0.5 bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] md:text-xs font-bold rounded-full">
+                  <span className="px-2 md:px-3 py-0.5 md:py-1 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs md:text-sm font-bold rounded-full">
                     {lowStockResources.length + lowStockVariants.length}
                   </span>
                 </h3>
