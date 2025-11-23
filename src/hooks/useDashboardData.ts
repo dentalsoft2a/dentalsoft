@@ -26,10 +26,10 @@ export function useDashboardData() {
     queryKey: ['dashboard', user?.id],
     queryFn: () => fetchDashboardData(user!.id),
     enabled: !!user,
-    staleTime: 30 * 1000, // 30 secondes - rafraîchissement automatique
+    staleTime: 0, // Toujours considérer les données comme obsolètes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 2,
-    refetchInterval: 30 * 1000, // Polling toutes les 30 secondes
+    refetchOnMount: 'always', // Recharger à chaque fois que le composant est monté
     refetchOnWindowFocus: true, // Rafraîchir quand l'utilisateur revient sur la page
   });
 
