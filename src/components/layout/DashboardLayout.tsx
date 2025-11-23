@@ -39,11 +39,12 @@ interface DashboardLayoutProps {
   currentPage: string;
   onNavigate: (page: string) => void;
   isSuperAdmin?: boolean;
-  lowStockCount?: number;
+  lowStockCatalogCount?: number;
+  lowStockResourcesCount?: number;
   hasValidSubscription?: boolean;
 }
 
-export default function DashboardLayout({ children, currentPage, onNavigate, isSuperAdmin, lowStockCount = 0, hasValidSubscription = true }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, currentPage, onNavigate, isSuperAdmin, lowStockCatalogCount = 0, lowStockResourcesCount = 0, hasValidSubscription = true }: DashboardLayoutProps) {
   const { profile, userProfile, signOut, isEmployee, laboratoryId, employeeInfo } = useAuth();
   const { hasMenuAccess, isOwner, rolePermissions, loading: permissionsLoading } = usePermissions();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -55,7 +56,7 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
   }, []);
 
   useEffect(() => {
-  }, [isEmployee, employeeInfo, rolePermissions, permissionsLoading, lowStockCount]);
+  }, [isEmployee, employeeInfo, rolePermissions, permissionsLoading, lowStockCatalogCount, lowStockResourcesCount]);
 
   const isSubscriptionInactive = userProfile?.subscription_status !== 'active' && userProfile?.subscription_status !== 'trial';
   const showSubscriptionWarning = isSubscriptionInactive && !isSuperAdmin;
@@ -180,7 +181,9 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.page;
-              const showBadge = (item.page === 'catalog' || item.page === 'resources') && lowStockCount > 0;
+              const showCatalogBadge = item.page === 'catalog' && lowStockCatalogCount > 0;
+              const showResourcesBadge = item.page === 'resources' && lowStockResourcesCount > 0;
+              const badgeCount = item.page === 'catalog' ? lowStockCatalogCount : lowStockResourcesCount;
               const isDisabled = !hasValidSubscription && !isSuperAdmin && !item.allowedForCancelled;
               return (
                 <button
@@ -202,11 +205,11 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
                 >
                   <Icon className="w-[18px] h-[18px] flex-shrink-0" />
                   <span className="text-[14px]">{item.name}</span>
-                  {showBadge && (
+                  {(showCatalogBadge || showResourcesBadge) && (
                     <div className="ml-auto flex items-center gap-1.5">
                       <AlertTriangle className="w-4 h-4 text-orange-500" />
                       <span className="px-1.5 py-0.5 bg-orange-500 text-white text-[10px] font-bold rounded-full animate-pulse">
-                        {lowStockCount}
+                        {badgeCount}
                       </span>
                     </div>
                   )}

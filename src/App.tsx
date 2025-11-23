@@ -45,7 +45,8 @@ function AppContent() {
   const [isDentist, setIsDentist] = useState(false);
   const [checkingUserType, setCheckingUserType] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
-  const [lowStockCount, setLowStockCount] = useState(0);
+  const [lowStockCatalogCount, setLowStockCatalogCount] = useState(0);
+  const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
   const [initialPageSet, setInitialPageSet] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
 
@@ -189,9 +190,9 @@ function AppContent() {
       const catalogCount = data?.lowStock?.catalog?.length || 0;
       const resourcesCount = data?.lowStock?.resources?.length || 0;
       const variantsCount = data?.lowStock?.variants?.length || 0;
-      const totalCount = catalogCount + resourcesCount + variantsCount;
 
-      setLowStockCount(totalCount);
+      setLowStockCatalogCount(catalogCount);
+      setLowStockResourcesCount(resourcesCount + variantsCount);
     } catch (error) {
       console.error('Error loading low stock count:', error);
     }
@@ -359,7 +360,8 @@ function AppContent() {
           navigate(`/${page}`);
         }}
         isSuperAdmin={isSuperAdmin}
-        lowStockCount={lowStockCount}
+        lowStockCatalogCount={lowStockCatalogCount}
+        lowStockResourcesCount={lowStockResourcesCount}
         hasValidSubscription={hasValidSubscription}
       >
         {renderPage()}
