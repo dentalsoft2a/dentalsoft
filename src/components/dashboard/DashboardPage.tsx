@@ -533,7 +533,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     <Archive className="w-4 h-4 text-slate-600 flex-shrink-0" />
                     <span className="font-medium text-slate-900 truncate">{item.name}</span>
                     <span className="text-red-600 font-bold whitespace-nowrap">
-                      {item.stock_quantity}/{item.low_stock_threshold}
+                      {item.current_stock}/{item.low_stock_threshold}
                     </span>
                     <span className="text-xs text-slate-500 hidden sm:inline">(Catalogue)</span>
                   </div>
@@ -541,7 +541,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     onClick={() => setShowQuickFill({
                       id: item.id,
                       name: item.name,
-                      currentStock: item.stock_quantity,
+                      currentStock: item.current_stock,
                       type: 'catalog'
                     })}
                     className="px-2 py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm"
@@ -559,7 +559,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     <Package className="w-4 h-4 text-slate-600 flex-shrink-0" />
                     <span className="font-medium text-slate-900 truncate">{resource.name}</span>
                     <span className="text-red-600 font-bold whitespace-nowrap">
-                      {resource.stock_quantity}/{resource.low_stock_threshold}
+                      {resource.current_stock}/{resource.low_stock_threshold}
                     </span>
                     <span className="text-xs text-slate-500 hidden sm:inline">(Ressource)</span>
                   </div>
@@ -567,7 +567,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     onClick={() => setShowQuickFill({
                       id: resource.id,
                       name: resource.name,
-                      currentStock: resource.stock_quantity,
+                      currentStock: resource.current_stock,
                       type: 'resource'
                     })}
                     className="px-2 py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm"
@@ -576,9 +576,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                   </button>
                 </div>
               ))}
-              {lowStockVariants.slice(0, 8).map((variant) => {
-                if (!variant.resource) return null;
-                return (
+              {lowStockVariants.slice(0, 8).map((variant) => (
                 <div
                   key={variant.id}
                   className="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-lg px-3 py-2 border border-slate-200 text-xs md:text-sm transition-colors"
@@ -586,20 +584,18 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                   <div className="flex items-center gap-2 flex-1 min-w-0">
                     <Package className="w-4 h-4 text-slate-600 flex-shrink-0" />
                     <span className="font-medium text-slate-900 truncate">
-                      {variant.resource.name}
-                      {variant.subcategory && ` - ${variant.subcategory}`}
-                      {' - '}{variant.variant_name}
+                      {variant.name}
                     </span>
                     <span className="text-red-600 font-bold whitespace-nowrap">
-                      {variant.stock_quantity}/{variant.low_stock_threshold}
+                      {variant.current_stock}/{variant.low_stock_threshold}
                     </span>
                     <span className="text-xs text-slate-500 hidden sm:inline">(Variante)</span>
                   </div>
                   <button
                     onClick={() => setShowQuickFill({
                       id: variant.id,
-                      name: `${variant.resource.name}${variant.subcategory ? ` - ${variant.subcategory}` : ''} - ${variant.variant_name}`,
-                      currentStock: variant.stock_quantity,
+                      name: variant.name,
+                      currentStock: variant.current_stock,
                       type: 'variant'
                     })}
                     className="px-2 py-1 bg-gradient-to-r from-primary-600 to-cyan-600 text-white rounded text-xs hover:from-primary-700 hover:to-cyan-700 transition-all font-medium shadow-sm"
@@ -607,8 +603,7 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps = {}) {
                     Remplir
                   </button>
                 </div>
-                );
-              })}
+              ))}
               {(lowStockItems.length + lowStockResources.length + lowStockVariants.length > 7) && (
                 <div className="flex items-center gap-2 bg-slate-100 rounded-lg px-3 py-2 text-xs md:text-sm font-medium text-slate-700 border border-slate-200">
                   +{lowStockItems.length + lowStockResources.length + lowStockVariants.length - 7} autres
