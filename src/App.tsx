@@ -216,6 +216,8 @@ function AppContent() {
       let lowStockCount = 0;
 
       for (const resource of (resourcesData || [])) {
+        if (lowStockCount >= 8) break;
+
         if (resource.has_variants) {
           const { data: variantsData } = await supabase
             .from('resource_variants')
@@ -226,7 +228,7 @@ function AppContent() {
           const lowStockVariants = (variantsData || []).filter(
             v => v.stock_quantity <= v.low_stock_threshold
           );
-          lowStockCount += lowStockVariants.length;
+          lowStockCount += Math.min(lowStockVariants.length, 8 - lowStockCount);
         } else {
           if (resource.stock_quantity <= resource.low_stock_threshold) {
             lowStockCount++;
@@ -234,7 +236,7 @@ function AppContent() {
         }
       }
 
-      setLowStockResourcesCount(lowStockCount);
+      setLowStockResourcesCount(Math.min(lowStockCount, 8));
     } catch (error) {
       console.error('Error loading low stock resources count:', error);
     }
