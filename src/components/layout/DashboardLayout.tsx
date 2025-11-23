@@ -191,6 +191,10 @@ export default function DashboardLayout({ children, currentPage, onNavigate, isS
               const showResourceBadge = item.page === 'resources' && lowStockResourcesCount > 0;
               const badgeCount = item.page === 'catalog' ? lowStockCount : lowStockResourcesCount;
               const isDisabled = !hasValidSubscription && !isSuperAdmin && !item.allowedForCancelled;
+
+              if (item.page === 'resources') {
+                console.log('Resources menu - lowStockResourcesCount:', lowStockResourcesCount, 'showResourceBadge:', showResourceBadge);
+              }
               return (
                 <button
                   key={item.page}
