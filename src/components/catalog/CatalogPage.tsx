@@ -134,11 +134,13 @@ export default function CatalogPage() {
   }, [items]);
 
   const lowStockItems = useMemo(() => {
-    return items.filter(item =>
-      item.track_stock &&
-      item.stock_quantity <= item.low_stock_threshold &&
-      item.is_active
-    );
+    return items
+      .filter(item =>
+        item.track_stock &&
+        item.stock_quantity <= item.low_stock_threshold &&
+        item.is_active
+      )
+      .slice(0, 8);
   }, [items]);
 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
