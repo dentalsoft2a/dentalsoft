@@ -54,7 +54,9 @@ function AppContent() {
   const showServerMonitor = !!user;
 
   useEffect(() => {
+    console.log('=== App.tsx useEffect triggered, user:', user?.email);
     if (user) {
+      console.log('=== Calling loadLowStockResourcesCount...');
       checkSuperAdminAndSubscription();
       loadLowStockCount();
       loadLowStockResourcesCount();
@@ -202,8 +204,10 @@ function AppContent() {
   };
 
   const loadLowStockResourcesCount = async () => {
+    console.log('loadLowStockResourcesCount called, user:', user);
     if (!user) return;
 
+    console.log('loadLowStockResourcesCount starting query...');
     try {
       const { data: resourcesData, error: resourcesError } = await supabase
         .from('resources')
