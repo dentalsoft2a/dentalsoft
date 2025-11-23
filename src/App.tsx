@@ -45,7 +45,7 @@ function AppContent() {
   const [isDentist, setIsDentist] = useState(false);
   const [checkingUserType, setCheckingUserType] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
-  const [lowStockCatalogCount, setLowStockCatalogCount] = useState(0);
+  const [lowStockCount, setLowStockCount] = useState(0);
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
   const [initialPageSet, setInitialPageSet] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
@@ -57,6 +57,7 @@ function AppContent() {
     if (user) {
       checkSuperAdminAndSubscription();
       loadLowStockCount();
+      loadLowStockResourcesCount();
       checkOnboardingStatus();
     } else {
       setIsDentist(false);
@@ -181,20 +182,61 @@ function AppContent() {
     if (!user) return;
 
     try {
-      const { data, error } = await supabase.rpc('get_dashboard_data', {
-        p_user_id: user.id
-      });
+      const { data: catalogData, error: catalogError } = await supabase
+        .from('catalog_items')
+        .select('stock_quantity, low_stock_threshold')
+        .eq('user_id', user.id)
+        .eq('track_stock', true)
+        .eq('is_active', true);
 
-      if (error) throw error;
+      if (catalogError) throw catalogError;
 
-      const catalogCount = data?.lowStock?.catalog?.length || 0;
-      const resourcesCount = data?.lowStock?.resources?.length || 0;
-      const variantsCount = data?.lowStock?.variants?.length || 0;
+      const lowStockItems = (catalogData || []).filter(
+        item => item.stock_quantity <= item.low_stock_threshold
+      );
 
-      setLowStockCatalogCount(catalogCount);
-      setLowStockResourcesCount(resourcesCount + variantsCount);
+      setLowStockCount(lowStockItems.length);
     } catch (error) {
       console.error('Error loading low stock count:', error);
+    }
+  };
+
+  const loadLowStockResourcesCount = async () => {
+    if (!user) return;
+
+    try {
+      const { data: resourcesData, error: resourcesError } = await supabase
+        .from('resources')
+        .select('id, stock_quantity, low_stock_threshold, has_variants')
+        .eq('user_id', user.id)
+        .eq('track_stock', true);
+
+      if (resourcesError) throw resourcesError;
+
+      let lowStockCount = 0;
+
+      for (const resource of (resourcesData || [])) {
+        if (resource.has_variants) {
+          const { data: variantsData } = await supabase
+            .from('resource_variants')
+            .select('stock_quantity, low_stock_threshold, is_active')
+            .eq('resource_id', resource.id)
+            .eq('is_active', true);
+
+          const lowStockVariants = (variantsData || []).filter(
+            v => v.stock_quantity <= v.low_stock_threshold
+          );
+          lowStockCount += lowStockVariants.length;
+        } else {
+          if (resource.stock_quantity <= resource.low_stock_threshold) {
+            lowStockCount++;
+          }
+        }
+      }
+
+      setLowStockResourcesCount(lowStockCount);
+    } catch (error) {
+      console.error('Error loading low stock resources count:', error);
     }
   };
 
@@ -289,6 +331,7 @@ function AppContent() {
 
   const handleStockUpdate = () => {
     loadLowStockCount();
+    loadLowStockResourcesCount();
   };
 
   const renderPage = () => {
@@ -360,7 +403,7 @@ function AppContent() {
           navigate(`/${page}`);
         }}
         isSuperAdmin={isSuperAdmin}
-        lowStockCatalogCount={lowStockCatalogCount}
+        lowStockCount={lowStockCount}
         lowStockResourcesCount={lowStockResourcesCount}
         hasValidSubscription={hasValidSubscription}
       >
