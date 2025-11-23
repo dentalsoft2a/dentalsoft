@@ -1079,6 +1079,11 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
       return;
     }
 
+    if (!user) {
+      alert('Utilisateur non connecté');
+      return;
+    }
+
     setLoading(true);
     try {
       const { error } = await supabase.from('invoice_payments').insert({
@@ -1087,7 +1092,7 @@ function PaymentModal({ invoice, onClose, onSave }: PaymentModalProps) {
         payment_method: paymentMethod,
         payment_date: paymentDate,
         notes: reference || null,
-        user_id: invoice.user_id,
+        user_id: user.id,
       });
 
       if (error) throw error;
