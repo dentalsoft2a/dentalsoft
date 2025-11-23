@@ -71,17 +71,6 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
     is_active: true,
   });
 
-  useEffect(() => {
-    loadResources();
-    loadPredefinedResources();
-
-    const interval = setInterval(() => {
-      loadResources();
-    }, 10000);
-
-    return () => clearInterval(interval);
-  }, [user]);
-
   const loadResources = async (showRefreshIndicator = false) => {
     if (!user) return;
 
@@ -158,6 +147,17 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
       console.error('Error loading predefined resources:', error);
     }
   };
+
+  useEffect(() => {
+    loadResources();
+    loadPredefinedResources();
+
+    const interval = setInterval(() => {
+      loadResources();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   const handleRefresh = () => {
     loadResources(true);
