@@ -288,7 +288,6 @@ function AppContent() {
 
   const handleStockUpdate = () => {
     loadLowStockCount();
-    loadLowStockResourcesCount();
   };
 
   const renderPage = () => {
