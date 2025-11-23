@@ -613,16 +613,27 @@ export default function CatalogPage() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {paginatedItems.map((item) => (
+            {paginatedItems.map((item) => {
+            const isLowStock = item.track_stock && item.stock_quantity <= item.low_stock_threshold;
+
+            return (
             <div
               key={item.id}
-              className="bg-white rounded-2xl shadow-md border border-slate-200 hover:shadow-xl hover:border-primary-300 transition-all duration-300 overflow-hidden group"
+              className={`rounded-2xl shadow-md border transition-all duration-300 overflow-hidden group ${
+                isLowStock
+                  ? 'bg-gradient-to-br from-orange-50 to-orange-100 border-orange-400 hover:shadow-xl hover:border-orange-500'
+                  : 'bg-white border-slate-200 hover:shadow-xl hover:border-primary-300'
+              }`}
             >
               <div className="p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-cyan-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg group-hover:scale-110 transition-transform duration-300 ${
+                        isLowStock
+                          ? 'bg-gradient-to-br from-orange-500 to-red-500'
+                          : 'bg-gradient-to-br from-primary-500 to-cyan-500'
+                      }`}>
                         <Package className="w-6 h-6" />
                       </div>
                       <div className="flex-1">
@@ -739,7 +750,8 @@ export default function CatalogPage() {
                 </div>
               </div>
             </div>
-          ))}
+          );
+          })}
         </div>
 
         {filteredItems.length > 0 && (
