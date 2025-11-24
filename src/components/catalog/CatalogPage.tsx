@@ -87,10 +87,16 @@ export default function CatalogPage() {
         .eq('is_active', true)
         .order('name', { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error loading resources:', error);
+        throw error;
+      }
+
+      console.log('Loaded resources:', data?.length || 0);
       setResources(data || []);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error loading resources:', error);
+      alert('Erreur lors du chargement des ressources: ' + (error.message || 'Erreur inconnue'));
     }
   };
 
@@ -1011,47 +1017,60 @@ export default function CatalogPage() {
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      <select
-                        className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                        id="resource-select"
-                      >
-                        <option value="">Sélectionner une ressource</option>
-                        {resources.map((resource) => (
-                          <option key={resource.id} value={resource.id}>
-                            {resource.name} ({resource.unit})
-                          </option>
-                        ))}
-                      </select>
-                      <input
-                        type="number"
-                        min="0.01"
-                        step="0.01"
-                        placeholder="Qté"
-                        defaultValue="1"
-                        className="w-24 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
-                        id="quantity-input"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const select = document.getElementById('resource-select') as HTMLSelectElement;
-                          const input = document.getElementById('quantity-input') as HTMLInputElement;
-                          if (select.value) {
-                            handleAddResource(select.value, parseFloat(input.value) || 1);
-                            select.value = '';
-                            input.value = '1';
-                          }
-                        }}
-                        className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition text-sm font-medium"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
+                    {resources.length === 0 ? (
+                      <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-sm text-amber-900 mb-2">
+                          <strong>Aucune ressource disponible</strong>
+                        </p>
+                        <p className="text-xs text-amber-700">
+                          Créez d'abord des ressources dans la page "Ressources" avant de pouvoir les assigner à un article.
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex gap-2">
+                          <select
+                            className="flex-1 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                            id="resource-select"
+                          >
+                            <option value="">Sélectionner une ressource</option>
+                            {resources.map((resource) => (
+                              <option key={resource.id} value={resource.id}>
+                                {resource.name} ({resource.unit})
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            placeholder="Qté"
+                            defaultValue="1"
+                            className="w-24 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none"
+                            id="quantity-input"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const select = document.getElementById('resource-select') as HTMLSelectElement;
+                              const input = document.getElementById('quantity-input') as HTMLInputElement;
+                              if (select.value) {
+                                handleAddResource(select.value, parseFloat(input.value) || 1);
+                                select.value = '';
+                                input.value = '1';
+                              }
+                            }}
+                            className="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 transition text-sm font-medium"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
 
-                    <p className="text-xs text-cyan-800 italic">
-                      <strong>Exemple:</strong> Si 28 couronnes nécessitent 1 disque, entrez 28 dans la quantité.
-                    </p>
+                        <p className="text-xs text-cyan-800 italic">
+                          <strong>Exemple:</strong> Si 28 couronnes nécessitent 1 disque, entrez 28 dans la quantité.
+                        </p>
+                      </>
+                    )}
                   </>
                 )}
               </div>
