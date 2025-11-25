@@ -61,11 +61,21 @@ export default function OnboardingWizard() {
     try {
       const catalogIds = stepData[3]?.selectedItems || [];
       const resourceIds = stepData[4]?.selectedResources || [];
-      const configuration = {
+
+      const configStep = stepData[5] || {};
+      const configuration: any = {
         ...stepData[2],
-        ...stepData[5],
         ...finalData,
       };
+
+      if (configStep.dentistName) {
+        configuration.first_dentist = {
+          name: configStep.dentistName,
+          email: configStep.dentistEmail || '',
+          phone: configStep.dentistPhone || '',
+          address: '',
+        };
+      }
 
       await initializeData.mutateAsync({
         catalogItemIds: catalogIds,

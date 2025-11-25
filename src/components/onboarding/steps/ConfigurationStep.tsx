@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, User, Mail, Phone, Settings } from 'lucide-react';
+import { ArrowRight, User, Mail, Phone } from 'lucide-react';
 
 interface ConfigurationStepProps {
   data?: any;
@@ -12,8 +12,6 @@ export default function ConfigurationStep({ data, onNext, isLoading }: Configura
     dentistName: data?.dentistName || '',
     dentistEmail: data?.dentistEmail || '',
     dentistPhone: data?.dentistPhone || '',
-    defaultLowStockThreshold: data?.defaultLowStockThreshold || 10,
-    defaultTaxRate: data?.defaultTaxRate || 20,
   });
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -85,57 +83,7 @@ export default function ConfigurationStep({ data, onNext, isLoading }: Configura
           </div>
         </div>
 
-        <div className="border-t pt-8">
-          <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-            <Settings className="w-5 h-5" />
-            Préférences de Gestion
-          </h3>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Seuil d'alerte de stock bas
-              </label>
-              <div className="flex items-center gap-4">
-                <input
-                  type="number"
-                  min="0"
-                  value={formData.defaultLowStockThreshold}
-                  onChange={(e) =>
-                    setFormData({ ...formData, defaultLowStockThreshold: parseInt(e.target.value) || 0 })
-                  }
-                  className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <span className="text-sm text-gray-600">
-                  Vous serez alerté quand le stock atteint ce niveau
-                </span>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm font-medium text-gray-700 mb-2 block">
-                Taux de TVA par défaut (%)
-              </label>
-              <div className="flex items-center gap-4">
-                <input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  value={formData.defaultTaxRate}
-                  onChange={(e) =>
-                    setFormData({ ...formData, defaultTaxRate: parseFloat(e.target.value) || 0 })
-                  }
-                  className="w-32 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <span className="text-sm text-gray-600">
-                  Sera appliqué par défaut sur vos factures
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-end pt-4">
+        <div className="flex justify-end pt-8">
           <button
             type="submit"
             disabled={isLoading}

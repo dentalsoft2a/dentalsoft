@@ -79,10 +79,6 @@ export default function WelcomeStep({ onNext, isLoading }: WelcomeStepProps) {
             <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
             <span className="text-gray-700">Les ressources et matériaux que vous utilisez</span>
           </li>
-          <li className="flex items-start gap-3">
-            <CheckCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <span className="text-gray-700">Vos préférences de gestion</span>
-          </li>
         </ul>
       </div>
 
@@ -95,6 +91,7 @@ export default function WelcomeStep({ onNext, isLoading }: WelcomeStepProps) {
           Passer cette étape
         </button>
         <button
+          type="button"
           onClick={() => onNext({})}
           disabled={isLoading}
           className="flex items-center gap-2 px-8 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-cyan-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
