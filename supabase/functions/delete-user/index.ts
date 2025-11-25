@@ -64,28 +64,74 @@ Deno.serve(async (req: Request) => {
       throw new Error("Cannot delete your own account");
     }
 
-    console.log('Starting deletion process for user:', userId);
+    console.log('=== STARTING USER DELETION ===');
+    console.log('Target user ID:', userId);
 
+    console.log('Step 1: Calling PostgreSQL deletion function...');
     const { data: result, error: deleteError } = await supabaseAdmin.rpc(
       'delete_user_and_all_data',
       { target_user_id: userId }
     );
 
     if (deleteError) {
-      console.error('Error from delete function:', deleteError);
-      throw new Error(deleteError.message);
+      console.error('ERROR in PostgreSQL function:', deleteError);
+      throw new Error(`Database deletion failed: ${deleteError.message}`);
     }
 
-    console.log('Database deletion successful:', result);
+    console.log('PostgreSQL deletion successful:', result);
 
-    console.log('Deleting from auth.users...');
-    const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    console.log('Step 2: Deleting from auth.users...');
 
-    if (deleteAuthError && !deleteAuthError.message.includes('not found')) {
-      console.error('Error deleting auth user:', deleteAuthError);
+    let authDeleted = false;
+    let lastAuthError = null;
+
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      console.log(`Attempt ${attempt}/3 to delete from auth.users...`);
+
+      const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+      if (!deleteAuthError) {
+        console.log('Successfully deleted from auth.users');
+        authDeleted = true;
+        break;
+      }
+
+      if (deleteAuthError.message.includes('not found') || deleteAuthError.message.includes('User not found')) {
+        console.log('User not found in auth.users (already deleted or never existed)');
+        authDeleted = true;
+        break;
+      }
+
+      console.error(`Attempt ${attempt} failed:`, deleteAuthError);
+      lastAuthError = deleteAuthError;
+
+      if (attempt < 3) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
     }
 
-    console.log('User deletion complete:', result);
+    if (!authDeleted && lastAuthError) {
+      console.error('FAILED to delete from auth.users after 3 attempts:', lastAuthError);
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: `User data deleted but auth account remains: ${lastAuthError.message}`,
+          details: 'The user data has been removed from the database, but the authentication account could not be deleted. Please try again or contact support.',
+          partialSuccess: true,
+          accountType: result.account_type,
+          accountName: result.account_name
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+    }
+
+    console.log('=== USER DELETION COMPLETE ===');
 
     return new Response(
       JSON.stringify({
@@ -102,11 +148,15 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error: any) {
-    console.error("Error deleting user:", error);
+    console.error("=== FATAL ERROR ===");
+    console.error("Error:", error);
+    console.error("Stack:", error.stack);
+
     return new Response(
       JSON.stringify({
         error: error.message || "Failed to delete user",
-        details: error.toString()
+        details: error.toString(),
+        stack: error.stack
       }),
       {
         status: 400,
