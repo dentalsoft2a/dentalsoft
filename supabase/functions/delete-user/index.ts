@@ -70,7 +70,10 @@ Deno.serve(async (req: Request) => {
     console.log('Step 1: Calling PostgreSQL deletion function...');
     const { data: result, error: deleteError } = await supabaseAdmin.rpc(
       'delete_user_and_all_data',
-      { target_user_id: userId }
+      {
+        target_user_id: userId,
+        admin_user_id: currentUser.id
+      }
     );
 
     if (deleteError) {
