@@ -64,9 +64,8 @@ Deno.serve(async (req: Request) => {
       throw new Error("Cannot delete your own account");
     }
 
-    console.log('Attempting to delete user:', userId);
+    console.log('Starting user deletion process for:', userId);
 
-    // Vérifier si c'est un laboratoire ou un dentiste (pour les logs)
     const { data: profile } = await supabaseAdmin
       .from("profiles")
       .select("laboratory_name")
@@ -79,32 +78,92 @@ Deno.serve(async (req: Request) => {
       .eq("id", userId)
       .maybeSingle();
 
-    // Vérifier si l'utilisateur existe dans auth.users
-    const { data: authUser, error: getUserError } = await supabaseAdmin.auth.admin.getUserById(userId);
-    const hasAuthAccount = !getUserError && authUser?.user;
-
     const accountType = profile ? "laboratory" : dentist ? "dentist" : "unknown";
-    const accountName = profile?.laboratory_name || dentist?.name || authUser?.user?.email || "Unknown";
+    const accountName = profile?.laboratory_name || dentist?.name || "Unknown";
 
-    console.log(`Deleting ${accountType} account:`, {
-      userId,
-      accountName,
-      hasAuthAccount,
-      isDentistAccount: !!dentist
-    });
+    console.log(`Account type: ${accountType}, Name: ${accountName}`);
 
-    if (hasAuthAccount) {
-      // Supprimer le compte auth - la cascade DELETE s'occupera du reste
-      const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+    console.log('Step 1: Deleting related data from all tables...');
 
-      if (deleteError) {
-        console.error('Error deleting user from auth:', deleteError);
-        throw deleteError;
+    const tablesToClean = [
+      'admin_impersonation_sessions',
+      'archived_documents',
+      'audit_log',
+      'credit_notes',
+      'data_seals',
+      'delivery_note_stages',
+      'delivery_notes',
+      'dentist_favorite_laboratories',
+      'dentist_notifications',
+      'dentist_quote_requests',
+      'dentists',
+      'digital_certificates',
+      'fiscal_periods',
+      'help_replies',
+      'help_topics',
+      'help_votes',
+      'invoices',
+      'laboratory_employees',
+      'laboratory_role_permissions',
+      'onboarding_progress',
+      'photo_submissions',
+      'proformas',
+      'quote_requests',
+      'referral_rewards',
+      'referrals',
+      'stl_files',
+      'subscription_invoices',
+      'user_extensions',
+      'work_assignments',
+      'work_comments'
+    ];
+
+    for (const table of tablesToClean) {
+      try {
+        const { error: error1 } = await supabaseAdmin
+          .from(table)
+          .delete()
+          .eq('user_id', userId);
+
+        if (error1 && !error1.message.includes('column') && !error1.message.includes('does not exist')) {
+          console.error(`Error deleting from ${table} (user_id):`, error1);
+        }
+
+        const { error: error2 } = await supabaseAdmin
+          .from(table)
+          .delete()
+          .eq('laboratory_id', userId);
+
+        if (error2 && !error2.message.includes('column') && !error2.message.includes('does not exist')) {
+          console.error(`Error deleting from ${table} (laboratory_id):`, error2);
+        }
+
+        const { error: error3 } = await supabaseAdmin
+          .from(table)
+          .delete()
+          .eq('profile_id', userId);
+
+        if (error3 && !error3.message.includes('column') && !error3.message.includes('does not exist')) {
+          console.error(`Error deleting from ${table} (profile_id):`, error3);
+        }
+
+        const { error: error4 } = await supabaseAdmin
+          .from(table)
+          .delete()
+          .eq('laboratory_profile_id', userId);
+
+        if (error4 && !error4.message.includes('column') && !error4.message.includes('does not exist')) {
+          console.error(`Error deleting from ${table} (laboratory_profile_id):`, error4);
+        }
+
+        console.log(`Cleaned table: ${table}`);
+      } catch (e) {
+        console.log(`Skipped table ${table}:`, e.message);
       }
+    }
 
-      console.log(`Successfully deleted auth account and cascaded data:`, { userId, accountName });
-    } else if (dentist) {
-      // C'est un dentist_account sans compte auth, supprimer directement de la table
+    if (dentist) {
+      console.log('Step 2: Deleting dentist_accounts...');
       const { error: deleteDentistError } = await supabaseAdmin
         .from("dentist_accounts")
         .delete()
@@ -112,13 +171,43 @@ Deno.serve(async (req: Request) => {
 
       if (deleteDentistError) {
         console.error('Error deleting dentist account:', deleteDentistError);
-        throw deleteDentistError;
+        throw new Error(`Failed to delete dentist account: ${deleteDentistError.message}`);
       }
-
-      console.log(`Successfully deleted dentist account without auth:`, { userId, accountName });
-    } else {
-      throw new Error("User not found in auth.users or dentist_accounts");
     }
+
+    if (profile) {
+      console.log('Step 3: Deleting profiles...');
+      const { error: deleteProfileError } = await supabaseAdmin
+        .from("profiles")
+        .delete()
+        .eq("id", userId);
+
+      if (deleteProfileError) {
+        console.error('Error deleting profile:', deleteProfileError);
+        throw new Error(`Failed to delete profile: ${deleteProfileError.message}`);
+      }
+    }
+
+    console.log('Step 4: Deleting user_profiles...');
+    const { error: deleteUserProfileError } = await supabaseAdmin
+      .from("user_profiles")
+      .delete()
+      .eq("id", userId);
+
+    if (deleteUserProfileError) {
+      console.error('Error deleting user_profile:', deleteUserProfileError);
+      throw new Error(`Failed to delete user_profile: ${deleteUserProfileError.message}`);
+    }
+
+    console.log('Step 5: Deleting auth.users...');
+    const { error: deleteAuthError } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+    if (deleteAuthError && !deleteAuthError.message.includes('not found')) {
+      console.error('Error deleting auth user:', deleteAuthError);
+      throw new Error(`Failed to delete auth user: ${deleteAuthError.message}`);
+    }
+
+    console.log(`Successfully deleted user ${userId} (${accountName})`);
 
     return new Response(
       JSON.stringify({
@@ -135,9 +224,12 @@ Deno.serve(async (req: Request) => {
       }
     );
   } catch (error: any) {
-    console.error("Error deleting user:", error);
+    console.error("FATAL ERROR deleting user:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Failed to delete user" }),
+      JSON.stringify({
+        error: error.message || "Failed to delete user",
+        details: error.toString()
+      }),
       {
         status: 400,
         headers: {
