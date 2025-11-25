@@ -1,4 +1,4 @@
-import { CheckCircle, Package, Box, User, Settings, Loader2, Sparkles } from 'lucide-react';
+import { CheckCircle, Package, Box, User, Loader2, Sparkles } from 'lucide-react';
 import { usePredefinedCatalogItems, usePredefinedResources } from '../../../hooks/useOnboarding';
 
 interface SummaryStepProps {
@@ -118,30 +118,6 @@ export default function SummaryStep({ allData, onFinish, isLoading }: SummarySte
           </div>
         )}
 
-        <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 border-2 border-cyan-200 rounded-xl p-6">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-cyan-600 rounded-lg flex items-center justify-center flex-shrink-0">
-              <Settings className="w-6 h-6 text-white" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold text-gray-900 mb-2">Configuration</h3>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Seuil de stock bas:</span>
-                  <span className="ml-2 font-semibold text-gray-900">
-                    {allData[5]?.defaultLowStockThreshold || 10}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-gray-600">TVA par défaut:</span>
-                  <span className="ml-2 font-semibold text-gray-900">
-                    {allData[5]?.defaultTaxRate || 20}%
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <div className="bg-blue-50 border border-blue-200 rounded-xl p-6 mb-8">
