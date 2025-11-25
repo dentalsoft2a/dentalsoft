@@ -1,4 +1,4 @@
-import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus, Camera, Phone, Layers, Scale, FileCheck, Play, X } from 'lucide-react';
+import { ArrowRight, CheckCircle, Package, FileText, Receipt, Users, TrendingUp, Shield, Clock, Zap, Sparkles, Star, Heart, Award, Target, Rocket, MousePointerClick, BarChart3, Calendar, Printer, Box, AlertTriangle, TrendingDown, RefreshCw, MessageCircle, Headphones, Mail, UserPlus, Camera, Phone, Layers, Scale, FileCheck } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import { supabase } from '../../lib/supabase';
@@ -19,7 +19,6 @@ export function LandingPage() {
   const [totalExtensionsPrice, setTotalExtensionsPrice] = useState<number>(0);
   const [contactPhone, setContactPhone] = useState<string>('');
   const [pricesLoaded, setPricesLoaded] = useState<boolean>(false);
-  const [showVideoModal, setShowVideoModal] = useState(false);
 
   useEffect(() => {
     loadPrices();
@@ -306,38 +305,6 @@ export function LandingPage() {
           </section>
 
           <section className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-12 lg:py-16">
-            <div className="text-center mb-6 sm:mb-8 lg:mb-12 px-4">
-              <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold mb-2 sm:mb-4 bg-gradient-to-r from-slate-900 to-primary-900 bg-clip-text text-transparent">
-                Découvrez DentalCloud en vidéo
-              </h2>
-              <p className="text-sm sm:text-base lg:text-lg text-slate-600 max-w-2xl mx-auto">
-                Une présentation complète de toutes les fonctionnalités
-              </p>
-            </div>
-
-            <div className="max-w-4xl mx-auto mb-12 sm:mb-16 lg:mb-20">
-              <div
-                onClick={() => setShowVideoModal(true)}
-                className="relative aspect-video rounded-2xl overflow-hidden shadow-2xl cursor-pointer group bg-slate-900"
-              >
-                <img
-                  src="https://img.youtube.com/vi/zmoe3GM5RC8/maxresdefault.jpg"
-                  alt="Présentation DentalCloud"
-                  className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 rounded-full bg-white/90 backdrop-blur flex items-center justify-center group-hover:scale-110 transition-transform shadow-2xl">
-                    <Play className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 text-primary-600 ml-2" fill="currentColor" />
-                  </div>
-                </div>
-                <div className="absolute bottom-0 left-0 right-0 p-4 sm:p-6">
-                  <h3 className="text-white text-lg sm:text-xl lg:text-2xl font-bold mb-1 sm:mb-2">Présentation complète de DentalCloud</h3>
-                  <p className="text-white/90 text-sm sm:text-base">Cliquez pour regarder la vidéo en plein écran</p>
-                </div>
-              </div>
-            </div>
-
             <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 mb-8 sm:mb-12 lg:mb-16 shadow-lg">
               <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-4 max-w-4xl mx-auto">
                 <div className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-lg sm:rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center flex-shrink-0 shadow-lg">
@@ -1130,33 +1097,6 @@ export function LandingPage() {
             </div>
           </footer>
       </>
-
-      {showVideoModal && (
-        <div
-          className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4"
-          onClick={() => setShowVideoModal(false)}
-        >
-          <button
-            onClick={() => setShowVideoModal(false)}
-            className="absolute top-4 right-4 z-10 w-12 h-12 rounded-full bg-white/10 hover:bg-white/20 backdrop-blur flex items-center justify-center transition-all group"
-          >
-            <X className="w-6 h-6 text-white group-hover:scale-110 transition-transform" />
-          </button>
-
-          <div
-            className="w-full max-w-6xl aspect-video"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <iframe
-              className="w-full h-full rounded-lg shadow-2xl"
-              src="https://www.youtube.com/embed/zmoe3GM5RC8?autoplay=1&rel=0"
-              title="Présentation DentalCloud"
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-              allowFullScreen
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 }
