@@ -1203,8 +1203,8 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                 </div>
               </div>
 
-              {!editingResource?.has_variants && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {!editingResource?.has_variants && (
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-2">
                       Quantité en stock *
@@ -1219,23 +1219,28 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                       placeholder="0"
                     />
                   </div>
+                )}
 
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Seuil d'alerte *
-                    </label>
-                    <input
-                      type="number"
-                      required
-                      min="0"
-                      value={formData.low_stock_threshold || ''}
-                      onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value === '' ? '' as any : parseInt(e.target.value) })}
-                      className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
-                      placeholder="5"
-                    />
-                  </div>
+                <div className={!editingResource?.has_variants ? '' : 'md:col-span-2'}>
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    Seuil d'alerte {editingResource?.has_variants ? 'par défaut ' : ''}*
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min="0"
+                    value={formData.low_stock_threshold || ''}
+                    onChange={(e) => setFormData({ ...formData, low_stock_threshold: e.target.value === '' ? '' as any : parseInt(e.target.value) })}
+                    className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent outline-none"
+                    placeholder="5"
+                  />
+                  {editingResource?.has_variants && (
+                    <p className="text-xs text-slate-500 mt-1">
+                      Ce seuil peut être redéfini individuellement pour chaque variante
+                    </p>
+                  )}
                 </div>
-              )}
+              </div>
 
               {editingResource?.has_variants && (
                 <div className="p-4 bg-cyan-50 border border-cyan-200 rounded-lg">
@@ -1246,7 +1251,7 @@ export default function ResourcesPage({ onStockUpdate }: ResourcesPageProps = {}
                         Cette ressource utilise des variantes
                       </p>
                       <p className="text-sm text-cyan-700">
-                        Le stock et le seuil d'alerte sont gérés au niveau de chaque variante. Utilisez le bouton "Variantes" pour les gérer.
+                        Le stock est géré au niveau de chaque variante. Utilisez le bouton "Variantes" pour les gérer.
                       </p>
                     </div>
                   </div>
