@@ -71,8 +71,8 @@ Deno.serve(async (req: Request) => {
     const { data: result, error: deleteError } = await supabaseAdmin.rpc(
       'delete_user_and_all_data',
       {
-        target_user_id: userId,
-        admin_user_id: currentUser.id
+        p_target_user_id: userId,
+        p_admin_user_id: currentUser.id
       }
     );
 
