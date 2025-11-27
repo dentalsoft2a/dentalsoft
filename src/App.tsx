@@ -38,6 +38,7 @@ import DentalPatientsPage from './components/dentist/cabinet/DentalPatientsPage'
 import DentalCatalogPage from './components/dentist/cabinet/DentalCatalogPage';
 import DentalStockPage from './components/dentist/cabinet/DentalStockPage';
 import DentalInvoicesPage from './components/dentist/cabinet/DentalInvoicesPage';
+import DentistSubscriptionPage from './components/dentist/DentistSubscriptionPage';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { ImpersonationBanner } from './components/common/ImpersonationBanner';
 import { CookieConsent } from './components/common/CookieConsent';
@@ -343,7 +344,7 @@ function AppContent() {
     }
 
     // Sur desktop, afficher l'interface complète avec layout
-    const dentistPages = ['dentist-dashboard', 'dentist-orders', 'dentist-laboratories', 'dentist-photos', 'dentist-settings', 'dentist-help', 'dentist-support', 'dentist-patients', 'dentist-catalog', 'dentist-stock', 'dentist-invoices'];
+    const dentistPages = ['dentist-dashboard', 'dentist-orders', 'dentist-laboratories', 'dentist-photos', 'dentist-settings', 'dentist-help', 'dentist-support', 'dentist-patients', 'dentist-catalog', 'dentist-stock', 'dentist-invoices', 'dentist-subscription'];
 
     if (currentPath === '' || !dentistPages.includes(currentPath)) {
       return <Navigate to="/dentist-dashboard" replace />;
@@ -367,6 +368,8 @@ function AppContent() {
           return cabinetBillingEnabled ? <DentalStockPage /> : <Navigate to="/dentist-dashboard" replace />;
         case 'dentist-invoices':
           return cabinetBillingEnabled ? <DentalInvoicesPage /> : <Navigate to="/dentist-dashboard" replace />;
+        case 'dentist-subscription':
+          return <DentistSubscriptionPage />;
         case 'dentist-settings':
           return <DentistSettingsPage />;
         case 'dentist-help':
