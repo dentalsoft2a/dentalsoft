@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Users, TrendingUp, Clock, DollarSign, Filter, Plus, Calendar, Eye } from 'lucide-react';
+import { Users, TrendingUp, Clock, DollarSign, Filter, Plus, Calendar, Eye, MoreVertical } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
+import ManageDentistSubscriptionModal from './ManageDentistSubscriptionModal';
 
 interface DentistSubscriptionData {
   id: string;
@@ -35,6 +36,8 @@ export default function DentistSubscriptionsManagement() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'all' | 'trial' | 'active' | 'expired'>('all');
   const [showAccessCodeGenerator, setShowAccessCodeGenerator] = useState(false);
+  const [showManageModal, setShowManageModal] = useState(false);
+  const [selectedDentist, setSelectedDentist] = useState<DentistSubscriptionData | null>(null);
 
   useEffect(() => {
     loadData();
@@ -229,12 +232,13 @@ export default function DentistSubscriptionsManagement() {
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Statut</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Date de fin</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Prix/mois</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredSubscriptions.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-slate-500">
+                  <td colSpan={7} className="text-center py-8 text-slate-500">
                     Aucun abonnement trouvé
                   </td>
                 </tr>
@@ -254,6 +258,18 @@ export default function DentistSubscriptionsManagement() {
                     <td className="py-3 px-4 font-semibold">
                       {sub.plan_price ? `${sub.plan_price.toFixed(2)}€` : 'Gratuit'}
                     </td>
+                    <td className="py-3 px-4">
+                      <button
+                        onClick={() => {
+                          setSelectedDentist(sub);
+                          setShowManageModal(true);
+                        }}
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                        title="Gérer l'abonnement"
+                      >
+                        <MoreVertical className="w-5 h-5 text-slate-600" />
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -267,6 +283,21 @@ export default function DentistSubscriptionsManagement() {
           onClose={() => setShowAccessCodeGenerator(false)}
           onSuccess={() => {
             setShowAccessCodeGenerator(false);
+            loadData();
+          }}
+        />
+      )}
+
+      {showManageModal && selectedDentist && (
+        <ManageDentistSubscriptionModal
+          dentist={selectedDentist}
+          onClose={() => {
+            setShowManageModal(false);
+            setSelectedDentist(null);
+          }}
+          onSuccess={() => {
+            setShowManageModal(false);
+            setSelectedDentist(null);
             loadData();
           }}
         />

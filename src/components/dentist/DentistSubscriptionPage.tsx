@@ -41,6 +41,8 @@ export default function DentistSubscriptionPage() {
   const [showAccessCodeModal, setShowAccessCodeModal] = useState(false);
   const [activating, setActivating] = useState(false);
   const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
+  const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
 
   useEffect(() => {
     if (user) {
@@ -87,6 +89,41 @@ export default function DentistSubscriptionPage() {
       alert('Une erreur est survenue');
     } finally {
       setActivating(false);
+    }
+  };
+
+  const handleSubscribeStripe = async (planId: string) => {
+    setSubscribingPlanId(planId);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-dentist-subscription-checkout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          planId: planId,
+          billingPeriod: billingPeriod
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Error response:', errorData);
+        throw new Error(errorData.error || 'Erreur lors de la création de la session de paiement');
+      }
+
+      const { url } = await response.json();
+
+      if (url) {
+        window.location.href = url;
+      } else {
+        throw new Error('URL de paiement non reçue');
+      }
+    } catch (error) {
+      console.error('Error subscribing to plan:', error);
+      alert(`Erreur lors de la création de la session de paiement: ${(error as Error).message}`);
+      setSubscribingPlanId(null);
     }
   };
 
@@ -283,12 +320,31 @@ export default function DentistSubscriptionPage() {
                   Plan actif
                 </button>
               ) : (
-                <button
-                  onClick={() => setShowAccessCodeModal(true)}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-green-700 transition-all shadow-lg hover:shadow-xl"
-                >
-                  Utiliser un code promo
-                </button>
+                <div className="space-y-3">
+                  <button
+                    onClick={() => handleSubscribeStripe(premiumPlan.id)}
+                    disabled={subscribingPlanId === premiumPlan.id}
+                    className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-lg font-semibold hover:from-blue-700 hover:to-green-700 transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  >
+                    {subscribingPlanId === premiumPlan.id ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        Redirection...
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="w-5 h-5" />
+                        Souscrire avec Stripe
+                      </>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => setShowAccessCodeModal(true)}
+                    className="w-full px-6 py-3 border-2 border-blue-600 text-blue-600 rounded-lg font-semibold hover:bg-blue-50 transition-colors"
+                  >
+                    Utiliser un code promo
+                  </button>
+                </div>
               )}
             </div>
           )}

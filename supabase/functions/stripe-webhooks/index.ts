@@ -65,7 +65,41 @@ Deno.serve(async (req: Request) => {
         const session = event.data.object as Stripe.Checkout.Session;
         console.log("Checkout session completed:", session);
 
-        if (session.metadata?.type === "subscription_plan") {
+        if (session.metadata?.type === "dentist_subscription") {
+          const dentistId = session.metadata.dentist_id;
+          const planId = session.metadata.plan_id;
+          const billingPeriod = session.metadata.billing_period || 'monthly';
+          const subscriptionId = session.subscription as string;
+          const customerId = session.customer as string;
+
+          console.log("Processing dentist subscription for dentist:", dentistId, "plan:", planId);
+
+          const subscriptionEndDate = new Date();
+          if (billingPeriod === 'yearly') {
+            subscriptionEndDate.setFullYear(subscriptionEndDate.getFullYear() + 1);
+          } else {
+            subscriptionEndDate.setMonth(subscriptionEndDate.getMonth() + 1);
+          }
+
+          const { error: updateError } = await supabase
+            .from("dentist_accounts")
+            .update({
+              subscription_status: "active",
+              subscription_plan_id: planId,
+              subscription_start_date: new Date().toISOString(),
+              subscription_end_date: subscriptionEndDate.toISOString(),
+              stripe_subscription_id: subscriptionId,
+              stripe_customer_id: customerId,
+              billing_period: billingPeriod,
+            })
+            .eq("id", dentistId);
+
+          if (updateError) {
+            console.error("Error activating dentist subscription:", updateError);
+          } else {
+            console.log("Dentist subscription activated successfully for dentist:", dentistId);
+          }
+        } else if (session.metadata?.type === "subscription_plan") {
           const userId = session.metadata.user_id;
           const planId = session.metadata.plan_id;
           const subscriptionId = session.subscription as string;
@@ -203,6 +237,19 @@ Deno.serve(async (req: Request) => {
         const subscription = event.data.object as Stripe.Subscription;
         console.log("Subscription deleted:", subscription);
 
+        // Cancel dentist subscriptions
+        const { error: dentistDeleteError } = await supabase
+          .from("dentist_accounts")
+          .update({
+            subscription_status: "expired",
+            stripe_subscription_id: null,
+          })
+          .eq("stripe_subscription_id", subscription.id);
+
+        if (dentistDeleteError) {
+          console.error("Error cancelling dentist subscription:", dentistDeleteError);
+        }
+
         const { error: extensionDeleteError } = await supabase
           .from("user_extensions")
           .update({
@@ -231,13 +278,28 @@ Deno.serve(async (req: Request) => {
       case "invoice.paid": {
         const invoice = event.data.object as Stripe.Invoice;
         console.log("Invoice paid:", invoice);
-        
+
         if (invoice.subscription) {
           const nextBillingDate = new Date(invoice.lines.data[0].period.end * 1000);
-          
+
+          // Renew dentist subscriptions
+          const { error: dentistRenewError } = await supabase
+            .from("dentist_accounts")
+            .update({
+              subscription_end_date: nextBillingDate.toISOString(),
+              subscription_status: "active",
+            })
+            .eq("stripe_subscription_id", invoice.subscription as string);
+
+          if (dentistRenewError) {
+            console.error("Error renewing dentist subscription:", dentistRenewError);
+          } else {
+            console.log("Dentist subscription renewed successfully");
+          }
+
           const { error: renewError } = await supabase
             .from("user_extensions")
-            .update({ 
+            .update({
               expiry_date: nextBillingDate.toISOString(),
               status: "active",
             })
@@ -249,7 +311,7 @@ Deno.serve(async (req: Request) => {
 
           const { error: profileRenewError } = await supabase
             .from("user_profiles")
-            .update({ 
+            .update({
               subscription_end_date: nextBillingDate.toISOString(),
               subscription_status: "active",
             })

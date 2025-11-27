@@ -84,18 +84,32 @@ export function useDentistSubscription(): DentistSubscriptionStatus {
       setSubscriptionEndsAt(dentistAccount.subscription_end_date);
       setCanStartTrial(!dentistAccount.trial_used && status === 'none');
 
-      const access = status === 'trial' || status === 'active';
-      setHasAccess(access);
-
+      // Check if subscription is actually valid by verifying the end date
+      let actualAccess = false;
       if (dentistAccount.subscription_end_date && (status === 'trial' || status === 'active')) {
         const endDate = new Date(dentistAccount.subscription_end_date);
         const now = new Date();
         const diffTime = endDate.getTime() - now.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        setTrialDaysRemaining(diffDays > 0 ? diffDays : 0);
+
+        // Only grant access if subscription hasn't expired yet
+        if (diffDays > 0) {
+          actualAccess = true;
+          setTrialDaysRemaining(diffDays);
+        } else {
+          // Subscription date has passed, no access even if status says trial/active
+          actualAccess = false;
+          setTrialDaysRemaining(0);
+        }
+      } else if (status === 'trial' || status === 'active') {
+        // Has status but no end date - should not happen but grant access to be safe
+        actualAccess = true;
+        setTrialDaysRemaining(null);
       } else {
         setTrialDaysRemaining(null);
       }
+
+      setHasAccess(actualAccess);
     } catch (error) {
       console.error('Error loading subscription data:', error);
       setHasAccess(false);
