@@ -61,6 +61,7 @@ export default function DentistOrdersPage() {
       const dentistIds = dentistRecords.map(d => d.id);
 
       // Step 2: Get all delivery notes for these dentist records
+      // Exclude delivery notes that are in proforma or invoiced
       const { data, error } = await supabase
         .from('delivery_notes')
         .select(`
@@ -74,9 +75,11 @@ export default function DentistOrdersPage() {
           shade,
           notes,
           created_by_dentist,
-          user_id
+          user_id,
+          proforma_id
         `)
         .in('dentist_id', dentistIds)
+        .is('proforma_id', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
