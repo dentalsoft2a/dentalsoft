@@ -20,6 +20,7 @@ interface DeliveryNote {
   billing_status?: 'bl' | 'proforma' | 'invoiced';
   proforma_id?: string | null;
   proforma_number?: string;
+  invoice_id?: string | null;
   invoice_number?: string;
   laboratory?: {
     laboratory_name: string;
@@ -107,7 +108,9 @@ export default function DentistOrdersPage() {
         .from('invoice_proformas')
         .select(`
           proforma_id,
+          invoice_id,
           invoices(
+            id,
             invoice_number
           )
         `)
@@ -124,6 +127,7 @@ export default function DentistOrdersPage() {
           billing_status: invoiceInfo ? 'invoiced' : 'proforma',
           proforma_id: pi.proforma_id,
           proforma_number: pi.proformas?.proforma_number,
+          invoice_id: invoiceInfo?.invoice_id,
           invoice_number: invoiceInfo?.invoices?.invoice_number
         });
       });
@@ -143,7 +147,9 @@ export default function DentistOrdersPage() {
             ...order,
             laboratory: labData || undefined,
             billing_status: billingInfo?.billing_status || 'bl',
+            proforma_id: billingInfo?.proforma_id,
             proforma_number: billingInfo?.proforma_number,
+            invoice_id: billingInfo?.invoice_id,
             invoice_number: billingInfo?.invoice_number,
           };
         })
@@ -233,8 +239,19 @@ export default function DentistOrdersPage() {
 
   const handleDownloadPdf = async (order: DeliveryNote) => {
     try {
-      if (order.billing_status === 'invoiced' && order.invoice_number) {
+      if (order.billing_status === 'invoiced' && order.invoice_id) {
         // Download invoice PDF
+        const { data: invoiceData } = await supabase
+          .from('invoices')
+          .select('id, invoice_number')
+          .eq('id', order.invoice_id)
+          .maybeSingle();
+
+        if (!invoiceData) {
+          alert('Facture introuvable');
+          return;
+        }
+
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-invoice-pdf`,
           {
@@ -243,7 +260,7 @@ export default function DentistOrdersPage() {
               'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ invoice_number: order.invoice_number })
+            body: JSON.stringify({ invoiceId: invoiceData.id })
           }
         );
 
@@ -252,12 +269,27 @@ export default function DentistOrdersPage() {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `Facture_${order.invoice_number}.pdf`;
+          a.download = `Facture_${invoiceData.invoice_number}.pdf`;
           a.click();
           window.URL.revokeObjectURL(url);
+        } else {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          alert('Erreur lors de la génération du PDF de la facture');
         }
-      } else if (order.billing_status === 'proforma' && order.proforma_number) {
+      } else if (order.billing_status === 'proforma' && order.proforma_id) {
         // Download proforma PDF
+        const { data: proformaData } = await supabase
+          .from('proformas')
+          .select('id, proforma_number')
+          .eq('id', order.proforma_id)
+          .maybeSingle();
+
+        if (!proformaData) {
+          alert('Proforma introuvable');
+          return;
+        }
+
         const response = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pdf`,
           {
@@ -266,7 +298,10 @@ export default function DentistOrdersPage() {
               'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ proforma_number: order.proforma_number })
+            body: JSON.stringify({
+              documentType: 'proforma',
+              documentId: proformaData.id
+            })
           }
         );
 
@@ -275,9 +310,13 @@ export default function DentistOrdersPage() {
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement('a');
           a.href = url;
-          a.download = `Proforma_${order.proforma_number}.pdf`;
+          a.download = `Proforma_${proformaData.proforma_number}.pdf`;
           a.click();
           window.URL.revokeObjectURL(url);
+        } else {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          alert('Erreur lors de la génération du PDF de la proforma');
         }
       }
     } catch (error) {
