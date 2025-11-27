@@ -33,6 +33,7 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
   const loadLaboratories = async () => {
     try {
       setLoading(true);
+      console.log('🔍 Loading laboratories for dentist ID:', dentistId);
 
       // Load favorite laboratories
       const favoritesResult = await supabase
@@ -43,22 +44,27 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
       if (favoritesResult.error) throw favoritesResult.error;
 
       const favoriteIds = (favoritesResult.data || []).map(fav => fav.laboratory_profile_id);
+      console.log('⭐ Favorites found:', favoriteIds);
 
-      // Load all accepted invitations (linked laboratories)
-      const invitationsResult = await supabase
-        .from('laboratory_invitations')
-        .select('laboratory_profile_id')
-        .eq('dentist_user_id', dentistId)
-        .eq('status', 'accepted')
-        .not('laboratory_profile_id', 'is', null);
+      // Load all linked laboratories via dentists table
+      const linkedDentistsResult = await supabase
+        .from('dentists')
+        .select('id, user_id')
+        .eq('linked_dentist_account_id', dentistId);
 
-      if (invitationsResult.error) throw invitationsResult.error;
+      console.log('👥 Linked dentists query result:', {
+        data: linkedDentistsResult.data,
+        error: linkedDentistsResult.error,
+        dentistId: dentistId
+      });
 
-      const linkedLabIds = (invitationsResult.data || [])
-        .map(inv => inv.laboratory_profile_id)
-        .filter(id => id !== null);
+      if (linkedDentistsResult.error) throw linkedDentistsResult.error;
+
+      const linkedLabIds = [...new Set((linkedDentistsResult.data || []).map(d => d.user_id))];
+      console.log('🔗 Linked lab IDs:', linkedLabIds);
 
       if (linkedLabIds.length === 0) {
+        console.log('❌ No linked laboratories found');
         setLaboratories([]);
         setFavorites(new Set(favoriteIds));
         return;
@@ -73,16 +79,20 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
         .neq('laboratory_name', '')
         .order('laboratory_name');
 
+      console.log('👔 Profiles query result:', profilesResult);
+
       if (profilesResult.error) throw profilesResult.error;
 
       const labs = (profilesResult.data || []).filter(
         lab => lab.laboratory_name && lab.laboratory_name.trim() !== ''
       );
 
+      console.log('✅ Final laboratories list:', labs);
+
       setLaboratories(labs);
       setFavorites(new Set(favoriteIds));
     } catch (error) {
-      console.error('Error loading laboratories:', error);
+      console.error('❌ Error loading laboratories:', error);
     } finally {
       setLoading(false);
     }
@@ -231,7 +241,7 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
                     <div className="space-y-3">
                       <p className="text-slate-700 font-medium">Aucun laboratoire lié</p>
                       <p className="text-sm text-slate-500">
-                        Vous devez d'abord inviter ou accepter l'invitation d'un laboratoire depuis la page "Mes laboratoires"
+                        Les laboratoires que vous utilisez peuvent vous ajouter comme client depuis leur interface. Contactez votre laboratoire pour qu'il vous ajoute à son système.
                       </p>
                     </div>
                   )}

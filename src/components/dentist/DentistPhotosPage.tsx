@@ -25,22 +25,18 @@ export default function DentistPhotosPage() {
     if (!user) return;
 
     try {
-      // Load all accepted invitations (linked laboratories)
-      const { data: invitationsData } = await supabase
-        .from('laboratory_invitations')
-        .select('laboratory_profile_id')
-        .eq('dentist_user_id', user.id)
-        .eq('status', 'accepted')
-        .not('laboratory_profile_id', 'is', null);
+      // Load all linked laboratories via dentists table
+      const { data: linkedDentists } = await supabase
+        .from('dentists')
+        .select('id, user_id')
+        .eq('linked_dentist_account_id', user.id);
 
-      const linkedLabIds = (invitationsData || [])
-        .map(inv => inv.laboratory_profile_id)
-        .filter(id => id !== null);
-
-      if (linkedLabIds.length === 0) {
+      if (!linkedDentists || linkedDentists.length === 0) {
         setLaboratories([]);
         return;
       }
+
+      const linkedLabIds = [...new Set(linkedDentists.map(d => d.user_id))];
 
       const { data: profilesData } = await supabase
         .from('profiles')
