@@ -2,14 +2,13 @@ import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import DentistPhotoPanel from './DentistPhotoPanel';
 import DentistPhotoHistory from './DentistPhotoHistory';
 import { useState } from 'react';
-import { Camera, Upload, History, X } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
 export default function DentistPhotosPage() {
   const { isMobile } = useDeviceDetection();
   const { user } = useAuth();
-  const [showHistory, setShowHistory] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [selectedLab, setSelectedLab] = useState('');
@@ -103,6 +102,7 @@ export default function DentistPhotosPage() {
       setSelectedLab('');
       setPatientName('');
       setNotes('');
+      window.location.reload();
     } catch (error) {
       console.error('Error uploading photos:', error);
       alert('Erreur lors de l\'envoi des photos');
@@ -117,94 +117,22 @@ export default function DentistPhotosPage() {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Photos</h1>
-            <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Envoyez des photos à vos laboratoires</p>
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={() => setShowHistory(true)}
-              className="flex items-center justify-center gap-2 px-5 py-3 bg-white border-2 border-slate-300 text-slate-700 rounded-xl hover:bg-slate-50 hover:border-slate-400 transition-all duration-200 hover:scale-105 active:scale-95 font-medium"
-            >
-              <History className="w-5 h-5" />
-              <span>Historique</span>
-            </button>
-            <button
-              onClick={() => {
-                setShowUploadModal(true);
-                loadLaboratories();
-              }}
-              className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 hover:scale-105 active:scale-95 font-medium"
-            >
-              <Upload className="w-5 h-5" />
-              <span>Envoyer des photos</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border-2 border-blue-200 p-8">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="w-16 h-16 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Camera className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-xl text-slate-900 mb-2">Mode Bureau</h3>
-              <p className="text-slate-600">
-                Sur ordinateur, utilisez le bouton "Envoyer des photos" pour sélectionner des images depuis votre ordinateur.
-              </p>
-            </div>
-          </div>
-          <div className="bg-white/60 backdrop-blur-sm rounded-lg p-4 border border-blue-200">
-            <h4 className="font-semibold text-slate-900 mb-2">Fonctionnalités :</h4>
-            <ul className="space-y-2 text-sm text-slate-700">
-              <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                <span>Envoyez jusqu'à 3 photos par soumission</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                <span>Sélectionnez le laboratoire destinataire</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                <span>Ajoutez des notes pour le laboratoire</span>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl border-2 border-purple-200 p-8">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="w-16 h-16 bg-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <History className="w-8 h-8 text-white" />
-            </div>
-            <div>
-              <h3 className="font-bold text-xl text-slate-900 mb-2">Historique</h3>
-              <p className="text-slate-600">
-                Consultez toutes vos photos envoyées et leur statut de traitement par les laboratoires.
-              </p>
-            </div>
+            <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Historique de vos photos envoyées</p>
           </div>
           <button
-            onClick={() => setShowHistory(true)}
-            className="w-full py-3 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
+            onClick={() => {
+              setShowUploadModal(true);
+              loadLaboratories();
+            }}
+            className="flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg hover:shadow-xl rounded-xl hover:from-blue-700 hover:to-cyan-700 transition-all duration-200 hover:scale-105 active:scale-95 font-medium"
           >
-            Voir l'historique complet
+            <Upload className="w-5 h-5" />
+            <span>Envoyer des photos</span>
           </button>
         </div>
       </div>
 
-      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-start gap-3">
-          <Camera className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">Astuce pour mobile</p>
-            <p>Sur votre smartphone, vous aurez accès à la caméra pour prendre des photos directement depuis l'application.</p>
-          </div>
-        </div>
-      </div>
-
-      {showHistory && <DentistPhotoHistory onClose={() => setShowHistory(false)} />}
+      <DentistPhotoHistory />
 
       {showUploadModal && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50" onClick={() => setShowUploadModal(false)}>

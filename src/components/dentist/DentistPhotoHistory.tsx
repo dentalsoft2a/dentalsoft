@@ -15,11 +15,7 @@ interface PhotoSubmission {
   laboratory_response: string | null;
 }
 
-interface DentistPhotoHistoryProps {
-  onClose: () => void;
-}
-
-export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProps) {
+export default function DentistPhotoHistory() {
   const { user } = useAuth();
   const [submissions, setSubmissions] = useState<PhotoSubmission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -158,29 +154,24 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
   };
 
   return (
-    <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-full h-full md:max-w-4xl md:h-[90vh] flex flex-col">
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h2 className="text-xl font-bold text-slate-900">Historique des photos</h2>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={handleRefresh}
-              disabled={refreshing}
-              className="p-2 hover:bg-slate-100 rounded-lg transition disabled:opacity-50"
-              title="Actualiser"
-            >
-              <RefreshCw className={`w-5 h-5 text-slate-600 ${refreshing ? 'animate-spin' : ''}`} />
-            </button>
-            <button
-              onClick={onClose}
-              className="p-2 hover:bg-slate-100 rounded-lg transition"
-            >
-              <X className="w-5 h-5 text-slate-600" />
-            </button>
+    <>
+      <div className="bg-white rounded-xl shadow-lg border border-slate-200">
+        <div className="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-slate-900">Historique des photos</h2>
+            <p className="text-sm text-slate-600">Toutes vos photos envoyées</p>
           </div>
+          <button
+            onClick={handleRefresh}
+            disabled={refreshing}
+            className="p-2 hover:bg-slate-200 rounded-lg transition disabled:opacity-50"
+            title="Actualiser"
+          >
+            <RefreshCw className={`w-5 h-5 text-slate-600 ${refreshing ? 'animate-spin' : ''}`} />
+          </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="p-6">
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -287,6 +278,6 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
