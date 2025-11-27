@@ -68,6 +68,7 @@ export default function DentalStockPage() {
 
       if (error) throw error;
       setResources(data || []);
+      refreshLowStockAlert();
     } catch (error) {
       console.error('Error loading resources:', error);
     } finally {
@@ -112,8 +113,8 @@ export default function DentalStockPage() {
       setShowModal(false);
       setEditingResource(null);
       resetForm();
-      loadResources();
-      refreshLowStockAlert();
+      await loadResources();
+      setTimeout(() => refreshLowStockAlert(), 100);
     } catch (error) {
       console.error('Error saving resource:', error);
       alert('Erreur lors de l\'enregistrement');
@@ -155,8 +156,8 @@ export default function DentalStockPage() {
 
       setShowStockModal(false);
       setStockAdjustment({ resourceId: '', quantity: 0, type: 'in', notes: '' });
-      loadResources();
-      refreshLowStockAlert();
+      await loadResources();
+      setTimeout(() => refreshLowStockAlert(), 100);
     } catch (error) {
       console.error('Error adjusting stock:', error);
       alert('Erreur lors de l\'ajustement du stock');
@@ -203,8 +204,8 @@ export default function DentalStockPage() {
         .eq('id', id);
 
       if (error) throw error;
-      loadResources();
-      refreshLowStockAlert();
+      await loadResources();
+      setTimeout(() => refreshLowStockAlert(), 100);
     } catch (error) {
       console.error('Error deleting resource:', error);
       alert('Erreur lors de la suppression');

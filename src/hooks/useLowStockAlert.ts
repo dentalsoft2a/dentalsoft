@@ -35,28 +35,11 @@ export function useLowStockAlert() {
     if (user) {
       checkLowStock();
 
-      const channel = supabase
-        .channel('dental_resources_changes')
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'dental_resources',
-            filter: `dentist_id=eq.${user.id}`
-          },
-          () => {
-            checkLowStock();
-          }
-        )
-        .subscribe();
-
       const interval = setInterval(() => {
         checkLowStock();
-      }, 30000);
+      }, 5000);
 
       return () => {
-        supabase.removeChannel(channel);
         clearInterval(interval);
       };
     }
