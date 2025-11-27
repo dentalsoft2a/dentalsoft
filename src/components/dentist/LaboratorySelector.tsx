@@ -34,7 +34,7 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
     try {
       setLoading(true);
 
-      // Load only favorite laboratories
+      // Load favorite laboratories
       const favoritesResult = await supabase
         .from('dentist_favorite_laboratories')
         .select('laboratory_profile_id')
@@ -44,17 +44,31 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
 
       const favoriteIds = (favoritesResult.data || []).map(fav => fav.laboratory_profile_id);
 
-      if (favoriteIds.length === 0) {
+      // Load all accepted invitations (linked laboratories)
+      const invitationsResult = await supabase
+        .from('laboratory_invitations')
+        .select('laboratory_profile_id')
+        .eq('dentist_user_id', dentistId)
+        .eq('status', 'accepted')
+        .not('laboratory_profile_id', 'is', null);
+
+      if (invitationsResult.error) throw invitationsResult.error;
+
+      const linkedLabIds = (invitationsResult.data || [])
+        .map(inv => inv.laboratory_profile_id)
+        .filter(id => id !== null);
+
+      if (linkedLabIds.length === 0) {
         setLaboratories([]);
-        setFavorites(new Set());
+        setFavorites(new Set(favoriteIds));
         return;
       }
 
-      // Load only the profiles for favorite laboratories
+      // Load profiles for all linked laboratories
       const profilesResult = await supabase
         .from('profiles')
         .select('id, laboratory_name')
-        .in('id', favoriteIds)
+        .in('id', linkedLabIds)
         .not('laboratory_name', 'is', null)
         .neq('laboratory_name', '')
         .order('laboratory_name');
@@ -217,7 +231,7 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
                     <div className="space-y-3">
                       <p className="text-slate-700 font-medium">Aucun laboratoire lié</p>
                       <p className="text-sm text-slate-500">
-                        Vous devez d'abord ajouter des laboratoires à vos favoris depuis la page "Mes laboratoires"
+                        Vous devez d'abord inviter ou accepter l'invitation d'un laboratoire depuis la page "Mes laboratoires"
                       </p>
                     </div>
                   )}
