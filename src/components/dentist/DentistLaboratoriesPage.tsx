@@ -35,6 +35,12 @@ export default function DentistLaboratoriesPage() {
     if (!user) return;
 
     try {
+      // Récupérer tous les dentists liés à ce dentist_account
+      const { data: linkedDentists } = await supabase
+        .from('dentists')
+        .select('id, user_id')
+        .eq('linked_dentist_account_id', user.id);
+
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, laboratory_name, laboratory_email, laboratory_phone, laboratory_address')
@@ -60,11 +66,18 @@ export default function DentistLaboratoriesPage() {
 
       const labsWithStats = await Promise.all(
         validLabs.map(async (lab) => {
-          const { data: ordersData } = await supabase
-            .from('delivery_notes')
-            .select('id, status')
-            .eq('dentist_id', user.id)
-            .eq('user_id', lab.id);
+          // Chercher les commandes avec les dentist_ids liés à ce laboratoire
+          const linkedDentistIdsForLab = linkedDentists?.filter(d => d.user_id === lab.id).map(d => d.id) || [];
+
+          let ordersData = [];
+          if (linkedDentistIdsForLab.length > 0) {
+            const { data } = await supabase
+              .from('delivery_notes')
+              .select('id, status')
+              .in('dentist_id', linkedDentistIdsForLab)
+              .eq('user_id', lab.id);
+            ordersData = data || [];
+          }
 
           const orders = ordersData || [];
           const activeOrders = orders.filter(o => o.status === 'pending' || o.status === 'in_progress');
