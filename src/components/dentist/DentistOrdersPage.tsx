@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Package, Clock, CheckCircle, XCircle, Eye, Calendar, User, Building2, AlertCircle, Filter, UserCircle } from 'lucide-react';
+import { Search, Package, Clock, CheckCircle, XCircle, Eye, Calendar, User, Building2, AlertCircle, Filter, UserCircle, FileText, Download } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -17,6 +17,10 @@ interface DeliveryNote {
   shade: string | null;
   notes: string | null;
   created_by_dentist: boolean;
+  billing_status?: 'bl' | 'proforma' | 'invoiced';
+  proforma_id?: string | null;
+  proforma_number?: string;
+  invoice_number?: string;
   laboratory?: {
     laboratory_name: string;
     laboratory_email: string;
@@ -82,34 +86,65 @@ export default function DentistOrdersPage() {
 
       if (error) throw error;
 
-      // Step 3: Filter out delivery notes that are in proforma_items (already in proforma/invoice)
+      // Step 3: Get proforma/invoice info for each delivery note
       const deliveryNoteIds = (data || []).map(dn => dn.id);
 
       const { data: proformaItems } = await supabase
         .from('proforma_items')
-        .select('delivery_note_id')
+        .select(`
+          delivery_note_id,
+          proforma_id,
+          proformas(
+            proforma_number,
+            status
+          )
+        `)
         .in('delivery_note_id', deliveryNoteIds);
 
-      const proformaLinkedIds = new Set(
-        (proformaItems || []).map(pi => pi.delivery_note_id)
-      );
+      // Get invoice info for proformas
+      const proformaIds = [...new Set((proformaItems || []).map(pi => pi.proforma_id))];
+      const { data: invoiceProformas } = await supabase
+        .from('invoice_proformas')
+        .select(`
+          proforma_id,
+          invoices(
+            invoice_number
+          )
+        `)
+        .in('proforma_id', proformaIds);
 
-      const filteredData = (data || []).filter(
-        dn => !proformaLinkedIds.has(dn.id)
-      );
+      // Create a map of delivery_note_id to billing info
+      const billingMap = new Map();
+      (proformaItems || []).forEach(pi => {
+        const invoiceInfo = (invoiceProformas || []).find(
+          ip => ip.proforma_id === pi.proforma_id
+        );
 
-      // Step 4: Enrich with laboratory information
+        billingMap.set(pi.delivery_note_id, {
+          billing_status: invoiceInfo ? 'invoiced' : 'proforma',
+          proforma_id: pi.proforma_id,
+          proforma_number: pi.proformas?.proforma_number,
+          invoice_number: invoiceInfo?.invoices?.invoice_number
+        });
+      });
+
+      // Step 4: Enrich with laboratory and billing information
       const ordersWithLab = await Promise.all(
-        filteredData.map(async (order) => {
+        (data || []).map(async (order) => {
           const { data: labData } = await supabase
             .from('profiles')
             .select('laboratory_name, laboratory_email')
             .eq('id', order.user_id)
             .maybeSingle();
 
+          const billingInfo = billingMap.get(order.id);
+
           return {
             ...order,
             laboratory: labData || undefined,
+            billing_status: billingInfo?.billing_status || 'bl',
+            proforma_number: billingInfo?.proforma_number,
+            invoice_number: billingInfo?.invoice_number,
           };
         })
       );
@@ -170,6 +205,84 @@ export default function DentistOrdersPage() {
         return 'Refusé';
       default:
         return status;
+    }
+  };
+
+  const getBillingStatusBadge = (billingStatus: string) => {
+    switch (billingStatus) {
+      case 'proforma':
+        return {
+          label: 'Proforma',
+          icon: FileText,
+          className: 'bg-orange-100 text-orange-700 border-orange-200'
+        };
+      case 'invoiced':
+        return {
+          label: 'Facturé',
+          icon: CheckCircle,
+          className: 'bg-emerald-100 text-emerald-700 border-emerald-200'
+        };
+      default:
+        return {
+          label: 'BL',
+          icon: Package,
+          className: 'bg-slate-100 text-slate-700 border-slate-200'
+        };
+    }
+  };
+
+  const handleDownloadPdf = async (order: DeliveryNote) => {
+    try {
+      if (order.billing_status === 'invoiced' && order.invoice_number) {
+        // Download invoice PDF
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-invoice-pdf`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ invoice_number: order.invoice_number })
+          }
+        );
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Facture_${order.invoice_number}.pdf`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        }
+      } else if (order.billing_status === 'proforma' && order.proforma_number) {
+        // Download proforma PDF
+        const response = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pdf`,
+          {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ proforma_number: order.proforma_number })
+          }
+        );
+
+        if (response.ok) {
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `Proforma_${order.proforma_number}.pdf`;
+          a.click();
+          window.URL.revokeObjectURL(url);
+        }
+      }
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Erreur lors du téléchargement du PDF');
     }
   };
 
@@ -265,11 +378,12 @@ export default function DentistOrdersPage() {
               const StatusIcon = getStatusIcon(order.status);
               const originBadge = getOriginBadge(order.created_by_dentist);
               const OriginIcon = originBadge.icon;
+              const billingBadge = getBillingStatusBadge(order.billing_status || 'bl');
+              const BillingIcon = billingBadge.icon;
               return (
                 <div
                   key={order.id}
-                  className="bg-white rounded-xl shadow-md border border-slate-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300 overflow-hidden group cursor-pointer"
-                  onClick={() => setSelectedOrder(order)}
+                  className="bg-white rounded-xl shadow-md border border-slate-200 hover:shadow-xl hover:border-blue-300 transition-all duration-300 overflow-hidden group"
                 >
                   <div className="p-4 md:p-6">
                     <div className="flex flex-col md:flex-row md:items-start gap-4">
@@ -284,6 +398,10 @@ export default function DentistOrdersPage() {
                               <span className={`px-2 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 ${getStatusColor(order.status)}`}>
                                 <StatusIcon className="w-3 h-3" />
                                 {getStatusLabel(order.status)}
+                              </span>
+                              <span className={`px-2 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 ${billingBadge.className}`}>
+                                <BillingIcon className="w-3 h-3" />
+                                {billingBadge.label}
                               </span>
                               <span className={`px-2 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 ${originBadge.className}`}>
                                 <OriginIcon className="w-3 h-3" />
@@ -332,16 +450,31 @@ export default function DentistOrdersPage() {
                         </div>
                       </div>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedOrder(order);
-                        }}
-                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                      >
-                        <Eye className="w-4 h-4" />
-                        <span>Voir détails</span>
-                      </button>
+                      <div className="flex flex-col gap-2">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedOrder(order);
+                          }}
+                          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                        >
+                          <Eye className="w-4 h-4" />
+                          <span>Voir détails</span>
+                        </button>
+
+                        {(order.billing_status === 'proforma' || order.billing_status === 'invoiced') && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDownloadPdf(order);
+                            }}
+                            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                          >
+                            <Download className="w-4 h-4" />
+                            <span>Télécharger PDF</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -392,9 +525,16 @@ export default function DentistOrdersPage() {
               <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
                 <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
                   <h3 className="font-bold text-slate-900">BL {selectedOrder.delivery_number}</h3>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${getStatusColor(selectedOrder.status)}`}>
                       {getStatusLabel(selectedOrder.status)}
+                    </span>
+                    <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1 ${getBillingStatusBadge(selectedOrder.billing_status || 'bl').className}`}>
+                      {(() => {
+                        const badge = getBillingStatusBadge(selectedOrder.billing_status || 'bl');
+                        const Icon = badge.icon;
+                        return <><Icon className="w-3.5 h-3.5" />{badge.label}</>;
+                      })()}
                     </span>
                     <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1 ${getOriginBadge(selectedOrder.created_by_dentist).className}`}>
                       {(() => {
@@ -414,6 +554,31 @@ export default function DentistOrdersPage() {
                     minute: '2-digit'
                   })}
                 </p>
+                {(selectedOrder.billing_status === 'proforma' || selectedOrder.billing_status === 'invoiced') && (
+                  <div className="mt-3 pt-3 border-t border-blue-200">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm">
+                        {selectedOrder.billing_status === 'invoiced' && selectedOrder.invoice_number && (
+                          <p className="text-slate-700">
+                            <span className="font-semibold">Facture:</span> {selectedOrder.invoice_number}
+                          </p>
+                        )}
+                        {selectedOrder.proforma_number && (
+                          <p className="text-slate-700">
+                            <span className="font-semibold">Proforma:</span> {selectedOrder.proforma_number}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        onClick={() => handleDownloadPdf(selectedOrder)}
+                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Télécharger PDF</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div>
