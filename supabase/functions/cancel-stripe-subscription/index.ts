@@ -39,11 +39,46 @@ Deno.serve(async (req: Request) => {
       throw new Error("Unauthorized");
     }
 
-    const { userExtensionId, subscriptionId } = await req.json();
+    const { userExtensionId, subscriptionId, dentistAccountId } = await req.json();
 
     let stripeSubscriptionId: string | null = null;
 
-    if (userExtensionId) {
+    if (dentistAccountId) {
+      const { data: dentistAccount, error: dentistError } = await supabase
+        .from("dentist_accounts")
+        .select("stripe_subscription_id, id")
+        .eq("id", dentistAccountId)
+        .eq("id", userData.user.id)
+        .maybeSingle();
+
+      if (dentistError || !dentistAccount) {
+        throw new Error("Dentist account not found");
+      }
+
+      if (!dentistAccount.stripe_subscription_id) {
+        throw new Error("No Stripe subscription found for this dentist account");
+      }
+
+      stripeSubscriptionId = dentistAccount.stripe_subscription_id;
+
+      console.log("Cancelling dentist Stripe subscription at period end:", stripeSubscriptionId);
+
+      await stripe.subscriptions.update(stripeSubscriptionId, {
+        cancel_at_period_end: true,
+      });
+
+      const { error: updateError } = await supabase
+        .from("dentist_accounts")
+        .update({
+          subscription_status: 'cancelling'
+        })
+        .eq("id", dentistAccountId);
+
+      if (updateError) {
+        console.error("Error updating dentist account:", updateError);
+      }
+    }
+    else if (userExtensionId) {
       const { data: userExtension, error: extensionError } = await supabase
         .from("user_extensions")
         .select("stripe_subscription_id, user_id")
@@ -108,7 +143,7 @@ Deno.serve(async (req: Request) => {
         console.error("Error updating user profile:", updateError);
       }
     } else {
-      throw new Error("Either userExtensionId or subscriptionId is required");
+      throw new Error("Either dentistAccountId, userExtensionId or subscriptionId is required");
     }
 
     return new Response(

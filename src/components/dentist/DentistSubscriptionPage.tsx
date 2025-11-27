@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CreditCard, CheckCircle, Clock, Sparkles, Key, Download, Calendar } from 'lucide-react';
+import { CreditCard, CheckCircle, Clock, Sparkles, Key, Download, Calendar, X } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDentistSubscription, DentistSubscriptionPlan } from '../../hooks/useDentistSubscription';
@@ -43,6 +43,8 @@ export default function DentistSubscriptionPage() {
   const [downloadingInvoice, setDownloadingInvoice] = useState<string | null>(null);
   const [subscribingPlanId, setSubscribingPlanId] = useState<string | null>(null);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly');
+  const [cancellingSubscription, setCancellingSubscription] = useState(false);
+  const [stripeSubscriptionId, setStripeSubscriptionId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -52,7 +54,7 @@ export default function DentistSubscriptionPage() {
 
   const loadData = async () => {
     try {
-      const [plansRes, invoicesRes] = await Promise.all([
+      const [plansRes, invoicesRes, accountRes] = await Promise.all([
         supabase
           .from('dentist_subscription_plans')
           .select('*')
@@ -62,11 +64,17 @@ export default function DentistSubscriptionPage() {
           .from('dentist_subscription_invoices')
           .select('*')
           .eq('dentist_id', user!.id)
-          .order('issued_at', { ascending: false })
+          .order('issued_at', { ascending: false }),
+        supabase
+          .from('dentist_accounts')
+          .select('stripe_subscription_id')
+          .eq('id', user!.id)
+          .maybeSingle()
       ]);
 
       if (plansRes.data) setPlans(plansRes.data);
       if (invoicesRes.data) setInvoices(invoicesRes.data);
+      if (accountRes.data) setStripeSubscriptionId(accountRes.data.stripe_subscription_id);
     } catch (error) {
       console.error('Error loading subscription data:', error);
     } finally {
@@ -141,6 +149,45 @@ export default function DentistSubscriptionPage() {
       alert('Erreur lors de la génération du PDF');
     } finally {
       setDownloadingInvoice(null);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!stripeSubscriptionId) {
+      alert('Aucun abonnement Stripe actif trouvé');
+      return;
+    }
+
+    if (!confirm('Êtes-vous sûr de vouloir annuler le renouvellement automatique ? Votre abonnement restera actif jusqu\'à la fin de la période en cours.')) {
+      return;
+    }
+
+    setCancellingSubscription(true);
+    try {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/cancel-stripe-subscription`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
+        },
+        body: JSON.stringify({
+          dentistAccountId: user!.id
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erreur lors de l\'annulation');
+      }
+
+      alert('Renouvellement automatique annulé avec succès. Votre abonnement restera actif jusqu\'à la fin de la période en cours.');
+      await refreshSubscription();
+      await loadData();
+    } catch (error) {
+      console.error('Error cancelling subscription:', error);
+      alert(`Erreur lors de l'annulation: ${(error as Error).message}`);
+    } finally {
+      setCancellingSubscription(false);
     }
   };
 
@@ -228,6 +275,31 @@ export default function DentistSubscriptionPage() {
             </div>
           )}
         </div>
+
+        {stripeSubscriptionId && subscriptionStatus === 'active' && (
+          <div className="mt-4 pt-4 border-t border-slate-200">
+            <button
+              onClick={handleCancelSubscription}
+              disabled={cancellingSubscription}
+              className="px-4 py-2 bg-red-50 text-red-700 rounded-lg hover:bg-red-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 font-medium"
+            >
+              {cancellingSubscription ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-red-700/30 border-t-red-700 rounded-full animate-spin" />
+                  Annulation en cours...
+                </>
+              ) : (
+                <>
+                  <X className="w-4 h-4" />
+                  Annuler le renouvellement automatique
+                </>
+              )}
+            </button>
+            <p className="text-xs text-slate-500 mt-2">
+              Votre abonnement restera actif jusqu'à la fin de la période en cours
+            </p>
+          </div>
+        )}
       </div>
 
       <div className="mb-8">
