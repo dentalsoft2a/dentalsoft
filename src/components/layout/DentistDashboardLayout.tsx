@@ -14,7 +14,9 @@ import {
   FileText,
   Stethoscope,
   PackageOpen,
-  CreditCard
+  CreditCard,
+  Sparkles,
+  Lock
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
