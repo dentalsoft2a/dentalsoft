@@ -51,8 +51,7 @@ export function useDentistSubscription(): DentistSubscriptionStatus {
           subscription_plan_id,
           subscription_end_date,
           trial_used,
-          cabinet_billing_enabled,
-          subscription_plan:dentist_subscription_plans(*)
+          cabinet_billing_enabled
         `)
         .eq('id', user.id)
         .maybeSingle();
@@ -68,7 +67,17 @@ export function useDentistSubscription(): DentistSubscriptionStatus {
       }
 
       const status = dentistAccount.subscription_status || 'none';
-      const plan = dentistAccount.subscription_plan as DentistSubscriptionPlan | null;
+
+      // Load plan separately if there's a plan_id
+      let plan: DentistSubscriptionPlan | null = null;
+      if (dentistAccount.subscription_plan_id) {
+        const { data: planData } = await supabase
+          .from('dentist_subscription_plans')
+          .select('*')
+          .eq('id', dentistAccount.subscription_plan_id)
+          .maybeSingle();
+        plan = planData;
+      }
 
       setSubscriptionStatus(status);
       setCurrentPlan(plan);
