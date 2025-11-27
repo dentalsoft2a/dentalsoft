@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, FileText, Calendar } from 'lucide-react';
+import { Plus, FileText, Calendar, Edit, Trash2, CreditCard, Download, Eye } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
+import DentalInvoiceModal from './DentalInvoiceModal';
+import PaymentModal from './PaymentModal';
 
 interface Invoice {
   id: string;
@@ -24,6 +26,11 @@ export default function DentalInvoicesPage() {
   const { user } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [editingInvoiceId, setEditingInvoiceId] = useState<string | undefined>();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [filterStatus, setFilterStatus] = useState('all');
 
   useEffect(() => {
     if (user) {
@@ -70,8 +77,45 @@ export default function DentalInvoicesPage() {
     );
   };
 
-  const totalRevenue = invoices.reduce((sum, inv) => sum + inv.total, 0);
-  const totalPaid = invoices.reduce((sum, inv) => sum + inv.paid_amount, 0);
+  const handleEdit = (invoice: Invoice) => {
+    setEditingInvoiceId(invoice.id);
+    setShowInvoiceModal(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Supprimer cette facture ?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('dental_invoices')
+        .update({ status: 'cancelled' })
+        .eq('id', id);
+
+      if (error) throw error;
+      loadInvoices();
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      alert('Erreur lors de la suppression');
+    }
+  };
+
+  const handlePayment = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setShowPaymentModal(true);
+  };
+
+  const handleCloseInvoiceModal = () => {
+    setShowInvoiceModal(false);
+    setEditingInvoiceId(undefined);
+  };
+
+  const filteredInvoices = invoices.filter(inv => {
+    if (filterStatus === 'all') return inv.status !== 'cancelled';
+    return inv.status === filterStatus;
+  });
+
+  const totalRevenue = invoices.filter(inv => inv.status !== 'cancelled').reduce((sum, inv) => sum + inv.total, 0);
+  const totalPaid = invoices.filter(inv => inv.status !== 'cancelled').reduce((sum, inv) => sum + inv.paid_amount, 0);
   const pending = totalRevenue - totalPaid;
 
   return (
@@ -82,11 +126,64 @@ export default function DentalInvoicesPage() {
           <p className="text-slate-600 mt-1">{invoices.length} factures</p>
         </div>
         <button
-          onClick={() => alert('Fonctionnalité en cours de développement')}
+          onClick={() => setShowInvoiceModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 transition"
         >
           <Plus className="w-5 h-5" />
           Nouvelle Facture
+        </button>
+      </div>
+
+      <div className="mb-6 flex gap-2">
+        <button
+          onClick={() => setFilterStatus('all')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+            filterStatus === 'all'
+              ? 'bg-slate-900 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          Toutes
+        </button>
+        <button
+          onClick={() => setFilterStatus('draft')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+            filterStatus === 'draft'
+              ? 'bg-slate-600 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          Brouillons
+        </button>
+        <button
+          onClick={() => setFilterStatus('sent')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+            filterStatus === 'sent'
+              ? 'bg-blue-600 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          Envoyées
+        </button>
+        <button
+          onClick={() => setFilterStatus('partial')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+            filterStatus === 'partial'
+              ? 'bg-orange-600 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          En attente
+        </button>
+        <button
+          onClick={() => setFilterStatus('paid')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition ${
+            filterStatus === 'paid'
+              ? 'bg-green-600 text-white'
+              : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+          }`}
+        >
+          Payées
         </button>
       </div>
 
@@ -126,7 +223,11 @@ export default function DentalInvoicesPage() {
         <div className="text-center py-12">Chargement...</div>
       ) : (
         <div className="grid gap-4">
-          {invoices.map(invoice => (
+          {filteredInvoices.map(invoice => {
+            const remainingAmount = invoice.total - invoice.paid_amount;
+            const paymentProgress = invoice.total > 0 ? (invoice.paid_amount / invoice.total) * 100 : 0;
+
+            return (
             <div key={invoice.id} className="bg-white border border-slate-200 rounded-lg p-4 hover:shadow-lg transition">
               <div className="flex items-start justify-between">
                 <div className="flex items-start gap-4 flex-1">
@@ -143,7 +244,7 @@ export default function DentalInvoicesPage() {
                     <p className="text-sm text-slate-600 mb-2">
                       Patient: {invoice.patient?.first_name} {invoice.patient?.last_name}
                     </p>
-                    <div className="flex items-center gap-4 text-sm">
+                    <div className="flex items-center gap-4 text-sm mb-3">
                       <span className="flex items-center gap-1 text-slate-600">
                         <Calendar className="w-4 h-4" />
                         {new Date(invoice.invoice_date).toLocaleDateString('fr-FR')}
@@ -161,20 +262,90 @@ export default function DentalInvoicesPage() {
                         Patient: {invoice.patient_part.toFixed(2)}€
                       </span>
                     </div>
+                    {invoice.status !== 'draft' && invoice.status !== 'paid' && (
+                      <div>
+                        <div className="flex items-center justify-between text-xs mb-1">
+                          <span className="text-slate-600">Payé: {invoice.paid_amount.toFixed(2)}€</span>
+                          <span className="text-slate-600">Reste: {remainingAmount.toFixed(2)}€</span>
+                        </div>
+                        <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-green-500 to-teal-500 transition-all"
+                            style={{ width: `${paymentProgress}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
                   </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
+                    <button
+                      onClick={() => handlePayment(invoice)}
+                      className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
+                      title="Enregistrer un paiement"
+                    >
+                      <CreditCard className="w-5 h-5" />
+                    </button>
+                  )}
+                  {invoice.status === 'draft' && (
+                    <button
+                      onClick={() => handleEdit(invoice)}
+                      className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                      title="Modifier"
+                    >
+                      <Edit className="w-5 h-5" />
+                    </button>
+                  )}
+                  {invoice.status !== 'cancelled' && (
+                    <button
+                      onClick={() => handleDelete(invoice.id)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                      title="Annuler"
+                    >
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
 
-          {invoices.length === 0 && (
+          {filteredInvoices.length === 0 && (
             <div className="text-center py-12 text-slate-500">
               <FileText className="w-16 h-16 mx-auto mb-4 text-slate-300" />
               <p className="font-medium">Aucune facture</p>
-              <p className="text-sm">Créez votre première facture patient</p>
+              <p className="text-sm">
+                {filterStatus === 'all'
+                  ? 'Créez votre première facture patient'
+                  : 'Aucune facture avec ce statut'}
+              </p>
             </div>
           )}
         </div>
+      )}
+
+      {showInvoiceModal && (
+        <DentalInvoiceModal
+          invoiceId={editingInvoiceId}
+          onClose={handleCloseInvoiceModal}
+          onSuccess={loadInvoices}
+        />
+      )}
+
+      {showPaymentModal && selectedInvoice && (
+        <PaymentModal
+          invoiceId={selectedInvoice.id}
+          invoiceNumber={selectedInvoice.invoice_number}
+          totalAmount={selectedInvoice.total}
+          paidAmount={selectedInvoice.paid_amount}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setSelectedInvoice(null);
+          }}
+          onSuccess={loadInvoices}
+        />
       )}
     </div>
   );
