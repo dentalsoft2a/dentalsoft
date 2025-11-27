@@ -97,8 +97,8 @@ export default function DentistDashboardLayout({
     { name: 'Mes Commandes', icon: Package, page: 'dentist-orders', locked: false },
     { name: 'Laboratoires', icon: Users, page: 'dentist-laboratories', locked: false },
     { name: 'Photos', icon: Camera, page: 'dentist-photos', locked: false },
-    { name: 'Abonnement', icon: Sparkles, page: 'dentist-subscription', locked: false },
     { name: 'Paramètres', icon: Settings, page: 'dentist-settings', locked: false },
+    { name: 'Abonnement', icon: Sparkles, page: 'dentist-subscription', locked: false },
   ];
 
   const bottomNavigation = [
