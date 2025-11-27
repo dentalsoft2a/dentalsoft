@@ -43,6 +43,14 @@ export default function DentistLaboratoriesPage() {
 
       if (profilesError) throw profilesError;
 
+      // Filtrer les laboratoires qui ont un nom valide et au moins un email
+      const validLabs = (profilesData || []).filter(lab =>
+        lab.laboratory_name &&
+        lab.laboratory_name.trim().length > 0 &&
+        lab.laboratory_email &&
+        lab.laboratory_email.trim().length > 0
+      );
+
       const { data: favoritesData } = await supabase
         .from('dentist_favorite_laboratories')
         .select('laboratory_id')
@@ -51,7 +59,7 @@ export default function DentistLaboratoriesPage() {
       const favoriteIds = new Set(favoritesData?.map(f => f.laboratory_id) || []);
 
       const labsWithStats = await Promise.all(
-        (profilesData || []).map(async (lab) => {
+        validLabs.map(async (lab) => {
           const { data: ordersData } = await supabase
             .from('delivery_notes')
             .select('id, status')
