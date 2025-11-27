@@ -322,9 +322,9 @@ export default function DentalInvoiceModal({ invoiceId, onClose, onSuccess }: De
   const hasInsufficientStock = supplies.some(s => s.quantity > s.available_stock);
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-6xl w-full my-8">
-        <div className="sticky top-0 bg-gradient-to-r from-green-600 to-teal-600 px-6 py-4 rounded-t-2xl flex items-center justify-between">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] flex flex-col">
+        <div className="bg-gradient-to-r from-green-600 to-teal-600 px-6 py-4 rounded-t-2xl flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
               <FileText className="w-6 h-6 text-white" />
@@ -346,7 +346,8 @@ export default function DentalInvoiceModal({ invoiceId, onClose, onSuccess }: De
           </button>
         </div>
 
-        <form onSubmit={(e) => handleSubmit(e, 'draft')} className="p-6">
+        <form onSubmit={(e) => handleSubmit(e, 'draft')} className="flex-1 overflow-y-auto">
+          <div className="p-6">
           {loading && (
             <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-center gap-2">
               <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-600 border-t-transparent" />
@@ -520,34 +521,36 @@ export default function DentalInvoiceModal({ invoiceId, onClose, onSuccess }: De
               </div>
             )}
           </div>
-
-          <div className="flex justify-end gap-3 pt-6 border-t mt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
-            >
-              Annuler
-            </button>
-            <button
-              type="submit"
-              disabled={loading || !isValidInvoice()}
-              className="px-6 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <Save className="w-5 h-5" />
-              Enregistrer brouillon
-            </button>
-            <button
-              type="button"
-              onClick={(e) => handleSubmit(e, 'sent')}
-              disabled={loading || !isValidInvoice()}
-              className="px-6 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              <FileText className="w-5 h-5" />
-              Valider et envoyer
-            </button>
           </div>
         </form>
+
+        <div className="flex justify-end gap-3 p-6 border-t bg-slate-50 rounded-b-2xl flex-shrink-0">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-6 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
+          >
+            Annuler
+          </button>
+          <button
+            type="button"
+            onClick={(e) => handleSubmit(e, 'draft')}
+            disabled={loading || !isValidInvoice()}
+            className="px-6 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <Save className="w-5 h-5" />
+            Enregistrer brouillon
+          </button>
+          <button
+            type="button"
+            onClick={(e) => handleSubmit(e, 'sent')}
+            disabled={loading || !isValidInvoice()}
+            className="px-6 py-2 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg hover:from-green-700 hover:to-teal-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <FileText className="w-5 h-5" />
+            Valider et envoyer
+          </button>
+        </div>
       </div>
     </div>
   );
