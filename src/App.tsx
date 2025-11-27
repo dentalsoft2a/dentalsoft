@@ -159,18 +159,21 @@ function AppContent() {
 
       // Check if dentist needs onboarding for cabinet billing
       if (dentistData.cabinet_billing_enabled) {
-        const { data: patientsCount } = await supabase
-          .from('dental_patients')
-          .select('id', { count: 'exact', head: true })
-          .eq('dentist_id', user.id);
-
-        const { data: servicesCount } = await supabase
+        const { count: servicesCount, error: servicesError } = await supabase
           .from('dental_catalog_items')
           .select('id', { count: 'exact', head: true })
           .eq('dentist_id', user.id);
 
-        // If cabinet billing is enabled but no data, show onboarding
-        setNeedsDentalOnboarding(!servicesCount || servicesCount === 0);
+        if (servicesError) {
+          console.error('Error checking services count:', servicesError);
+        }
+
+        console.log('[App] Services count for dentist:', servicesCount);
+
+        // If cabinet billing is enabled but no services, show onboarding
+        setNeedsDentalOnboarding(servicesCount === null || servicesCount === 0);
+      } else {
+        setNeedsDentalOnboarding(false);
       }
 
       setCheckingUserType(false);

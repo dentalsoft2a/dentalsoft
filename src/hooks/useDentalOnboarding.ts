@@ -95,7 +95,7 @@ export function useInitializeDentalCabinet() {
           .select('*')
           .in('id', serviceIds);
 
-        if (services) {
+        if (services && services.length > 0) {
           const catalogItems = services.map(service => ({
             dentist_id: user.id,
             name: service.name,
@@ -112,7 +112,11 @@ export function useInitializeDentalCabinet() {
             .from('dental_catalog_items')
             .insert(catalogItems);
 
-          if (error) throw error;
+          if (error) {
+            logger.error('[Dental Onboarding] Error inserting catalog items:', error);
+            throw error;
+          }
+          logger.info('[Dental Onboarding] Inserted', catalogItems.length, 'catalog items');
         }
       }
 
@@ -123,7 +127,7 @@ export function useInitializeDentalCabinet() {
           .select('*')
           .in('id', supplyIds);
 
-        if (supplies) {
+        if (supplies && supplies.length > 0) {
           const resources = supplies.map(supply => ({
             dentist_id: user.id,
             name: supply.name,
@@ -142,20 +146,19 @@ export function useInitializeDentalCabinet() {
             .from('dental_resources')
             .insert(resources);
 
-          if (error) throw error;
+          if (error) {
+            logger.error('[Dental Onboarding] Error inserting resources:', error);
+            throw error;
+          }
+          logger.info('[Dental Onboarding] Inserted', resources.length, 'resources');
         }
       }
 
-      // Activer le module de facturation
-      const { error: enableError } = await supabase.rpc('enable_dental_billing_module', {
-        p_dentist_id: user.id,
-      });
-
-      if (enableError) throw enableError;
-
+      logger.info('[Dental Onboarding] Cabinet initialization completed successfully');
       return { success: true };
     },
     onSuccess: () => {
+      logger.info('[Dental Onboarding] Invalidating queries');
       queryClient.invalidateQueries({ queryKey: ['dental-catalog'] });
       queryClient.invalidateQueries({ queryKey: ['dental-resources'] });
       queryClient.invalidateQueries({ queryKey: ['dentist-account'] });

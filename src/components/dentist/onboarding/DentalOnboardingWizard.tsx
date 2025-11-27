@@ -46,15 +46,25 @@ export default function DentalOnboardingWizard() {
         ...finalData,
       };
 
+      console.log('[Dental Onboarding] Finalizing with:', {
+        serviceIds: serviceIds.length,
+        supplyIds: supplyIds.length,
+        configuration
+      });
+
       await initializeCabinet.mutateAsync({
         serviceIds,
         supplyIds,
         configuration,
       });
 
-      window.location.href = '/dentist/dashboard';
+      console.log('[Dental Onboarding] Initialization successful, reloading page');
+
+      // Force reload to refresh the app state
+      window.location.reload();
     } catch (error) {
-      console.error('Error finishing onboarding:', error);
+      console.error('[Dental Onboarding] Error finishing onboarding:', error);
+      alert('Erreur lors de la finalisation. Veuillez réessayer.');
     }
   };
 
