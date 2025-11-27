@@ -34,18 +34,30 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
     try {
       setLoading(true);
 
-      const [profilesResult, favoritesResult] = await Promise.all([
-        supabase
-          .from('profiles')
-          .select('id, laboratory_name')
-          .not('laboratory_name', 'is', null)
-          .neq('laboratory_name', '')
-          .order('laboratory_name'),
-        supabase
-          .from('dentist_favorite_laboratories')
-          .select('laboratory_profile_id')
-          .eq('dentist_id', dentistId)
-      ]);
+      // Load only favorite laboratories
+      const favoritesResult = await supabase
+        .from('dentist_favorite_laboratories')
+        .select('laboratory_profile_id')
+        .eq('dentist_id', dentistId);
+
+      if (favoritesResult.error) throw favoritesResult.error;
+
+      const favoriteIds = (favoritesResult.data || []).map(fav => fav.laboratory_profile_id);
+
+      if (favoriteIds.length === 0) {
+        setLaboratories([]);
+        setFavorites(new Set());
+        return;
+      }
+
+      // Load only the profiles for favorite laboratories
+      const profilesResult = await supabase
+        .from('profiles')
+        .select('id, laboratory_name')
+        .in('id', favoriteIds)
+        .not('laboratory_name', 'is', null)
+        .neq('laboratory_name', '')
+        .order('laboratory_name');
 
       if (profilesResult.error) throw profilesResult.error;
 
@@ -53,12 +65,8 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
         lab => lab.laboratory_name && lab.laboratory_name.trim() !== ''
       );
 
-      const favoriteIds = new Set(
-        (favoritesResult.data || []).map(fav => fav.laboratory_profile_id)
-      );
-
       setLaboratories(labs);
-      setFavorites(favoriteIds);
+      setFavorites(new Set(favoriteIds));
     } catch (error) {
       console.error('Error loading laboratories:', error);
     } finally {
@@ -202,8 +210,17 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
                   <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
                 </div>
               ) : filteredLabs.length === 0 ? (
-                <div className="text-center py-8 text-slate-500">
-                  {searchTerm ? 'Aucun laboratoire trouvé' : 'Aucun laboratoire disponible'}
+                <div className="text-center py-8 px-4">
+                  {searchTerm ? (
+                    <p className="text-slate-500">Aucun laboratoire trouvé</p>
+                  ) : (
+                    <div className="space-y-3">
+                      <p className="text-slate-700 font-medium">Aucun laboratoire lié</p>
+                      <p className="text-sm text-slate-500">
+                        Vous devez d'abord ajouter des laboratoires à vos favoris depuis la page "Mes laboratoires"
+                      </p>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-1">
