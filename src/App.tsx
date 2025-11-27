@@ -33,6 +33,8 @@ import { useDeviceDetection } from './hooks/useDeviceDetection';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
 import PurchaseOrderPage from './components/purchase-orders/PurchaseOrderPage';
 import OnboardingWizard from './components/onboarding/OnboardingWizard';
+import DentalOnboardingWizard from './components/dentist/onboarding/DentalOnboardingWizard';
+import DentalPatientsPage from './components/dentist/cabinet/DentalPatientsPage';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { ImpersonationBanner } from './components/common/ImpersonationBanner';
 import { CookieConsent } from './components/common/CookieConsent';
@@ -58,6 +60,8 @@ function AppContent() {
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
   const [initialPageSet, setInitialPageSet] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
+  const [cabinetBillingEnabled, setCabinetBillingEnabled] = useState(false);
+  const [needsDentalOnboarding, setNeedsDentalOnboarding] = useState(false);
 
   // Only show server monitor for authenticated users
   const showServerMonitor = !!user;
@@ -145,12 +149,30 @@ function AppContent() {
 
     const { data: dentistData } = await supabase
       .from('dentist_accounts')
-      .select('id')
+      .select('id, cabinet_billing_enabled')
       .eq('id', user.id)
       .maybeSingle();
 
     if (dentistData) {
       setIsDentist(true);
+      setCabinetBillingEnabled(dentistData.cabinet_billing_enabled || false);
+
+      // Check if dentist needs onboarding for cabinet billing
+      if (dentistData.cabinet_billing_enabled) {
+        const { data: patientsCount } = await supabase
+          .from('dental_patients')
+          .select('id', { count: 'exact', head: true })
+          .eq('dentist_id', user.id);
+
+        const { data: servicesCount } = await supabase
+          .from('dental_catalog_items')
+          .select('id', { count: 'exact', head: true })
+          .eq('dentist_id', user.id);
+
+        // If cabinet billing is enabled but no data, show onboarding
+        setNeedsDentalOnboarding(!servicesCount || servicesCount === 0);
+      }
+
       setCheckingUserType(false);
       return;
     }
@@ -285,6 +307,24 @@ function AppContent() {
   }
 
   if (isDentist) {
+    // Show dental onboarding if needed
+    if (needsDentalOnboarding && currentPath !== 'dental-onboarding') {
+      return <Navigate to="/dental-onboarding" replace />;
+    }
+
+    if (currentPath === 'dental-onboarding') {
+      if (!needsDentalOnboarding) {
+        return <Navigate to="/dentist-dashboard" replace />;
+      }
+      return (
+        <>
+          {showServerMonitor && <ServerStatusMonitor />}
+          {isImpersonating && <ImpersonationBanner />}
+          <DentalOnboardingWizard />
+        </>
+      );
+    }
+
     // Sur mobile, afficher uniquement le panel photo
     if (isMobile) {
       return (
@@ -297,7 +337,7 @@ function AppContent() {
     }
 
     // Sur desktop, afficher l'interface complète avec layout
-    const dentistPages = ['dentist-dashboard', 'dentist-orders', 'dentist-laboratories', 'dentist-photos', 'dentist-settings', 'dentist-help', 'dentist-support'];
+    const dentistPages = ['dentist-dashboard', 'dentist-orders', 'dentist-laboratories', 'dentist-photos', 'dentist-settings', 'dentist-help', 'dentist-support', 'dentist-patients'];
 
     if (currentPath === '' || !dentistPages.includes(currentPath)) {
       return <Navigate to="/dentist-dashboard" replace />;
@@ -313,6 +353,8 @@ function AppContent() {
           return <DentistLaboratoriesPage />;
         case 'dentist-photos':
           return <DentistPhotosPage />;
+        case 'dentist-patients':
+          return cabinetBillingEnabled ? <DentalPatientsPage /> : <Navigate to="/dentist-dashboard" replace />;
         case 'dentist-settings':
           return <DentistSettingsPage />;
         case 'dentist-help':
@@ -332,6 +374,7 @@ function AppContent() {
         <DentistDashboardLayout
           currentPage={currentPath}
           onNavigate={(page) => navigate(`/${page}`)}
+          cabinetBillingEnabled={cabinetBillingEnabled}
         >
           {renderDentistPage()}
         </DentistDashboardLayout>

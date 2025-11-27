@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone, Save, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, Save, Eye, EyeOff, Building2, CheckCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -19,6 +19,8 @@ export default function DentistSettingsPage() {
     confirm: '',
   });
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [cabinetBillingEnabled, setCabinetBillingEnabled] = useState(false);
+  const [enablingCabinet, setEnablingCabinet] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -44,11 +46,38 @@ export default function DentistSettingsPage() {
           email: data.email || '',
           phone: data.phone || '',
         });
+        setCabinetBillingEnabled(data.cabinet_billing_enabled || false);
       }
     } catch (error) {
       console.error('Error loading dentist data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEnableCabinetBilling = async () => {
+    if (!user) return;
+
+    if (!confirm('Activer le module de gestion de cabinet ? Vous aurez accès à la facturation patients, gestion de stock et plus encore.')) {
+      return;
+    }
+
+    setEnablingCabinet(true);
+
+    try {
+      const { error } = await supabase.rpc('enable_dental_billing_module', {
+        p_dentist_id: user.id,
+      });
+
+      if (error) throw error;
+
+      alert('Module de gestion de cabinet activé ! Rechargez la page pour voir les nouvelles fonctionnalités.');
+      window.location.reload();
+    } catch (error) {
+      console.error('Error enabling cabinet billing:', error);
+      alert('Erreur lors de l\'activation du module');
+    } finally {
+      setEnablingCabinet(false);
     }
   };
 
@@ -272,7 +301,76 @@ export default function DentistSettingsPage() {
             )}
           </div>
         </div>
+
+        {!cabinetBillingEnabled && (
+          <div className="bg-white rounded-xl shadow-lg border-2 border-green-200 overflow-hidden">
+            <div className="px-6 py-4 bg-gradient-to-r from-green-50 to-teal-50 border-b border-green-200">
+              <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-green-600" />
+                Module Gestion de Cabinet
+              </h2>
+            </div>
+
+            <div className="p-6">
+              <div className="mb-6">
+                <p className="text-slate-700 mb-4">
+                  Activez le module de gestion complète pour votre cabinet dentaire et bénéficiez de :
+                </p>
+                <ul className="space-y-2 mb-6">
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-slate-700">Gestion des patients et historique des soins</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-slate-700">Facturation avec calcul automatique CPAM/Mutuelle</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-slate-700">Gestion du stock de fournitures dentaires</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-slate-700">Catalogue d'actes dentaires personnalisable</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                    <span className="text-slate-700">Statistiques et reporting détaillés</span>
+                  </li>
+                </ul>
+              </div>
+
+              <button
+                onClick={handleEnableCabinetBilling}
+                disabled={enablingCabinet}
+                className="w-full flex items-center justify-center gap-2 py-4 bg-gradient-to-r from-green-600 to-teal-600 text-white rounded-lg font-semibold hover:from-green-700 hover:to-teal-700 transition disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl text-lg"
+              >
+                <Building2 className="w-6 h-6" />
+                {enablingCabinet ? 'Activation en cours...' : 'Activer le module de gestion'}
+              </button>
+
+              <p className="text-xs text-slate-500 mt-3 text-center">
+                Une configuration guidée vous accompagnera après l'activation
+              </p>
+            </div>
+          </div>
+        )}
+
+        {cabinetBillingEnabled && (
+          <div className="bg-gradient-to-br from-green-50 to-teal-50 border-2 border-green-200 rounded-xl p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-green-500 rounded-full flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">Module Cabinet Activé</h3>
+                <p className="text-sm text-slate-600">Vous avez accès à toutes les fonctionnalités de gestion</p>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 }
+

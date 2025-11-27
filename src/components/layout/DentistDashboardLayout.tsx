@@ -27,12 +27,14 @@ interface DentistDashboardLayoutProps {
   children: ReactNode;
   currentPage: string;
   onNavigate: (page: string) => void;
+  cabinetBillingEnabled?: boolean;
 }
 
 export default function DentistDashboardLayout({
   children,
   currentPage,
-  onNavigate
+  onNavigate,
+  cabinetBillingEnabled = false
 }: DentistDashboardLayoutProps) {
   const { user, signOut } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -83,6 +85,7 @@ export default function DentistDashboardLayout({
 
   const navigation = [
     { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dentist-dashboard' },
+    ...(cabinetBillingEnabled ? [{ name: 'Patients', icon: User, page: 'dentist-patients' }] : []),
     { name: 'Mes Commandes', icon: Package, page: 'dentist-orders' },
     { name: 'Laboratoires', icon: Users, page: 'dentist-laboratories' },
     { name: 'Photos', icon: Camera, page: 'dentist-photos' },
