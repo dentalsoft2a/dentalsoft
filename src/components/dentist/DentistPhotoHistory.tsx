@@ -216,24 +216,64 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
 
   const historyContent = (
     <div className={`bg-white ${onClose ? '' : 'rounded-xl shadow-lg border border-slate-200'} h-full flex flex-col overflow-hidden`}>
-      <div className="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 flex-shrink-0">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">Historique des photos</h2>
-            <p className="text-sm text-slate-600">
-              {selectedPatient ? `Photos de ${selectedPatient}` : 'Toutes vos photos envoyées'}
-            </p>
-          </div>
-          <div className="flex items-center gap-3">
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="p-2 hover:bg-slate-200 rounded-lg transition"
-                title="Fermer"
-              >
-                <X className="w-5 h-5 text-slate-600" />
-              </button>
+      {/* Header - Mobile optimized */}
+      <div className={`${onClose ? 'px-4 py-3' : 'px-6 py-4'} border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 flex-shrink-0`}>
+        {onClose ? (
+          // Mobile header
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-bold text-slate-900">Historique</h2>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="p-2 hover:bg-slate-200 rounded-lg transition disabled:opacity-50 active:scale-95"
+                  title="Actualiser"
+                >
+                  <RefreshCw className={`w-5 h-5 text-slate-600 ${refreshing ? 'animate-spin' : ''}`} />
+                </button>
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-slate-200 rounded-lg transition active:scale-95"
+                  title="Fermer"
+                >
+                  <X className="w-5 h-5 text-slate-600" />
+                </button>
+              </div>
+            </div>
+            <div className="flex items-stretch gap-2">
+              <div className="flex-1 flex items-center gap-2 bg-white rounded-lg px-3 py-2.5 border border-slate-300">
+                <Filter className="w-4 h-4 text-slate-600 flex-shrink-0" />
+                <select
+                  value={selectedPatient}
+                  onChange={(e) => handlePatientChange(e.target.value)}
+                  className="flex-1 text-sm text-slate-700 bg-transparent border-none outline-none"
+                >
+                  <option value="">Tous les patients</option>
+                  {patientsList.map((patient) => (
+                    <option key={patient} value={patient}>
+                      {patient}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {selectedPatient && (
+              <p className="text-xs text-slate-600 px-1">
+                Photos de {selectedPatient}
+              </p>
             )}
+          </div>
+        ) : (
+          // Desktop header (unchanged)
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Historique des photos</h2>
+              <p className="text-sm text-slate-600">
+                {selectedPatient ? `Photos de ${selectedPatient}` : 'Toutes vos photos envoyées'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-slate-300">
                 <Filter className="w-4 h-4 text-slate-600" />
                 <select
@@ -259,9 +299,10 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
               </button>
             </div>
           </div>
-        </div>
+        )}
+      </div>
 
-        <div className="p-6 flex-1 overflow-y-auto">
+        <div className={`${onClose ? 'p-3' : 'p-6'} flex-1 overflow-y-auto`}>
           {loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -276,39 +317,43 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
               {selectedPatient && (
                 <button
                   onClick={() => handlePatientChange('')}
-                  className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
+                  className="mt-4 text-blue-600 hover:text-blue-700 font-medium active:scale-95 transition"
                 >
                   Afficher tous les patients
                 </button>
               )}
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className={onClose ? 'space-y-3' : 'space-y-4'}>
               {submissions.map((submission) => (
                 <div
                   key={submission.id}
-                  className="bg-slate-50 rounded-xl p-4 border border-slate-200 hover:border-slate-300 transition cursor-pointer"
+                  className={`bg-white rounded-xl border border-slate-200 hover:border-blue-300 active:scale-[0.98] transition cursor-pointer shadow-sm hover:shadow-md ${
+                    onClose ? 'p-3' : 'bg-slate-50 p-4'
+                  }`}
                   onClick={() => setSelectedPhoto(submission)}
                 >
-                  <div className="flex gap-4">
+                  <div className={`flex ${onClose ? 'gap-3' : 'gap-4'}`}>
                     <img
                       src={submission.photo_url}
                       alt={submission.patient_name}
-                      className="w-24 h-24 object-cover rounded-lg"
+                      className={`${onClose ? 'w-20 h-20' : 'w-24 h-24'} object-cover rounded-lg flex-shrink-0`}
                     />
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h3 className="font-semibold text-slate-900 text-lg">
+                    <div className="flex-1 min-w-0">
+                      <div className={`flex items-start justify-between ${onClose ? 'mb-1' : 'mb-2'}`}>
+                        <div className="flex-1 min-w-0 pr-2">
+                          <h3 className={`font-semibold text-slate-900 ${onClose ? 'text-base' : 'text-lg'} truncate`}>
                             {submission.patient_name}
                           </h3>
-                          <p className="text-sm text-slate-600">{submission.laboratory_name}</p>
+                          <p className="text-xs text-slate-600 truncate">{submission.laboratory_name}</p>
                         </div>
-                        {getStatusBadge(submission.status)}
+                        <div className="flex-shrink-0">
+                          {getStatusBadge(submission.status)}
+                        </div>
                       </div>
-                      <p className="text-sm text-slate-500">{formatDate(submission.created_at)}</p>
+                      <p className="text-xs text-slate-500">{formatDate(submission.created_at)}</p>
                       {submission.notes && (
-                        <p className="text-sm text-slate-600 mt-2 line-clamp-2">{submission.notes}</p>
+                        <p className="text-xs text-slate-600 mt-1.5 line-clamp-2">{submission.notes}</p>
                       )}
                     </div>
                   </div>
@@ -318,62 +363,123 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
           )}
 
           {!loading && totalCount > 0 && (
-            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-200">
-              <div className="text-sm text-slate-600">
-                Affichage de {((currentPage - 1) * ITEMS_PER_PAGE) + 1} à {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} sur {totalCount} photo{totalCount > 1 ? 's' : ''}
-              </div>
+            <div className={`${onClose ? 'mt-4 pt-4' : 'mt-6 pt-6'} border-t border-slate-200`}>
+              {onClose ? (
+                // Mobile pagination - compact
+                <div className="space-y-3">
+                  <div className="text-xs text-slate-600 text-center">
+                    {((currentPage - 1) * ITEMS_PER_PAGE) + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} sur {totalCount}
+                  </div>
+                  <div className="flex items-center justify-center gap-2">
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="p-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-95"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePreviousPage}
-                  disabled={currentPage === 1}
-                  className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>Précédent</span>
-                </button>
+                    <div className="flex items-center gap-1.5">
+                      {Array.from({ length: Math.min(totalPages, 3) }, (_, i) => {
+                        let pageNumber;
+                        if (totalPages <= 3) {
+                          pageNumber = i + 1;
+                        } else if (currentPage === 1) {
+                          pageNumber = i + 1;
+                        } else if (currentPage === totalPages) {
+                          pageNumber = totalPages - 2 + i;
+                        } else {
+                          pageNumber = currentPage - 1 + i;
+                        }
 
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let pageNumber;
-                    if (totalPages <= 5) {
-                      pageNumber = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNumber = i + 1;
-                    } else if (currentPage >= totalPages - 2) {
-                      pageNumber = totalPages - 4 + i;
-                    } else {
-                      pageNumber = currentPage - 2 + i;
-                    }
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => {
+                              setCurrentPage(pageNumber);
+                              setLoading(true);
+                            }}
+                            className={`w-9 h-9 rounded-lg transition active:scale-95 ${
+                              currentPage === pageNumber
+                                ? 'bg-blue-500 text-white font-semibold'
+                                : 'bg-white border border-slate-300 text-slate-700'
+                            }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      })}
+                    </div>
 
-                    return (
-                      <button
-                        key={pageNumber}
-                        onClick={() => {
-                          setCurrentPage(pageNumber);
-                          setLoading(true);
-                        }}
-                        className={`w-10 h-10 rounded-lg transition ${
-                          currentPage === pageNumber
-                            ? 'bg-blue-500 text-white'
-                            : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
-                        }`}
-                      >
-                        {pageNumber}
-                      </button>
-                    );
-                  })}
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="p-2.5 bg-white border border-slate-300 text-slate-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition active:scale-95"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
+              ) : (
+                // Desktop pagination (unchanged)
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-sm text-slate-600">
+                    Affichage de {((currentPage - 1) * ITEMS_PER_PAGE) + 1} à {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} sur {totalCount} photo{totalCount > 1 ? 's' : ''}
+                  </div>
 
-                <button
-                  onClick={handleNextPage}
-                  disabled={currentPage === totalPages}
-                  className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
-                >
-                  <span>Suivant</span>
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handlePreviousPage}
+                      disabled={currentPage === 1}
+                      className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      <span>Précédent</span>
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                        let pageNumber;
+                        if (totalPages <= 5) {
+                          pageNumber = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNumber = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNumber = totalPages - 4 + i;
+                        } else {
+                          pageNumber = currentPage - 2 + i;
+                        }
+
+                        return (
+                          <button
+                            key={pageNumber}
+                            onClick={() => {
+                              setCurrentPage(pageNumber);
+                              setLoading(true);
+                            }}
+                            className={`w-10 h-10 rounded-lg transition ${
+                              currentPage === pageNumber
+                                ? 'bg-blue-500 text-white'
+                                : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                            }`}
+                          >
+                            {pageNumber}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <button
+                      onClick={handleNextPage}
+                      disabled={currentPage === totalPages}
+                      className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+                    >
+                      <span>Suivant</span>
+                      <ChevronRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -391,57 +497,62 @@ export default function DentistPhotoHistory({ onClose }: DentistPhotoHistoryProp
       )}
 
       {selectedPhoto && (
-        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[60]" onClick={() => setSelectedPhoto(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto m-4" onClick={(e) => e.stopPropagation()}>
-            <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-              <h2 className="text-xl font-bold text-slate-900">Détails de la photo</h2>
+        <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[60] p-0 md:p-4" onClick={() => setSelectedPhoto(null)}>
+          <div
+            className="bg-white md:rounded-2xl shadow-2xl max-w-4xl w-full h-full md:h-auto md:max-h-[90vh] overflow-y-auto flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sticky top-0 bg-white border-b border-slate-200 px-4 md:px-6 py-3 md:py-4 flex items-center justify-between md:rounded-t-2xl flex-shrink-0 z-10">
+              <h2 className="text-lg md:text-xl font-bold text-slate-900">Détails</h2>
               <button
                 onClick={() => setSelectedPhoto(null)}
-                className="p-2 hover:bg-slate-100 rounded-lg transition"
+                className="p-2 hover:bg-slate-100 active:bg-slate-200 rounded-lg transition active:scale-95"
               >
                 <X className="w-5 h-5 text-slate-600" />
               </button>
             </div>
 
-            <div className="p-6 space-y-6">
-              <img
-                src={selectedPhoto.photo_url}
-                alt={selectedPhoto.patient_name}
-                className="w-full rounded-xl"
-              />
+            <div className="p-4 md:p-6 space-y-4 md:space-y-6 flex-1 overflow-y-auto">
+              <div className="relative">
+                <img
+                  src={selectedPhoto.photo_url}
+                  alt={selectedPhoto.patient_name}
+                  className="w-full rounded-xl"
+                />
+              </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Patient</label>
-                  <p className="text-lg font-semibold text-slate-900">{selectedPhoto.patient_name}</p>
+              <div className="space-y-3 md:space-y-4">
+                <div className="bg-slate-50 rounded-xl p-3 md:p-4">
+                  <label className="block text-xs md:text-sm font-medium text-slate-600 mb-1">Patient</label>
+                  <p className="text-base md:text-lg font-semibold text-slate-900">{selectedPhoto.patient_name}</p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Laboratoire</label>
-                  <p className="text-slate-900">{selectedPhoto.laboratory_name}</p>
+                <div className="bg-slate-50 rounded-xl p-3 md:p-4">
+                  <label className="block text-xs md:text-sm font-medium text-slate-600 mb-1">Laboratoire</label>
+                  <p className="text-sm md:text-base text-slate-900">{selectedPhoto.laboratory_name}</p>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Statut</label>
+                <div className="bg-slate-50 rounded-xl p-3 md:p-4">
+                  <label className="block text-xs md:text-sm font-medium text-slate-600 mb-2">Statut</label>
                   <div>{getStatusBadge(selectedPhoto.status)}</div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Date d'envoi</label>
-                  <p className="text-slate-900">{formatDate(selectedPhoto.created_at)}</p>
+                <div className="bg-slate-50 rounded-xl p-3 md:p-4">
+                  <label className="block text-xs md:text-sm font-medium text-slate-600 mb-1">Date d'envoi</label>
+                  <p className="text-sm md:text-base text-slate-900">{formatDate(selectedPhoto.created_at)}</p>
                 </div>
 
                 {selectedPhoto.notes && (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Vos notes</label>
-                    <p className="text-slate-900 bg-slate-50 p-3 rounded-lg">{selectedPhoto.notes}</p>
+                  <div className="bg-amber-50 rounded-xl p-3 md:p-4 border border-amber-200">
+                    <label className="block text-xs md:text-sm font-medium text-amber-900 mb-1.5">Vos notes</label>
+                    <p className="text-sm md:text-base text-slate-900">{selectedPhoto.notes}</p>
                   </div>
                 )}
 
                 {selectedPhoto.laboratory_response && (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Réponse du laboratoire</label>
-                    <p className="text-slate-900 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                  <div className="bg-blue-50 rounded-xl p-3 md:p-4 border border-blue-200">
+                    <label className="block text-xs md:text-sm font-medium text-blue-900 mb-1.5">Réponse du laboratoire</label>
+                    <p className="text-sm md:text-base text-slate-900">
                       {selectedPhoto.laboratory_response}
                     </p>
                   </div>
