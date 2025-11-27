@@ -299,7 +299,7 @@ export default function DentistOrdersPage() {
                             </span>
                           </div>
 
-                          {order.tooth_numbers && order.tooth_numbers.length > 0 && (
+                          {order.tooth_numbers && Array.isArray(order.tooth_numbers) && order.tooth_numbers.length > 0 && (
                             <div className="flex items-center gap-2 text-sm text-slate-600 bg-slate-50 rounded-lg p-2">
                               <span className="font-medium">Dents:</span>
                               <span>{order.tooth_numbers.join(', ')}</span>
@@ -433,7 +433,7 @@ export default function DentistOrdersPage() {
                 </div>
               </div>
 
-              {selectedOrder.tooth_numbers && selectedOrder.tooth_numbers.length > 0 && (
+              {selectedOrder.tooth_numbers && Array.isArray(selectedOrder.tooth_numbers) && selectedOrder.tooth_numbers.length > 0 && (
                 <div>
                   <h3 className="font-bold text-slate-900 mb-3">Dents concernées</h3>
                   <div className="flex flex-wrap gap-2">
