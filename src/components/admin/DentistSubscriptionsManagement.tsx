@@ -46,6 +46,7 @@ export default function DentistSubscriptionsManagement() {
 
   const loadData = async () => {
     try {
+      // Load dentist accounts
       const { data: dentistData, error } = await supabase
         .from('dentist_accounts')
         .select(`
@@ -55,17 +56,29 @@ export default function DentistSubscriptionsManagement() {
           subscription_status,
           subscription_plan_id,
           subscription_end_date,
-          trial_used,
-          subscription_plan:dentist_subscription_plans(name, price_monthly)
+          trial_used
         `);
 
       if (error) throw error;
 
-      const formattedData = (dentistData || []).map(d => ({
-        ...d,
-        plan_name: d.subscription_plan?.name,
-        plan_price: d.subscription_plan?.price_monthly
-      }));
+      // Load all subscription plans
+      const { data: plansData } = await supabase
+        .from('dentist_subscription_plans')
+        .select('id, name, price_monthly');
+
+      const plansMap = new Map(
+        (plansData || []).map(plan => [plan.id, plan])
+      );
+
+      // Merge data
+      const formattedData = (dentistData || []).map(d => {
+        const plan = d.subscription_plan_id ? plansMap.get(d.subscription_plan_id) : null;
+        return {
+          ...d,
+          plan_name: plan?.name,
+          plan_price: plan?.price_monthly
+        };
+      });
 
       setSubscriptions(formattedData);
       calculateStats(formattedData);
