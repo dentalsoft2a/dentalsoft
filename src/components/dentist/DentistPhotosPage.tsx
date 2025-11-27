@@ -96,12 +96,12 @@ export default function DentistPhotosPage() {
         if (insertError) throw insertError;
       }
 
-      alert('Photos envoyées avec succès !');
       setShowUploadModal(false);
       setSelectedFiles([]);
       setSelectedLab('');
       setPatientName('');
       setNotes('');
+      alert('Photos envoyées avec succès !');
       window.location.reload();
     } catch (error) {
       console.error('Error uploading photos:', error);

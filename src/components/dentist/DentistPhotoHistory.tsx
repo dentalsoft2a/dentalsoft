@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Clock, CheckCircle, XCircle, Eye, RefreshCw } from 'lucide-react';
+import { X, Clock, CheckCircle, XCircle, Eye, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -15,36 +15,36 @@ interface PhotoSubmission {
   laboratory_response: string | null;
 }
 
+const ITEMS_PER_PAGE = 12;
+
 export default function DentistPhotoHistory() {
   const { user } = useAuth();
   const [submissions, setSubmissions] = useState<PhotoSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoSubmission | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   useLockScroll(!!selectedPhoto);
 
   useEffect(() => {
     loadSubmissions();
-  }, []);
+  }, [currentPage]);
 
   const loadSubmissions = async () => {
     if (!user) return;
 
     try {
-      console.log('Current user ID:', user.id);
+      const from = (currentPage - 1) * ITEMS_PER_PAGE;
+      const to = from + ITEMS_PER_PAGE - 1;
 
-      const { data: dentistAccount, error: dentistError } = await supabase
-        .from('dentist_accounts')
-        .select('id')
-        .eq('id', user.id)
-        .maybeSingle();
+      const { count } = await supabase
+        .from('photo_submissions')
+        .select('*', { count: 'exact', head: true })
+        .eq('dentist_id', user.id);
 
-      if (dentistError) {
-        console.error('Error fetching dentist account:', dentistError);
-      }
-
-      console.log('Dentist account:', dentistAccount);
+      setTotalCount(count || 0);
 
       const { data, error } = await supabase
         .from('photo_submissions')
@@ -60,9 +60,8 @@ export default function DentistPhotoHistory() {
           dentist_id
         `)
         .eq('dentist_id', user.id)
-        .order('created_at', { ascending: false });
-
-      console.log('Photo submissions query result:', { data, error });
+        .order('created_at', { ascending: false })
+        .range(from, to);
 
       if (error) {
         console.error('Error fetching submissions:', error);
@@ -153,6 +152,22 @@ export default function DentistPhotoHistory() {
     setRefreshing(false);
   };
 
+  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      setLoading(true);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      setLoading(true);
+    }
+  };
+
   return (
     <>
       <div className="bg-white rounded-xl shadow-lg border border-slate-200">
@@ -212,6 +227,66 @@ export default function DentistPhotoHistory() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+
+          {!loading && totalCount > 0 && (
+            <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-slate-200">
+              <div className="text-sm text-slate-600">
+                Affichage de {((currentPage - 1) * ITEMS_PER_PAGE) + 1} à {Math.min(currentPage * ITEMS_PER_PAGE, totalCount)} sur {totalCount} photo{totalCount > 1 ? 's' : ''}
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePreviousPage}
+                  disabled={currentPage === 1}
+                  className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>Précédent</span>
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                    let pageNumber;
+                    if (totalPages <= 5) {
+                      pageNumber = i + 1;
+                    } else if (currentPage <= 3) {
+                      pageNumber = i + 1;
+                    } else if (currentPage >= totalPages - 2) {
+                      pageNumber = totalPages - 4 + i;
+                    } else {
+                      pageNumber = currentPage - 2 + i;
+                    }
+
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => {
+                          setCurrentPage(pageNumber);
+                          setLoading(true);
+                        }}
+                        className={`w-10 h-10 rounded-lg transition ${
+                          currentPage === pageNumber
+                            ? 'bg-blue-500 text-white'
+                            : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                        }`}
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  onClick={handleNextPage}
+                  disabled={currentPage === totalPages}
+                  className="px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center gap-2"
+                >
+                  <span>Suivant</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>
