@@ -41,9 +41,19 @@ export default function DentistLaboratoriesPage() {
         .select('id, user_id')
         .eq('linked_dentist_account_id', user.id);
 
+      // Si aucun dentiste lié, ne rien afficher
+      if (!linkedDentists || linkedDentists.length === 0) {
+        setLaboratories([]);
+        return;
+      }
+
+      // Récupérer uniquement les IDs des laboratoires qui ont des dentistes liés
+      const linkedLabIds = [...new Set(linkedDentists.map(d => d.user_id))];
+
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, laboratory_name, laboratory_email, laboratory_phone, laboratory_address')
+        .in('id', linkedLabIds)
         .not('laboratory_name', 'is', null)
         .order('laboratory_name');
 
