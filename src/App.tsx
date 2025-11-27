@@ -63,6 +63,7 @@ function AppContent() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
+  const [lowStockSuppliesCount, setLowStockSuppliesCount] = useState(0);
   const [initialPageSet, setInitialPageSet] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [needsDentalOnboarding, setNeedsDentalOnboarding] = useState(false);
@@ -75,6 +76,7 @@ function AppContent() {
       checkSuperAdminAndSubscription();
       loadLowStockCount();
       loadLowStockResourcesCount();
+      loadLowStockSuppliesCount();
       checkOnboardingStatus();
     } else {
       setIsDentist(false);
@@ -280,6 +282,28 @@ function AppContent() {
     }
   };
 
+  const loadLowStockSuppliesCount = async () => {
+    if (!user) return;
+
+    try {
+      const { data: suppliesData, error: suppliesError } = await supabase
+        .from('dentist_supplies')
+        .select('stock_quantity, low_stock_threshold')
+        .eq('dentist_id', user.id)
+        .eq('track_stock', true);
+
+      if (suppliesError) throw suppliesError;
+
+      const lowStockSupplies = (suppliesData || []).filter(
+        supply => supply.stock_quantity <= supply.low_stock_threshold
+      );
+
+      setLowStockSuppliesCount(lowStockSupplies.length);
+    } catch (error) {
+      console.error('Error loading low stock supplies count:', error);
+    }
+  };
+
   if (loading || checkingUserType || (isEmployee && permissionsLoading)) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -419,6 +443,7 @@ function AppContent() {
         <DentistDashboardLayout
           currentPage={currentPath}
           onNavigate={(page) => navigate(`/${page}`)}
+          lowStockSuppliesCount={lowStockSuppliesCount}
         >
           {renderDentistPage()}
         </DentistDashboardLayout>

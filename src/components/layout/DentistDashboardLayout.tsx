@@ -16,7 +16,8 @@ import {
   PackageOpen,
   CreditCard,
   Sparkles,
-  Lock
+  Lock,
+  AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -33,12 +34,14 @@ interface DentistDashboardLayoutProps {
   children: ReactNode;
   currentPage: string;
   onNavigate: (page: string) => void;
+  lowStockSuppliesCount?: number;
 }
 
 export default function DentistDashboardLayout({
   children,
   currentPage,
-  onNavigate
+  onNavigate,
+  lowStockSuppliesCount = 0
 }: DentistDashboardLayoutProps) {
   const { user, signOut } = useAuth();
   const { hasAccess } = useDentistSubscription();
@@ -92,7 +95,7 @@ export default function DentistDashboardLayout({
     { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dentist-dashboard', locked: false },
     { name: 'Patients', icon: User, page: 'dentist-patients', locked: !hasAccess },
     { name: 'Catalogue Actes', icon: Stethoscope, page: 'dentist-catalog', locked: !hasAccess },
-    { name: 'Stock Fournitures', icon: PackageOpen, page: 'dentist-stock', locked: !hasAccess },
+    { name: 'Stock Fournitures', icon: PackageOpen, page: 'dentist-stock', locked: !hasAccess, badge: lowStockSuppliesCount > 0 ? lowStockSuppliesCount : undefined },
     { name: 'Facturation', icon: CreditCard, page: 'dentist-invoices', locked: !hasAccess },
     { name: 'Mes Commandes', icon: Package, page: 'dentist-orders', locked: false },
     { name: 'Laboratoires', icon: Users, page: 'dentist-laboratories', locked: false },
@@ -168,6 +171,7 @@ export default function DentistDashboardLayout({
               const Icon = item.icon;
               const isActive = currentPage === item.page;
               const isLocked = item.locked;
+              const hasBadge = item.badge && item.badge > 0;
 
               return (
                 <div key={item.page} className="relative">
@@ -182,17 +186,27 @@ export default function DentistDashboardLayout({
                     }}
                     className={`
                       w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 relative touch-manipulation
-                      ${isActive
-                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-500/30'
-                        : isLocked
-                          ? 'text-slate-400 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
-                          : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
+                      ${hasBadge
+                        ? 'bg-gradient-to-r from-orange-100 to-orange-50 text-orange-700 font-semibold border border-orange-200'
+                        : isActive
+                          ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-500/30'
+                          : isLocked
+                            ? 'text-slate-400 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
+                            : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
                       }
                     `}
                   >
-                    <Icon className="w-[18px] h-[18px] flex-shrink-0" />
-                    <span className="text-[14px]">{item.name}</span>
-                    {isLocked && (
+                    <Icon className={`w-[18px] h-[18px] flex-shrink-0 ${hasBadge ? 'text-orange-600' : ''}`} />
+                    <span className="text-[14px] flex-1">{item.name}</span>
+                    {hasBadge && (
+                      <div className="flex items-center gap-1.5">
+                        <AlertTriangle className="w-4 h-4 text-orange-600 animate-pulse" />
+                        <span className="px-1.5 py-0.5 bg-orange-600 text-white text-[10px] font-bold rounded-full animate-pulse">
+                          {item.badge}
+                        </span>
+                      </div>
+                    )}
+                    {isLocked && !hasBadge && (
                       <Lock className="w-3 h-3 ml-auto flex-shrink-0" />
                     )}
                   </button>
