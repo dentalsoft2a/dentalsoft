@@ -2,7 +2,7 @@ import { useDeviceDetection } from '../../hooks/useDeviceDetection';
 import DentistPhotoPanel from './DentistPhotoPanel';
 import DentistPhotoHistory from './DentistPhotoHistory';
 import { useState } from 'react';
-import { Upload, X } from 'lucide-react';
+import { Upload, X, Camera, Smartphone } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -135,6 +135,31 @@ export default function DentistPhotosPage() {
             <Upload className="w-5 h-5" />
             <span>Envoyer des photos</span>
           </button>
+        </div>
+      </div>
+
+      {/* Information banner for camera access on desktop */}
+      <div className="mb-6 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-5 animate-fade-in">
+        <div className="flex items-start gap-4">
+          <div className="flex-shrink-0">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+              <Camera className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <div className="flex-1">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2 flex items-center gap-2">
+              <Smartphone className="w-5 h-5 text-blue-600" />
+              Accès à la caméra
+            </h3>
+            <p className="text-slate-700 leading-relaxed">
+              Pour prendre des photos directement avec votre caméra, veuillez vous connecter à l'application depuis votre smartphone ou tablette.
+              <span className="font-semibold text-blue-700"> Sur ordinateur, vous pouvez uniquement envoyer des photos déjà enregistrées.</span>
+            </p>
+            <div className="mt-3 flex items-center gap-2 text-sm text-slate-600">
+              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
+              <span>Les photos sont automatiquement supprimées après 2 mois</span>
+            </div>
+          </div>
         </div>
       </div>
 
