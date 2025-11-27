@@ -23,6 +23,13 @@ import HelpCenterPage from './components/help-center/HelpCenterPage';
 import ExtensionsPage from './components/extensions/ExtensionsPage';
 import DentistRegisterPage from './components/dentist/DentistRegisterPage';
 import DentistPhotoPanel from './components/dentist/DentistPhotoPanel';
+import DentistDashboardLayout from './components/layout/DentistDashboardLayout';
+import DentistDashboardPage from './components/dentist/DentistDashboardPage';
+import DentistLaboratoriesPage from './components/dentist/DentistLaboratoriesPage';
+import DentistOrdersPage from './components/dentist/DentistOrdersPage';
+import DentistPhotosPage from './components/dentist/DentistPhotosPage';
+import DentistSettingsPage from './components/dentist/DentistSettingsPage';
+import { useDeviceDetection } from './hooks/useDeviceDetection';
 import PhotoSubmissionsPage from './components/photos/PhotoSubmissionsPage';
 import PurchaseOrderPage from './components/purchase-orders/PurchaseOrderPage';
 import OnboardingWizard from './components/onboarding/OnboardingWizard';
@@ -38,6 +45,7 @@ import { usePermissions } from './hooks/usePermissions';
 
 function AppContent() {
   const { user, loading, isEmployee, isImpersonating, userProfile } = useAuth();
+  const { isMobile } = useDeviceDetection();
   const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
   const location = useLocation();
@@ -277,14 +285,56 @@ function AppContent() {
   }
 
   if (isDentist) {
-    if (currentPath !== 'dentist-panel' && currentPath !== '') {
-      return <Navigate to="/dentist-panel" replace />;
+    // Sur mobile, afficher uniquement le panel photo
+    if (isMobile) {
+      return (
+        <>
+          {showServerMonitor && <ServerStatusMonitor />}
+          {isImpersonating && <ImpersonationBanner />}
+          <DentistPhotoPanel />
+        </>
+      );
     }
+
+    // Sur desktop, afficher l'interface complète avec layout
+    const dentistPages = ['dentist-dashboard', 'dentist-orders', 'dentist-laboratories', 'dentist-photos', 'dentist-settings', 'dentist-help', 'dentist-support'];
+
+    if (currentPath === '' || !dentistPages.includes(currentPath)) {
+      return <Navigate to="/dentist-dashboard" replace />;
+    }
+
+    const renderDentistPage = () => {
+      switch (currentPath) {
+        case 'dentist-dashboard':
+          return <DentistDashboardPage onNavigate={(page) => navigate(`/${page}`)} />;
+        case 'dentist-orders':
+          return <DentistOrdersPage />;
+        case 'dentist-laboratories':
+          return <DentistLaboratoriesPage />;
+        case 'dentist-photos':
+          return <DentistPhotosPage />;
+        case 'dentist-settings':
+          return <DentistSettingsPage />;
+        case 'dentist-help':
+          return <HelpCenterPage />;
+        case 'dentist-support':
+          return <SupportPage />;
+        default:
+          return <Navigate to="/dentist-dashboard" replace />;
+      }
+    };
+
     return (
       <>
         {showServerMonitor && <ServerStatusMonitor />}
         {isImpersonating && <ImpersonationBanner />}
-        <DentistPhotoPanel />
+        <CookieConsent />
+        <DentistDashboardLayout
+          currentPage={currentPath}
+          onNavigate={(page) => navigate(`/${page}`)}
+        >
+          {renderDentistPage()}
+        </DentistDashboardLayout>
       </>
     );
   }
