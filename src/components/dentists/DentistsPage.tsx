@@ -60,11 +60,13 @@ export default function DentistsPage() {
           if (dentist.linked_dentist_account_id) {
             const { data: accountData } = await supabase
               .from('dentist_accounts')
-              .select('name')
+              .select('name, email')
               .eq('id', dentist.linked_dentist_account_id)
               .maybeSingle();
 
-            if (accountData) {
+            // Vérifier que les emails correspondent (case-insensitive)
+            if (accountData && dentist.email &&
+                accountData.email.toLowerCase().trim() === dentist.email.toLowerCase().trim()) {
               is_linked = true;
               linked_account_name = accountData.name;
             }
