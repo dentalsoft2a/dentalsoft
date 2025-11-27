@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Save, FileText, User, Calendar, AlertCircle } from 'lucide-react';
+import { X, Save, FileText, User, Calendar, AlertCircle, UserPlus } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import InvoiceItemsManager from './InvoiceItemsManager';
@@ -25,6 +25,15 @@ export default function DentalInvoiceModal({ invoiceId, onClose, onSuccess }: De
   const [loading, setLoading] = useState(false);
   const [patients, setPatients] = useState<Patient[]>([]);
   const [searchPatient, setSearchPatient] = useState('');
+  const [showNewPatientModal, setShowNewPatientModal] = useState(false);
+  const [newPatient, setNewPatient] = useState({
+    first_name: '',
+    last_name: '',
+    social_security_number: '',
+    mutuelle_name: '',
+    phone: '',
+    email: '',
+  });
 
   const [formData, setFormData] = useState({
     patient_id: '',
@@ -160,6 +169,46 @@ export default function DentalInvoiceModal({ invoiceId, onClose, onSuccess }: De
 
   const checkStockAvailability = (): boolean => {
     return supplies.every(supply => supply.quantity <= supply.available_stock);
+  };
+
+  const handleCreatePatient = async () => {
+    if (!newPatient.first_name || !newPatient.last_name) {
+      alert('Le prénom et le nom sont obligatoires');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { data, error } = await supabase
+        .from('dental_patients')
+        .insert({
+          dentist_id: user.id,
+          ...newPatient,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setPatients([...patients, data]);
+      setFormData({ ...formData, patient_id: data.id });
+      setShowNewPatientModal(false);
+      setNewPatient({
+        first_name: '',
+        last_name: '',
+        social_security_number: '',
+        mutuelle_name: '',
+        phone: '',
+        email: '',
+      });
+      alert('Patient créé avec succès');
+    } catch (error) {
+      console.error('Error creating patient:', error);
+      alert('Erreur lors de la création du patient');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent, status: 'draft' | 'sent' = 'draft') => {
@@ -357,9 +406,19 @@ export default function DentalInvoiceModal({ invoiceId, onClose, onSuccess }: De
 
           <div className="grid md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
-                Patient *
-              </label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-sm font-medium text-slate-700">
+                  Patient *
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowNewPatientModal(true)}
+                  className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1"
+                >
+                  <UserPlus className="w-3 h-3" />
+                  Nouveau patient
+                </button>
+              </div>
               <div className="relative">
                 <User className="absolute left-3 top-3 w-5 h-5 text-slate-400" />
                 <input
@@ -552,6 +611,123 @@ export default function DentalInvoiceModal({ invoiceId, onClose, onSuccess }: De
           </button>
         </div>
       </div>
+
+      {showNewPatientModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 m-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-slate-900">Nouveau Patient</h3>
+              <button
+                onClick={() => setShowNewPatientModal(false)}
+                className="p-1 hover:bg-slate-100 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Prénom *
+                  </label>
+                  <input
+                    type="text"
+                    value={newPatient.first_name}
+                    onChange={(e) => setNewPatient({ ...newPatient, first_name: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Nom *
+                  </label>
+                  <input
+                    type="text"
+                    value={newPatient.last_name}
+                    onChange={(e) => setNewPatient({ ...newPatient, last_name: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Numéro de Sécurité Sociale
+                </label>
+                <input
+                  type="text"
+                  value={newPatient.social_security_number}
+                  onChange={(e) => setNewPatient({ ...newPatient, social_security_number: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  placeholder="1 23 45 67 890 123 45"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Mutuelle
+                </label>
+                <input
+                  type="text"
+                  value={newPatient.mutuelle_name}
+                  onChange={(e) => setNewPatient({ ...newPatient, mutuelle_name: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  placeholder="Nom de la mutuelle"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Téléphone
+                </label>
+                <input
+                  type="tel"
+                  value={newPatient.phone}
+                  onChange={(e) => setNewPatient({ ...newPatient, phone: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  placeholder="06 12 34 56 78"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={newPatient.email}
+                  onChange={(e) => setNewPatient({ ...newPatient, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  placeholder="patient@email.com"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 mt-6">
+              <button
+                type="button"
+                onClick={() => setShowNewPatientModal(false)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50"
+              >
+                Annuler
+              </button>
+              <button
+                type="button"
+                onClick={handleCreatePatient}
+                disabled={loading || !newPatient.first_name || !newPatient.last_name}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              >
+                <UserPlus className="w-4 h-4" />
+                Créer le patient
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
