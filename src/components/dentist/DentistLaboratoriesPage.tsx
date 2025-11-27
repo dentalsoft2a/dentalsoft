@@ -53,10 +53,10 @@ export default function DentistLaboratoriesPage() {
 
       const { data: favoritesData } = await supabase
         .from('dentist_favorite_laboratories')
-        .select('laboratory_id')
+        .select('laboratory_profile_id')
         .eq('dentist_id', user.id);
 
-      const favoriteIds = new Set(favoritesData?.map(f => f.laboratory_id) || []);
+      const favoriteIds = new Set(favoritesData?.map(f => f.laboratory_profile_id) || []);
 
       const labsWithStats = await Promise.all(
         validLabs.map(async (lab) => {
@@ -104,7 +104,7 @@ export default function DentistLaboratoriesPage() {
           .from('dentist_favorite_laboratories')
           .delete()
           .eq('dentist_id', user.id)
-          .eq('laboratory_id', labId);
+          .eq('laboratory_profile_id', labId);
 
         if (error) throw error;
       } else {
@@ -112,7 +112,7 @@ export default function DentistLaboratoriesPage() {
           .from('dentist_favorite_laboratories')
           .insert({
             dentist_id: user.id,
-            laboratory_id: labId,
+            laboratory_profile_id: labId,
           });
 
         if (error) throw error;

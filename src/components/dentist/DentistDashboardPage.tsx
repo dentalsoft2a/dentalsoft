@@ -47,7 +47,7 @@ export default function DentistDashboardPage({ onNavigate }: { onNavigate: (page
           .eq('dentist_id', user.id),
         supabase
           .from('dentist_favorite_laboratories')
-          .select('laboratory_id')
+          .select('laboratory_profile_id')
           .eq('dentist_id', user.id),
         supabase
           .from('quote_requests')
