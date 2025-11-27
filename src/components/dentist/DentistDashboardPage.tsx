@@ -66,7 +66,7 @@ export default function DentistDashboardPage({ onNavigate }: { onNavigate: (page
         supabase
           .from('photo_submissions')
           .select('id')
-          .in('dentist_id', dentistIds),
+          .eq('dentist_id', user.id),
         supabase
           .from('quote_requests')
           .select('id')
