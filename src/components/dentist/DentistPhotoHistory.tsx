@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Clock, CheckCircle, XCircle, Eye, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, Clock, CheckCircle, XCircle, Eye, RefreshCw, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -25,12 +25,36 @@ export default function DentistPhotoHistory() {
   const [selectedPhoto, setSelectedPhoto] = useState<PhotoSubmission | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const [selectedPatient, setSelectedPatient] = useState<string>('');
+  const [patientsList, setPatientsList] = useState<string[]>([]);
 
   useLockScroll(!!selectedPhoto);
 
   useEffect(() => {
+    loadPatientsList();
+  }, []);
+
+  useEffect(() => {
     loadSubmissions();
-  }, [currentPage]);
+  }, [currentPage, selectedPatient]);
+
+  const loadPatientsList = async () => {
+    if (!user) return;
+
+    try {
+      const { data } = await supabase
+        .from('photo_submissions')
+        .select('patient_name')
+        .eq('dentist_id', user.id);
+
+      if (data) {
+        const uniquePatients = [...new Set(data.map(item => item.patient_name))].sort();
+        setPatientsList(uniquePatients);
+      }
+    } catch (error) {
+      console.error('Error loading patients list:', error);
+    }
+  };
 
   const loadSubmissions = async () => {
     if (!user) return;
@@ -39,14 +63,19 @@ export default function DentistPhotoHistory() {
       const from = (currentPage - 1) * ITEMS_PER_PAGE;
       const to = from + ITEMS_PER_PAGE - 1;
 
-      const { count } = await supabase
+      let countQuery = supabase
         .from('photo_submissions')
         .select('*', { count: 'exact', head: true })
         .eq('dentist_id', user.id);
 
+      if (selectedPatient) {
+        countQuery = countQuery.eq('patient_name', selectedPatient);
+      }
+
+      const { count } = await countQuery;
       setTotalCount(count || 0);
 
-      const { data, error } = await supabase
+      let dataQuery = supabase
         .from('photo_submissions')
         .select(`
           id,
@@ -59,7 +88,13 @@ export default function DentistPhotoHistory() {
           laboratory_id,
           dentist_id
         `)
-        .eq('dentist_id', user.id)
+        .eq('dentist_id', user.id);
+
+      if (selectedPatient) {
+        dataQuery = dataQuery.eq('patient_name', selectedPatient);
+      }
+
+      const { data, error } = await dataQuery
         .order('created_at', { ascending: false })
         .range(from, to);
 
@@ -148,8 +183,15 @@ export default function DentistPhotoHistory() {
 
   const handleRefresh = async () => {
     setRefreshing(true);
+    await loadPatientsList();
     await loadSubmissions();
     setRefreshing(false);
+  };
+
+  const handlePatientChange = (patient: string) => {
+    setSelectedPatient(patient);
+    setCurrentPage(1);
+    setLoading(true);
   };
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE);
@@ -171,19 +213,40 @@ export default function DentistPhotoHistory() {
   return (
     <>
       <div className="bg-white rounded-xl shadow-lg border border-slate-200">
-        <div className="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100 flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">Historique des photos</h2>
-            <p className="text-sm text-slate-600">Toutes vos photos envoyées</p>
+        <div className="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-slate-50 to-slate-100">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Historique des photos</h2>
+              <p className="text-sm text-slate-600">
+                {selectedPatient ? `Photos de ${selectedPatient}` : 'Toutes vos photos envoyées'}
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-white rounded-lg px-3 py-2 border border-slate-300">
+                <Filter className="w-4 h-4 text-slate-600" />
+                <select
+                  value={selectedPatient}
+                  onChange={(e) => handlePatientChange(e.target.value)}
+                  className="text-sm text-slate-700 bg-transparent border-none outline-none cursor-pointer"
+                >
+                  <option value="">Tous les patients</option>
+                  {patientsList.map((patient) => (
+                    <option key={patient} value={patient}>
+                      {patient}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="p-2 hover:bg-slate-200 rounded-lg transition disabled:opacity-50"
+                title="Actualiser"
+              >
+                <RefreshCw className={`w-5 h-5 text-slate-600 ${refreshing ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
           </div>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            className="p-2 hover:bg-slate-200 rounded-lg transition disabled:opacity-50"
-            title="Actualiser"
-          >
-            <RefreshCw className={`w-5 h-5 text-slate-600 ${refreshing ? 'animate-spin' : ''}`} />
-          </button>
         </div>
 
         <div className="p-6">
@@ -193,7 +256,19 @@ export default function DentistPhotoHistory() {
             </div>
           ) : submissions.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-slate-500 text-lg">Aucune photo envoyée pour le moment</p>
+              <p className="text-slate-500 text-lg">
+                {selectedPatient
+                  ? `Aucune photo trouvée pour ${selectedPatient}`
+                  : 'Aucune photo envoyée pour le moment'}
+              </p>
+              {selectedPatient && (
+                <button
+                  onClick={() => handlePatientChange('')}
+                  className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Afficher tous les patients
+                </button>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
