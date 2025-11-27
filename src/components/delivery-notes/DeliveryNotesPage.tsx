@@ -20,6 +20,8 @@ import PaginationControls from '../common/PaginationControls';
 
 type DeliveryNote = Database['public']['Tables']['delivery_notes']['Row'] & {
   dentists?: { name: string };
+  proforma_status?: string | null;
+  invoice_status?: string | null;
 };
 
 export default function DeliveryNotesPage() {
@@ -89,23 +91,32 @@ export default function DeliveryNotesPage() {
 
       if (error) throw error;
 
-      // Get all delivery note IDs that are in proforma_items
-      const { data: usedDeliveryNotes, error: usedError } = await supabase
+      // Get proforma and invoice status for each delivery note
+      const { data: proformaData } = await supabase
         .from('proforma_items')
-        .select('delivery_note_id')
+        .select('delivery_note_id, proformas(status)')
         .not('delivery_note_id', 'is', null);
 
-      if (usedError) throw usedError;
+      // Create a map of delivery note ID to proforma/invoice status
+      const statusMap = new Map();
+      proformaData?.forEach(item => {
+        if (item.delivery_note_id) {
+          const proformaStatus = (item.proformas as any)?.status;
+          statusMap.set(item.delivery_note_id, {
+            proforma_status: proformaStatus === 'invoiced' ? null : proformaStatus,
+            invoice_status: proformaStatus === 'invoiced' ? 'invoiced' : null
+          });
+        }
+      });
 
-      // Create a Set of delivery note IDs that are already in proformas
-      const usedDeliveryNoteIds = new Set(
-        usedDeliveryNotes?.map(item => item.delivery_note_id).filter(Boolean) || []
-      );
+      // Add status to delivery notes
+      const notesWithStatus = (data || []).map(note => ({
+        ...note,
+        proforma_status: statusMap.get(note.id)?.proforma_status || null,
+        invoice_status: statusMap.get(note.id)?.invoice_status || null
+      }));
 
-      // Filter out delivery notes that are already in proformas
-      const availableDeliveryNotes = (data || []).filter(note => !usedDeliveryNoteIds.has(note.id));
-
-      setDeliveryNotes(availableDeliveryNotes);
+      setDeliveryNotes(notesWithStatus);
     } catch (error) {
       console.error('Error loading delivery notes:', error);
     } finally {
@@ -572,15 +583,27 @@ export default function DeliveryNotesPage() {
                         {new Date(note.date).toLocaleDateString('fr-FR')}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                          note.status === 'completed'
-                            ? 'bg-green-100 text-green-800'
-                            : note.status === 'in_progress'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {note.status === 'completed' ? 'Terminé' : note.status === 'in_progress' ? 'En cours' : 'En attente'}
-                        </span>
+                        <div className="flex flex-col gap-1">
+                          <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
+                            note.status === 'completed'
+                              ? 'bg-green-100 text-green-800'
+                              : note.status === 'in_progress'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {note.status === 'completed' ? 'Terminé' : note.status === 'in_progress' ? 'En cours' : 'En attente'}
+                          </span>
+                          {note.invoice_status && (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                              Facturé
+                            </span>
+                          )}
+                          {note.proforma_status && !note.invoice_status && (
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800">
+                              En proforma
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -639,7 +662,7 @@ export default function DeliveryNotesPage() {
                 <div key={note.id} className="p-4 hover:bg-slate-50 transition-colors active:bg-slate-100">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-start gap-2 mb-1 flex-wrap">
                         <h3 className="font-semibold text-slate-900 text-sm truncate">{note.delivery_number}</h3>
                         <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
                           note.status === 'completed'
@@ -650,6 +673,16 @@ export default function DeliveryNotesPage() {
                         }`}>
                           {note.status === 'completed' ? 'Terminé' : note.status === 'in_progress' ? 'En cours' : 'En attente'}
                         </span>
+                        {note.invoice_status && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 bg-purple-100 text-purple-800">
+                            Facturé
+                          </span>
+                        )}
+                        {note.proforma_status && !note.invoice_status && (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 bg-indigo-100 text-indigo-800">
+                            En proforma
+                          </span>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-1">
                         <User className="w-3.5 h-3.5 flex-shrink-0" />
