@@ -35,6 +35,9 @@ import PurchaseOrderPage from './components/purchase-orders/PurchaseOrderPage';
 import OnboardingWizard from './components/onboarding/OnboardingWizard';
 import DentalOnboardingWizard from './components/dentist/onboarding/DentalOnboardingWizard';
 import DentalPatientsPage from './components/dentist/cabinet/DentalPatientsPage';
+import DentalCatalogPage from './components/dentist/cabinet/DentalCatalogPage';
+import DentalStockPage from './components/dentist/cabinet/DentalStockPage';
+import DentalInvoicesPage from './components/dentist/cabinet/DentalInvoicesPage';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { ImpersonationBanner } from './components/common/ImpersonationBanner';
 import { CookieConsent } from './components/common/CookieConsent';
@@ -340,7 +343,7 @@ function AppContent() {
     }
 
     // Sur desktop, afficher l'interface complète avec layout
-    const dentistPages = ['dentist-dashboard', 'dentist-orders', 'dentist-laboratories', 'dentist-photos', 'dentist-settings', 'dentist-help', 'dentist-support', 'dentist-patients'];
+    const dentistPages = ['dentist-dashboard', 'dentist-orders', 'dentist-laboratories', 'dentist-photos', 'dentist-settings', 'dentist-help', 'dentist-support', 'dentist-patients', 'dentist-catalog', 'dentist-stock', 'dentist-invoices'];
 
     if (currentPath === '' || !dentistPages.includes(currentPath)) {
       return <Navigate to="/dentist-dashboard" replace />;
@@ -358,6 +361,12 @@ function AppContent() {
           return <DentistPhotosPage />;
         case 'dentist-patients':
           return cabinetBillingEnabled ? <DentalPatientsPage /> : <Navigate to="/dentist-dashboard" replace />;
+        case 'dentist-catalog':
+          return cabinetBillingEnabled ? <DentalCatalogPage /> : <Navigate to="/dentist-dashboard" replace />;
+        case 'dentist-stock':
+          return cabinetBillingEnabled ? <DentalStockPage /> : <Navigate to="/dentist-dashboard" replace />;
+        case 'dentist-invoices':
+          return cabinetBillingEnabled ? <DentalInvoicesPage /> : <Navigate to="/dentist-dashboard" replace />;
         case 'dentist-settings':
           return <DentistSettingsPage />;
         case 'dentist-help':

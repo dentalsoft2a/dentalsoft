@@ -11,7 +11,10 @@ import {
   Camera,
   Package,
   User,
-  FileText
+  FileText,
+  Stethoscope,
+  PackageOpen,
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
@@ -85,7 +88,12 @@ export default function DentistDashboardLayout({
 
   const navigation = [
     { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dentist-dashboard' },
-    ...(cabinetBillingEnabled ? [{ name: 'Patients', icon: User, page: 'dentist-patients' }] : []),
+    ...(cabinetBillingEnabled ? [
+      { name: 'Patients', icon: User, page: 'dentist-patients' },
+      { name: 'Catalogue Actes', icon: Stethoscope, page: 'dentist-catalog' },
+      { name: 'Stock Fournitures', icon: PackageOpen, page: 'dentist-stock' },
+      { name: 'Facturation', icon: CreditCard, page: 'dentist-invoices' },
+    ] : []),
     { name: 'Mes Commandes', icon: Package, page: 'dentist-orders' },
     { name: 'Laboratoires', icon: Users, page: 'dentist-laboratories' },
     { name: 'Photos', icon: Camera, page: 'dentist-photos' },
