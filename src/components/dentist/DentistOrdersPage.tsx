@@ -21,8 +21,6 @@ interface DeliveryNote {
     laboratory_name: string;
     laboratory_email: string;
   };
-  proforma_status?: string | null;
-  invoice_status?: string | null;
 }
 
 export default function DentistOrdersPage() {
@@ -83,25 +81,7 @@ export default function DentistOrdersPage() {
 
       if (error) throw error;
 
-      // Step 3: Get proforma and invoice status for each delivery note
-      const { data: proformaData } = await supabase
-        .from('proforma_items')
-        .select('delivery_note_id, proformas(status)')
-        .not('delivery_note_id', 'is', null);
-
-      // Create a map of delivery note ID to proforma/invoice status
-      const statusMap = new Map();
-      proformaData?.forEach(item => {
-        if (item.delivery_note_id) {
-          const proformaStatus = (item.proformas as any)?.status;
-          statusMap.set(item.delivery_note_id, {
-            proforma_status: proformaStatus === 'invoiced' ? null : proformaStatus,
-            invoice_status: proformaStatus === 'invoiced' ? 'invoiced' : null
-          });
-        }
-      });
-
-      // Step 4: Enrich with laboratory information and status
+      // Step 3: Enrich with laboratory information
       const ordersWithLab = await Promise.all(
         (data || []).map(async (order) => {
           const { data: labData } = await supabase
@@ -113,8 +93,6 @@ export default function DentistOrdersPage() {
           return {
             ...order,
             laboratory: labData || undefined,
-            proforma_status: statusMap.get(order.id)?.proforma_status || null,
-            invoice_status: statusMap.get(order.id)?.invoice_status || null
           };
         })
       );
@@ -294,16 +272,6 @@ export default function DentistOrdersPage() {
                                 <OriginIcon className="w-3 h-3" />
                                 {originBadge.label}
                               </span>
-                              {order.invoice_status && (
-                                <span className="px-2 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 bg-purple-100 text-purple-700 border-purple-200">
-                                  Facturé
-                                </span>
-                              )}
-                              {order.proforma_status && !order.invoice_status && (
-                                <span className="px-2 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 bg-indigo-100 text-indigo-700 border-indigo-200">
-                                  En proforma
-                                </span>
-                              )}
                             </div>
                             <div className="flex items-center gap-2 text-sm text-slate-600">
                               <User className="w-4 h-4" />
