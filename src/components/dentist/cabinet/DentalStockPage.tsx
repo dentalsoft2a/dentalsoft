@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Edit, Trash2, Package, AlertTriangle, TrendingUp, TrendingDown } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
+import { useLowStockAlert } from '../../../hooks/useLowStockAlert';
 
 interface Resource {
   id: string;
@@ -19,6 +20,7 @@ interface Resource {
 
 export default function DentalStockPage() {
   const { user } = useAuth();
+  const { refresh: refreshLowStockAlert } = useLowStockAlert();
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -111,6 +113,7 @@ export default function DentalStockPage() {
       setEditingResource(null);
       resetForm();
       loadResources();
+      refreshLowStockAlert();
     } catch (error) {
       console.error('Error saving resource:', error);
       alert('Erreur lors de l\'enregistrement');
@@ -153,6 +156,7 @@ export default function DentalStockPage() {
       setShowStockModal(false);
       setStockAdjustment({ resourceId: '', quantity: 0, type: 'in', notes: '' });
       loadResources();
+      refreshLowStockAlert();
     } catch (error) {
       console.error('Error adjusting stock:', error);
       alert('Erreur lors de l\'ajustement du stock');
@@ -200,6 +204,7 @@ export default function DentalStockPage() {
 
       if (error) throw error;
       loadResources();
+      refreshLowStockAlert();
     } catch (error) {
       console.error('Error deleting resource:', error);
       alert('Erreur lors de la suppression');

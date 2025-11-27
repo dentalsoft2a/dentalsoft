@@ -21,6 +21,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { useDentistSubscription } from '../../hooks/useDentistSubscription';
+import { useLowStockAlert } from '../../hooks/useLowStockAlert';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import PWAInstallPrompt from '../common/PWAInstallPrompt';
 
@@ -42,6 +43,7 @@ export default function DentistDashboardLayout({
 }: DentistDashboardLayoutProps) {
   const { user, signOut } = useAuth();
   const { hasAccess } = useDentistSubscription();
+  const { lowStockCount } = useLowStockAlert();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dentistProfile, setDentistProfile] = useState<any>(null);
   const [appVersion, setAppVersion] = useState<string>('');
@@ -169,6 +171,8 @@ export default function DentistDashboardLayout({
               const isActive = currentPage === item.page;
               const isLocked = item.locked;
 
+              const hasAlert = item.page === 'dentist-stock' && lowStockCount > 0;
+
               return (
                 <div key={item.page} className="relative">
                   <button
@@ -186,12 +190,19 @@ export default function DentistDashboardLayout({
                         ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-500/30'
                         : isLocked
                           ? 'text-slate-400 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
-                          : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
+                          : hasAlert
+                            ? 'text-orange-700 bg-orange-50 hover:bg-orange-100 active:bg-orange-200 active:scale-98 font-semibold'
+                            : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
                       }
                     `}
                   >
                     <Icon className="w-[18px] h-[18px] flex-shrink-0" />
                     <span className="text-[14px]">{item.name}</span>
+                    {hasAlert && (
+                      <span className="ml-auto flex items-center justify-center w-5 h-5 bg-orange-600 text-white text-[10px] font-bold rounded-full flex-shrink-0">
+                        {lowStockCount}
+                      </span>
+                    )}
                     {isLocked && (
                       <Lock className="w-3 h-3 ml-auto flex-shrink-0" />
                     )}
