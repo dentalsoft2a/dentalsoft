@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Package, Clock, CheckCircle, XCircle, Eye, Calendar, User, Building2, AlertCircle, Filter, UserCircle, FileText, Download } from 'lucide-react';
+import { Search, Package, Clock, CheckCircle, XCircle, Eye, Calendar, User, Building2, AlertCircle, Filter, UserCircle, FileText } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -237,94 +237,6 @@ export default function DentistOrdersPage() {
     }
   };
 
-  const handleDownloadPdf = async (order: DeliveryNote) => {
-    try {
-      if (order.billing_status === 'invoiced' && order.invoice_id) {
-        // Download invoice PDF
-        const { data: invoiceData } = await supabase
-          .from('invoices')
-          .select('id, invoice_number')
-          .eq('id', order.invoice_id)
-          .maybeSingle();
-
-        if (!invoiceData) {
-          alert('Facture introuvable');
-          return;
-        }
-
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-invoice-pdf`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ invoiceId: invoiceData.id })
-          }
-        );
-
-        if (response.ok) {
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Facture_${invoiceData.invoice_number}.pdf`;
-          a.click();
-          window.URL.revokeObjectURL(url);
-        } else {
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-          alert('Erreur lors de la génération du PDF de la facture');
-        }
-      } else if (order.billing_status === 'proforma' && order.proforma_id) {
-        // Download proforma PDF
-        const { data: proformaData } = await supabase
-          .from('proformas')
-          .select('id, proforma_number')
-          .eq('id', order.proforma_id)
-          .maybeSingle();
-
-        if (!proformaData) {
-          alert('Proforma introuvable');
-          return;
-        }
-
-        const response = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-pdf`,
-          {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              documentType: 'proforma',
-              documentId: proformaData.id
-            })
-          }
-        );
-
-        if (response.ok) {
-          const blob = await response.blob();
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = `Proforma_${proformaData.proforma_number}.pdf`;
-          a.click();
-          window.URL.revokeObjectURL(url);
-        } else {
-          const errorText = await response.text();
-          console.error('Error response:', errorText);
-          alert('Erreur lors de la génération du PDF de la proforma');
-        }
-      }
-    } catch (error) {
-      console.error('Error downloading PDF:', error);
-      alert('Erreur lors du téléchargement du PDF');
-    }
-  };
-
   const getOriginBadge = (createdByDentist: boolean) => {
     if (createdByDentist) {
       return {
@@ -489,31 +401,16 @@ export default function DentistOrdersPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col gap-2">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedOrder(order);
-                          }}
-                          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                        >
-                          <Eye className="w-4 h-4" />
-                          <span>Voir détails</span>
-                        </button>
-
-                        {(order.billing_status === 'proforma' || order.billing_status === 'invoiced') && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDownloadPdf(order);
-                            }}
-                            className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                          >
-                            <Download className="w-4 h-4" />
-                            <span>Télécharger PDF</span>
-                          </button>
-                        )}
-                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedOrder(order);
+                        }}
+                        className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>Voir détails</span>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -595,26 +492,17 @@ export default function DentistOrdersPage() {
                 </p>
                 {(selectedOrder.billing_status === 'proforma' || selectedOrder.billing_status === 'invoiced') && (
                   <div className="mt-3 pt-3 border-t border-blue-200">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm">
-                        {selectedOrder.billing_status === 'invoiced' && selectedOrder.invoice_number && (
-                          <p className="text-slate-700">
-                            <span className="font-semibold">Facture:</span> {selectedOrder.invoice_number}
-                          </p>
-                        )}
-                        {selectedOrder.proforma_number && (
-                          <p className="text-slate-700">
-                            <span className="font-semibold">Proforma:</span> {selectedOrder.proforma_number}
-                          </p>
-                        )}
-                      </div>
-                      <button
-                        onClick={() => handleDownloadPdf(selectedOrder)}
-                        className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-                      >
-                        <Download className="w-4 h-4" />
-                        <span>Télécharger PDF</span>
-                      </button>
+                    <div className="text-sm">
+                      {selectedOrder.billing_status === 'invoiced' && selectedOrder.invoice_number && (
+                        <p className="text-slate-700">
+                          <span className="font-semibold">Facture:</span> {selectedOrder.invoice_number}
+                        </p>
+                      )}
+                      {selectedOrder.proforma_number && (
+                        <p className="text-slate-700">
+                          <span className="font-semibold">Proforma:</span> {selectedOrder.proforma_number}
+                        </p>
+                      )}
                     </div>
                   </div>
                 )}

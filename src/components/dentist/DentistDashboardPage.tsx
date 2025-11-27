@@ -87,7 +87,62 @@ export default function DentistDashboardPage({ onNavigate }: { onNavigate: (page
         pendingQuotes: quotesResult.data?.length || 0,
       });
 
-      setRecentOrders(orders.slice(0, 5));
+      // Get billing status for recent orders
+      const recentOrdersList = orders.slice(0, 5);
+      const deliveryNoteIds = recentOrdersList.map(o => o.id);
+
+      const { data: proformaItems } = await supabase
+        .from('proforma_items')
+        .select(`
+          delivery_note_id,
+          proforma_id,
+          proformas(
+            proforma_number,
+            status
+          )
+        `)
+        .in('delivery_note_id', deliveryNoteIds);
+
+      // Get invoice info for proformas
+      const proformaIds = [...new Set((proformaItems || []).map(pi => pi.proforma_id))];
+      const { data: invoiceProformas } = await supabase
+        .from('invoice_proformas')
+        .select(`
+          proforma_id,
+          invoice_id,
+          invoices(
+            id,
+            invoice_number
+          )
+        `)
+        .in('proforma_id', proformaIds);
+
+      // Create a map of delivery_note_id to billing info
+      const billingMap = new Map();
+      (proformaItems || []).forEach(pi => {
+        const invoiceInfo = (invoiceProformas || []).find(
+          ip => ip.proforma_id === pi.proforma_id
+        );
+
+        billingMap.set(pi.delivery_note_id, {
+          billing_status: invoiceInfo ? 'invoiced' : 'proforma',
+          proforma_number: pi.proformas?.proforma_number,
+          invoice_number: invoiceInfo?.invoices?.invoice_number
+        });
+      });
+
+      // Enrich orders with billing info
+      const ordersWithBilling = recentOrdersList.map(order => {
+        const billingInfo = billingMap.get(order.id);
+        return {
+          ...order,
+          billing_status: billingInfo?.billing_status || 'bl',
+          proforma_number: billingInfo?.proforma_number,
+          invoice_number: billingInfo?.invoice_number,
+        };
+      });
+
+      setRecentOrders(ordersWithBilling);
     } catch (error) {
       console.error('Error loading dashboard data:', error);
     } finally {
@@ -124,6 +179,29 @@ export default function DentistDashboardPage({ onNavigate }: { onNavigate: (page
         return 'Refusé';
       default:
         return status;
+    }
+  };
+
+  const getBillingStatusBadge = (billingStatus: string) => {
+    switch (billingStatus) {
+      case 'proforma':
+        return {
+          label: 'Proforma',
+          icon: FileText,
+          className: 'bg-orange-100 text-orange-700 border-orange-200'
+        };
+      case 'invoiced':
+        return {
+          label: 'Facturé',
+          icon: CheckCircle,
+          className: 'bg-emerald-100 text-emerald-700 border-emerald-200'
+        };
+      default:
+        return {
+          label: 'BL',
+          icon: Package,
+          className: 'bg-slate-100 text-slate-700 border-slate-200'
+        };
     }
   };
 
@@ -257,37 +335,45 @@ export default function DentistDashboardPage({ onNavigate }: { onNavigate: (page
           </div>
         ) : (
           <div className="divide-y divide-slate-200">
-            {recentOrders.map((order) => (
-              <div
-                key={order.id}
-                className="p-4 md:p-6 hover:bg-slate-50 transition-colors cursor-pointer"
-                onClick={() => onNavigate('dentist-orders')}
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-slate-900">BL {order.delivery_number}</h3>
-                      <span className={`px-2 py-1 rounded-lg text-xs font-semibold border ${getStatusColor(order.status)}`}>
-                        {getStatusLabel(order.status)}
-                      </span>
+            {recentOrders.map((order) => {
+              const billingBadge = getBillingStatusBadge(order.billing_status || 'bl');
+              const BillingIcon = billingBadge.icon;
+              return (
+                <div
+                  key={order.id}
+                  className="p-4 md:p-6 hover:bg-slate-50 transition-colors cursor-pointer"
+                  onClick={() => onNavigate('dentist-orders')}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <h3 className="font-semibold text-slate-900">BL {order.delivery_number}</h3>
+                        <span className={`px-2 py-1 rounded-lg text-xs font-semibold border ${getStatusColor(order.status)}`}>
+                          {getStatusLabel(order.status)}
+                        </span>
+                        <span className={`px-2 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 ${billingBadge.className}`}>
+                          <BillingIcon className="w-3 h-3" />
+                          {billingBadge.label}
+                        </span>
+                      </div>
+                      <p className="text-sm text-slate-600">Patient: {order.patient_name}</p>
+                      <p className="text-xs text-slate-500 mt-1">
+                        {new Date(order.created_at).toLocaleDateString('fr-FR', {
+                          day: 'numeric',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </p>
                     </div>
-                    <p className="text-sm text-slate-600">Patient: {order.patient_name}</p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      {new Date(order.created_at).toLocaleDateString('fr-FR', {
-                        day: 'numeric',
-                        month: 'long',
-                        year: 'numeric'
-                      })}
-                    </p>
+                    <button
+                      className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
+                    >
+                      Voir détails
+                    </button>
                   </div>
-                  <button
-                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Voir détails
-                  </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
