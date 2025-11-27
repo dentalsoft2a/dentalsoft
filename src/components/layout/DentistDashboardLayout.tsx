@@ -87,17 +87,16 @@ export default function DentistDashboardLayout({
   }, [sidebarOpen]);
 
   const navigation = [
-    { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dentist-dashboard' },
-    ...(cabinetBillingEnabled ? [
-      { name: 'Patients', icon: User, page: 'dentist-patients' },
-      { name: 'Catalogue Actes', icon: Stethoscope, page: 'dentist-catalog' },
-      { name: 'Stock Fournitures', icon: PackageOpen, page: 'dentist-stock' },
-      { name: 'Facturation', icon: CreditCard, page: 'dentist-invoices' },
-    ] : []),
-    { name: 'Mes Commandes', icon: Package, page: 'dentist-orders' },
-    { name: 'Laboratoires', icon: Users, page: 'dentist-laboratories' },
-    { name: 'Photos', icon: Camera, page: 'dentist-photos' },
-    { name: 'Paramètres', icon: Settings, page: 'dentist-settings' },
+    { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dentist-dashboard', locked: false },
+    { name: 'Patients', icon: User, page: 'dentist-patients', locked: !cabinetBillingEnabled },
+    { name: 'Catalogue Actes', icon: Stethoscope, page: 'dentist-catalog', locked: !cabinetBillingEnabled },
+    { name: 'Stock Fournitures', icon: PackageOpen, page: 'dentist-stock', locked: !cabinetBillingEnabled },
+    { name: 'Facturation', icon: CreditCard, page: 'dentist-invoices', locked: !cabinetBillingEnabled },
+    { name: 'Mes Commandes', icon: Package, page: 'dentist-orders', locked: false },
+    { name: 'Laboratoires', icon: Users, page: 'dentist-laboratories', locked: false },
+    { name: 'Photos', icon: Camera, page: 'dentist-photos', locked: false },
+    { name: 'Abonnement', icon: Sparkles, page: 'dentist-subscription', locked: false },
+    { name: 'Paramètres', icon: Settings, page: 'dentist-settings', locked: false },
   ];
 
   const bottomNavigation = [
@@ -166,25 +165,36 @@ export default function DentistDashboardLayout({
             {navigation.map((item) => {
               const Icon = item.icon;
               const isActive = currentPage === item.page;
+              const isLocked = item.locked;
 
               return (
-                <button
-                  key={item.page}
-                  onClick={() => {
-                    onNavigate(item.page);
-                    setSidebarOpen(false);
-                  }}
-                  className={`
-                    w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 relative touch-manipulation
-                    ${isActive
-                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-500/30'
-                      : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
-                    }
-                  `}
-                >
-                  <Icon className="w-[18px] h-[18px] flex-shrink-0" />
-                  <span className="text-[14px]">{item.name}</span>
-                </button>
+                <div key={item.page} className="relative">
+                  <button
+                    onClick={() => {
+                      if (isLocked) {
+                        onNavigate('dentist-subscription');
+                      } else {
+                        onNavigate(item.page);
+                      }
+                      setSidebarOpen(false);
+                    }}
+                    className={`
+                      w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl transition-all duration-200 relative touch-manipulation
+                      ${isActive
+                        ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-semibold shadow-lg shadow-blue-500/30'
+                        : isLocked
+                          ? 'text-slate-400 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
+                          : 'text-slate-700 hover:bg-slate-50 active:bg-slate-100 active:scale-98'
+                      }
+                    `}
+                  >
+                    <Icon className="w-[18px] h-[18px] flex-shrink-0" />
+                    <span className="text-[14px]">{item.name}</span>
+                    {isLocked && (
+                      <Lock className="w-3 h-3 ml-auto flex-shrink-0" />
+                    )}
+                  </button>
+                </div>
               );
             })}
           </nav>
