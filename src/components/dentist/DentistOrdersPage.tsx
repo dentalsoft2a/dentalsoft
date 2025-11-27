@@ -61,7 +61,6 @@ export default function DentistOrdersPage() {
       const dentistIds = dentistRecords.map(d => d.id);
 
       // Step 2: Get all delivery notes for these dentist records
-      // Exclude delivery notes that are in proforma or invoiced
       const { data, error } = await supabase
         .from('delivery_notes')
         .select(`
@@ -79,14 +78,29 @@ export default function DentistOrdersPage() {
           proforma_id
         `)
         .in('dentist_id', dentistIds)
-        .is('proforma_id', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Step 3: Enrich with laboratory information
+      // Step 3: Filter out delivery notes that are in proforma_items (already in proforma/invoice)
+      const deliveryNoteIds = (data || []).map(dn => dn.id);
+
+      const { data: proformaItems } = await supabase
+        .from('proforma_items')
+        .select('delivery_note_id')
+        .in('delivery_note_id', deliveryNoteIds);
+
+      const proformaLinkedIds = new Set(
+        (proformaItems || []).map(pi => pi.delivery_note_id)
+      );
+
+      const filteredData = (data || []).filter(
+        dn => !proformaLinkedIds.has(dn.id)
+      );
+
+      // Step 4: Enrich with laboratory information
       const ordersWithLab = await Promise.all(
-        (data || []).map(async (order) => {
+        filteredData.map(async (order) => {
           const { data: labData } = await supabase
             .from('profiles')
             .select('laboratory_name, laboratory_email')
