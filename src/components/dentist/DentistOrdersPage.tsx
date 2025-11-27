@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Search, Package, Clock, CheckCircle, XCircle, Eye, Calendar, User, Building2, AlertCircle, Filter } from 'lucide-react';
+import { Search, Package, Clock, CheckCircle, XCircle, Eye, Calendar, User, Building2, AlertCircle, Filter, UserCircle } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useDebounce } from '../../hooks/useDebounce';
@@ -16,6 +16,7 @@ interface DeliveryNote {
   tooth_numbers: string[] | null;
   shade: string | null;
   notes: string | null;
+  created_by_dentist: boolean;
   laboratory?: {
     laboratory_name: string;
     laboratory_email: string;
@@ -42,6 +43,24 @@ export default function DentistOrdersPage() {
     if (!user) return;
 
     try {
+      // Step 1: Get all dentist records linked to this dentist account
+      const { data: dentistRecords, error: dentistError } = await supabase
+        .from('dentists')
+        .select('id')
+        .eq('linked_dentist_account_id', user.id);
+
+      if (dentistError) throw dentistError;
+
+      // If no linked dentist records, show empty list
+      if (!dentistRecords || dentistRecords.length === 0) {
+        setOrders([]);
+        setLoading(false);
+        return;
+      }
+
+      const dentistIds = dentistRecords.map(d => d.id);
+
+      // Step 2: Get all delivery notes for these dentist records
       const { data, error } = await supabase
         .from('delivery_notes')
         .select(`
@@ -54,13 +73,15 @@ export default function DentistOrdersPage() {
           tooth_numbers,
           shade,
           notes,
+          created_by_dentist,
           user_id
         `)
-        .eq('dentist_id', user.id)
+        .in('dentist_id', dentistIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
+      // Step 3: Enrich with laboratory information
       const ordersWithLab = await Promise.all(
         (data || []).map(async (order) => {
           const { data: labData } = await supabase
@@ -133,6 +154,21 @@ export default function DentistOrdersPage() {
       default:
         return status;
     }
+  };
+
+  const getOriginBadge = (createdByDentist: boolean) => {
+    if (createdByDentist) {
+      return {
+        label: 'Ma demande',
+        icon: UserCircle,
+        className: 'bg-blue-100 text-blue-700 border-blue-200'
+      };
+    }
+    return {
+      label: 'Du laboratoire',
+      icon: Building2,
+      className: 'bg-green-100 text-green-700 border-green-200'
+    };
   };
 
   const filteredOrders = orders.filter((order) => {
@@ -210,6 +246,8 @@ export default function DentistOrdersPage() {
           <div className="space-y-4">
             {paginatedOrders.map((order) => {
               const StatusIcon = getStatusIcon(order.status);
+              const originBadge = getOriginBadge(order.created_by_dentist);
+              const OriginIcon = originBadge.icon;
               return (
                 <div
                   key={order.id}
@@ -229,6 +267,10 @@ export default function DentistOrdersPage() {
                               <span className={`px-2 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 ${getStatusColor(order.status)}`}>
                                 <StatusIcon className="w-3 h-3" />
                                 {getStatusLabel(order.status)}
+                              </span>
+                              <span className={`px-2 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 ${originBadge.className}`}>
+                                <OriginIcon className="w-3 h-3" />
+                                {originBadge.label}
                               </span>
                             </div>
                             <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -331,11 +373,20 @@ export default function DentistOrdersPage() {
 
             <div className="p-6 space-y-6">
               <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
                   <h3 className="font-bold text-slate-900">BL {selectedOrder.delivery_number}</h3>
-                  <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${getStatusColor(selectedOrder.status)}`}>
-                    {getStatusLabel(selectedOrder.status)}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${getStatusColor(selectedOrder.status)}`}>
+                      {getStatusLabel(selectedOrder.status)}
+                    </span>
+                    <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold border flex items-center gap-1 ${getOriginBadge(selectedOrder.created_by_dentist).className}`}>
+                      {(() => {
+                        const badge = getOriginBadge(selectedOrder.created_by_dentist);
+                        const Icon = badge.icon;
+                        return <><Icon className="w-3.5 h-3.5" />{badge.label}</>;
+                      })()}
+                    </span>
+                  </div>
                 </div>
                 <p className="text-sm text-slate-600">
                   Créé le {new Date(selectedOrder.created_at).toLocaleDateString('fr-FR', {
@@ -346,6 +397,17 @@ export default function DentistOrdersPage() {
                     minute: '2-digit'
                   })}
                 </p>
+              </div>
+
+              <div>
+                <h3 className="font-bold text-slate-900 mb-3">Origine de la commande</h3>
+                <div className={`rounded-lg p-4 border-2 ${getOriginBadge(selectedOrder.created_by_dentist).className.replace('text-', 'border-').replace('-700', '-300')}`}>
+                  <p className="text-sm text-slate-700">
+                    {selectedOrder.created_by_dentist
+                      ? "Vous avez créé cette commande via votre portail dentiste."
+                      : "Cette commande a été créée par le laboratoire et vous a été assignée."}
+                  </p>
+                </div>
               </div>
 
               {selectedOrder.laboratory && (
