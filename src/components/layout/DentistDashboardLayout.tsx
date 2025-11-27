@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
+import { useDentistSubscription } from '../../hooks/useDentistSubscription';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import PWAInstallPrompt from '../common/PWAInstallPrompt';
 
@@ -32,16 +33,15 @@ interface DentistDashboardLayoutProps {
   children: ReactNode;
   currentPage: string;
   onNavigate: (page: string) => void;
-  cabinetBillingEnabled?: boolean;
 }
 
 export default function DentistDashboardLayout({
   children,
   currentPage,
-  onNavigate,
-  cabinetBillingEnabled = false
+  onNavigate
 }: DentistDashboardLayoutProps) {
   const { user, signOut } = useAuth();
+  const { hasAccess } = useDentistSubscription();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dentistProfile, setDentistProfile] = useState<any>(null);
   const [appVersion, setAppVersion] = useState<string>('');
@@ -90,10 +90,10 @@ export default function DentistDashboardLayout({
 
   const navigation = [
     { name: 'Tableau de bord', icon: LayoutDashboard, page: 'dentist-dashboard', locked: false },
-    { name: 'Patients', icon: User, page: 'dentist-patients', locked: !cabinetBillingEnabled },
-    { name: 'Catalogue Actes', icon: Stethoscope, page: 'dentist-catalog', locked: !cabinetBillingEnabled },
-    { name: 'Stock Fournitures', icon: PackageOpen, page: 'dentist-stock', locked: !cabinetBillingEnabled },
-    { name: 'Facturation', icon: CreditCard, page: 'dentist-invoices', locked: !cabinetBillingEnabled },
+    { name: 'Patients', icon: User, page: 'dentist-patients', locked: !hasAccess },
+    { name: 'Catalogue Actes', icon: Stethoscope, page: 'dentist-catalog', locked: !hasAccess },
+    { name: 'Stock Fournitures', icon: PackageOpen, page: 'dentist-stock', locked: !hasAccess },
+    { name: 'Facturation', icon: CreditCard, page: 'dentist-invoices', locked: !hasAccess },
     { name: 'Mes Commandes', icon: Package, page: 'dentist-orders', locked: false },
     { name: 'Laboratoires', icon: Users, page: 'dentist-laboratories', locked: false },
     { name: 'Photos', icon: Camera, page: 'dentist-photos', locked: false },

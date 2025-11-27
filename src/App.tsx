@@ -39,6 +39,7 @@ import DentalCatalogPage from './components/dentist/cabinet/DentalCatalogPage';
 import DentalStockPage from './components/dentist/cabinet/DentalStockPage';
 import DentalInvoicesPage from './components/dentist/cabinet/DentalInvoicesPage';
 import DentistSubscriptionPage from './components/dentist/DentistSubscriptionPage';
+import SubscriptionGuard from './components/dentist/SubscriptionGuard';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { ImpersonationBanner } from './components/common/ImpersonationBanner';
 import { CookieConsent } from './components/common/CookieConsent';
@@ -64,7 +65,6 @@ function AppContent() {
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
   const [initialPageSet, setInitialPageSet] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
-  const [cabinetBillingEnabled, setCabinetBillingEnabled] = useState(false);
   const [needsDentalOnboarding, setNeedsDentalOnboarding] = useState(false);
 
   // Only show server monitor for authenticated users
@@ -153,16 +153,18 @@ function AppContent() {
 
     const { data: dentistData } = await supabase
       .from('dentist_accounts')
-      .select('id, cabinet_billing_enabled')
+      .select('id, subscription_status, subscription_plan_id')
       .eq('id', user.id)
       .maybeSingle();
 
     if (dentistData) {
       setIsDentist(true);
-      setCabinetBillingEnabled(dentistData.cabinet_billing_enabled || false);
+
+      // Check if dentist has access (trial or active subscription)
+      const hasAccess = dentistData.subscription_status === 'trial' || dentistData.subscription_status === 'active';
 
       // Check if dentist needs onboarding for cabinet billing
-      if (dentistData.cabinet_billing_enabled) {
+      if (hasAccess) {
         const { count: servicesCount, error: servicesError } = await supabase
           .from('dental_catalog_items')
           .select('id', { count: 'exact', head: true })
@@ -361,13 +363,41 @@ function AppContent() {
         case 'dentist-photos':
           return <DentistPhotosPage />;
         case 'dentist-patients':
-          return cabinetBillingEnabled ? <DentalPatientsPage /> : <Navigate to="/dentist-dashboard" replace />;
+          return (
+            <SubscriptionGuard
+              feature="Gestion des Patients"
+              onSubscribe={() => navigate('/dentist-subscription')}
+            >
+              <DentalPatientsPage />
+            </SubscriptionGuard>
+          );
         case 'dentist-catalog':
-          return cabinetBillingEnabled ? <DentalCatalogPage /> : <Navigate to="/dentist-dashboard" replace />;
+          return (
+            <SubscriptionGuard
+              feature="Catalogue Actes"
+              onSubscribe={() => navigate('/dentist-subscription')}
+            >
+              <DentalCatalogPage />
+            </SubscriptionGuard>
+          );
         case 'dentist-stock':
-          return cabinetBillingEnabled ? <DentalStockPage /> : <Navigate to="/dentist-dashboard" replace />;
+          return (
+            <SubscriptionGuard
+              feature="Stock Fournitures"
+              onSubscribe={() => navigate('/dentist-subscription')}
+            >
+              <DentalStockPage />
+            </SubscriptionGuard>
+          );
         case 'dentist-invoices':
-          return cabinetBillingEnabled ? <DentalInvoicesPage /> : <Navigate to="/dentist-dashboard" replace />;
+          return (
+            <SubscriptionGuard
+              feature="Facturation"
+              onSubscribe={() => navigate('/dentist-subscription')}
+            >
+              <DentalInvoicesPage />
+            </SubscriptionGuard>
+          );
         case 'dentist-subscription':
           return <DentistSubscriptionPage />;
         case 'dentist-settings':
@@ -389,7 +419,6 @@ function AppContent() {
         <DentistDashboardLayout
           currentPage={currentPath}
           onNavigate={(page) => navigate(`/${page}`)}
-          cabinetBillingEnabled={cabinetBillingEnabled}
         >
           {renderDentistPage()}
         </DentistDashboardLayout>
