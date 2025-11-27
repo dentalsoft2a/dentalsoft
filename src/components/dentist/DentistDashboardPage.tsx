@@ -35,24 +35,42 @@ export default function DentistDashboardPage({ onNavigate }: { onNavigate: (page
     if (!user) return;
 
     try {
-      const [ordersResult, photosResult, labsResult, quotesResult] = await Promise.all([
+      // Récupérer tous les dentists liés à ce dentist_account
+      const { data: linkedDentists } = await supabase
+        .from('dentists')
+        .select('id, user_id')
+        .eq('linked_dentist_account_id', user.id);
+
+      if (!linkedDentists || linkedDentists.length === 0) {
+        setStats({
+          totalOrders: 0,
+          activeOrders: 0,
+          completedOrders: 0,
+          totalPhotos: 0,
+          connectedLabs: 0,
+          pendingQuotes: 0,
+        });
+        setRecentOrders([]);
+        return;
+      }
+
+      const dentistIds = linkedDentists.map(d => d.id);
+      const labIds = [...new Set(linkedDentists.map(d => d.user_id))];
+
+      const [ordersResult, photosResult, quotesResult] = await Promise.all([
         supabase
           .from('delivery_notes')
           .select('id, status, delivery_number, patient_name, created_at')
-          .eq('dentist_id', user.id)
+          .in('dentist_id', dentistIds)
           .order('created_at', { ascending: false }),
         supabase
           .from('photo_submissions')
           .select('id')
-          .eq('dentist_id', user.id),
-        supabase
-          .from('dentist_favorite_laboratories')
-          .select('laboratory_profile_id')
-          .eq('dentist_id', user.id),
+          .in('dentist_id', dentistIds),
         supabase
           .from('quote_requests')
           .select('id')
-          .eq('dentist_id', user.id)
+          .in('dentist_id', dentistIds)
           .eq('status', 'pending')
       ]);
 
@@ -65,7 +83,7 @@ export default function DentistDashboardPage({ onNavigate }: { onNavigate: (page
         activeOrders: activeOrders.length,
         completedOrders: completedOrders.length,
         totalPhotos: photosResult.data?.length || 0,
-        connectedLabs: labsResult.data?.length || 0,
+        connectedLabs: labIds.length,
         pendingQuotes: quotesResult.data?.length || 0,
       });
 
