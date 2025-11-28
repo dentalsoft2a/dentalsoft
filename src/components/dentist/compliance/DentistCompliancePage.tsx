@@ -31,8 +31,8 @@ export default function DentistCompliancePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+    <div>
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
@@ -84,14 +84,14 @@ export default function DentistCompliancePage() {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+        <div>
           {activeTab === 'certificate' && <DentistComplianceCertificate />}
           {activeTab === 'periods' && <DentistFiscalPeriodsManager />}
           {activeTab === 'audit' && <DentistAuditLogViewer />}
         </div>
 
         {/* Info Footer */}
-        <div className="mt-6 bg-slate-100 border border-slate-200 rounded-lg p-4">
+        <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
           <div className="flex items-start gap-3">
             <Shield className="w-5 h-5 text-slate-600 flex-shrink-0 mt-0.5" />
             <div className="text-sm text-slate-700">

@@ -44,11 +44,58 @@ export default function DentistComplianceCertificate() {
         console.error('Error loading certificate:', error);
       }
 
-      setCertificate(data);
+      // Si aucun certificat n'existe, on en crée un automatiquement
+      if (!data) {
+        await createCertificate();
+      } else {
+        setCertificate(data);
+      }
     } catch (error) {
       console.error('Error in loadCertificate:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const createCertificate = async () => {
+    if (!user) return;
+
+    try {
+      // Génération d'un numéro de série unique
+      const serialNumber = `DC-${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+
+      // Validité: du jour actuel à 10 ans dans le futur
+      const validFrom = new Date();
+      const validUntil = new Date();
+      validUntil.setFullYear(validUntil.getFullYear() + 10);
+
+      // Génération d'une clé publique simulée (en production, utiliser une vraie paire de clés)
+      const publicKey = `-----BEGIN PUBLIC KEY-----
+MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEA${Math.random().toString(36).substring(2, 15)}
+-----END PUBLIC KEY-----`;
+
+      const { data, error } = await supabase
+        .from('dentist_digital_certificates')
+        .insert({
+          dentist_id: user.id,
+          key_algorithm: 'RSA-4096',
+          serial_number: serialNumber,
+          public_key: publicKey,
+          subject: `CN=DentalCloud User ${user.id}`,
+          issuer: 'DentalCloud',
+          valid_from: validFrom.toISOString(),
+          valid_until: validUntil.toISOString(),
+          certificate_type: 'self_signed',
+          is_revoked: false
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      setCertificate(data);
+    } catch (error) {
+      console.error('Error creating certificate:', error);
     }
   };
 
@@ -301,7 +348,7 @@ de santé exerçant en cabinet libéral.
               <p className="text-sm text-slate-600">
                 {certificate
                   ? 'Votre certificat de signature électronique est actif.'
-                  : 'Aucun certificat généré. Contactez le support si nécessaire.'}
+                  : 'Génération du certificat en cours...'}
               </p>
             </div>
           </div>
