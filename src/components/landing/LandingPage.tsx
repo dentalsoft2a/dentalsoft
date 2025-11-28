@@ -622,55 +622,6 @@ export function LandingPage() {
               </div>
             </div>
 
-            {userType === 'cabinet' && (
-              <div className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 mb-8 sm:mb-12 lg:mb-16 shadow-lg">
-                <div className="flex flex-col lg:flex-row items-start gap-4 sm:gap-6 max-w-6xl mx-auto">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 rounded-lg sm:rounded-xl bg-gradient-to-br from-blue-600 to-cyan-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                    <Shield className="w-6 h-6 sm:w-8 sm:h-8 lg:w-10 lg:h-10 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="text-lg sm:text-2xl lg:text-3xl font-bold text-slate-900 mb-2 sm:mb-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
-                      <span>Conformité légale pour cabinets dentaires</span>
-                      <span className="text-xs sm:text-sm lg:text-base bg-blue-600 text-white px-3 py-1 sm:px-4 sm:py-1.5 rounded-full font-medium inline-block w-fit">Loi NF525</span>
-                    </h3>
-                    <p className="text-slate-700 text-sm sm:text-base lg:text-lg xl:text-xl leading-relaxed mb-3 sm:mb-4">
-                      Système de facturation conforme à la loi anti-fraude TVA (NF525). Vos factures sont inaltérables, traçables et sécurisées avec un journal d'audit automatique pour une protection juridique totale.
-                    </p>
-                    <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
-                      <div className="flex items-start gap-2 sm:gap-3 bg-white rounded-lg p-3 sm:p-4 shadow-sm">
-                        <FileCheck className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="font-semibold text-slate-900 text-sm sm:text-base mb-1">Facturation inaltérable</h4>
-                          <p className="text-xs sm:text-sm text-slate-600">Chaque facture est horodatée et sécurisée. Impossible de modifier ou supprimer une facture validée</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2 sm:gap-3 bg-white rounded-lg p-3 sm:p-4 shadow-sm">
-                        <FileBarChart className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="font-semibold text-slate-900 text-sm sm:text-base mb-1">Journal d'audit complet</h4>
-                          <p className="text-xs sm:text-sm text-slate-600">Traçabilité automatique de toutes les opérations pour vos contrôles fiscaux en toute sérénité</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2 sm:gap-3 bg-white rounded-lg p-3 sm:p-4 shadow-sm">
-                        <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="font-semibold text-slate-900 text-sm sm:text-base mb-1">Protection juridique</h4>
-                          <p className="text-xs sm:text-sm text-slate-600">Certificats de conformité automatiques et attestation de respect de la loi NF525</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-2 sm:gap-3 bg-white rounded-lg p-3 sm:p-4 shadow-sm">
-                        <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <div>
-                          <h4 className="font-semibold text-slate-900 text-sm sm:text-base mb-1">Gestion des avoirs conforme</h4>
-                          <p className="text-xs sm:text-sm text-slate-600">Créez des avoirs en toute légalité avec lien automatique vers la facture d'origine</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             <div className="text-center mb-6 sm:mb-8 lg:mb-12 px-4">
               <div className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 text-blue-700 text-xs sm:text-sm font-medium mb-4 sm:mb-6">
                 <Box className="w-3 h-3 sm:w-4 sm:h-4" />
