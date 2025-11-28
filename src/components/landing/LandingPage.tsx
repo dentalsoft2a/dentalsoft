@@ -1032,7 +1032,7 @@ export function LandingPage() {
                 <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-4 sm:p-6 lg:p-8 text-center border-b border-amber-400">
                   <h3 className="text-lg sm:text-xl font-bold text-white mb-3">{userType === 'cabinet' ? 'Plan Premium' : 'Plan Premium Complet'}</h3>
                   <div className="inline-flex items-baseline gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                    <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">{premiumPrice.toFixed(2)}€</span>
+                    <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">{userType === 'cabinet' ? '59.99' : premiumPrice.toFixed(2)}€</span>
                     <span className="text-base sm:text-lg text-white/90">/mois</span>
                   </div>
                   <p className="text-xs sm:text-sm text-white/90 mt-1 sm:mt-2">Sans engagement</p>
