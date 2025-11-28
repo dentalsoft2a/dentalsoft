@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone, Save, Eye, EyeOff, FileText, Building2 } from 'lucide-react';
+import { User, Mail, Phone, Save, Eye, EyeOff, FileText, Building2, Lock } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import DentistLegalSettings from './settings/DentistLegalSettings';
+import DentistCompliancePage from './compliance/DentistCompliancePage';
 
-type TabType = 'profile' | 'legal';
+type TabType = 'profile' | 'legal' | 'compliance';
 
 export default function DentistSettingsPage() {
   const { user } = useAuth();
@@ -165,11 +166,26 @@ export default function DentistSettingsPage() {
               <Building2 className="w-5 h-5" />
               Informations Légales
             </button>
+            <button
+              onClick={() => setActiveTab('compliance')}
+              className={`
+                px-4 py-3 flex items-center gap-2 border-b-2 font-medium text-sm transition-all
+                ${activeTab === 'compliance'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }
+              `}
+            >
+              <Lock className="w-5 h-5" />
+              Conformité & Audit
+            </button>
           </nav>
         </div>
       </div>
 
-      {activeTab === 'legal' ? (
+      {activeTab === 'compliance' ? (
+        <DentistCompliancePage />
+      ) : activeTab === 'legal' ? (
         <DentistLegalSettings />
       ) : (
       <div className="space-y-6">

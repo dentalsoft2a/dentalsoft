@@ -96,7 +96,6 @@ export default function DentistDashboardLayout({
     { name: 'Catalogue Actes', icon: Stethoscope, page: 'dentist-catalog', locked: !hasAccess },
     { name: 'Stock Fournitures', icon: PackageOpen, page: 'dentist-stock', locked: !hasAccess },
     { name: 'Facturation', icon: CreditCard, page: 'dentist-invoices', locked: !hasAccess },
-    { name: 'Conformité & Audit', icon: Lock, page: 'dentist-compliance', locked: !hasAccess },
     { name: 'Mes Commandes', icon: Package, page: 'dentist-orders', locked: false },
     { name: 'Laboratoires', icon: Users, page: 'dentist-laboratories', locked: false },
     { name: 'Photos', icon: Camera, page: 'dentist-photos', locked: false },
