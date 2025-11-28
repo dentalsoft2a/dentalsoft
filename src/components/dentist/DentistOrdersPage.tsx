@@ -345,7 +345,7 @@ export default function DentistOrdersPage() {
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap mb-1">
-                              <h3 className="font-bold text-lg text-slate-900">BL {order.delivery_number}</h3>
+                              <h3 className="font-bold text-lg text-slate-900">{order.delivery_number}</h3>
                               <span className={`px-2 py-1 rounded-lg text-xs font-semibold border flex items-center gap-1 ${getStatusColor(order.status)}`}>
                                 <StatusIcon className="w-3 h-3" />
                                 {getStatusLabel(order.status)}
@@ -460,7 +460,7 @@ export default function DentistOrdersPage() {
             <div className="p-6 space-y-6">
               <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
                 <div className="flex items-center justify-between flex-wrap gap-2 mb-2">
-                  <h3 className="font-bold text-slate-900">BL {selectedOrder.delivery_number}</h3>
+                  <h3 className="font-bold text-slate-900">{selectedOrder.delivery_number}</h3>
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className={`px-3 py-1.5 rounded-lg text-xs font-semibold border ${getStatusColor(selectedOrder.status)}`}>
                       {getStatusLabel(selectedOrder.status)}
