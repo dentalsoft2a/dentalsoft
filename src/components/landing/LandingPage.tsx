@@ -944,53 +944,74 @@ export function LandingPage() {
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-5xl mx-auto mb-12">
               <div className="bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-slate-200 overflow-hidden">
                 <div className="bg-gradient-to-br from-slate-50 to-white p-4 sm:p-6 lg:p-8 text-center border-b border-slate-200">
-                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-3">Plan Standard</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-3">{userType === 'cabinet' ? 'Plan Gratuit' : 'Plan Standard'}</h3>
                   <div className="inline-flex items-baseline gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                    <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900">{price.toFixed(2)}€</span>
+                    <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-slate-900">{userType === 'cabinet' ? '0' : price.toFixed(2)}€</span>
                     <span className="text-base sm:text-lg text-slate-600">/mois</span>
                   </div>
                   <p className="text-xs sm:text-sm text-slate-600 mt-1 sm:mt-2">Sans engagement</p>
                 </div>
 
                 <div className="p-4 sm:p-6 lg:p-8">
-                  <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion complète des bons de livraison</span>
+                  {userType === 'cabinet' ? (
+                    <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Envoi de photos vers les laboratoires</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Communication avec les laboratoires</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion de commandes laboratoires</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Tableau de bord simple</span>
+                      </div>
                     </div>
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Factures et devis professionnels</span>
+                  ) : (
+                    <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion complète des bons de livraison</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Factures et devis professionnels</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion des dentistes et patients</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Catalogue produits et ressources</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion des stocks et lots</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700">Portail dentiste avec photos</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700">3 employés inclus</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700">Support par email</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3 mt-4 pt-4 border-t border-slate-200">
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 text-slate-400">+</div>
+                        <span className="text-xs sm:text-sm text-slate-500 italic">Extensions disponibles à la carte</span>
+                      </div>
                     </div>
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion des dentistes et patients</span>
-                    </div>
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Catalogue produits et ressources</span>
-                    </div>
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion des stocks et lots</span>
-                    </div>
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700">Portail dentiste avec photos</span>
-                    </div>
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700">3 employés inclus</span>
-                    </div>
-                    <div className="flex items-start gap-2 sm:gap-3">
-                      <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-600 flex-shrink-0 mt-0.5" />
-                      <span className="text-xs sm:text-sm text-slate-700">Support par email</span>
-                    </div>
-                    <div className="flex items-start gap-2 sm:gap-3 mt-4 pt-4 border-t border-slate-200">
-                      <div className="w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0 mt-0.5 text-slate-400">+</div>
-                      <span className="text-xs sm:text-sm text-slate-500 italic">Extensions disponibles à la carte</span>
-                    </div>
-                  </div>
+                  )}
 
                   <button
                     onClick={() => setCurrentView('register')}
@@ -1009,14 +1030,14 @@ export function LandingPage() {
                 </div>
 
                 <div className="bg-gradient-to-br from-amber-500 to-orange-600 p-4 sm:p-6 lg:p-8 text-center border-b border-amber-400">
-                  <h3 className="text-lg sm:text-xl font-bold text-white mb-3">Plan Premium Complet</h3>
+                  <h3 className="text-lg sm:text-xl font-bold text-white mb-3">{userType === 'cabinet' ? 'Plan Premium' : 'Plan Premium Complet'}</h3>
                   <div className="inline-flex items-baseline gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                     <span className="text-3xl sm:text-4xl md:text-5xl font-bold text-white">{premiumPrice.toFixed(2)}€</span>
                     <span className="text-base sm:text-lg text-white/90">/mois</span>
                   </div>
                   <p className="text-xs sm:text-sm text-white/90 mt-1 sm:mt-2">Sans engagement</p>
 
-                  {pricesLoaded && totalExtensionsPrice > 0 && (
+                  {userType === 'lab' && pricesLoaded && totalExtensionsPrice > 0 && (
                     <div className="mt-4 bg-white/20 backdrop-blur rounded-lg p-3">
                       <div className="text-center mb-3">
                         <div className="text-xs text-white/80 mb-1">Économisez en passant au Premium</div>
@@ -1034,7 +1055,43 @@ export function LandingPage() {
                 </div>
 
                 <div className="p-4 sm:p-6 lg:p-8 bg-white">
-                  <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
+                  {userType === 'cabinet' ? (
+                    <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion de patients</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Catalogue d'actes</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion des stocks</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Facturation</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Support prioritaire</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700">Toutes les fonctionnalités du plan gratuit</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3 mt-4 pt-4 border-t border-amber-200">
+                        <Rocket className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Futures extensions gratuites</span>
+                      </div>
+                      <div className="flex items-start gap-2 sm:gap-3">
+                        <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                        <span className="text-xs sm:text-sm text-slate-700 font-semibold">Accès anticipé aux nouveautés</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-2.5 sm:space-y-3 mb-6 sm:mb-8">
                     <div className="flex items-start gap-2 sm:gap-3">
                       <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                       <span className="text-xs sm:text-sm text-slate-700 font-semibold">Gestion complète des bons de livraison</span>
@@ -1105,7 +1162,8 @@ export function LandingPage() {
                       <Star className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 flex-shrink-0 mt-0.5" />
                       <span className="text-xs sm:text-sm text-slate-700 font-semibold">Accès anticipé aux nouveautés</span>
                     </div>
-                  </div>
+                    </div>
+                  )}
 
                   <button
                     onClick={() => setCurrentView('register')}
