@@ -38,13 +38,11 @@ interface DentalInvoiceData {
   certificate_serial?: string | null;
 }
 
-// Fonction helper pour s'assurer qu'on a toujours une string valide
 function safeText(text: any): string {
   if (text === null || text === undefined) return '';
   return String(text).trim();
 }
 
-// Fonction helper pour les nombres
 function safeNumber(num: any): number {
   if (num === null || num === undefined || isNaN(Number(num))) return 0;
   return Number(num);
@@ -75,27 +73,27 @@ export async function generateDentalInvoicePDF(data: DentalInvoiceData) {
     }
 
     if (safeText(data.dentist_phone)) {
-      doc.text(`Tel: ${safeText(data.dentist_phone)}`, 15, yPos);
+      doc.text('Tel: ' + safeText(data.dentist_phone), 15, yPos);
       yPos += 5;
     }
 
     if (safeText(data.dentist_email)) {
-      doc.text(`Email: ${safeText(data.dentist_email)}`, 15, yPos);
+      doc.text('Email: ' + safeText(data.dentist_email), 15, yPos);
       yPos += 5;
     }
 
     if (safeText(data.dentist_rpps)) {
-      doc.text(`RPPS: ${safeText(data.dentist_rpps)}`, 15, yPos);
+      doc.text('RPPS: ' + safeText(data.dentist_rpps), 15, yPos);
       yPos += 5;
     }
 
     if (safeText(data.dentist_adeli)) {
-      doc.text(`ADELI: ${safeText(data.dentist_adeli)}`, 15, yPos);
+      doc.text('ADELI: ' + safeText(data.dentist_adeli), 15, yPos);
       yPos += 5;
     }
 
     if (safeText(data.dentist_siret)) {
-      doc.text(`SIRET: ${safeText(data.dentist_siret)}`, 15, yPos);
+      doc.text('SIRET: ' + safeText(data.dentist_siret), 15, yPos);
       yPos += 5;
     }
 
@@ -112,25 +110,42 @@ export async function generateDentalInvoicePDF(data: DentalInvoiceData) {
     doc.setFontSize(16);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(22, 163, 74);
-    doc.text('FACTURE', boxX + boxWidth / 2, boxY + 10, { align: 'center' });
+    const titleWidth = doc.getTextWidth('FACTURE');
+    doc.text('FACTURE', boxX + (boxWidth - titleWidth) / 2, boxY + 10);
 
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text(safeText(data.invoice_number) || 'N/A', boxX + boxWidth / 2, boxY + 18, { align: 'center' });
+    const invoiceNumText = safeText(data.invoice_number) || 'N/A';
+    const invoiceNumWidth = doc.getTextWidth(invoiceNumText);
+    doc.text(invoiceNumText, boxX + (boxWidth - invoiceNumWidth) / 2, boxY + 18);
 
     doc.setFont('helvetica', 'normal');
-    const invoiceDate = safeText(data.invoice_date) ? new Date(data.invoice_date).toLocaleDateString('fr-FR') : 'N/A';
-    doc.text(`Date: ${invoiceDate}`, boxX + boxWidth / 2, boxY + 25, { align: 'center' });
+    const invoiceDateText = safeText(data.invoice_date) ?
+      'Date: ' + new Date(data.invoice_date).toLocaleDateString('fr-FR') :
+      'Date: N/A';
+    const dateWidth = doc.getTextWidth(invoiceDateText);
+    doc.text(invoiceDateText, boxX + (boxWidth - dateWidth) / 2, boxY + 25);
 
     // Statut
-    const statusText = data.status === 'paid' ? 'PAYEE' :
-                      data.status === 'partial' ? 'PARTIEL' :
-                      data.status === 'sent' ? 'ENVOYEE' : 'BROUILLON';
+    let statusText = 'BROUILLON';
+    let statusR = 100, statusG = 116, statusB = 139;
+
+    if (data.status === 'paid') {
+      statusText = 'PAYEE';
+      statusR = 34; statusG = 197; statusB = 94;
+    } else if (data.status === 'partial') {
+      statusText = 'PARTIEL';
+      statusR = 249; statusG = 115; statusB = 22;
+    } else if (data.status === 'sent') {
+      statusText = 'ENVOYEE';
+      statusR = 59; statusG = 130; statusB = 246;
+    }
+
     doc.setFont('helvetica', 'bold');
-    doc.setTextColor(data.status === 'paid' ? [34, 197, 94] :
-                     data.status === 'partial' ? [249, 115, 22] : [100, 116, 139]);
-    doc.text(statusText, boxX + boxWidth / 2, boxY + 32, { align: 'center' });
+    doc.setTextColor(statusR, statusG, statusB);
+    const statusWidth = doc.getTextWidth(statusText);
+    doc.text(statusText, boxX + (boxWidth - statusWidth) / 2, boxY + 32);
 
     doc.setTextColor(0, 0, 0);
 
@@ -156,7 +171,7 @@ export async function generateDentalInvoicePDF(data: DentalInvoiceData) {
     }
 
     if (safeText(data.patient_security_number)) {
-      doc.text(`N° Secu: ${safeText(data.patient_security_number)}`, 15, yPos);
+      doc.text('N Secu: ' + safeText(data.patient_security_number), 15, yPos);
       yPos += 5;
     }
 
@@ -190,7 +205,11 @@ export async function generateDentalInvoicePDF(data: DentalInvoiceData) {
 
     // Lignes du tableau
     let isAlternate = false;
-    (data.items || []).forEach((item) => {
+    const itemsArray = data.items || [];
+
+    for (let i = 0; i < itemsArray.length; i++) {
+      const item = itemsArray[i];
+
       if (yPos > pageHeight - 60) {
         doc.addPage();
         yPos = 20;
@@ -202,19 +221,18 @@ export async function generateDentalInvoicePDF(data: DentalInvoiceData) {
       }
 
       const description = safeText(item.description) || 'Acte';
-      const descLines = doc.splitTextToSize(description, 75);
-      doc.text(descLines, 17, yPos + 5);
+      doc.text(description.substring(0, 40), 17, yPos + 5);
 
       doc.text(safeText(item.ccam_code) || '-', 95, yPos + 5);
       doc.text(safeText(item.tooth_number) || '-', 115, yPos + 5);
       doc.text(String(safeNumber(item.quantity)), 130, yPos + 5);
-      doc.text(`${safeNumber(item.unit_price).toFixed(2)}€`, 145, yPos + 5);
-      doc.text(`${safeNumber(item.cpam_reimbursement).toFixed(2)}€`, 165, yPos + 5);
-      doc.text(`${safeNumber(item.total).toFixed(2)}€`, 182, yPos + 5);
+      doc.text(safeNumber(item.unit_price).toFixed(2) + ' EUR', 145, yPos + 5);
+      doc.text(safeNumber(item.cpam_reimbursement).toFixed(2) + ' EUR', 165, yPos + 5);
+      doc.text(safeNumber(item.total).toFixed(2) + ' EUR', 182, yPos + 5);
 
-      yPos += Math.max(7, descLines.length * 5);
+      yPos += 7;
       isAlternate = !isAlternate;
-    });
+    }
 
     doc.setDrawColor(200, 200, 200);
     doc.line(15, yPos, pageWidth - 15, yPos);
@@ -226,19 +244,19 @@ export async function generateDentalInvoicePDF(data: DentalInvoiceData) {
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(9);
     doc.text('Sous-total HT:', totalsX, yPos);
-    doc.text(`${safeNumber(data.subtotal).toFixed(2)}€`, totalsX + 50, yPos, { align: 'right' });
+    doc.text(safeNumber(data.subtotal).toFixed(2) + ' EUR', totalsX + 35, yPos);
     yPos += 6;
 
     if (safeNumber(data.tax_rate) > 0) {
-      doc.text(`TVA (${safeNumber(data.tax_rate).toFixed(1)}%):`, totalsX, yPos);
-      doc.text(`${safeNumber(data.tax_amount).toFixed(2)}€`, totalsX + 50, yPos, { align: 'right' });
+      doc.text('TVA (' + safeNumber(data.tax_rate).toFixed(1) + '%):', totalsX, yPos);
+      doc.text(safeNumber(data.tax_amount).toFixed(2) + ' EUR', totalsX + 35, yPos);
       yPos += 6;
     }
 
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(11);
     doc.text('Total TTC:', totalsX, yPos);
-    doc.text(`${safeNumber(data.total).toFixed(2)}€`, totalsX + 50, yPos, { align: 'right' });
+    doc.text(safeNumber(data.total).toFixed(2) + ' EUR', totalsX + 35, yPos);
     yPos += 10;
 
     // Répartition
@@ -250,16 +268,16 @@ export async function generateDentalInvoicePDF(data: DentalInvoiceData) {
 
     doc.setTextColor(22, 163, 74);
     doc.text('Part CPAM:', totalsX, yPos + 3);
-    doc.text(`${safeNumber(data.cpam_part).toFixed(2)}€`, totalsX + 50, yPos + 3, { align: 'right' });
+    doc.text(safeNumber(data.cpam_part).toFixed(2) + ' EUR', totalsX + 35, yPos + 3);
     yPos += 6;
 
     doc.text('Part Mutuelle:', totalsX, yPos + 3);
-    doc.text(`${safeNumber(data.mutuelle_part).toFixed(2)}€`, totalsX + 50, yPos + 3, { align: 'right' });
+    doc.text(safeNumber(data.mutuelle_part).toFixed(2) + ' EUR', totalsX + 35, yPos + 3);
     yPos += 6;
 
     doc.setFont('helvetica', 'bold');
     doc.text('Part Patient:', totalsX, yPos + 3);
-    doc.text(`${safeNumber(data.patient_part).toFixed(2)}€`, totalsX + 50, yPos + 3, { align: 'right' });
+    doc.text(safeNumber(data.patient_part).toFixed(2) + ' EUR', totalsX + 35, yPos + 3);
 
     doc.setTextColor(0, 0, 0);
     yPos += 15;
@@ -269,13 +287,13 @@ export async function generateDentalInvoicePDF(data: DentalInvoiceData) {
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(9);
       doc.setTextColor(34, 197, 94);
-      doc.text(`Montant paye: ${safeNumber(data.paid_amount).toFixed(2)}€`, totalsX, yPos);
+      doc.text('Montant paye: ' + safeNumber(data.paid_amount).toFixed(2) + ' EUR', totalsX, yPos);
       yPos += 6;
 
       const remaining = safeNumber(data.total) - safeNumber(data.paid_amount);
       if (remaining > 0.01) {
         doc.setTextColor(249, 115, 22);
-        doc.text(`Reste a payer: ${remaining.toFixed(2)}€`, totalsX, yPos);
+        doc.text('Reste a payer: ' + remaining.toFixed(2) + ' EUR', totalsX, yPos);
       }
       doc.setTextColor(0, 0, 0);
       yPos += 10;
@@ -288,43 +306,52 @@ export async function generateDentalInvoicePDF(data: DentalInvoiceData) {
       doc.setFont('helvetica', 'italic');
       doc.text('Notes:', 15, yPos);
       yPos += 5;
-      const notesLines = doc.splitTextToSize(safeText(data.notes), pageWidth - 30);
-      doc.text(notesLines, 15, yPos);
-      yPos += notesLines.length * 5;
+      doc.setFont('helvetica', 'normal');
+      doc.text(safeText(data.notes).substring(0, 100), 15, yPos);
+      yPos += 5;
     }
 
     // Pied de page
-    yPos = pageHeight - 40;
+    const footerY = pageHeight - 40;
 
     doc.setFontSize(7);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(100, 116, 139);
 
-    doc.text('Cette facture est conforme a l\'article 286 du Code General des Impots', pageWidth / 2, yPos, { align: 'center' });
-    yPos += 4;
-    doc.text('Journal d\'audit inalterable - Conservation 6 ans minimum', pageWidth / 2, yPos, { align: 'center' });
-    yPos += 4;
+    const footer1 = 'Cette facture est conforme a l\'article 286 du Code General des Impots';
+    const footer1Width = doc.getTextWidth(footer1);
+    doc.text(footer1, (pageWidth - footer1Width) / 2, footerY);
+
+    const footer2 = 'Journal d\'audit inalterable - Conservation 6 ans minimum';
+    const footer2Width = doc.getTextWidth(footer2);
+    doc.text(footer2, (pageWidth - footer2Width) / 2, footerY + 4);
 
     if (safeText(data.certificate_serial)) {
-      doc.text(`Certificat numerique: ${safeText(data.certificate_serial)}`, pageWidth / 2, yPos, { align: 'center' });
-      yPos += 4;
+      const footer3 = 'Certificat numerique: ' + safeText(data.certificate_serial);
+      const footer3Width = doc.getTextWidth(footer3);
+      doc.text(footer3, (pageWidth - footer3Width) / 2, footerY + 8);
     }
 
-    const hashInput = `${safeText(data.invoice_number)}|${safeText(data.invoice_date)}|${safeNumber(data.total)}|${safeText(data.dentist_siret)}`;
+    const hashInput = safeText(data.invoice_number) + '|' +
+                     safeText(data.invoice_date) + '|' +
+                     safeNumber(data.total) + '|' +
+                     safeText(data.dentist_siret);
     const simpleHash = btoa(hashInput).substring(0, 16);
-    doc.text(`Hash de verification: ${simpleHash}`, pageWidth / 2, yPos, { align: 'center' });
+    const footer4 = 'Hash de verification: ' + simpleHash;
+    const footer4Width = doc.getTextWidth(footer4);
+    doc.text(footer4, (pageWidth - footer4Width) / 2, footerY + 12);
 
     return doc;
   } catch (error) {
     console.error('Error in generateDentalInvoicePDF:', error);
-    throw new Error(`Erreur PDF: ${error instanceof Error ? error.message : 'Erreur inconnue'}`);
+    throw new Error('Erreur PDF: ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
   }
 }
 
 export async function downloadDentalInvoicePDF(data: DentalInvoiceData) {
   try {
     const doc = await generateDentalInvoicePDF(data);
-    const fileName = `facture-${safeText(data.invoice_number) || 'patient'}.pdf`;
+    const fileName = 'facture-' + (safeText(data.invoice_number) || 'patient') + '.pdf';
     doc.save(fileName);
   } catch (error) {
     console.error('Error downloading PDF:', error);
