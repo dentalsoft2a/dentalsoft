@@ -99,12 +99,25 @@ export default function DentalInvoicesPage() {
   };
 
   const handleEdit = (invoice: Invoice) => {
+    if (invoice.status !== 'draft') {
+      alert('Une facture définitive ne peut pas être modifiée. Créez un avoir pour corriger une erreur.');
+      return;
+    }
     setEditingInvoiceId(invoice.id);
     setShowInvoiceModal(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Supprimer cette facture ?')) return;
+    const invoice = invoices.find(inv => inv.id === id);
+
+    if (!invoice) return;
+
+    if (invoice.status !== 'draft') {
+      alert('Une facture envoyée ou payée ne peut pas être supprimée pour des raisons de conformité légale. Vous pouvez créer un avoir à la place.');
+      return;
+    }
+
+    if (!confirm('Supprimer cette facture brouillon ?')) return;
 
     try {
       const { error } = await supabase
@@ -424,14 +437,19 @@ export default function DentalInvoicesPage() {
                       <Edit className="w-5 h-5" />
                     </button>
                   )}
-                  {invoice.status !== 'cancelled' && (
+                  {invoice.status === 'draft' && (
                     <button
                       onClick={() => handleDelete(invoice.id)}
                       className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition"
-                      title="Annuler"
+                      title="Supprimer le brouillon"
                     >
                       <Trash2 className="w-5 h-5" />
                     </button>
+                  )}
+                  {invoice.status !== 'draft' && invoice.status !== 'cancelled' && (
+                    <div className="px-3 py-1 bg-slate-100 rounded-lg text-xs text-slate-600 font-medium">
+                      Facture définitive
+                    </div>
                   )}
                 </div>
               </div>
