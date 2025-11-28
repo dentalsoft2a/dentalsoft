@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Plus, FileText, Calendar, Edit, Trash2, CreditCard, Download, Eye } from 'lucide-react';
+import { Plus, FileText, Calendar, Edit, Trash2, CreditCard, Download, Eye, FileDown, Receipt } from 'lucide-react';
 import { supabase } from '../../../lib/supabase';
 import { useAuth } from '../../../contexts/AuthContext';
 import DentalInvoiceModal from './DentalInvoiceModal';
 import PaymentModal from './PaymentModal';
+import DentalCreditNoteModal from './DentalCreditNoteModal';
+import { downloadDentalInvoicePDF } from '../../../utils/dentalInvoicePdfGenerator';
+import { useDentistLegalInfo } from '../../../hooks/useDentistLegalInfo';
 
 interface Invoice {
   id: string;
@@ -29,8 +32,11 @@ export default function DentalInvoicesPage() {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [editingInvoiceId, setEditingInvoiceId] = useState<string | undefined>();
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showCreditNoteModal, setShowCreditNoteModal] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [filterStatus, setFilterStatus] = useState('all');
+  const { info: dentistInfo } = useDentistLegalInfo();
+  const [downloadingPdf, setDownloadingPdf] = useState<string | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -102,6 +108,66 @@ export default function DentalInvoicesPage() {
   const handlePayment = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
     setShowPaymentModal(true);
+  };
+
+  const handleCreateCreditNote = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+    setShowCreditNoteModal(true);
+  };
+
+  const handleDownloadPDF = async (invoice: Invoice) => {
+    if (!user || downloadingPdf) return;
+
+    try {
+      setDownloadingPdf(invoice.id);
+
+      // Charger les items de la facture
+      const { data: items, error: itemsError } = await supabase
+        .from('dental_invoice_items')
+        .select('*')
+        .eq('invoice_id', invoice.id);
+
+      if (itemsError) throw itemsError;
+
+      // Charger les informations du certificat
+      const { data: certificate } = await supabase
+        .from('dentist_digital_certificates')
+        .select('serial_number')
+        .eq('dentist_id', user.id)
+        .eq('is_revoked', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      await downloadDentalInvoicePDF({
+        invoice_number: invoice.invoice_number,
+        invoice_date: invoice.invoice_date,
+        dentist_name: dentistInfo.company_name || 'Cabinet Dentaire',
+        dentist_address: `${dentistInfo.cabinet_address || ''}\n${dentistInfo.cabinet_postal_code || ''} ${dentistInfo.cabinet_city || ''}`,
+        dentist_phone: dentistInfo.cabinet_phone || '',
+        dentist_email: dentistInfo.cabinet_email || '',
+        dentist_rpps: dentistInfo.rpps_number || undefined,
+        dentist_adeli: dentistInfo.adeli_number || undefined,
+        dentist_siret: dentistInfo.siret_number || undefined,
+        patient_name: `${invoice.patient?.first_name} ${invoice.patient?.last_name}`,
+        items: items || [],
+        subtotal: invoice.total - (invoice.total * 0.2),
+        tax_rate: 20,
+        tax_amount: invoice.total * 0.2,
+        total: invoice.total,
+        cpam_part: invoice.cpam_part,
+        mutuelle_part: invoice.mutuelle_part,
+        patient_part: invoice.patient_part,
+        paid_amount: invoice.paid_amount,
+        status: invoice.status,
+        certificate_serial: certificate?.serial_number
+      });
+    } catch (error) {
+      console.error('Error downloading PDF:', error);
+      alert('Erreur lors de la génération du PDF');
+    } finally {
+      setDownloadingPdf(null);
+    }
   };
 
   const handleCloseInvoiceModal = () => {
@@ -279,6 +345,29 @@ export default function DentalInvoicesPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {invoice.status !== 'draft' && invoice.status !== 'cancelled' && (
+                    <button
+                      onClick={() => handleDownloadPDF(invoice)}
+                      disabled={downloadingPdf === invoice.id}
+                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition disabled:opacity-50"
+                      title="Télécharger PDF"
+                    >
+                      {downloadingPdf === invoice.id ? (
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                      ) : (
+                        <FileDown className="w-5 h-5" />
+                      )}
+                    </button>
+                  )}
+                  {invoice.status !== 'draft' && invoice.status !== 'cancelled' && (
+                    <button
+                      onClick={() => handleCreateCreditNote(invoice)}
+                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                      title="Créer un avoir"
+                    >
+                      <Receipt className="w-5 h-5" />
+                    </button>
+                  )}
                   {invoice.status !== 'paid' && invoice.status !== 'cancelled' && (
                     <button
                       onClick={() => handlePayment(invoice)}
@@ -300,7 +389,7 @@ export default function DentalInvoicesPage() {
                   {invoice.status !== 'cancelled' && (
                     <button
                       onClick={() => handleDelete(invoice.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                      className="p-2 text-orange-600 hover:bg-orange-50 rounded-lg transition"
                       title="Annuler"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -342,6 +431,17 @@ export default function DentalInvoicesPage() {
           paidAmount={selectedInvoice.paid_amount}
           onClose={() => {
             setShowPaymentModal(false);
+            setSelectedInvoice(null);
+          }}
+          onSuccess={loadInvoices}
+        />
+      )}
+
+      {showCreditNoteModal && selectedInvoice && (
+        <DentalCreditNoteModal
+          invoice={selectedInvoice}
+          onClose={() => {
+            setShowCreditNoteModal(false);
             setSelectedInvoice(null);
           }}
           onSuccess={loadInvoices}
