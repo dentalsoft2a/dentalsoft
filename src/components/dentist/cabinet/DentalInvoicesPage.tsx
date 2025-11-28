@@ -13,15 +13,23 @@ interface Invoice {
   invoice_number: string;
   invoice_date: string;
   patient_id: string;
+  subtotal: number;
+  tax_rate: number;
+  tax_amount: number;
   total: number;
   cpam_part: number;
   mutuelle_part: number;
   patient_part: number;
   paid_amount: number;
   status: string;
+  notes?: string;
   patient?: {
     first_name: string;
     last_name: string;
+    address?: string;
+    postal_code?: string;
+    city?: string;
+    social_security_number?: string;
   };
 }
 
@@ -52,7 +60,14 @@ export default function DentalInvoicesPage() {
         .from('dental_invoices')
         .select(`
           *,
-          patient:dental_patients(first_name, last_name)
+          patient:dental_patients(
+            first_name,
+            last_name,
+            address,
+            postal_code,
+            city,
+            social_security_number
+          )
         `)
         .eq('dentist_id', user.id)
         .order('invoice_date', { ascending: false });
@@ -129,6 +144,20 @@ export default function DentalInvoicesPage() {
 
       if (itemsError) throw itemsError;
 
+      // Charger les informations légales du dentiste
+      const { data: legalInfo } = await supabase
+        .from('dentist_legal_info')
+        .select('*')
+        .eq('dentist_id', user.id)
+        .maybeSingle();
+
+      // Charger le compte dentiste
+      const { data: dentistAccount } = await supabase
+        .from('dentist_accounts')
+        .select('*')
+        .eq('id', user.id)
+        .maybeSingle();
+
       // Charger les informations du certificat
       const { data: certificate } = await supabase
         .from('dentist_digital_certificates')
@@ -139,32 +168,41 @@ export default function DentalInvoicesPage() {
         .limit(1)
         .maybeSingle();
 
+      const patientAddress = invoice.patient?.address
+        ? `${invoice.patient.address}\n${invoice.patient.postal_code || ''} ${invoice.patient.city || ''}`.trim()
+        : undefined;
+
       await downloadDentalInvoicePDF({
         invoice_number: invoice.invoice_number,
         invoice_date: invoice.invoice_date,
-        dentist_name: dentistInfo.company_name || 'Cabinet Dentaire',
-        dentist_address: `${dentistInfo.cabinet_address || ''}\n${dentistInfo.cabinet_postal_code || ''} ${dentistInfo.cabinet_city || ''}`,
-        dentist_phone: dentistInfo.cabinet_phone || '',
-        dentist_email: dentistInfo.cabinet_email || '',
-        dentist_rpps: dentistInfo.rpps_number || undefined,
-        dentist_adeli: dentistInfo.adeli_number || undefined,
-        dentist_siret: dentistInfo.siret_number || undefined,
-        patient_name: `${invoice.patient?.first_name} ${invoice.patient?.last_name}`,
+        dentist_name: legalInfo?.company_name || dentistAccount?.name || 'Cabinet Dentaire',
+        dentist_address: legalInfo?.cabinet_address
+          ? `${legalInfo.cabinet_address}\n${legalInfo.cabinet_postal_code || ''} ${legalInfo.cabinet_city || ''}`.trim()
+          : '',
+        dentist_phone: legalInfo?.cabinet_phone || '',
+        dentist_email: legalInfo?.cabinet_email || dentistAccount?.email || '',
+        dentist_rpps: legalInfo?.rpps_number || undefined,
+        dentist_adeli: legalInfo?.adeli_number || undefined,
+        dentist_siret: legalInfo?.siret_number || undefined,
+        patient_name: `${invoice.patient?.first_name || ''} ${invoice.patient?.last_name || ''}`.trim(),
+        patient_address: patientAddress,
+        patient_security_number: invoice.patient?.social_security_number || undefined,
         items: items || [],
-        subtotal: invoice.total - (invoice.total * 0.2),
-        tax_rate: 20,
-        tax_amount: invoice.total * 0.2,
+        subtotal: invoice.subtotal || 0,
+        tax_rate: invoice.tax_rate || 0,
+        tax_amount: invoice.tax_amount || 0,
         total: invoice.total,
         cpam_part: invoice.cpam_part,
         mutuelle_part: invoice.mutuelle_part,
         patient_part: invoice.patient_part,
         paid_amount: invoice.paid_amount,
         status: invoice.status,
+        notes: invoice.notes,
         certificate_serial: certificate?.serial_number
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error downloading PDF:', error);
-      alert('Erreur lors de la génération du PDF');
+      alert(`Erreur lors de la génération du PDF: ${error.message || 'Erreur inconnue'}`);
     } finally {
       setDownloadingPdf(null);
     }
