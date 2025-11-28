@@ -39,6 +39,7 @@ import DentalCatalogPage from './components/dentist/cabinet/DentalCatalogPage';
 import DentalStockPage from './components/dentist/cabinet/DentalStockPage';
 import DentalInvoicesPage from './components/dentist/cabinet/DentalInvoicesPage';
 import DentistSubscriptionPage from './components/dentist/DentistSubscriptionPage';
+import DentistCompliancePage from './components/dentist/compliance/DentistCompliancePage';
 import SubscriptionGuard from './components/dentist/SubscriptionGuard';
 import { ServerStatusMonitor } from './components/common/ServerStatusMonitor';
 import { ImpersonationBanner } from './components/common/ImpersonationBanner';
@@ -346,7 +347,7 @@ function AppContent() {
     }
 
     // Sur desktop, afficher l'interface complète avec layout
-    const dentistPages = ['dentist-dashboard', 'dentist-orders', 'dentist-laboratories', 'dentist-photos', 'dentist-settings', 'dentist-help', 'dentist-support', 'dentist-patients', 'dentist-catalog', 'dentist-stock', 'dentist-invoices', 'dentist-subscription'];
+    const dentistPages = ['dentist-dashboard', 'dentist-orders', 'dentist-laboratories', 'dentist-photos', 'dentist-settings', 'dentist-help', 'dentist-support', 'dentist-patients', 'dentist-catalog', 'dentist-stock', 'dentist-invoices', 'dentist-subscription', 'dentist-compliance'];
 
     if (currentPath === '' || !dentistPages.includes(currentPath)) {
       return <Navigate to="/dentist-dashboard" replace />;
@@ -400,6 +401,8 @@ function AppContent() {
           );
         case 'dentist-subscription':
           return <DentistSubscriptionPage />;
+        case 'dentist-compliance':
+          return <DentistCompliancePage />;
         case 'dentist-settings':
           return <DentistSettingsPage />;
         case 'dentist-help':

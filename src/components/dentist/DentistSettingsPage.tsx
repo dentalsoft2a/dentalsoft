@@ -1,10 +1,14 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone, Save, Eye, EyeOff } from 'lucide-react';
+import { User, Mail, Phone, Save, Eye, EyeOff, FileText, Building2 } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
+import DentistLegalSettings from './settings/DentistLegalSettings';
+
+type TabType = 'profile' | 'legal';
 
 export default function DentistSettingsPage() {
   const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState<TabType>('profile');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -128,9 +132,46 @@ export default function DentistSettingsPage() {
     <div className="max-w-4xl mx-auto">
       <div className="mb-6 md:mb-8 animate-fade-in">
         <h1 className="text-2xl md:text-3xl font-bold text-slate-900">Paramètres</h1>
-        <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez vos informations personnelles</p>
+        <p className="text-slate-600 mt-1 md:mt-2 text-sm md:text-base">Gérez vos informations personnelles et légales</p>
       </div>
 
+      {/* Tabs */}
+      <div className="mb-6">
+        <div className="border-b border-slate-200">
+          <nav className="-mb-px flex space-x-4" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('profile')}
+              className={`
+                px-4 py-3 flex items-center gap-2 border-b-2 font-medium text-sm transition-all
+                ${activeTab === 'profile'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }
+              `}
+            >
+              <User className="w-5 h-5" />
+              Profil
+            </button>
+            <button
+              onClick={() => setActiveTab('legal')}
+              className={`
+                px-4 py-3 flex items-center gap-2 border-b-2 font-medium text-sm transition-all
+                ${activeTab === 'legal'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                }
+              `}
+            >
+              <Building2 className="w-5 h-5" />
+              Informations Légales
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      {activeTab === 'legal' ? (
+        <DentistLegalSettings />
+      ) : (
       <div className="space-y-6">
         <div className="bg-white rounded-xl shadow-lg border border-slate-200 overflow-hidden">
           <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-cyan-50 border-b border-slate-200">
@@ -274,6 +315,7 @@ export default function DentistSettingsPage() {
           </div>
         </div>
       </div>
+      )}
     </div>
   );
 }
