@@ -50,7 +50,8 @@ export default function LaboratorySelector({ value, onChange, dentistId }: Labor
       const linkedDentistsResult = await supabase
         .from('dentists')
         .select('id, user_id')
-        .eq('linked_dentist_account_id', dentistId);
+        .eq('linked_dentist_account_id', dentistId)
+        .not('linked_dentist_account_id', 'is', null);
 
       console.log('👥 Linked dentists query result:', {
         data: linkedDentistsResult.data,

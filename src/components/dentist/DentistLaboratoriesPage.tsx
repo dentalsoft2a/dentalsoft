@@ -39,7 +39,8 @@ export default function DentistLaboratoriesPage() {
       const { data: linkedDentists } = await supabase
         .from('dentists')
         .select('id, user_id')
-        .eq('linked_dentist_account_id', user.id);
+        .eq('linked_dentist_account_id', user.id)
+        .not('linked_dentist_account_id', 'is', null);
 
       // Si aucun dentiste lié, ne rien afficher
       if (!linkedDentists || linkedDentists.length === 0) {
