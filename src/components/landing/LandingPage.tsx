@@ -320,6 +320,18 @@ export function LandingPage() {
                 </div>
               </div>
 
+              {contactPhone && (
+                <div className="mt-8 sm:mt-10 flex justify-center">
+                  <a
+                    href={`tel:${contactPhone.replace(/\s/g, '')}`}
+                    className="inline-flex items-center gap-2 px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 text-slate-700 font-medium hover:border-green-400 hover:shadow-lg hover:scale-105 transition-all duration-300 group text-sm sm:text-base"
+                  >
+                    <Phone className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 group-hover:scale-110 transition-transform" />
+                    <span className="text-green-700 font-semibold">{contactPhone}</span>
+                  </a>
+                </div>
+              )}
+
               <div className="mt-4 sm:mt-6 md:mt-8 flex flex-wrap justify-center gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm text-slate-600 px-4">
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5 text-green-500 flex-shrink-0" />
