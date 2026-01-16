@@ -11,6 +11,7 @@ export default function DentistRegisterPage({ onNavigate }: DentistRegisterPageP
   const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
@@ -22,6 +23,10 @@ export default function DentistRegisterPage({ onNavigate }: DentistRegisterPageP
     setLoading(true);
 
     try {
+      if (password !== confirmPassword) {
+        throw new Error('Les mots de passe ne correspondent pas');
+      }
+
       // Importer supabase pour vérifier l'email
       const { supabase } = await import('../../lib/supabase');
 
@@ -137,6 +142,28 @@ export default function DentistRegisterPage({ onNavigate }: DentistRegisterPageP
                   minLength={6}
                 />
                 <p className="mt-1 text-xs text-slate-500">Minimum 6 caractères</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                  Confirmer le mot de passe *
+                </label>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:border-transparent transition text-sm ${
+                    confirmPassword && password !== confirmPassword
+                      ? 'border-red-300 focus:ring-red-500'
+                      : 'border-slate-300 focus:ring-blue-500'
+                  }`}
+                  placeholder="••••••••"
+                  required
+                  minLength={6}
+                />
+                {confirmPassword && password !== confirmPassword && (
+                  <p className="mt-1 text-xs text-red-600">Les mots de passe ne correspondent pas</p>
+                )}
               </div>
 
               <button

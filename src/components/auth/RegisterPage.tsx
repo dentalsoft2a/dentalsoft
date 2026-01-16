@@ -12,6 +12,7 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [laboratoryName, setLaboratoryName] = useState('');
   const [referralCode, setReferralCode] = useState('');
   const [isDentistMode, setIsDentistMode] = useState(false);
@@ -34,6 +35,10 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
     setLoading(true);
 
     try {
+      if (password !== confirmPassword) {
+        throw new Error('Les mots de passe ne correspondent pas');
+      }
+
       // Importer supabase pour vérifier l'email
       const { supabase } = await import('../../lib/supabase');
 
@@ -211,6 +216,29 @@ export default function RegisterPage({ onToggleLogin }: RegisterPageProps) {
                 placeholder="••••••••"
               />
               <p className="text-xs text-slate-500 mt-1">Minimum 6 caractères</p>
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-2">
+                Confirmer le mot de passe
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                className={`w-full px-4 py-3 rounded-lg border focus:ring-2 focus:border-transparent outline-none transition ${
+                  confirmPassword && password !== confirmPassword
+                    ? 'border-red-300 focus:ring-red-500'
+                    : 'border-slate-300 focus:ring-primary-500'
+                }`}
+                placeholder="••••••••"
+              />
+              {confirmPassword && password !== confirmPassword && (
+                <p className="text-xs text-red-600 mt-1">Les mots de passe ne correspondent pas</p>
+              )}
             </div>
 
             <div>
