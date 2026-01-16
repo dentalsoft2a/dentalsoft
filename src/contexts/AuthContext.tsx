@@ -130,8 +130,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       (async () => {
+        logger.debug('Auth state change event:', event);
+
+        if (event === 'TOKEN_REFRESHED') {
+          setUser(session?.user ?? null);
+          return;
+        }
+
+        if (event === 'SIGNED_OUT') {
+          setUser(null);
+          setProfile(null);
+          setUserProfile(null);
+          setEmployeeInfo(null);
+          setLaboratoryUserProfile(null);
+          setLoading(false);
+          return;
+        }
+
         setUser(session?.user ?? null);
         if (session?.user) {
           await loadProfile(session.user.id);
