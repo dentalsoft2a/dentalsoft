@@ -227,32 +227,19 @@ export default function BatchSelector({
         <div className="space-y-2">
           {selectedBatches.map((batch, index) => (
             <div key={index} className="flex gap-2 items-center p-2 bg-slate-50 rounded border border-slate-200">
-              <div className="flex-1 grid grid-cols-2 gap-2">
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Lot</label>
-                  <select
-                    value={batch.batch_number_id || ''}
-                    onChange={(e) => updateBatch(index, 'batch_number_id', e.target.value)}
-                    className="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    {availableBatches.map((b) => (
-                      <option key={b.id} value={b.id}>
-                        {b.batch_number} - {b.material_name} {b.is_current && '(actuel)'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs text-slate-600 mb-1">Quantité utilisée</label>
-                  <input
-                    type="number"
-                    min="0.01"
-                    step="0.01"
-                    value={batch.quantity_used}
-                    onChange={(e) => updateBatch(index, 'quantity_used', parseFloat(e.target.value) || 0)}
-                    className="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
+              <div className="flex-1">
+                <label className="block text-xs text-slate-600 mb-1">Lot</label>
+                <select
+                  value={batch.batch_number_id || ''}
+                  onChange={(e) => updateBatch(index, 'batch_number_id', e.target.value)}
+                  className="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {availableBatches.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.batch_number} - {b.material_name} {b.is_current && '(actuel)'}
+                    </option>
+                  ))}
+                </select>
               </div>
               <button
                 type="button"
