@@ -48,6 +48,7 @@ import { LegalNotice } from './components/legal/LegalNotice';
 import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
 import { TermsOfService } from './components/legal/TermsOfService';
 import QuoteRequestsPage from './components/quotes/QuoteRequestsPage';
+import ResetPasswordPage from './components/auth/ResetPasswordPage';
 import { supabase } from './lib/supabase';
 import { usePermissions } from './hooks/usePermissions';
 
@@ -302,6 +303,9 @@ function AppContent() {
     }
     if (currentPath === 'terms-of-service') {
       return <TermsOfService />;
+    }
+    if (currentPath === 'reset-password') {
+      return <ResetPasswordPage />;
     }
 
     if (currentPath !== '' && currentPath !== 'register-dentist' && currentPath !== 'dashboard') {

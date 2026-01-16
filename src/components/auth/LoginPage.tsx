@@ -15,6 +15,11 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [userType, setUserType] = useState<'laboratory' | 'dentist'>('laboratory');
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetError, setResetError] = useState('');
+  const [resetSuccess, setResetSuccess] = useState(false);
   const { signIn } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -54,6 +59,32 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
     } catch (err: any) {
       setError(err.message || 'Une erreur est survenue lors de la connexion');
       setLoading(false);
+    }
+  };
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError('');
+    setResetSuccess(false);
+    setResetLoading(true);
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      setResetSuccess(true);
+      setResetEmail('');
+      setTimeout(() => {
+        setShowResetModal(false);
+        setResetSuccess(false);
+        setResetLoading(false);
+      }, 3000);
+    } catch (err: any) {
+      setResetError(err.message || 'Erreur lors de l\'envoi du lien de réinitialisation');
+      setResetLoading(false);
     }
   };
 
@@ -146,7 +177,16 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
             </button>
           </form>
 
-          <div className="mt-6 text-center">
+          <div className="mt-6 space-y-3 text-center">
+            <p className="text-slate-600 text-sm">
+              <button
+                type="button"
+                onClick={() => setShowResetModal(true)}
+                className="text-primary-600 font-medium hover:text-primary-700 transition-colors duration-200 hover:underline"
+              >
+                Mot de passe oublié ?
+              </button>
+            </p>
             <p className="text-slate-600 text-sm">
               Pas encore de compte ?{' '}
               <button
@@ -159,6 +199,66 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
           </div>
         </div>
       </div>
+
+      {showResetModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-scale-in">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Réinitialiser le mot de passe</h2>
+            <p className="text-slate-600 text-sm mb-6">Entrez votre email pour recevoir un lien de réinitialisation</p>
+
+            <form onSubmit={handleResetPassword} className="space-y-4">
+              <div>
+                <label htmlFor="reset-email" className="block text-sm font-medium text-slate-700 mb-2">
+                  Email
+                </label>
+                <input
+                  id="reset-email"
+                  type="email"
+                  value={resetEmail}
+                  onChange={(e) => setResetEmail(e.target.value)}
+                  required
+                  className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all duration-200"
+                  placeholder="votre@email.com"
+                />
+              </div>
+
+              {resetError && (
+                <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm animate-slide-in">
+                  {resetError}
+                </div>
+              )}
+
+              {resetSuccess && (
+                <div className="bg-green-50 border-2 border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm animate-slide-in">
+                  Lien de réinitialisation envoyé ! Vérifiez votre email.
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowResetModal(false);
+                    setResetError('');
+                    setResetSuccess(false);
+                    setResetEmail('');
+                  }}
+                  className="flex-1 px-4 py-3 rounded-lg border-2 border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors duration-200"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetLoading}
+                  className="flex-1 bg-gradient-to-r from-primary-500 to-cyan-500 text-white py-3 rounded-lg font-medium hover:from-primary-600 hover:to-cyan-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {resetLoading ? 'Envoi...' : 'Envoyer'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
