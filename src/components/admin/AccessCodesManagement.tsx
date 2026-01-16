@@ -14,6 +14,8 @@ interface AccessCode {
   created_at: string;
   expires_at: string | null;
   subscription_plan_id: string | null;
+  max_uses: number | null;
+  current_uses: number;
   subscription_plan?: {
     name: string;
     plan_type: string;
@@ -39,6 +41,7 @@ export function AccessCodesManagement() {
     quantity: 1,
     expires_in_days: 0,
     subscription_plan_id: '',
+    max_uses: 1,
   });
 
   useLockScroll(showCreateModal);
@@ -106,6 +109,8 @@ export function AccessCodesManagement() {
           created_by: user.id,
           expires_at: expiresAt,
           subscription_plan_id: formData.subscription_plan_id || null,
+          max_uses: formData.max_uses > 0 ? formData.max_uses : null,
+          current_uses: 0,
         });
       }
 
@@ -120,7 +125,8 @@ export function AccessCodesManagement() {
         duration_days: 30,
         quantity: 1,
         expires_in_days: 0,
-        subscription_plan_id: plans.length > 0 ? plans[0].id : ''
+        subscription_plan_id: plans.length > 0 ? plans[0].id : '',
+        max_uses: 1,
       });
       loadData();
     } catch (error) {
@@ -202,7 +208,11 @@ export function AccessCodesManagement() {
             <div>
               <p className="text-sm text-orange-700">Disponibles</p>
               <p className="text-2xl font-bold text-orange-900">
-                {codes.filter(c => !c.is_used && (!c.expires_at || new Date(c.expires_at) > new Date())).length}
+                {codes.filter(c => {
+                  const isExpired = c.expires_at && new Date(c.expires_at) < new Date();
+                  const isExhausted = c.max_uses !== null && c.current_uses >= c.max_uses;
+                  return !c.is_used && !isExpired && !isExhausted;
+                }).length}
               </p>
             </div>
           </div>
@@ -228,6 +238,7 @@ export function AccessCodesManagement() {
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Plan</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Durée</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Statut</th>
+                <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Utilisations</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Expire le</th>
                 <th className="text-left py-3 px-4 text-sm font-semibold text-slate-700">Créé le</th>
                 <th className="text-right py-3 px-4 text-sm font-semibold text-slate-700">Actions</th>
@@ -236,7 +247,8 @@ export function AccessCodesManagement() {
             <tbody className="divide-y divide-slate-200">
               {codes.map((code) => {
                 const isExpired = code.expires_at && new Date(code.expires_at) < new Date();
-                const isAvailable = !code.is_used && !isExpired;
+                const isExhausted = code.max_uses !== null && code.current_uses >= code.max_uses;
+                const isAvailable = !code.is_used && !isExpired && !isExhausted;
 
                 return (
                   <tr key={code.id} className="hover:bg-slate-50 transition-colors">
@@ -275,7 +287,12 @@ export function AccessCodesManagement() {
                       {code.duration_days} jours
                     </td>
                     <td className="py-3 px-4">
-                      {code.is_used ? (
+                      {isExhausted ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">
+                          <Clock className="w-3 h-3" />
+                          Épuisé
+                        </span>
+                      ) : code.is_used ? (
                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-cyan-100 text-cyan-700 rounded-full text-xs font-medium">
                           <Check className="w-3 h-3" />
                           Utilisé
@@ -289,6 +306,17 @@ export function AccessCodesManagement() {
                         <span className="inline-flex items-center gap-1 px-2 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">
                           <Key className="w-3 h-3" />
                           Disponible
+                        </span>
+                      )}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-slate-700">
+                      {code.max_uses === null ? (
+                        <span className="text-slate-600">
+                          {code.current_uses} / ∞ <span className="text-xs text-slate-500">(illimité)</span>
+                        </span>
+                      ) : (
+                        <span className={code.current_uses >= code.max_uses ? 'text-red-600 font-medium' : 'text-slate-600'}>
+                          {code.current_uses} / {code.max_uses}
                         </span>
                       )}
                     </td>
@@ -370,6 +398,21 @@ export function AccessCodesManagement() {
                   onChange={(e) => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })}
                   className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                 />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Nombre maximum d'utilisateurs par code
+                </label>
+                <input
+                  type="number"
+                  min="0"
+                  value={formData.max_uses}
+                  onChange={(e) => setFormData({ ...formData, max_uses: parseInt(e.target.value) || 0 })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  placeholder="0 = illimité"
+                />
+                <p className="text-xs text-slate-500 mt-1">0 = utilisation illimitée, 1 = usage unique</p>
               </div>
 
               <div>
