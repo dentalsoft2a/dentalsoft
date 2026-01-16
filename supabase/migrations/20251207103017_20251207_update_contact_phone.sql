@@ -5,5 +5,5 @@
 */
 
 UPDATE smtp_settings
-SET contact_phone = '0970701767'
+SET contact_phone = '09 70 70 17 67'
 WHERE contact_phone = '+33 1 89 70 35 53';
