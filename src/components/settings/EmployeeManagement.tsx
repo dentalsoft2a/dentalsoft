@@ -71,7 +71,8 @@ export default function EmployeeManagement() {
     email: '',
     full_name: '',
     role_name: '',
-    password: ''
+    password: '',
+    confirmPassword: ''
   });
 
   const [roleForm, setRoleForm] = useState({
@@ -133,11 +134,12 @@ export default function EmployeeManagement() {
         email: employee.email,
         full_name: employee.full_name,
         role_name: employee.role_name,
-        password: ''
+        password: '',
+        confirmPassword: ''
       });
     } else {
       setEditingEmployee(null);
-      setEmployeeForm({ email: '', full_name: '', role_name: '', password: '' });
+      setEmployeeForm({ email: '', full_name: '', role_name: '', password: '', confirmPassword: '' });
     }
     setShowEmployeeModal(true);
   };
@@ -185,6 +187,11 @@ export default function EmployeeManagement() {
 
     if (employeeForm.password && employeeForm.password.length < 6) {
       alert('Le mot de passe doit contenir au moins 6 caractères');
+      return;
+    }
+
+    if (employeeForm.password && employeeForm.password !== employeeForm.confirmPassword) {
+      alert('Les mots de passe ne correspondent pas');
       return;
     }
 
@@ -801,6 +808,29 @@ export default function EmployeeManagement() {
                     : "L'employé utilisera cet email et ce mot de passe pour se connecter"}
                 </p>
               </div>
+
+              {employeeForm.password && (
+                <div>
+                  <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
+                    Confirmer le mot de passe
+                  </label>
+                  <input
+                    type="password"
+                    value={employeeForm.confirmPassword}
+                    onChange={(e) => setEmployeeForm({ ...employeeForm, confirmPassword: e.target.value })}
+                    className={`w-full px-3 sm:px-4 py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:border-transparent ${
+                      employeeForm.confirmPassword && employeeForm.password !== employeeForm.confirmPassword
+                        ? 'border-red-300 focus:ring-red-500'
+                        : 'border-slate-300 focus:ring-blue-500'
+                    }`}
+                    placeholder="Confirmer le mot de passe"
+                    minLength={6}
+                  />
+                  {employeeForm.confirmPassword && employeeForm.password !== employeeForm.confirmPassword && (
+                    <p className="text-xs text-red-600 mt-1">Les mots de passe ne correspondent pas</p>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex gap-2 sm:gap-3 mt-4 sm:mt-6">
