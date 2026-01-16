@@ -118,17 +118,23 @@ export function FiscalPeriodsManager() {
       const { data: creditNotes } = await supabase
         .from('credit_notes')
         .select('*, dentists(name)')
-        .eq('laboratory_id', user.id)
-        .gte('issue_date', period.period_start)
-        .lte('issue_date', period.period_end)
+        .eq('user_id', user.id)
+        .gte('date', period.period_start)
+        .lte('date', period.period_end)
         .order('credit_note_number');
 
       // Générer le rapport via l'edge function
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        throw new Error('Session non disponible');
+      }
+
       const apiUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-certificate`;
       const response = await fetch(apiUrl, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Authorization': `Bearer ${session.access_token}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
