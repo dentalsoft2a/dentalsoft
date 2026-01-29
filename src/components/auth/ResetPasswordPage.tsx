@@ -21,17 +21,51 @@ export default function ResetPasswordPage() {
         console.log('[Reset Password] Starting verification...');
         console.log('[Reset Password] Full URL:', window.location.href);
         console.log('[Reset Password] Hash:', window.location.hash);
+        console.log('[Reset Password] Search:', window.location.search);
+
+        // IMPORTANT: Try to catch the token from query params (before Supabase redirect)
+        const queryParams = new URLSearchParams(window.location.search);
+        const queryToken = queryParams.get('token');
+        const queryType = queryParams.get('type');
+        const queryError = queryParams.get('error');
+        const queryErrorDescription = queryParams.get('error_description');
+
+        console.log('[Reset Password] Query params:', {
+          token: queryToken ? `${queryToken.substring(0, 20)}...` : null,
+          type: queryType,
+          error: queryError,
+          error_description: queryErrorDescription
+        });
 
         // Check if we have a hash with parameters
         if (!window.location.hash || window.location.hash === '#') {
           console.log('[Reset Password] No hash parameters found');
+
+          // Show detailed error with what we found
+          let detailedError = '🔴 AUCUN TOKEN TROUVÉ DANS L\'URL\n\n';
+          detailedError += '📍 URL actuelle : ' + window.location.href + '\n\n';
+
+          if (queryToken) {
+            detailedError += '⚠️ Token trouvé dans query params mais PAS dans hash !\n';
+            detailedError += 'Cela signifie que Supabase a REFUSÉ la redirection.\n\n';
+          }
+
+          detailedError += '🔧 SOLUTION :\n';
+          detailedError += '1. Va sur https://supabase.com/dashboard\n';
+          detailedError += '2. Sélectionne ton projet\n';
+          detailedError += '3. Authentication → URL Configuration\n';
+          detailedError += '4. Dans "Redirect URLs", VÉRIFIE qu\'il y a EXACTEMENT :\n';
+          detailedError += '   ' + window.location.origin + '/reset-password\n\n';
+          detailedError += '5. Si c\'est déjà là, SUPPRIME-LA et RAJOUTE-LA\n';
+          detailedError += '6. Clique sur Save\n';
+          detailedError += '7. Attends 3 minutes\n';
+          detailedError += '8. Demande un NOUVEAU lien (les vieux ne marcheront JAMAIS)\n\n';
+          detailedError += '📧 Email reçu récemment ? ' + (queryToken ? 'OUI mais bloqué' : 'Redemande un nouveau lien');
+
           if (isSubscribed) {
             setIsCheckingSession(false);
             setIsValidRecoverySession(false);
-            setError(
-              'Pour réinitialiser votre mot de passe, vous devez cliquer sur le lien reçu par email. ' +
-              'Si vous n\'avez pas reçu d\'email, retournez à la page de connexion.'
-            );
+            setError(detailedError);
           }
           return;
         }
