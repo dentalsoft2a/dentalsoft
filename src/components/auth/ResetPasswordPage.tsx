@@ -26,16 +26,12 @@ export default function ResetPasswordPage() {
         // Check if this is a direct navigation without hash (not from email link)
         if (!window.location.hash) {
           console.log('[Reset Password] No hash in URL - not a valid reset link');
-          console.error('[Reset Password] CONFIGURATION REQUISE DANS SUPABASE:');
-          console.error('[Reset Password] URL à autoriser:', window.location.origin + '/reset-password');
-          console.error('[Reset Password] Allez dans: Supabase Dashboard → Authentication → URL Configuration → Redirect URLs');
           if (isSubscribed) {
             setIsCheckingSession(false);
             setIsValidRecoverySession(false);
             setError(
-              'CONFIGURATION REQUISE : L\'URL ' + window.location.origin + '/reset-password ' +
-              'doit être ajoutée dans Supabase Dashboard → Authentication → URL Configuration → Redirect URLs. ' +
-              'Après configuration, demandez un nouveau lien de réinitialisation.'
+              'Pour réinitialiser votre mot de passe, vous devez cliquer sur le lien reçu par email. ' +
+              'Si vous n\'avez pas reçu d\'email, retournez à la page de connexion et cliquez sur "Mot de passe oublié ?".'
             );
           }
           return;
