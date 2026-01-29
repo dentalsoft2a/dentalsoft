@@ -14,133 +14,140 @@ export default function ResetPasswordPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout;
     let isSubscribed = true;
 
-    const checkRecoverySession = async () => {
+    const verifyRecoverySession = async () => {
       try {
-        console.log('[Reset Password] Checking session...');
+        console.log('[Reset Password] Starting verification...');
         console.log('[Reset Password] Full URL:', window.location.href);
-        console.log('[Reset Password] URL hash:', window.location.hash);
+        console.log('[Reset Password] Hash:', window.location.hash);
 
-        // Check if this is a direct navigation without hash (not from email link)
+        // Check if we have a hash with parameters
         if (!window.location.hash || window.location.hash === '#') {
-          console.log('[Reset Password] No hash or empty hash in URL - not a valid reset link');
+          console.log('[Reset Password] No hash parameters found');
           if (isSubscribed) {
             setIsCheckingSession(false);
             setIsValidRecoverySession(false);
             setError(
               'Pour réinitialiser votre mot de passe, vous devez cliquer sur le lien reçu par email. ' +
-              'Si vous n\'avez pas reçu d\'email, retournez à la page de connexion et cliquez sur "Mot de passe oublié ?".'
+              'Si vous n\'avez pas reçu d\'email, retournez à la page de connexion.'
             );
           }
           return;
         }
 
+        // Parse hash parameters
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        console.log('[Reset Password] Hash parameters:', Object.fromEntries(hashParams.entries()));
 
-        // Check if hash exists but has no parameters (expired/used link)
-        if (!hashParams.toString()) {
-          console.log('[Reset Password] Hash exists but no parameters - link is expired or already used');
-          if (isSubscribed) {
-            setIsCheckingSession(false);
-            setIsValidRecoverySession(false);
-            setError(
-              'Ce lien de réinitialisation a expiré ou a déjà été utilisé. ' +
-              'Les liens sont valides 1 heure et ne peuvent être utilisés qu\'une seule fois. ' +
-              'Veuillez demander un nouveau lien de réinitialisation.'
-            );
-          }
-          return;
-        }
-
+        // Check for errors in URL
         const urlError = hashParams.get('error');
         const errorCode = hashParams.get('error_code');
         const errorDescription = hashParams.get('error_description');
 
         if (urlError) {
-          console.error('[Reset Password] Error in URL:', urlError, errorCode, errorDescription);
+          console.error('[Reset Password] Error in URL:', { urlError, errorCode, errorDescription });
 
           let errorMessage = 'Lien de réinitialisation invalide ou expiré.';
-
           if (errorCode === 'otp_expired') {
-            errorMessage = 'Ce lien de réinitialisation a expiré. Les liens sont valides pendant 1 heure et ne peuvent être utilisés qu\'une seule fois.';
+            errorMessage = 'Ce lien a expiré. Les liens sont valides pendant 1 heure.';
           } else if (errorCode === 'otp_disabled') {
-            errorMessage = 'Ce lien de réinitialisation a déjà été utilisé. Chaque lien ne peut être utilisé qu\'une seule fois.';
-          } else if (urlError === 'access_denied') {
-            errorMessage = 'Accès refusé. Le lien de réinitialisation est invalide ou a expiré.';
+            errorMessage = 'Ce lien a déjà été utilisé.';
           }
 
           if (isSubscribed) {
             setIsCheckingSession(false);
             setIsValidRecoverySession(false);
-            setError(errorMessage + ' Veuillez faire une nouvelle demande de réinitialisation.');
+            setError(errorMessage + ' Veuillez demander un nouveau lien.');
           }
           return;
         }
 
-        const hasRecoveryToken = hashParams.get('type') === 'recovery' ||
-                                 hashParams.get('access_token') !== null;
+        // Check for access token and type
+        const accessToken = hashParams.get('access_token');
+        const type = hashParams.get('type');
 
-        console.log('[Reset Password] Has recovery token in URL:', hasRecoveryToken);
+        console.log('[Reset Password] Token check:', {
+          hasAccessToken: !!accessToken,
+          type,
+          tokenLength: accessToken?.length
+        });
 
-        if (!hasRecoveryToken && !window.location.hash) {
-          console.log('[Reset Password] No hash in URL - invalid link');
+        if (!accessToken || type !== 'recovery') {
+          console.log('[Reset Password] Missing recovery token or wrong type');
           if (isSubscribed) {
             setIsCheckingSession(false);
             setIsValidRecoverySession(false);
-            setError('Lien de réinitialisation invalide. Veuillez faire une nouvelle demande.');
+            setError('Lien de réinitialisation invalide. Veuillez demander un nouveau lien.');
           }
           return;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Let Supabase process the hash (it does this automatically)
+        // Wait a bit for Supabase to set up the session
+        await new Promise(resolve => setTimeout(resolve, 1000));
 
-        const { data } = await supabase.auth.getSession();
-        console.log('[Reset Password] Session data:', data);
+        // Check if we have a valid session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
-        if (isSubscribed && data.session) {
-          console.log('[Reset Password] Valid session found!');
-          setIsValidRecoverySession(true);
-          setIsCheckingSession(false);
-          if (timeoutId) clearTimeout(timeoutId);
+        console.log('[Reset Password] Session check:', {
+          hasSession: !!session,
+          userEmail: session?.user?.email,
+          error: sessionError
+        });
+
+        if (sessionError) {
+          console.error('[Reset Password] Session error:', sessionError);
+          if (isSubscribed) {
+            setIsCheckingSession(false);
+            setIsValidRecoverySession(false);
+            setError('Erreur lors de la vérification de la session. Veuillez redemander un lien.');
+          }
+          return;
+        }
+
+        if (session) {
+          console.log('[Reset Password] Valid recovery session detected!');
+          if (isSubscribed) {
+            setIsValidRecoverySession(true);
+            setIsCheckingSession(false);
+          }
+        } else {
+          console.log('[Reset Password] No valid session found');
+          if (isSubscribed) {
+            setIsCheckingSession(false);
+            setIsValidRecoverySession(false);
+            setError('Session de récupération invalide. Veuillez redemander un lien.');
+          }
         }
       } catch (err) {
-        console.error('[Reset Password] Error checking session:', err);
+        console.error('[Reset Password] Error during verification:', err);
+        if (isSubscribed) {
+          setIsCheckingSession(false);
+          setIsValidRecoverySession(false);
+          setError('Erreur lors de la vérification du lien. Veuillez réessayer.');
+        }
       }
     };
 
+    // Listen for auth state changes
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[Reset Password] Auth state changed:', event, session?.user?.email);
+      console.log('[Reset Password] Auth event:', event, 'Session:', !!session);
 
       if (!isSubscribed) return;
 
-      if (event === 'PASSWORD_RECOVERY') {
-        console.log('[Reset Password] PASSWORD_RECOVERY event detected!');
+      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
+        console.log('[Reset Password] Recovery session established via event');
         setIsValidRecoverySession(true);
         setIsCheckingSession(false);
-        if (timeoutId) clearTimeout(timeoutId);
-      } else if (event === 'SIGNED_IN' && session) {
-        console.log('[Reset Password] SIGNED_IN event detected!');
-        setIsValidRecoverySession(true);
-        setIsCheckingSession(false);
-        if (timeoutId) clearTimeout(timeoutId);
       }
     });
 
-    checkRecoverySession();
-
-    timeoutId = setTimeout(() => {
-      if (isSubscribed && !isValidRecoverySession) {
-        console.log('[Reset Password] Timeout reached - no valid session detected');
-        setIsCheckingSession(false);
-        setError('Lien de réinitialisation invalide ou expiré. Veuillez faire une nouvelle demande.');
-      }
-    }, 10000);
+    // Start verification
+    verifyRecoverySession();
 
     return () => {
       isSubscribed = false;
-      if (timeoutId) clearTimeout(timeoutId);
       authListener.subscription.unsubscribe();
     };
   }, []);
@@ -150,6 +157,7 @@ export default function ResetPasswordPage() {
     setError('');
     setLoading(true);
 
+    // Validation
     if (newPassword !== confirmPassword) {
       setError('Les mots de passe ne correspondent pas');
       setLoading(false);
@@ -163,30 +171,53 @@ export default function ResetPasswordPage() {
     }
 
     try {
-      // Update password - this will only work if there's a valid recovery session
-      const { error } = await supabase.auth.updateUser({
+      console.log('[Reset Password] Attempting to update password...');
+
+      // Verify we still have a valid session before updating
+      const { data: { session } } = await supabase.auth.getSession();
+
+      if (!session) {
+        console.error('[Reset Password] No active session found');
+        setError('Session expirée. Veuillez redemander un nouveau lien de réinitialisation.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('[Reset Password] Session valid, updating password...');
+
+      // Update password
+      const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (error) {
-        console.error('[Reset Password] Error updating password:', error);
-        throw error;
+      if (updateError) {
+        console.error('[Reset Password] Error updating password:', updateError);
+        throw updateError;
       }
 
       console.log('[Reset Password] Password updated successfully');
       setSuccess(true);
 
-      // CRITICAL: Sign out immediately to prevent access with recovery session
+      // Sign out immediately to require login with new password
       await supabase.auth.signOut();
       console.log('[Reset Password] User signed out after password reset');
 
-      // Redirect to login page after a short delay
+      // Redirect to login page
       setTimeout(() => {
         navigate('/');
-      }, 2000);
+      }, 2500);
     } catch (err: any) {
       console.error('[Reset Password] Error during password reset:', err);
-      setError(err.message || 'Erreur lors de la réinitialisation du mot de passe');
+
+      let errorMessage = 'Erreur lors de la réinitialisation du mot de passe';
+
+      if (err.message?.includes('session')) {
+        errorMessage = 'Session expirée. Veuillez redemander un nouveau lien.';
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      setError(errorMessage);
       setLoading(false);
     }
   };
