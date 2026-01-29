@@ -48,12 +48,28 @@ Deno.serve(async (req: Request) => {
     }
 
     console.log(`[Reset Password] Generating recovery link for: ${email}`);
+    console.log(`[Reset Password] Redirect URL: ${redirectTo}`);
+
+    // Use the provided redirectTo or extract origin from request
+    let finalRedirectTo = redirectTo;
+    if (!finalRedirectTo) {
+      const referer = req.headers.get('referer') || req.headers.get('origin');
+      if (referer) {
+        const url = new URL(referer);
+        finalRedirectTo = `${url.origin}/reset-password`;
+      } else {
+        // Fallback to production URL
+        finalRedirectTo = 'https://dentalcloud.fr/reset-password';
+      }
+    }
+
+    console.log(`[Reset Password] Final redirect URL: ${finalRedirectTo}`);
 
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: redirectTo || 'https://dentalcloud.fr/reset-password'
+        redirectTo: finalRedirectTo
       }
     });
 

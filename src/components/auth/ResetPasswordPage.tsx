@@ -163,22 +163,29 @@ export default function ResetPasswordPage() {
     }
 
     try {
+      // Update password - this will only work if there's a valid recovery session
       const { error } = await supabase.auth.updateUser({
         password: newPassword
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[Reset Password] Error updating password:', error);
+        throw error;
+      }
 
+      console.log('[Reset Password] Password updated successfully');
       setSuccess(true);
 
-      // Sign out the user to clear the recovery session
+      // CRITICAL: Sign out immediately to prevent access with recovery session
       await supabase.auth.signOut();
+      console.log('[Reset Password] User signed out after password reset');
 
       // Redirect to login page after a short delay
       setTimeout(() => {
         navigate('/');
       }, 2000);
     } catch (err: any) {
+      console.error('[Reset Password] Error during password reset:', err);
       setError(err.message || 'Erreur lors de la réinitialisation du mot de passe');
       setLoading(false);
     }

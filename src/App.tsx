@@ -294,8 +294,11 @@ function AppContent() {
   }
 
   // If user is in password recovery mode, always show the reset password page
+  // CRITICAL: This prevents users from accessing the app with a recovery session
   if (user && isPasswordRecovery) {
+    console.log('[App] User in password recovery mode, showing reset password page');
     if (currentPath !== 'reset-password') {
+      console.log('[App] Redirecting to reset-password page');
       return <Navigate to="/reset-password" replace />;
     }
     return (
