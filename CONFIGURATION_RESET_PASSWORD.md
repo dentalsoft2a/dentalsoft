@@ -1,155 +1,104 @@
-# Configuration de la réinitialisation de mot de passe
+# Réinitialisation de mot de passe - SOLUTION FINALE
 
-## CONFIGURATION OBLIGATOIRE DANS SUPABASE
+## PROBLÈME RÉSOLU
 
-Pour que la réinitialisation de mot de passe fonctionne, vous DEVEZ configurer les URLs de redirection dans Supabase.
+Le système de réinitialisation de mot de passe a été **complètement refait** pour utiliser l'API native de Supabase au lieu d'une fonction edge personnalisée.
 
-### Étapes de configuration (À FAIRE MAINTENANT)
+## Ce qui a été changé
 
-1. **Connectez-vous au Dashboard Supabase**
-   - Allez sur : https://supabase.com/dashboard
-   - Sélectionnez votre projet : `eovmrvtiizyhyzcmpvov`
+**AVANT** : Utilisait une edge function `send-reset-password-email` qui générait manuellement les liens
+**MAINTENANT** : Utilise directement `supabase.auth.resetPasswordForEmail()` qui respecte automatiquement la configuration du dashboard Supabase
 
-2. **Configurez les URLs de redirection**
-   - Dans le menu de gauche, cliquez sur **Authentication**
-   - Cliquez sur **URL Configuration**
-   - Dans **Redirect URLs**, ajoutez EXACTEMENT ces URLs :
-     ```
-     https://dentalcloud.fr/reset-password
-     http://localhost:5173/reset-password
-     ```
-   - Dans **Site URL**, mettez : `https://dentalcloud.fr`
-   - Cliquez sur **Save**
+## Configuration requise dans Supabase
 
-3. **Attendez 1-2 minutes** que la configuration se propage
+Vous DEVEZ configurer les URLs dans le dashboard Supabase une seule fois :
 
-4. **Testez avec un nouveau lien**
-   - Les anciens liens ne fonctionneront PAS
-   - Demandez un nouveau lien de réinitialisation
-   - Vérifiez votre email
-   - Cliquez sur le nouveau lien
+1. Allez sur https://supabase.com/dashboard
+2. Sélectionnez votre projet
+3. **Authentication** → **URL Configuration**
+4. Dans **Redirect URLs**, ajoutez : `https://dentalcloud.fr/reset-password`
+5. Dans **Site URL**, mettez : `https://dentalcloud.fr`
+6. Cliquez sur **Save**
 
-## Comment tester si ça fonctionne
+## Test complet
 
-### Test complet :
-
-1. **Demander un lien de réinitialisation**
+1. **Demander un lien** :
    - Allez sur https://dentalcloud.fr
    - Cliquez sur "Mot de passe oublié ?"
    - Entrez votre email
    - Cliquez sur "Envoyer"
 
-2. **Vérifier l'email**
+2. **Vérifier l'email** :
    - Ouvrez votre boîte email
-   - Cherchez l'email de DentalCloud (vérifiez les spams)
-   - Le lien devrait ressembler à :
-     ```
-     https://dentalcloud.fr/reset-password#access_token=...&type=recovery
-     ```
+   - Cherchez l'email de Supabase (peut être dans les spams)
+   - Le lien doit ressembler à : `https://dentalcloud.fr/reset-password#access_token=...&type=recovery`
+   - **IMPORTANT** : Si vous voyez `error=access_denied`, c'est que la configuration n'est pas faite ou que vous utilisez un vieux lien
 
-3. **Cliquer sur le lien**
-   - Vous devriez arriver sur la page de réinitialisation
-   - La page devrait afficher le formulaire avec :
-     - "Nouveau mot de passe"
-     - "Confirmer le mot de passe"
-     - Bouton "Réinitialiser le mot de passe"
+3. **Cliquer sur le lien** :
+   - Vous arrivez sur la page de réinitialisation
+   - Vous voyez le formulaire avec deux champs de mot de passe
 
-4. **Réinitialiser le mot de passe**
-   - Entrez votre nouveau mot de passe (minimum 6 caractères)
+4. **Réinitialiser** :
+   - Entrez un nouveau mot de passe (minimum 6 caractères)
    - Confirmez-le
-   - Cliquez sur "Réinitialiser le mot de passe"
-   - Vous devriez voir un message de succès
-   - Vous serez automatiquement déconnecté
-   - Vous serez redirigé vers la page de connexion
+   - Cliquez sur "Réinitialiser"
+   - Vous êtes déconnecté et redirigé vers la connexion
 
-5. **Se connecter avec le nouveau mot de passe**
-   - Utilisez votre email
+5. **Se reconnecter** :
    - Utilisez votre nouveau mot de passe
-   - Vous devriez pouvoir vous connecter
 
-## Messages d'erreur possibles
+## Messages d'erreur
 
-### "Pour réinitialiser votre mot de passe, vous devez cliquer sur le lien reçu par email"
-**Cause** : Vous essayez d'accéder à `/reset-password` directement sans lien
-**Solution** : Demandez un nouveau lien de réinitialisation
+### "🔴 CONFIGURATION REQUISE"
+- **Cause** : Les URLs ne sont pas configurées dans Supabase
+- **Solution** : Suivez les étapes de configuration ci-dessus et demandez un NOUVEAU lien
 
 ### "Ce lien a expiré"
-**Cause** : Le lien a plus d'1 heure (durée par défaut)
-**Solution** : Demandez un nouveau lien de réinitialisation
+- **Cause** : Le lien a plus d'1 heure
+- **Solution** : Demandez un nouveau lien
 
 ### "Ce lien a déjà été utilisé"
-**Cause** : Vous avez déjà cliqué sur ce lien
-**Solution** : Demandez un nouveau lien de réinitialisation
+- **Cause** : Vous avez déjà cliqué sur ce lien
+- **Solution** : Demandez un nouveau lien
 
-### "Lien de réinitialisation invalide"
-**Cause** : L'URL de redirection n'est pas configurée dans Supabase
-**Solution** : Suivez les étapes de configuration ci-dessus
+### "Pour réinitialiser votre mot de passe, vous devez cliquer sur le lien reçu par email"
+- **Cause** : Vous accédez directement à `/reset-password` sans lien
+- **Solution** : Demandez un lien depuis la page de connexion
 
-### "Session expirée"
-**Cause** : Vous avez attendu trop longtemps avant de soumettre le formulaire
-**Solution** : Demandez un nouveau lien et réinitialisez le mot de passe rapidement
+## Débogage
 
-## Vérifications si ça ne fonctionne toujours pas
+Si ça ne marche toujours pas après la configuration :
 
-### 1. Vérifiez dans la console du navigateur (F12)
-Ouvrez la console et recherchez les messages commençant par `[Reset Password]`.
+1. **Vérifiez la console du navigateur** (F12) et cherchez les messages `[Reset Password]`
 
-Vous devriez voir :
-```
-[Reset Password] Starting verification...
-[Reset Password] Hash parameters: {access_token: "...", type: "recovery", ...}
-[Reset Password] Token check: {hasAccessToken: true, type: "recovery", ...}
-[Reset Password] Session check: {hasSession: true, userEmail: "...", ...}
-[Reset Password] Valid recovery session detected!
-```
+2. **Vérifiez l'URL** quand vous cliquez sur le lien :
+   - Doit contenir `#access_token=` et `type=recovery`
+   - Si vous voyez `error=access_denied&error_code=otp_expired`, la configuration n'est pas appliquée
 
-### 2. Vérifiez l'URL dans la barre d'adresse
-Quand vous cliquez sur le lien, l'URL doit contenir :
-- `#access_token=` suivi d'une longue chaîne de caractères
-- `type=recovery`
+3. **Attendez 2-3 minutes** après avoir configuré les URLs dans Supabase
 
-Si vous voyez juste `/reset-password#` sans rien après, c'est que les URLs ne sont pas configurées dans Supabase.
+4. **Demandez un NOUVEAU lien** après la configuration (les vieux liens ne fonctionnent pas)
 
-### 3. Vérifiez la configuration SMTP (facultatif)
-Si vous ne recevez pas d'emails du tout :
-- Allez dans le Dashboard Supabase
-- **Authentication** → **Email Templates**
-- Vérifiez que les templates sont activés
-- Vérifiez vos paramètres SMTP dans l'application (Paramètres → SMTP)
+5. **Vérifiez que l'email vient bien de Supabase** :
+   - L'email est envoyé par Supabase directement
+   - Vérifiez vos spams
+   - Le template d'email est celui par défaut de Supabase
 
-## Améliorations apportées au code
+## Important
 
-1. **Vérification robuste du lien**
-   - Vérifie que le hash contient les bons paramètres
-   - Vérifie que le type est "recovery"
-   - Vérifie que le access_token est présent
+- Les liens sont valides 1 heure
+- Chaque lien ne peut être utilisé qu'une seule fois
+- Après avoir configuré les URLs, attendez 2-3 minutes
+- Demandez toujours un NOUVEAU lien après avoir changé la configuration
+- Les vieux liens générés avant la configuration ne fonctionneront jamais
 
-2. **Messages d'erreur clairs**
-   - Chaque type d'erreur a son propre message explicite
-   - Instructions claires sur quoi faire
+## Architecture technique
 
-3. **Validation de session**
-   - Vérifie que la session est toujours valide avant de changer le mot de passe
-   - Gère le cas où la session expire pendant le remplissage du formulaire
+Le système utilise maintenant :
+- `supabase.auth.resetPasswordForEmail()` côté client (LoginPage.tsx)
+- Détection automatique des tokens de récupération (ResetPasswordPage.tsx)
+- Validation de session avant changement de mot de passe
+- Déconnexion automatique après changement
+- Messages d'erreur détaillés selon le type d'erreur
 
-4. **Déconnexion automatique**
-   - Après changement de mot de passe, l'utilisateur est déconnecté
-   - Il doit se reconnecter avec le nouveau mot de passe
-
-5. **Logs détaillés**
-   - Tous les événements sont loggués dans la console
-   - Facilite le débogage en cas de problème
-
-## Sécurité
-
-- Les liens sont à usage unique
-- Les liens expirent après 1 heure par défaut
-- Après changement de mot de passe, l'ancienne session est invalidée
-- L'utilisateur doit se reconnecter avec le nouveau mot de passe
-
-## Support
-
-Si le problème persiste après avoir suivi toutes ces étapes :
-1. Ouvrez la console du navigateur (F12)
-2. Copiez tous les messages commençant par `[Reset Password]`
-3. Partagez ces logs pour diagnostic
+Plus besoin de fonction edge pour l'envoi d'emails de réinitialisation.

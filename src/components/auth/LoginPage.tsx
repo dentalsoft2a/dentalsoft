@@ -69,35 +69,30 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
     setResetLoading(true);
 
     try {
-      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-      const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+      console.log('[Reset Password Request] Sending reset email to:', resetEmail);
+      console.log('[Reset Password Request] Redirect URL:', `${window.location.origin}/reset-password`);
 
-      const response = await fetch(`${supabaseUrl}/functions/v1/send-reset-password-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseAnonKey}`,
-        },
-        body: JSON.stringify({
-          email: resetEmail,
-          redirectTo: `${window.location.origin}/reset-password`,
-        }),
+      // Use Supabase client directly - it respects the URL configuration in dashboard
+      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de l\'envoi du lien');
+      if (error) {
+        console.error('[Reset Password Request] Error:', error);
+        throw error;
       }
 
+      console.log('[Reset Password Request] Email sent successfully');
       setResetSuccess(true);
       setResetEmail('');
+
       setTimeout(() => {
         setShowResetModal(false);
         setResetSuccess(false);
         setResetLoading(false);
       }, 3000);
     } catch (err: any) {
+      console.error('[Reset Password Request] Error:', err);
       setResetError(err.message || 'Erreur lors de l\'envoi du lien de réinitialisation');
       setResetLoading(false);
     }
