@@ -53,7 +53,7 @@ import { supabase } from './lib/supabase';
 import { usePermissions } from './hooks/usePermissions';
 
 function AppContent() {
-  const { user, loading, isEmployee, isImpersonating, userProfile, isPasswordRecovery } = useAuth();
+  const { user, loading, isEmployee, isImpersonating, userProfile } = useAuth();
   const { isMobile } = useDeviceDetection();
   const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
@@ -290,22 +290,6 @@ function AppContent() {
           <span className="text-slate-600 font-medium">Chargement...</span>
         </div>
       </div>
-    );
-  }
-
-  // If user is in password recovery mode, always show the reset password page
-  // CRITICAL: This prevents users from accessing the app with a recovery session
-  if (user && isPasswordRecovery) {
-    console.log('[App] User in password recovery mode, showing reset password page');
-    if (currentPath !== 'reset-password') {
-      console.log('[App] Redirecting to reset-password page');
-      return <Navigate to="/reset-password" replace />;
-    }
-    return (
-      <>
-        {showServerMonitor && <ServerStatusMonitor />}
-        <ResetPasswordPage />
-      </>
     );
   }
 
