@@ -1,12 +1,36 @@
 # Configuration de la réinitialisation de mot de passe
 
-## ✅ Problèmes résolus
+## 🔴 ERREUR ACTUELLE : "Lien invalide ou expiré" avec URL vide
+
+Si vous arrivez sur la page `/reset-password#` (sans paramètres après le #), c'est que **l'URL de redirection n'est PAS configurée dans Supabase**.
+
+### Solution immédiate
+
+1. Allez sur : https://supabase.com/dashboard
+2. Sélectionnez votre projet `eovmrvtiizyhyzcmpvov`
+3. Allez dans **Authentication** → **URL Configuration**
+4. Dans **Redirect URLs**, ajoutez EXACTEMENT :
+   ```
+   https://dentalcloud.fr/reset-password
+   ```
+5. Cliquez sur **Save**
+6. **Attendez 1-2 minutes**
+7. **Demandez un NOUVEAU lien** (les anciens ne fonctionneront pas)
+
+## ⚠️ CONFIGURATION OBLIGATOIRE
+
+**IMPORTANT : Sans cette configuration, le système de réinitialisation ne fonctionnera PAS !**
+
+Si vous voyez l'erreur "CONFIGURATION REQUISE", c'est que cette étape n'a pas été faite.
+
+## ✅ Problèmes résolus (après configuration)
 Le système de réinitialisation de mot de passe a été corrigé. Les problèmes suivants ont été résolus :
 
 1. ✅ **Redirection automatique au dashboard** : L'application ne redirige plus automatiquement vers le dashboard lors de l'utilisation d'un lien de réinitialisation
 2. ✅ **Détection des liens expirés** : L'application détecte maintenant les liens expirés et affiche un message d'erreur clair
 3. ✅ **Gestion des erreurs** : Messages d'erreur détaillés selon le type de problème
 4. ✅ **Déconnexion automatique** : Après changement de mot de passe, l'utilisateur est déconnecté et peut se reconnecter avec le nouveau mot de passe
+5. ✅ **Détection de configuration manquante** : Si l'URL n'est pas configurée dans Supabase, un message explicite s'affiche
 
 ## Causes possibles d'erreurs (si vous en rencontrez)
 1. **Le lien a expiré** : Par défaut, les liens Supabase expirent après 1 heure
