@@ -48,17 +48,33 @@ export default function ResetPasswordPage() {
         if (urlError) {
           console.error('[Reset Password] Error in URL:', { urlError, errorCode, errorDescription });
 
-          let errorMessage = 'Lien de réinitialisation invalide ou expiré.';
-          if (errorCode === 'otp_expired') {
-            errorMessage = 'Ce lien a expiré. Les liens sont valides pendant 1 heure.';
+          let errorMessage = '';
+
+          // When access_denied + otp_expired appears, it's a configuration issue
+          if (urlError === 'access_denied' && errorCode === 'otp_expired') {
+            errorMessage =
+              '🔴 CONFIGURATION REQUISE : Les URLs de redirection ne sont PAS configurées dans Supabase !\n\n' +
+              'Étapes obligatoires :\n' +
+              '1. Allez sur https://supabase.com/dashboard\n' +
+              '2. Sélectionnez votre projet\n' +
+              '3. Menu: Authentication → URL Configuration\n' +
+              '4. Dans "Redirect URLs", ajoutez :\n   ' + window.location.origin + '/reset-password\n' +
+              '5. Dans "Site URL", mettez :\n   ' + window.location.origin + '\n' +
+              '6. Cliquez sur Save et attendez 1-2 minutes\n' +
+              '7. Demandez un NOUVEAU lien (les anciens ne marcheront pas)\n\n' +
+              'Documentation complète : CONFIGURATION_RESET_PASSWORD.md';
+          } else if (errorCode === 'otp_expired') {
+            errorMessage = 'Ce lien a expiré. Les liens sont valides pendant 1 heure. Veuillez demander un nouveau lien.';
           } else if (errorCode === 'otp_disabled') {
-            errorMessage = 'Ce lien a déjà été utilisé.';
+            errorMessage = 'Ce lien a déjà été utilisé. Chaque lien ne peut être utilisé qu\'une seule fois. Veuillez demander un nouveau lien.';
+          } else {
+            errorMessage = 'Lien de réinitialisation invalide ou expiré. Veuillez demander un nouveau lien.';
           }
 
           if (isSubscribed) {
             setIsCheckingSession(false);
             setIsValidRecoverySession(false);
-            setError(errorMessage + ' Veuillez demander un nouveau lien.');
+            setError(errorMessage);
           }
           return;
         }
@@ -241,9 +257,15 @@ export default function ResetPasswordPage() {
             </div>
           ) : !isValidRecoverySession ? (
             <div className="space-y-4">
-              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 text-center animate-slide-in">
-                <h2 className="text-lg font-bold text-red-700 mb-2">Lien invalide ou expiré</h2>
-                <p className="text-red-600 text-sm mb-4">{error || 'Ce lien de réinitialisation n\'est plus valide.'}</p>
+              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 animate-slide-in">
+                <h2 className="text-lg font-bold text-red-700 mb-3 text-center">Lien invalide ou expiré</h2>
+                <div className="text-red-600 text-sm space-y-2">
+                  {error ? (
+                    <pre className="whitespace-pre-wrap font-sans text-left">{error}</pre>
+                  ) : (
+                    <p className="text-center">Ce lien de réinitialisation n'est plus valide.</p>
+                  )}
+                </div>
               </div>
               <button
                 onClick={() => navigate('/')}
