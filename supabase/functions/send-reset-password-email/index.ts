@@ -53,7 +53,7 @@ Deno.serve(async (req: Request) => {
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: redirectTo || `${window.location.origin}/reset-password`
+        redirectTo: redirectTo || 'https://dentalcloud.fr/reset-password'
       }
     });
 
