@@ -1,9 +1,14 @@
 # Configuration de la réinitialisation de mot de passe
 
-## Problème
-Le lien de réinitialisation de mot de passe affiche une erreur `otp_expired` ou "Lien invalide ou expiré".
+## ✅ Problèmes résolus
+Le système de réinitialisation de mot de passe a été corrigé. Les problèmes suivants ont été résolus :
 
-## Causes possibles
+1. ✅ **Redirection automatique au dashboard** : L'application ne redirige plus automatiquement vers le dashboard lors de l'utilisation d'un lien de réinitialisation
+2. ✅ **Détection des liens expirés** : L'application détecte maintenant les liens expirés et affiche un message d'erreur clair
+3. ✅ **Gestion des erreurs** : Messages d'erreur détaillés selon le type de problème
+4. ✅ **Déconnexion automatique** : Après changement de mot de passe, l'utilisateur est déconnecté et peut se reconnecter avec le nouveau mot de passe
+
+## Causes possibles d'erreurs (si vous en rencontrez)
 1. **Le lien a expiré** : Par défaut, les liens Supabase expirent après 1 heure
 2. **Le lien a déjà été utilisé** : Chaque lien ne peut être utilisé qu'une seule fois
 3. **URLs non configurées** : Les URLs de redirection ne sont pas autorisées dans Supabase
@@ -56,17 +61,36 @@ Par défaut, les liens expirent après **1 heure**. Pour une meilleure expérien
 ### 6. Sauvegardez les modifications
 Cliquez sur **Save** en bas de la page.
 
-## Vérification
+## Fonctionnement actuel (après les corrections)
 
-Après avoir configuré les URLs :
+Le flux de réinitialisation fonctionne maintenant comme suit :
 
-1. **Demandez un NOUVEAU lien** : Les anciens liens ne fonctionneront pas
-2. Allez sur https://dentalcloud.fr
-3. Cliquez sur "Mot de passe oublié"
-4. Entrez votre email
-5. Vérifiez votre boîte mail (et le dossier spam)
-6. **Cliquez sur le lien dans les 24 heures** (ou 1 heure si vous n'avez pas modifié la durée)
-7. Vous devriez voir le formulaire de réinitialisation
+1. **Demandez un nouveau lien** sur https://dentalcloud.fr via "Mot de passe oublié"
+2. Entrez votre email
+3. Vérifiez votre boîte mail (et le dossier spam)
+4. **Cliquez sur le lien** (valide pendant 1 heure par défaut)
+5. **Vous êtes redirigé vers la page de réinitialisation**
+   - ✅ Vous ne serez PAS redirigé vers le dashboard
+   - ✅ Vous restez sur la page de réinitialisation
+6. Entrez votre nouveau mot de passe (minimum 6 caractères)
+7. Confirmez votre nouveau mot de passe
+8. Cliquez sur "Réinitialiser le mot de passe"
+9. **Vous êtes déconnecté automatiquement** et redirigé vers la page de connexion
+10. Connectez-vous avec votre nouveau mot de passe
+
+### Options disponibles
+- **Bouton "Réinitialiser le mot de passe"** : Change le mot de passe
+- **Bouton "Annuler"** : Retourne à la page de connexion sans changer le mot de passe
+
+## Fonctionnalités implémentées
+
+- ✅ Détection automatique des sessions de récupération de mot de passe
+- ✅ Blocage de la redirection automatique vers le dashboard
+- ✅ Messages d'erreur clairs et détaillés selon le type d'erreur
+- ✅ Bouton "Annuler" pour retourner à la connexion
+- ✅ Déconnexion automatique après changement de mot de passe
+- ✅ Interface responsive et moderne
+- ✅ Logs de débogage détaillés dans la console
 
 ## Points importants
 

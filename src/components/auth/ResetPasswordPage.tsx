@@ -23,6 +23,17 @@ export default function ResetPasswordPage() {
         console.log('[Reset Password] Full URL:', window.location.href);
         console.log('[Reset Password] URL hash:', window.location.hash);
 
+        // Check if this is a direct navigation without hash (not from email link)
+        if (!window.location.hash) {
+          console.log('[Reset Password] No hash in URL - not a valid reset link');
+          if (isSubscribed) {
+            setIsCheckingSession(false);
+            setIsValidRecoverySession(false);
+            setError('Accès direct non autorisé. Veuillez utiliser le lien envoyé par email.');
+          }
+          return;
+        }
+
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
 
         const urlError = hashParams.get('error');
@@ -141,6 +152,11 @@ export default function ResetPasswordPage() {
       if (error) throw error;
 
       setSuccess(true);
+
+      // Sign out the user to clear the recovery session
+      await supabase.auth.signOut();
+
+      // Redirect to login page after a short delay
       setTimeout(() => {
         navigate('/');
       }, 2000);
@@ -182,8 +198,9 @@ export default function ResetPasswordPage() {
             </div>
           ) : success ? (
             <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center animate-slide-in">
-              <h2 className="text-lg font-bold text-green-700 mb-2">Mot de passe réinitialisé</h2>
-              <p className="text-green-600 text-sm">Redirection vers la connexion...</p>
+              <h2 className="text-lg font-bold text-green-700 mb-2">Mot de passe réinitialisé avec succès</h2>
+              <p className="text-green-600 text-sm">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
+              <p className="text-green-500 text-xs mt-2">Redirection automatique dans quelques secondes...</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -230,6 +247,17 @@ export default function ResetPasswordPage() {
                 className="w-full bg-gradient-to-r from-primary-500 to-cyan-500 text-white py-3 rounded-lg font-medium hover:from-primary-600 hover:to-cyan-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40"
               >
                 {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  navigate('/');
+                }}
+                className="w-full bg-slate-100 text-slate-600 py-3 rounded-lg font-medium hover:bg-slate-200 transition-all duration-200"
+              >
+                Annuler
               </button>
             </form>
           )}

@@ -53,7 +53,7 @@ import { supabase } from './lib/supabase';
 import { usePermissions } from './hooks/usePermissions';
 
 function AppContent() {
-  const { user, loading, isEmployee, isImpersonating, userProfile } = useAuth();
+  const { user, loading, isEmployee, isImpersonating, userProfile, isPasswordRecovery } = useAuth();
   const { isMobile } = useDeviceDetection();
   const { getFirstAllowedPage, hasMenuAccess, loading: permissionsLoading } = usePermissions();
   const navigate = useNavigate();
@@ -290,6 +290,19 @@ function AppContent() {
           <span className="text-slate-600 font-medium">Chargement...</span>
         </div>
       </div>
+    );
+  }
+
+  // If user is in password recovery mode, always show the reset password page
+  if (user && isPasswordRecovery) {
+    if (currentPath !== 'reset-password') {
+      return <Navigate to="/reset-password" replace />;
+    }
+    return (
+      <>
+        {showServerMonitor && <ServerStatusMonitor />}
+        <ResetPasswordPage />
+      </>
     );
   }
 

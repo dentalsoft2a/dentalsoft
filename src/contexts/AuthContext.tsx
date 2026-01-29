@@ -57,6 +57,7 @@ interface AuthContextType {
   userEmail: string | null;
   isImpersonating: boolean;
   impersonationSession: ImpersonationSession | null;
+  isPasswordRecovery: boolean;
   signUp: (email: string, password: string, firstName: string, lastName: string, laboratoryName: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -90,6 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   });
   const [impersonationSession, setImpersonationSession] = useState<ImpersonationSession | null>(null);
   const [isImpersonating, setIsImpersonating] = useState(false);
+  const [isPasswordRecovery, setIsPasswordRecovery] = useState(false);
 
   useEffect(() => {
     if (employeeInfo) {
@@ -139,14 +141,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
+        if (event === 'PASSWORD_RECOVERY') {
+          logger.debug('PASSWORD_RECOVERY event detected - setting recovery mode');
+          setIsPasswordRecovery(true);
+          setUser(session?.user ?? null);
+          setLoading(false);
+          return;
+        }
+
         if (event === 'SIGNED_OUT') {
           setUser(null);
           setProfile(null);
           setUserProfile(null);
           setEmployeeInfo(null);
           setLaboratoryUserProfile(null);
+          setIsPasswordRecovery(false);
           setLoading(false);
           return;
+        }
+
+        // Clear password recovery mode on normal sign in
+        if (event === 'SIGNED_IN') {
+          setIsPasswordRecovery(false);
         }
 
         setUser(session?.user ?? null);
@@ -673,6 +689,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       userEmail,
       isImpersonating,
       impersonationSession,
+      isPasswordRecovery,
       signUp,
       signIn,
       signOut,
