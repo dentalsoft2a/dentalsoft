@@ -55,106 +55,108 @@ Deno.serve(async (req: Request) => {
 
     console.log(`Sending email to ${to} with subject: ${subject}`);
 
-    // Créer le corps de l'email en format MIME
-    const boundary = `----=_Part_${Date.now()}`;
     const textContent = text || subject;
 
-    const emailBody = [
-      `From: ${smtpSettings.from_email}`,
-      `To: ${to}`,
-      `Subject: ${subject}`,
-      `MIME-Version: 1.0`,
-      `Content-Type: multipart/alternative; boundary="${boundary}"`,
-      ``,
-      `--${boundary}`,
-      `Content-Type: text/plain; charset=utf-8`,
-      `Content-Transfer-Encoding: quoted-printable`,
-      ``,
-      textContent,
-      ``,
-      `--${boundary}`,
-      `Content-Type: text/html; charset=utf-8`,
-      `Content-Transfer-Encoding: quoted-printable`,
-      ``,
-      html,
-      ``,
-      `--${boundary}--`,
-    ].join('\r\n');
-
-    // Encoder les credentials en base64
-    const credentials = btoa(`${smtpSettings.smtp_user}:${smtpSettings.smtp_password}`);
-
-    // Se connecter au serveur SMTP et envoyer l'email
-    const smtpHost = smtpSettings.smtp_host;
-    const smtpPort = smtpSettings.smtp_port;
-    const useTLS = smtpSettings.smtp_secure;
-
-    console.log(`Connecting to SMTP server: ${smtpHost}:${smtpPort} (TLS: ${useTLS})`);
-
     try {
-      // Utiliser un service d'envoi d'email compatible avec les Edge Functions
-      // Pour l'instant, on utilise l'API Resend si configurée, sinon on logue
+      let apiUrl: string;
+      let headers: Record<string, string>;
+      let requestBody: any;
 
-      // Option 1: Utiliser Resend API (plus simple pour Edge Functions)
-      if (smtpSettings.smtp_host.includes('resend') || smtpSettings.smtp_host.includes('sendgrid')) {
-        const apiUrl = smtpSettings.smtp_host.includes('resend')
-          ? 'https://api.resend.com/emails'
-          : 'https://api.sendgrid.com/v3/mail/send';
-
-        const headers: Record<string, string> = {
+      // Détecter le service email et utiliser l'API appropriée
+      if (smtpSettings.smtp_host.includes('brevo') || smtpSettings.smtp_host.includes('sendinblue')) {
+        // Brevo (anciennement Sendinblue) API
+        console.log('Using Brevo API');
+        apiUrl = 'https://api.brevo.com/v3/smtp/email';
+        headers = {
+          'accept': 'application/json',
+          'api-key': smtpSettings.smtp_password,
+          'content-type': 'application/json',
+        };
+        requestBody = {
+          sender: {
+            email: smtpSettings.from_email,
+          },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html,
+          textContent,
+        };
+      } else if (smtpSettings.smtp_host.includes('resend')) {
+        // Resend API
+        console.log('Using Resend API');
+        apiUrl = 'https://api.resend.com/emails';
+        headers = {
+          'Authorization': `Bearer ${smtpSettings.smtp_password}`,
           'Content-Type': 'application/json',
         };
-
-        let requestBody: any;
-
-        if (smtpSettings.smtp_host.includes('resend')) {
-          headers['Authorization'] = `Bearer ${smtpSettings.smtp_password}`;
-          requestBody = {
-            from: smtpSettings.from_email,
-            to: [to],
-            subject,
-            html,
-            text: textContent,
-          };
-        } else {
-          headers['Authorization'] = `Bearer ${smtpSettings.smtp_password}`;
-          requestBody = {
-            personalizations: [{
-              to: [{ email: to }],
-            }],
-            from: { email: smtpSettings.from_email },
-            subject,
-            content: [
-              { type: 'text/plain', value: textContent },
-              { type: 'text/html', value: html },
-            ],
-          };
-        }
-
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          throw new Error(`Email API error: ${response.status} - ${errorText}`);
-        }
-
-        const result = await response.json();
-        console.log('Email sent successfully via API:', result);
-
-      } else {
-        // Option 2: SMTP générique (nécessite une connexion socket)
-        console.warn('Generic SMTP not fully supported in Edge Functions. Please use Resend or SendGrid.');
-        console.log('Email would be sent with the following data:', {
+        requestBody = {
+          from: smtpSettings.from_email,
+          to: [to],
+          subject,
+          html,
+          text: textContent,
+        };
+      } else if (smtpSettings.smtp_host.includes('sendgrid')) {
+        // SendGrid API
+        console.log('Using SendGrid API');
+        apiUrl = 'https://api.sendgrid.com/v3/mail/send';
+        headers = {
+          'Authorization': `Bearer ${smtpSettings.smtp_password}`,
+          'Content-Type': 'application/json',
+        };
+        requestBody = {
+          personalizations: [{
+            to: [{ email: to }],
+          }],
+          from: { email: smtpSettings.from_email },
+          subject,
+          content: [
+            { type: 'text/plain', value: textContent },
+            { type: 'text/html', value: html },
+          ],
+        };
+      } else if (smtpSettings.smtp_host.includes('mailgun')) {
+        // Mailgun API
+        console.log('Using Mailgun API');
+        const domain = smtpSettings.smtp_user.split('@')[1] || 'mg.yourdomain.com';
+        apiUrl = `https://api.mailgun.net/v3/${domain}/messages`;
+        headers = {
+          'Authorization': `Basic ${btoa(`api:${smtpSettings.smtp_password}`)}`,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        };
+        const formData = new URLSearchParams({
           from: smtpSettings.from_email,
           to,
           subject,
-          html: html.substring(0, 100) + '...',
+          text: textContent,
+          html,
         });
+        requestBody = formData.toString();
+      } else {
+        // Service SMTP générique non supporté
+        throw new Error(
+          `SMTP provider ${smtpSettings.smtp_host} not supported. ` +
+          `Please use Brevo, Resend, SendGrid, or Mailgun.`
+        );
       }
+
+      console.log(`Sending email via ${apiUrl}`);
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: typeof requestBody === 'string' ? requestBody : JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Email API error:', errorText);
+        throw new Error(`Email API error: ${response.status} - ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('Email sent successfully:', result);
+
     } catch (emailError) {
       console.error('Failed to send email:', emailError);
       throw new Error(`Failed to send email: ${emailError.message}`);
