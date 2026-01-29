@@ -19,25 +19,54 @@ export default function ResetPasswordPage() {
 
     const checkRecoverySession = async () => {
       try {
+        console.log('[Reset Password] Checking session...');
+        console.log('[Reset Password] Full URL:', window.location.href);
+        console.log('[Reset Password] URL hash:', window.location.hash);
+
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const hasRecoveryToken = hashParams.get('type') === 'recovery' ||
+                                 hashParams.get('access_token') !== null;
+
+        console.log('[Reset Password] Has recovery token in URL:', hasRecoveryToken);
+
+        if (!hasRecoveryToken && !window.location.hash) {
+          console.log('[Reset Password] No hash in URL - invalid link');
+          if (isSubscribed) {
+            setIsCheckingSession(false);
+            setIsValidRecoverySession(false);
+            setError('Lien de réinitialisation invalide ou expiré. Veuillez faire une nouvelle demande.');
+          }
+          return;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, 500));
+
         const { data } = await supabase.auth.getSession();
+        console.log('[Reset Password] Session data:', data);
 
         if (isSubscribed && data.session) {
+          console.log('[Reset Password] Valid session found!');
           setIsValidRecoverySession(true);
           setIsCheckingSession(false);
+          if (timeoutId) clearTimeout(timeoutId);
         }
       } catch (err) {
-        console.error('Error checking session:', err);
+        console.error('[Reset Password] Error checking session:', err);
       }
     };
 
     const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[Reset Password] Auth state changed:', event, session?.user?.email);
+
       if (!isSubscribed) return;
 
       if (event === 'PASSWORD_RECOVERY') {
+        console.log('[Reset Password] PASSWORD_RECOVERY event detected!');
         setIsValidRecoverySession(true);
         setIsCheckingSession(false);
         if (timeoutId) clearTimeout(timeoutId);
       } else if (event === 'SIGNED_IN' && session) {
+        console.log('[Reset Password] SIGNED_IN event detected!');
         setIsValidRecoverySession(true);
         setIsCheckingSession(false);
         if (timeoutId) clearTimeout(timeoutId);
@@ -48,10 +77,11 @@ export default function ResetPasswordPage() {
 
     timeoutId = setTimeout(() => {
       if (isSubscribed && !isValidRecoverySession) {
+        console.log('[Reset Password] Timeout reached - no valid session detected');
         setIsCheckingSession(false);
         setError('Lien de réinitialisation invalide ou expiré. Veuillez faire une nouvelle demande.');
       }
-    }, 5000);
+    }, 10000);
 
     return () => {
       isSubscribed = false;
