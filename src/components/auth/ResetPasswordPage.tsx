@@ -9,16 +9,55 @@ export default function ResetPasswordPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [isCheckingSession, setIsCheckingSession] = useState(true);
+  const [isValidRecoverySession, setIsValidRecoverySession] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        setError('Lien de réinitialisation invalide ou expiré. Veuillez faire une nouvelle demande.');
+    let timeoutId: NodeJS.Timeout;
+    let isSubscribed = true;
+
+    const checkRecoverySession = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+
+        if (isSubscribed && data.session) {
+          setIsValidRecoverySession(true);
+          setIsCheckingSession(false);
+        }
+      } catch (err) {
+        console.error('Error checking session:', err);
       }
     };
-    checkSession();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isSubscribed) return;
+
+      if (event === 'PASSWORD_RECOVERY') {
+        setIsValidRecoverySession(true);
+        setIsCheckingSession(false);
+        if (timeoutId) clearTimeout(timeoutId);
+      } else if (event === 'SIGNED_IN' && session) {
+        setIsValidRecoverySession(true);
+        setIsCheckingSession(false);
+        if (timeoutId) clearTimeout(timeoutId);
+      }
+    });
+
+    checkRecoverySession();
+
+    timeoutId = setTimeout(() => {
+      if (isSubscribed && !isValidRecoverySession) {
+        setIsCheckingSession(false);
+        setError('Lien de réinitialisation invalide ou expiré. Veuillez faire une nouvelle demande.');
+      }
+    }, 5000);
+
+    return () => {
+      isSubscribed = false;
+      if (timeoutId) clearTimeout(timeoutId);
+      authListener.subscription.unsubscribe();
+    };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,7 +106,25 @@ export default function ResetPasswordPage() {
             <p className="text-slate-600 mt-2">Réinitialiser le mot de passe</p>
           </div>
 
-          {success ? (
+          {isCheckingSession ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mb-4"></div>
+              <p className="text-slate-600 text-sm">Vérification du lien de réinitialisation...</p>
+            </div>
+          ) : !isValidRecoverySession ? (
+            <div className="space-y-4">
+              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 text-center animate-slide-in">
+                <h2 className="text-lg font-bold text-red-700 mb-2">Lien invalide ou expiré</h2>
+                <p className="text-red-600 text-sm mb-4">{error || 'Ce lien de réinitialisation n\'est plus valide.'}</p>
+              </div>
+              <button
+                onClick={() => navigate('/')}
+                className="w-full bg-gradient-to-r from-primary-500 to-cyan-500 text-white py-3 rounded-lg font-medium hover:from-primary-600 hover:to-cyan-600 transition-all duration-200 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40"
+              >
+                Retour à la connexion
+              </button>
+            </div>
+          ) : success ? (
             <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center animate-slide-in">
               <h2 className="text-lg font-bold text-green-700 mb-2">Mot de passe réinitialisé</h2>
               <p className="text-green-600 text-sm">Redirection vers la connexion...</p>
