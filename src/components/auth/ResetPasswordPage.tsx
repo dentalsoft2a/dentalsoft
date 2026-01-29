@@ -24,6 +24,32 @@ export default function ResetPasswordPage() {
         console.log('[Reset Password] URL hash:', window.location.hash);
 
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+        const urlError = hashParams.get('error');
+        const errorCode = hashParams.get('error_code');
+        const errorDescription = hashParams.get('error_description');
+
+        if (urlError) {
+          console.error('[Reset Password] Error in URL:', urlError, errorCode, errorDescription);
+
+          let errorMessage = 'Lien de réinitialisation invalide ou expiré.';
+
+          if (errorCode === 'otp_expired') {
+            errorMessage = 'Ce lien de réinitialisation a expiré. Les liens sont valides pendant 1 heure et ne peuvent être utilisés qu\'une seule fois.';
+          } else if (errorCode === 'otp_disabled') {
+            errorMessage = 'Ce lien de réinitialisation a déjà été utilisé. Chaque lien ne peut être utilisé qu\'une seule fois.';
+          } else if (urlError === 'access_denied') {
+            errorMessage = 'Accès refusé. Le lien de réinitialisation est invalide ou a expiré.';
+          }
+
+          if (isSubscribed) {
+            setIsCheckingSession(false);
+            setIsValidRecoverySession(false);
+            setError(errorMessage + ' Veuillez faire une nouvelle demande de réinitialisation.');
+          }
+          return;
+        }
+
         const hasRecoveryToken = hashParams.get('type') === 'recovery' ||
                                  hashParams.get('access_token') !== null;
 
@@ -34,7 +60,7 @@ export default function ResetPasswordPage() {
           if (isSubscribed) {
             setIsCheckingSession(false);
             setIsValidRecoverySession(false);
-            setError('Lien de réinitialisation invalide ou expiré. Veuillez faire une nouvelle demande.');
+            setError('Lien de réinitialisation invalide. Veuillez faire une nouvelle demande.');
           }
           return;
         }
