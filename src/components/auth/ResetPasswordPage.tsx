@@ -24,8 +24,8 @@ export default function ResetPasswordPage() {
         console.log('[Reset Password] URL hash:', window.location.hash);
 
         // Check if this is a direct navigation without hash (not from email link)
-        if (!window.location.hash) {
-          console.log('[Reset Password] No hash in URL - not a valid reset link');
+        if (!window.location.hash || window.location.hash === '#') {
+          console.log('[Reset Password] No hash or empty hash in URL - not a valid reset link');
           if (isSubscribed) {
             setIsCheckingSession(false);
             setIsValidRecoverySession(false);
@@ -38,6 +38,21 @@ export default function ResetPasswordPage() {
         }
 
         const hashParams = new URLSearchParams(window.location.hash.substring(1));
+
+        // Check if hash exists but has no parameters (expired/used link)
+        if (!hashParams.toString()) {
+          console.log('[Reset Password] Hash exists but no parameters - link is expired or already used');
+          if (isSubscribed) {
+            setIsCheckingSession(false);
+            setIsValidRecoverySession(false);
+            setError(
+              'Ce lien de réinitialisation a expiré ou a déjà été utilisé. ' +
+              'Les liens sont valides 1 heure et ne peuvent être utilisés qu\'une seule fois. ' +
+              'Veuillez demander un nouveau lien de réinitialisation.'
+            );
+          }
+          return;
+        }
 
         const urlError = hashParams.get('error');
         const errorCode = hashParams.get('error_code');
