@@ -49,27 +49,11 @@ Deno.serve(async (req: Request) => {
 
     console.log(`[Reset Password] Generating recovery link for: ${email}`);
 
-    const { data: userData, error: userError } = await supabaseAdmin.auth.admin.getUserByEmail(email);
-
-    if (userError || !userData.user) {
-      console.log(`[Reset Password] User not found: ${email}`);
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "If this email exists, a reset link has been sent"
-        }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
     const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: email,
       options: {
-        redirectTo: redirectTo || `${supabaseUrl.replace('https://', 'https://').replace('.supabase.co', '')}/reset-password`
+        redirectTo: redirectTo || `${window.location.origin}/reset-password`
       }
     });
 
