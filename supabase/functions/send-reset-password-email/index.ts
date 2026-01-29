@@ -161,8 +161,25 @@ Deno.serve(async (req: Request) => {
                 </p>
               </div>
 
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="https://dentalcloud.fr/reset-password" style="display: inline-block; background-color: #f8fafc; color: #0ea5e9; text-decoration: none; padding: 12px 30px; border-radius: 8px; font-weight: 600; font-size: 14px; border: 2px solid #e2e8f0; transition: all 0.2s;">
+                      Aller sur la page de réinitialisation
+                    </a>
+                  </td>
+                </tr>
+              </table>
+
               <p style="color: #475569; font-size: 14px; line-height: 1.6; margin: 20px 0 0 0;">
                 Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email en toute sécurité.
+              </p>
+
+              <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+
+              <p style="color: #94a3b8; font-size: 12px; line-height: 1.5; margin: 0;">
+                Ou copiez ce lien dans votre navigateur :<br>
+                <a href="https://dentalcloud.fr/reset-password" style="color: #0ea5e9; word-break: break-all;">https://dentalcloud.fr/reset-password</a>
               </p>
             </td>
           </tr>

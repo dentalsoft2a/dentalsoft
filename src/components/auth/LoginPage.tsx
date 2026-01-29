@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../lib/supabase';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import { Camera, Building2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface LoginPageProps {
   onToggleRegister: () => void;
@@ -21,6 +22,7 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
   const [resetError, setResetError] = useState('');
   const [resetSuccess, setResetSuccess] = useState(false);
   const { signIn } = useAuth();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,7 +96,8 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
         setShowResetModal(false);
         setResetSuccess(false);
         setResetLoading(false);
-      }, 3000);
+        navigate('/reset-password');
+      }, 2000);
     } catch (err: any) {
       console.error('[Reset Password Request] Error:', err);
       setResetError(err.message || 'Erreur lors de l\'envoi du code de réinitialisation');
