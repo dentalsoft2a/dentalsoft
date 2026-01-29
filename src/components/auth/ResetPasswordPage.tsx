@@ -1,213 +1,22 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
+import { useState } from 'react';
 import DentalCloudLogo from '../common/DentalCloudLogo';
 import { useNavigate } from 'react-router-dom';
 
 export default function ResetPasswordPage() {
+  const [email, setEmail] = useState('');
+  const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  const [isCheckingSession, setIsCheckingSession] = useState(true);
-  const [isValidRecoverySession, setIsValidRecoverySession] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    let isSubscribed = true;
-
-    const verifyRecoverySession = async () => {
-      try {
-        console.log('[Reset Password] Starting verification...');
-        console.log('[Reset Password] Full URL:', window.location.href);
-        console.log('[Reset Password] Hash:', window.location.hash);
-        console.log('[Reset Password] Search:', window.location.search);
-
-        // IMPORTANT: Try to catch the token from query params (before Supabase redirect)
-        const queryParams = new URLSearchParams(window.location.search);
-        const queryToken = queryParams.get('token');
-        const queryType = queryParams.get('type');
-        const queryError = queryParams.get('error');
-        const queryErrorDescription = queryParams.get('error_description');
-
-        console.log('[Reset Password] Query params:', {
-          token: queryToken ? `${queryToken.substring(0, 20)}...` : null,
-          type: queryType,
-          error: queryError,
-          error_description: queryErrorDescription
-        });
-
-        // Check if we have a hash with parameters
-        if (!window.location.hash || window.location.hash === '#') {
-          console.log('[Reset Password] No hash parameters found');
-
-          // Show detailed error with what we found
-          let detailedError = '🔴 AUCUN TOKEN TROUVÉ DANS L\'URL\n\n';
-          detailedError += '📍 URL actuelle : ' + window.location.href + '\n\n';
-
-          if (queryToken) {
-            detailedError += '⚠️ Token trouvé dans query params mais PAS dans hash !\n';
-            detailedError += 'Cela signifie que Supabase a REFUSÉ la redirection.\n\n';
-          }
-
-          detailedError += '🔧 SOLUTION :\n';
-          detailedError += '1. Va sur https://supabase.com/dashboard\n';
-          detailedError += '2. Sélectionne ton projet\n';
-          detailedError += '3. Authentication → URL Configuration\n';
-          detailedError += '4. Dans "Redirect URLs", VÉRIFIE qu\'il y a EXACTEMENT :\n';
-          detailedError += '   ' + window.location.origin + '/reset-password\n\n';
-          detailedError += '5. Si c\'est déjà là, SUPPRIME-LA et RAJOUTE-LA\n';
-          detailedError += '6. Clique sur Save\n';
-          detailedError += '7. Attends 3 minutes\n';
-          detailedError += '8. Demande un NOUVEAU lien (les vieux ne marcheront JAMAIS)\n\n';
-          detailedError += '📧 Email reçu récemment ? ' + (queryToken ? 'OUI mais bloqué' : 'Redemande un nouveau lien');
-
-          if (isSubscribed) {
-            setIsCheckingSession(false);
-            setIsValidRecoverySession(false);
-            setError(detailedError);
-          }
-          return;
-        }
-
-        // Parse hash parameters
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        console.log('[Reset Password] Hash parameters:', Object.fromEntries(hashParams.entries()));
-
-        // Check for errors in URL
-        const urlError = hashParams.get('error');
-        const errorCode = hashParams.get('error_code');
-        const errorDescription = hashParams.get('error_description');
-
-        if (urlError) {
-          console.error('[Reset Password] Error in URL:', { urlError, errorCode, errorDescription });
-
-          let errorMessage = '';
-
-          // When access_denied + otp_expired appears, it's a configuration issue
-          if (urlError === 'access_denied' && errorCode === 'otp_expired') {
-            errorMessage =
-              '🔴 CONFIGURATION REQUISE : Les URLs de redirection ne sont PAS configurées dans Supabase !\n\n' +
-              'Étapes obligatoires :\n' +
-              '1. Allez sur https://supabase.com/dashboard\n' +
-              '2. Sélectionnez votre projet\n' +
-              '3. Menu: Authentication → URL Configuration\n' +
-              '4. Dans "Redirect URLs", ajoutez :\n   ' + window.location.origin + '/reset-password\n' +
-              '5. Dans "Site URL", mettez :\n   ' + window.location.origin + '\n' +
-              '6. Cliquez sur Save et attendez 1-2 minutes\n' +
-              '7. Demandez un NOUVEAU lien (les anciens ne marcheront pas)\n\n' +
-              'Documentation complète : CONFIGURATION_RESET_PASSWORD.md';
-          } else if (errorCode === 'otp_expired') {
-            errorMessage = 'Ce lien a expiré. Les liens sont valides pendant 1 heure. Veuillez demander un nouveau lien.';
-          } else if (errorCode === 'otp_disabled') {
-            errorMessage = 'Ce lien a déjà été utilisé. Chaque lien ne peut être utilisé qu\'une seule fois. Veuillez demander un nouveau lien.';
-          } else {
-            errorMessage = 'Lien de réinitialisation invalide ou expiré. Veuillez demander un nouveau lien.';
-          }
-
-          if (isSubscribed) {
-            setIsCheckingSession(false);
-            setIsValidRecoverySession(false);
-            setError(errorMessage);
-          }
-          return;
-        }
-
-        // Check for access token and type
-        const accessToken = hashParams.get('access_token');
-        const type = hashParams.get('type');
-
-        console.log('[Reset Password] Token check:', {
-          hasAccessToken: !!accessToken,
-          type,
-          tokenLength: accessToken?.length
-        });
-
-        if (!accessToken || type !== 'recovery') {
-          console.log('[Reset Password] Missing recovery token or wrong type');
-          if (isSubscribed) {
-            setIsCheckingSession(false);
-            setIsValidRecoverySession(false);
-            setError('Lien de réinitialisation invalide. Veuillez demander un nouveau lien.');
-          }
-          return;
-        }
-
-        // Let Supabase process the hash (it does this automatically)
-        // Wait a bit for Supabase to set up the session
-        await new Promise(resolve => setTimeout(resolve, 1000));
-
-        // Check if we have a valid session
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-
-        console.log('[Reset Password] Session check:', {
-          hasSession: !!session,
-          userEmail: session?.user?.email,
-          error: sessionError
-        });
-
-        if (sessionError) {
-          console.error('[Reset Password] Session error:', sessionError);
-          if (isSubscribed) {
-            setIsCheckingSession(false);
-            setIsValidRecoverySession(false);
-            setError('Erreur lors de la vérification de la session. Veuillez redemander un lien.');
-          }
-          return;
-        }
-
-        if (session) {
-          console.log('[Reset Password] Valid recovery session detected!');
-          if (isSubscribed) {
-            setIsValidRecoverySession(true);
-            setIsCheckingSession(false);
-          }
-        } else {
-          console.log('[Reset Password] No valid session found');
-          if (isSubscribed) {
-            setIsCheckingSession(false);
-            setIsValidRecoverySession(false);
-            setError('Session de récupération invalide. Veuillez redemander un lien.');
-          }
-        }
-      } catch (err) {
-        console.error('[Reset Password] Error during verification:', err);
-        if (isSubscribed) {
-          setIsCheckingSession(false);
-          setIsValidRecoverySession(false);
-          setError('Erreur lors de la vérification du lien. Veuillez réessayer.');
-        }
-      }
-    };
-
-    // Listen for auth state changes
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[Reset Password] Auth event:', event, 'Session:', !!session);
-
-      if (!isSubscribed) return;
-
-      if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && session)) {
-        console.log('[Reset Password] Recovery session established via event');
-        setIsValidRecoverySession(true);
-        setIsCheckingSession(false);
-      }
-    });
-
-    // Start verification
-    verifyRecoverySession();
-
-    return () => {
-      isSubscribed = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    // Validation
     if (newPassword !== confirmPassword) {
       setError('Les mots de passe ne correspondent pas');
       setLoading(false);
@@ -220,159 +29,174 @@ export default function ResetPasswordPage() {
       return;
     }
 
+    if (code.length !== 6 || !/^\d{6}$/.test(code)) {
+      setError('Le code doit contenir exactement 6 chiffres');
+      setLoading(false);
+      return;
+    }
+
     try {
-      console.log('[Reset Password] Attempting to update password...');
-
-      // Verify we still have a valid session before updating
-      const { data: { session } } = await supabase.auth.getSession();
-
-      if (!session) {
-        console.error('[Reset Password] No active session found');
-        setError('Session expirée. Veuillez redemander un nouveau lien de réinitialisation.');
-        setLoading(false);
-        return;
-      }
-
-      console.log('[Reset Password] Session valid, updating password...');
-
-      // Update password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/verify-reset-code`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          email,
+          code,
+          newPassword,
+        }),
       });
 
-      if (updateError) {
-        console.error('[Reset Password] Error updating password:', updateError);
-        throw updateError;
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Erreur lors de la réinitialisation');
       }
 
-      console.log('[Reset Password] Password updated successfully');
       setSuccess(true);
-
-      // Sign out immediately to require login with new password
-      await supabase.auth.signOut();
-      console.log('[Reset Password] User signed out after password reset');
-
-      // Redirect to login page
       setTimeout(() => {
         navigate('/');
-      }, 2500);
+      }, 2000);
     } catch (err: any) {
-      console.error('[Reset Password] Error during password reset:', err);
-
-      let errorMessage = 'Erreur lors de la réinitialisation du mot de passe';
-
-      if (err.message?.includes('session')) {
-        errorMessage = 'Session expirée. Veuillez redemander un nouveau lien.';
-      } else if (err.message) {
-        errorMessage = err.message;
-      }
-
-      setError(errorMessage);
+      setError(err.message || 'Une erreur est survenue');
       setLoading(false);
     }
   };
 
+  if (success) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md animate-scale-in">
+          <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-slate-200/50">
+            <div className="flex flex-col items-center mb-8">
+              <div className="mb-4">
+                <DentalCloudLogo size={56} showText={false} />
+              </div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">
+                Succès !
+              </h1>
+            </div>
+
+            <div className="bg-green-50 border-2 border-green-200 text-green-700 px-4 py-3 rounded-lg text-center">
+              <p className="font-medium mb-2">Mot de passe réinitialisé avec succès</p>
+              <p className="text-sm">Redirection vers la page de connexion...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-50 to-cyan-50">
+    <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md animate-scale-in">
         <div className="bg-white/80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-slate-200/50">
           <div className="flex flex-col items-center mb-8">
             <div className="mb-4">
               <DentalCloudLogo size={56} showText={false} />
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">DentalCloud</h1>
-            <p className="text-slate-600 mt-2">Réinitialiser le mot de passe</p>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">
+              Nouveau mot de passe
+            </h1>
+            <p className="text-slate-600 mt-2 text-center">
+              Entrez le code reçu par email et votre nouveau mot de passe
+            </p>
           </div>
 
-          {isCheckingSession ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-12 h-12 border-4 border-primary-200 border-t-primary-600 rounded-full animate-spin mb-4"></div>
-              <p className="text-slate-600 text-sm">Vérification du lien de réinitialisation...</p>
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all duration-200 hover:border-primary-300"
+                placeholder="votre@email.com"
+              />
             </div>
-          ) : !isValidRecoverySession ? (
-            <div className="space-y-4">
-              <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 animate-slide-in">
-                <h2 className="text-lg font-bold text-red-700 mb-3 text-center">Lien invalide ou expiré</h2>
-                <div className="text-red-600 text-sm space-y-2">
-                  {error ? (
-                    <pre className="whitespace-pre-wrap font-sans text-left">{error}</pre>
-                  ) : (
-                    <p className="text-center">Ce lien de réinitialisation n'est plus valide.</p>
-                  )}
-                </div>
+
+            <div>
+              <label htmlFor="code" className="block text-sm font-medium text-slate-700 mb-2">
+                Code de réinitialisation (6 chiffres)
+              </label>
+              <input
+                id="code"
+                type="text"
+                value={code}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, '');
+                  if (value.length <= 6) setCode(value);
+                }}
+                required
+                maxLength={6}
+                className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all duration-200 hover:border-primary-300 text-center text-2xl tracking-widest font-mono"
+                placeholder="000000"
+              />
+              <p className="text-xs text-slate-500 mt-2">
+                Code reçu par email, valide pendant 15 minutes
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="newPassword" className="block text-sm font-medium text-slate-700 mb-2">
+                Nouveau mot de passe
+              </label>
+              <input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all duration-200 hover:border-primary-300"
+                placeholder="••••••••"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-2">
+                Confirmer le mot de passe
+              </label>
+              <input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all duration-200 hover:border-primary-300"
+                placeholder="••••••••"
+              />
+            </div>
+
+            {error && (
+              <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm animate-slide-in">
+                {error}
               </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-gradient-to-r from-primary-500 to-cyan-500 text-white py-3 rounded-lg font-medium hover:from-primary-600 hover:to-cyan-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40 hover:scale-102"
+            >
+              {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+            </button>
+
+            <div className="text-center">
               <button
+                type="button"
                 onClick={() => navigate('/')}
-                className="w-full bg-gradient-to-r from-primary-500 to-cyan-500 text-white py-3 rounded-lg font-medium hover:from-primary-600 hover:to-cyan-600 transition-all duration-200 shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40"
+                className="text-primary-600 font-medium hover:text-primary-700 transition-colors duration-200 hover:underline text-sm"
               >
                 Retour à la connexion
               </button>
             </div>
-          ) : success ? (
-            <div className="bg-green-50 border-2 border-green-200 rounded-lg p-6 text-center animate-slide-in">
-              <h2 className="text-lg font-bold text-green-700 mb-2">Mot de passe réinitialisé avec succès</h2>
-              <p className="text-green-600 text-sm">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</p>
-              <p className="text-green-500 text-xs mt-2">Redirection automatique dans quelques secondes...</p>
-            </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div>
-                <label htmlFor="new-password" className="block text-sm font-medium text-slate-700 mb-2">
-                  Nouveau mot de passe
-                </label>
-                <input
-                  id="new-password"
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all duration-200"
-                  placeholder="••••••••"
-                />
-                <p className="text-xs text-slate-500 mt-1">Minimum 6 caractères</p>
-              </div>
-
-              <div>
-                <label htmlFor="confirm-password" className="block text-sm font-medium text-slate-700 mb-2">
-                  Confirmer le mot de passe
-                </label>
-                <input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all duration-200"
-                  placeholder="••••••••"
-                />
-              </div>
-
-              {error && (
-                <div className="bg-red-50 border-2 border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm animate-slide-in">
-                  {error}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="w-full bg-gradient-to-r from-primary-500 to-cyan-500 text-white py-3 rounded-lg font-medium hover:from-primary-600 hover:to-cyan-600 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary-500/30 hover:shadow-xl hover:shadow-primary-500/40"
-              >
-                {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
-              </button>
-
-              <button
-                type="button"
-                onClick={async () => {
-                  await supabase.auth.signOut();
-                  navigate('/');
-                }}
-                className="w-full bg-slate-100 text-slate-600 py-3 rounded-lg font-medium hover:bg-slate-200 transition-all duration-200"
-              >
-                Annuler
-              </button>
-            </form>
-          )}
+          </form>
         </div>
       </div>
     </div>

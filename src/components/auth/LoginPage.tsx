@@ -69,20 +69,24 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
     setResetLoading(true);
 
     try {
-      console.log('[Reset Password Request] Sending reset email to:', resetEmail);
-      console.log('[Reset Password Request] Redirect URL:', `${window.location.origin}/reset-password`);
+      console.log('[Reset Password Request] Sending reset code to:', resetEmail);
 
-      // Use Supabase client directly - it respects the URL configuration in dashboard
-      const { error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/reset-password`,
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-reset-password-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ email: resetEmail }),
       });
 
-      if (error) {
-        console.error('[Reset Password Request] Error:', error);
-        throw error;
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Erreur lors de l\'envoi du code');
       }
 
-      console.log('[Reset Password Request] Email sent successfully');
+      console.log('[Reset Password Request] Code sent successfully');
       setResetSuccess(true);
       setResetEmail('');
 
@@ -93,7 +97,7 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
       }, 3000);
     } catch (err: any) {
       console.error('[Reset Password Request] Error:', err);
-      setResetError(err.message || 'Erreur lors de l\'envoi du lien de réinitialisation');
+      setResetError(err.message || 'Erreur lors de l\'envoi du code de réinitialisation');
       setResetLoading(false);
     }
   };
@@ -214,7 +218,7 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 animate-scale-in">
             <h2 className="text-2xl font-bold text-slate-900 mb-2">Réinitialiser le mot de passe</h2>
-            <p className="text-slate-600 text-sm mb-6">Entrez votre email pour recevoir un lien de réinitialisation</p>
+            <p className="text-slate-600 text-sm mb-6">Entrez votre email pour recevoir un code de réinitialisation</p>
 
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div>
@@ -240,7 +244,7 @@ export default function LoginPage({ onToggleRegister, onNavigateToDentistRegiste
 
               {resetSuccess && (
                 <div className="bg-green-50 border-2 border-green-200 text-green-700 px-4 py-3 rounded-lg text-sm animate-slide-in">
-                  Lien de réinitialisation envoyé ! Vérifiez votre email.
+                  Code de réinitialisation envoyé ! Vérifiez votre email et utilisez /reset-password
                 </div>
               )}
 
