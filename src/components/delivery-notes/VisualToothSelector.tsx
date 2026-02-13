@@ -30,9 +30,14 @@ export default function VisualToothSelector({ selectedTeeth, onChange }: VisualT
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isDropdownOpen]);
 
   const toggleTooth = (toothValue: string) => {
     if (selectedTeeth.includes(toothValue)) {

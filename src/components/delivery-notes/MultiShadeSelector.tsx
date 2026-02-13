@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Check } from 'lucide-react';
 
 interface MultiShadeSelectorProps {
@@ -47,6 +47,23 @@ const SHADE_GROUPS = [
 
 export default function MultiShadeSelector({ selectedShades, onChange }: MultiShadeSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const toggleShade = (shade: string) => {
     const newShades = selectedShades.includes(shade)
@@ -66,7 +83,7 @@ export default function MultiShadeSelector({ selectedShades, onChange }: MultiSh
         Teinte(s)
       </label>
 
-      <div className="relative">
+      <div className="relative" ref={containerRef}>
         <button
           type="button"
           onClick={() => setIsOpen(!isOpen)}
