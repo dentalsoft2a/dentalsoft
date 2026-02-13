@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Plus, Edit, Trash2, Search, FileDown, User, CheckCircle, Play, Clock, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Plus, Edit, Trash2, Search, FileDown, User, CheckCircle, Play, Clock, ThumbsUp, ThumbsDown, ChevronDown, ChevronRight } from 'lucide-react';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useLockScroll } from '../../hooks/useLockScroll';
@@ -22,6 +22,13 @@ type DeliveryNote = Database['public']['Tables']['delivery_notes']['Row'] & {
   dentists?: { name: string };
 };
 
+interface GroupedDeliveryNotes {
+  dentist_id: string;
+  dentist_name: string;
+  notes: DeliveryNote[];
+  total: number;
+}
+
 export default function DeliveryNotesPage() {
   const { user, profile } = useAuth();
   const [deliveryNotes, setDeliveryNotes] = useState<DeliveryNote[]>([]);
@@ -30,6 +37,7 @@ export default function DeliveryNotesPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingNote, setEditingNote] = useState<string | null>(null);
   const [hasValidSubscription, setHasValidSubscription] = useState(false);
+  const [expandedDentists, setExpandedDentists] = useState<Set<string>>(new Set());
 
   useLockScroll(showModal);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
@@ -310,8 +318,48 @@ export default function DeliveryNotesPage() {
     return matchesSearch;
   });
 
-  const pagination = usePagination(filteredNotes, { initialPageSize: 50 });
-  const paginatedNotes = pagination.paginatedItems;
+  // Group notes by dentist
+  const groupedNotes: GroupedDeliveryNotes[] = Object.values(
+    filteredNotes.reduce((acc, note) => {
+      const dentistId = note.dentist_id || 'unknown';
+      const dentistName = note.dentists?.name || 'Dentiste inconnu';
+
+      if (!acc[dentistId]) {
+        acc[dentistId] = {
+          dentist_id: dentistId,
+          dentist_name: dentistName,
+          notes: [],
+          total: 0,
+        };
+      }
+
+      acc[dentistId].notes.push(note);
+
+      // Calculate total
+      const items = Array.isArray((note as any).items) ? (note as any).items : [];
+      const noteTotal = items.reduce((sum: number, item: any) => {
+        const quantity = parseFloat(item.quantity) || 0;
+        const unitPrice = parseFloat(item.unit_price) || 0;
+        return sum + (quantity * unitPrice);
+      }, 0);
+      acc[dentistId].total += noteTotal;
+
+      return acc;
+    }, {} as Record<string, GroupedDeliveryNotes>)
+  ).sort((a, b) => a.dentist_name.localeCompare(b.dentist_name));
+
+  const pagination = usePagination(groupedNotes, { initialPageSize: 50 });
+  const paginatedGroups = pagination.paginatedItems;
+
+  const toggleDentist = (dentistId: string) => {
+    const newExpanded = new Set(expandedDentists);
+    if (newExpanded.has(dentistId)) {
+      newExpanded.delete(dentistId);
+    } else {
+      newExpanded.add(dentistId);
+    }
+    setExpandedDentists(newExpanded);
+  };
 
   const handleStartWork = async (note: DeliveryNote) => {
     if (!confirm('Démarrer ce travail ?')) return;
@@ -543,19 +591,13 @@ export default function DeliveryNotesPage() {
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      Numéro
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                       Dentiste
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      Date
+                      Nombre de BL
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      Statut
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
-                      Montant
+                      Total
                     </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
                       Actions
@@ -563,171 +605,228 @@ export default function DeliveryNotesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200">
-                  {paginatedNotes.map((note) => (
-                    <tr key={note.id} className="hover:bg-slate-50 transition">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="font-medium text-slate-900">{note.delivery_number}</div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                        {note.dentists?.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-600">
-                        {new Date(note.date).toLocaleDateString('fr-FR')}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${
-                          note.status === 'completed'
-                            ? 'bg-green-100 text-green-800'
-                            : note.status === 'in_progress'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {note.status === 'completed' ? 'Terminé' : note.status === 'in_progress' ? 'En cours' : 'En attente'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 font-semibold">
-                        {(() => {
-                          const items = Array.isArray((note as any).items) ? (note as any).items : [];
-                          const total = items.reduce((sum: number, item: any) => {
-                            const quantity = parseFloat(item.quantity) || 0;
-                            const unitPrice = parseFloat(item.unit_price) || 0;
-                            return sum + (quantity * unitPrice);
-                          }, 0);
-                          return `${total.toFixed(2)} €`;
-                        })()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {note.status === 'pending' && (
-                            <button
-                              onClick={() => handleStartWork(note)}
-                              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                              title="Démarrer le travail"
-                            >
-                              <Play className="w-4 h-4" />
-                            </button>
-                          )}
-                          {note.status === 'in_progress' && (
-                            <button
-                              onClick={() => handleCompleteWork(note)}
-                              className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
-                              title="Marquer comme terminé"
-                            >
-                              <CheckCircle className="w-4 h-4" />
-                            </button>
-                          )}
+                  {paginatedGroups.map((group) => (
+                    <>
+                      <tr key={group.dentist_id} className="hover:bg-slate-50 transition cursor-pointer" onClick={() => toggleDentist(group.dentist_id)}>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            {expandedDentists.has(group.dentist_id) ? (
+                              <ChevronDown className="w-5 h-5 text-slate-400" />
+                            ) : (
+                              <ChevronRight className="w-5 h-5 text-slate-400" />
+                            )}
+                            <User className="w-5 h-5 text-primary-600" />
+                            <span className="font-semibold text-slate-900">{group.dentist_name}</span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                            {group.notes.length} BL
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="font-bold text-slate-900">{group.total.toFixed(2)} €</span>
+                        </td>
+                        <td className="px-6 py-4 text-right">
                           <button
-                            onClick={() => handleDownloadPDF(note)}
-                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
-                            title="Télécharger PDF"
-                          >
-                            <FileDown className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              setEditingNote(note.id);
-                              setShowModal(true);
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleDentist(group.dentist_id);
                             }}
-                            className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
-                            title="Modifier"
+                            className="text-xs text-primary-600 hover:text-primary-700 font-medium"
                           >
-                            <Edit className="w-4 h-4" />
+                            {expandedDentists.has(group.dentist_id) ? 'Masquer' : 'Voir les détails'}
                           </button>
-                          <button
-                            onClick={() => handleDelete(note.id)}
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
-                            title="Supprimer"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
+                      {expandedDentists.has(group.dentist_id) && group.notes.map((note) => (
+                        <tr key={note.id} className="bg-slate-50/50 hover:bg-slate-100/50 transition">
+                          <td className="px-6 py-3 pl-16">
+                            <div className="font-medium text-slate-900 text-sm">{note.delivery_number}</div>
+                          </td>
+                          <td className="px-6 py-3">
+                            <div className="text-sm text-slate-600">
+                              {new Date(note.date).toLocaleDateString('fr-FR')}
+                            </div>
+                          </td>
+                          <td className="px-6 py-3">
+                            <div className="flex items-center gap-3">
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                note.status === 'completed'
+                                  ? 'bg-green-100 text-green-800'
+                                  : note.status === 'in_progress'
+                                  ? 'bg-orange-100 text-orange-800'
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {note.status === 'completed' ? 'Terminé' : note.status === 'in_progress' ? 'En cours' : 'En attente'}
+                              </span>
+                              <span className="text-sm font-semibold text-slate-900">
+                                {(() => {
+                                  const items = Array.isArray((note as any).items) ? (note as any).items : [];
+                                  const total = items.reduce((sum: number, item: any) => {
+                                    const quantity = parseFloat(item.quantity) || 0;
+                                    const unitPrice = parseFloat(item.unit_price) || 0;
+                                    return sum + (quantity * unitPrice);
+                                  }, 0);
+                                  return `${total.toFixed(2)} €`;
+                                })()}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              {note.status === 'pending' && (
+                                <button
+                                  onClick={() => handleStartWork(note)}
+                                  className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                                  title="Démarrer le travail"
+                                >
+                                  <Play className="w-4 h-4" />
+                                </button>
+                              )}
+                              {note.status === 'in_progress' && (
+                                <button
+                                  onClick={() => handleCompleteWork(note)}
+                                  className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200"
+                                  title="Marquer comme terminé"
+                                >
+                                  <CheckCircle className="w-4 h-4" />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleDownloadPDF(note)}
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200"
+                                title="Télécharger PDF"
+                              >
+                                <FileDown className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setEditingNote(note.id);
+                                  setShowModal(true);
+                                }}
+                                className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-all duration-200"
+                                title="Modifier"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDelete(note.id)}
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                                title="Supprimer"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </>
                   ))}
                 </tbody>
               </table>
             </div>
 
             <div className="md:hidden divide-y divide-slate-200">
-              {paginatedNotes.map((note) => (
-                <div key={note.id} className="p-4 hover:bg-slate-50 transition-colors active:bg-slate-100">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-slate-900 text-sm truncate">{note.delivery_number}</h3>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
-                          note.status === 'completed'
-                            ? 'bg-green-100 text-green-800'
-                            : note.status === 'in_progress'
-                            ? 'bg-orange-100 text-orange-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {note.status === 'completed' ? 'Terminé' : note.status === 'in_progress' ? 'En cours' : 'En attente'}
-                        </span>
+              {paginatedGroups.map((group) => (
+                <div key={group.dentist_id}>
+                  <div className="p-4 hover:bg-slate-50 transition-colors active:bg-slate-100 cursor-pointer" onClick={() => toggleDentist(group.dentist_id)}>
+                    <div className="flex items-start justify-between mb-2">
+                      <div className="flex items-center gap-2 flex-1">
+                        {expandedDentists.has(group.dentist_id) ? (
+                          <ChevronDown className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                        ) : (
+                          <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                        )}
+                        <User className="w-5 h-5 text-primary-600 flex-shrink-0" />
+                        <h3 className="font-semibold text-slate-900 text-sm truncate">{group.dentist_name}</h3>
                       </div>
-                      <div className="flex items-center gap-1.5 text-xs text-slate-600 mb-1">
-                        <User className="w-3.5 h-3.5 flex-shrink-0" />
-                        <span className="truncate">{note.dentists?.name}</span>
-                      </div>
-                      <p className="text-xs text-slate-500">
-                        {new Date(note.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </p>
-                      <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-1 bg-slate-100 rounded text-xs font-semibold text-slate-900">
-                        {(() => {
-                          const items = Array.isArray((note as any).items) ? (note as any).items : [];
-                          const total = items.reduce((sum: number, item: any) => {
-                            const quantity = parseFloat(item.quantity) || 0;
-                            const unitPrice = parseFloat(item.unit_price) || 0;
-                            return sum + (quantity * unitPrice);
-                          }, 0);
-                          return `${total.toFixed(2)} €`;
-                        })()}
-                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 ml-12">
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {group.notes.length} BL
+                      </span>
+                      <span className="text-sm font-bold text-slate-900">{group.total.toFixed(2)} €</span>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2 pt-3 border-t border-slate-100">
-                    {note.status === 'pending' && (
-                      <button
-                        onClick={() => handleStartWork(note)}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-all active:scale-95"
-                      >
-                        <Play className="w-3.5 h-3.5" />
-                        Démarrer
-                      </button>
-                    )}
-                    {note.status === 'in_progress' && (
-                      <button
-                        onClick={() => handleCompleteWork(note)}
-                        className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-all active:scale-95"
-                      >
-                        <CheckCircle className="w-3.5 h-3.5" />
-                        Terminer
-                      </button>
-                    )}
-                    <button
-                      onClick={() => handleDownloadPDF(note)}
-                      className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-all active:scale-95"
-                    >
-                      <FileDown className="w-3.5 h-3.5" />
-                      PDF
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditingNote(note.id);
-                        setShowModal(true);
-                      }}
-                      className="p-2 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg transition-all active:scale-95"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(note.id)}
-                      className="p-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg transition-all active:scale-95"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+                  {expandedDentists.has(group.dentist_id) && group.notes.map((note) => (
+                    <div key={note.id} className="p-4 pl-12 bg-slate-50/50 border-t border-slate-100">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-medium text-slate-900 text-sm">{note.delivery_number}</h4>
+                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium flex-shrink-0 ${
+                              note.status === 'completed'
+                                ? 'bg-green-100 text-green-800'
+                                : note.status === 'in_progress'
+                                ? 'bg-orange-100 text-orange-800'
+                                : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {note.status === 'completed' ? 'Terminé' : note.status === 'in_progress' ? 'En cours' : 'En attente'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-slate-500 mb-1">
+                            {new Date(note.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                          </p>
+                          <div className="inline-flex items-center gap-1 px-2 py-1 bg-slate-100 rounded text-xs font-semibold text-slate-900">
+                            {(() => {
+                              const items = Array.isArray((note as any).items) ? (note as any).items : [];
+                              const total = items.reduce((sum: number, item: any) => {
+                                const quantity = parseFloat(item.quantity) || 0;
+                                const unitPrice = parseFloat(item.unit_price) || 0;
+                                return sum + (quantity * unitPrice);
+                              }, 0);
+                              return `${total.toFixed(2)} €`;
+                            })()}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-3 border-t border-slate-200">
+                        {note.status === 'pending' && (
+                          <button
+                            onClick={() => handleStartWork(note)}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                          >
+                            <Play className="w-3.5 h-3.5" />
+                            Démarrer
+                          </button>
+                        )}
+                        {note.status === 'in_progress' && (
+                          <button
+                            onClick={() => handleCompleteWork(note)}
+                            className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-green-50 text-green-700 hover:bg-green-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                          >
+                            <CheckCircle className="w-3.5 h-3.5" />
+                            Terminer
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDownloadPDF(note)}
+                          className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-medium transition-all active:scale-95"
+                        >
+                          <FileDown className="w-3.5 h-3.5" />
+                          PDF
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingNote(note.id);
+                            setShowModal(true);
+                          }}
+                          className="p-2 bg-primary-50 text-primary-700 hover:bg-primary-100 rounded-lg transition-all active:scale-95"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(note.id)}
+                          className="p-2 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg transition-all active:scale-95"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ))}
             </div>
