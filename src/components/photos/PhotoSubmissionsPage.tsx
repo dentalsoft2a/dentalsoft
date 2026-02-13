@@ -812,16 +812,16 @@ export default function PhotoSubmissionsPage() {
                   type="button"
                   onClick={() => setShowAddModal(false)}
                   className="flex-1 px-4 py-2 border border-slate-300 text-slate-700 rounded-lg font-medium hover:bg-slate-50 transition"
-                  disabled={uploading}
+                  disabled={uploadPhotoMutation.isPending}
                 >
                   Annuler
                 </button>
                 <button
                   type="submit"
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:from-purple-600 hover:to-pink-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={uploading}
+                  disabled={uploadPhotoMutation.isPending}
                 >
-                  {uploading ? (
+                  {uploadPhotoMutation.isPending ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                       Envoi en cours...
