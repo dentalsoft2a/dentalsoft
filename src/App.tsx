@@ -65,7 +65,6 @@ function AppContent() {
   const [subscriptionStatus, setSubscriptionStatus] = useState<string | null>(null);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [lowStockResourcesCount, setLowStockResourcesCount] = useState(0);
-  const [initialPageSet, setInitialPageSet] = useState(false);
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const [needsDentalOnboarding, setNeedsDentalOnboarding] = useState(false);
 
@@ -81,7 +80,6 @@ function AppContent() {
     } else {
       setIsDentist(false);
       setIsSuperAdmin(false);
-      setInitialPageSet(false);
       setNeedsOnboarding(false);
     }
   }, [user]);
@@ -107,14 +105,6 @@ function AppContent() {
       console.error('Error checking onboarding status:', error);
     }
   };
-
-  useEffect(() => {
-    if (user && isEmployee && !permissionsLoading && !checkingUserType && !initialPageSet) {
-      const firstPage = getFirstAllowedPage();
-      navigate(`/${firstPage}`, { replace: true });
-      setInitialPageSet(true);
-    }
-  }, [user, isEmployee, permissionsLoading, checkingUserType, initialPageSet, navigate]);
 
   useEffect(() => {
     if (user && isEmployee && !permissionsLoading) {
@@ -197,10 +187,6 @@ function AppContent() {
     if (data) {
       setIsSuperAdmin(data.role === 'super_admin');
       setSubscriptionStatus(data.subscription_status);
-
-      if (!isEmployee) {
-        setInitialPageSet(true);
-      }
 
       // Check if subscription or trial has expired
       const now = new Date();
@@ -499,6 +485,13 @@ function AppContent() {
     switch (currentPath) {
       case 'dashboard':
       case '':
+        // For employees, check if they have access to dashboard
+        if (isEmployee && !permissionsLoading) {
+          if (!hasMenuAccess('dashboard')) {
+            const firstAllowedPage = getFirstAllowedPage();
+            return <Navigate to={`/${firstAllowedPage}`} replace />;
+          }
+        }
         return <DashboardPage onNavigate={(page) => navigate(`/${page}`)} />;
       case 'calendar':
         return <CalendarPage />;
@@ -541,6 +534,11 @@ function AppContent() {
       case 'terms-of-service':
         return <TermsOfService />;
       default:
+        // For employees without access to dashboard, redirect to first allowed page
+        if (isEmployee && !permissionsLoading) {
+          const firstAllowedPage = getFirstAllowedPage();
+          return <Navigate to={`/${firstAllowedPage}`} replace />;
+        }
         return <Navigate to="/dashboard" replace />;
     }
   };
