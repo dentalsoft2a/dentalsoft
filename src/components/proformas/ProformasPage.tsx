@@ -1194,6 +1194,17 @@ function ProformaModal({ proformaId, onClose, onSave }: ProformaModalProps) {
                               {note.dentists?.name} - {new Date(note.date).toLocaleDateString('fr-FR')}
                               {note.patient_name && ` - ${note.patient_name}`}
                             </div>
+                            <div className="text-xs font-semibold text-primary-600 mt-1">
+                              {(() => {
+                                const noteItems = Array.isArray(note.items) ? note.items : [];
+                                const noteTotal = noteItems.reduce((sum: number, item: any) => {
+                                  const qty = parseFloat(item.quantity) || 0;
+                                  const price = parseFloat(item.unit_price) || 0;
+                                  return sum + (qty * price);
+                                }, 0);
+                                return `${noteTotal.toFixed(2)} €`;
+                              })()}
+                            </div>
                           </div>
                           {isImported ? (
                             <div className="flex-shrink-0 px-3 py-1.5 text-xs md:text-sm bg-gradient-to-r from-green-100 to-emerald-100 text-green-700 rounded-lg md:rounded-xl font-semibold border border-green-200">

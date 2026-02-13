@@ -554,6 +554,9 @@ export default function DeliveryNotesPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
                       Statut
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-slate-700 uppercase tracking-wider">
+                      Montant
+                    </th>
                     <th className="px-6 py-3 text-right text-xs font-medium text-slate-700 uppercase tracking-wider">
                       Actions
                     </th>
@@ -581,6 +584,17 @@ export default function DeliveryNotesPage() {
                         }`}>
                           {note.status === 'completed' ? 'Terminé' : note.status === 'in_progress' ? 'En cours' : 'En attente'}
                         </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-slate-900 font-semibold">
+                        {(() => {
+                          const items = Array.isArray((note as any).items) ? (note as any).items : [];
+                          const total = items.reduce((sum: number, item: any) => {
+                            const quantity = parseFloat(item.quantity) || 0;
+                            const unitPrice = parseFloat(item.unit_price) || 0;
+                            return sum + (quantity * unitPrice);
+                          }, 0);
+                          return `${total.toFixed(2)} €`;
+                        })()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -658,6 +672,17 @@ export default function DeliveryNotesPage() {
                       <p className="text-xs text-slate-500">
                         {new Date(note.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </p>
+                      <div className="mt-1.5 inline-flex items-center gap-1 px-2 py-1 bg-slate-100 rounded text-xs font-semibold text-slate-900">
+                        {(() => {
+                          const items = Array.isArray((note as any).items) ? (note as any).items : [];
+                          const total = items.reduce((sum: number, item: any) => {
+                            const quantity = parseFloat(item.quantity) || 0;
+                            const unitPrice = parseFloat(item.unit_price) || 0;
+                            return sum + (quantity * unitPrice);
+                          }, 0);
+                          return `${total.toFixed(2)} €`;
+                        })()}
+                      </div>
                     </div>
                   </div>
 
