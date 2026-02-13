@@ -646,10 +646,13 @@ export default function ProformasPage() {
             setShowModal(false);
             setEditingProforma(null);
           }}
-          onSave={() => {
+          onSave={async () => {
             setShowModal(false);
             setEditingProforma(null);
-            loadProformas();
+            setSearchTerm('');
+            setStatusFilter('all');
+            await new Promise(resolve => setTimeout(resolve, 300));
+            await loadProformas();
           }}
         />
       )}
@@ -657,9 +660,12 @@ export default function ProformasPage() {
       {showBulkCreateModal && (
         <BulkCreateProformasModal
           onClose={() => setShowBulkCreateModal(false)}
-          onSave={() => {
+          onSave={async () => {
             setShowBulkCreateModal(false);
-            loadProformas();
+            setSearchTerm('');
+            setStatusFilter('all');
+            await new Promise(resolve => setTimeout(resolve, 300));
+            await loadProformas();
           }}
         />
       )}
