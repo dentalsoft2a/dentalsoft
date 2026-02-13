@@ -748,11 +748,15 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [validatedProformas, setValidatedProformas] = useState<any[]>([]);
+  const [pendingProformas, setPendingProformas] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (selectedDentist) {
       loadValidatedProformas();
+    } else {
+      setValidatedProformas([]);
+      setPendingProformas([]);
     }
   }, [selectedDentist, selectedMonth, selectedYear]);
 
@@ -774,6 +778,19 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
 
       if (error) throw error;
       setValidatedProformas(data || []);
+
+      // Also check for pending proformas
+      const { data: pendingData, error: pendingError } = await supabase
+        .from('proformas')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('dentist_id', selectedDentist)
+        .eq('status', 'pending')
+        .gte('date', startDate.toISOString().split('T')[0])
+        .lte('date', endDate.toISOString().split('T')[0]);
+
+      if (pendingError) throw pendingError;
+      setPendingProformas(pendingData || []);
     } catch (error) {
       console.error('Error loading proformas:', error);
     }
@@ -811,8 +828,17 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
   };
 
   const handleGenerate = async () => {
-    if (!user || !selectedDentist || validatedProformas.length === 0) {
-      alert('Veuillez sélectionner un dentiste avec des proformas validés');
+    if (!user || !selectedDentist) {
+      alert('Veuillez sélectionner un dentiste');
+      return;
+    }
+
+    if (validatedProformas.length === 0) {
+      if (pendingProformas.length > 0) {
+        alert(`Impossible de générer une facture.\n\nIl y a ${pendingProformas.length} proforma(s) en attente de validation pour cette période.\n\nVous devez d'abord valider ces proformas dans la section "Proformas" avant de pouvoir générer une facture.`);
+      } else {
+        alert('Aucun proforma trouvé pour cette période.\n\nCréez d\'abord des proformas dans la section "Proformas".');
+      }
       return;
     }
 
@@ -934,31 +960,68 @@ function GenerateInvoiceModal({ onClose, onSave }: GenerateInvoiceModalProps) {
           </div>
 
           {selectedDentist && (
-            <div className="bg-gradient-to-br from-slate-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
-              <h3 className="text-sm md:text-base font-bold text-slate-800 mb-2 md:mb-3 flex items-center gap-2">
-                <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
-                Proformas validés trouvés
-              </h3>
-              <p className="text-xs md:text-sm text-slate-600 font-semibold mb-3">
-                {validatedProformas.length} proforma(s) validé(s) pour cette période
-              </p>
-              {validatedProformas.length > 0 && (
-                <div className="mt-3 space-y-1.5 bg-white/50 rounded-lg md:rounded-xl p-3 border border-slate-200">
-                  {validatedProformas.map((proforma) => (
-                    <div key={proforma.id} className="text-xs md:text-sm text-slate-700 flex justify-between py-1.5">
-                      <span className="font-semibold truncate mr-2">{proforma.proforma_number}</span>
-                      <span className="font-bold text-slate-900 flex-shrink-0">{Number(proforma.total).toFixed(2)} €</span>
+            <>
+              <div className="bg-gradient-to-br from-slate-50 to-white p-3 md:p-5 rounded-xl md:rounded-2xl border border-slate-200/50 shadow-sm">
+                <h3 className="text-sm md:text-base font-bold text-slate-800 mb-2 md:mb-3 flex items-center gap-2">
+                  <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-primary-500 to-cyan-500 rounded-full"></div>
+                  Proformas validés trouvés
+                </h3>
+                <p className="text-xs md:text-sm text-slate-600 font-semibold mb-3">
+                  {validatedProformas.length} proforma(s) validé(s) pour cette période
+                </p>
+                {validatedProformas.length > 0 ? (
+                  <div className="mt-3 space-y-1.5 bg-white/50 rounded-lg md:rounded-xl p-3 border border-slate-200">
+                    {validatedProformas.map((proforma) => (
+                      <div key={proforma.id} className="text-xs md:text-sm text-slate-700 flex justify-between py-1.5">
+                        <span className="font-semibold truncate mr-2">{proforma.proforma_number}</span>
+                        <span className="font-bold text-slate-900 flex-shrink-0">{Number(proforma.total).toFixed(2)} €</span>
+                      </div>
+                    ))}
+                    <div className="pt-2 mt-2 border-t-2 border-slate-300 flex justify-between text-base md:text-lg font-bold">
+                      <span className="bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">Total</span>
+                      <span className="bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">
+                        {validatedProformas.reduce((sum, p) => sum + Number(p.total), 0).toFixed(2)} €
+                      </span>
                     </div>
-                  ))}
-                  <div className="pt-2 mt-2 border-t-2 border-slate-300 flex justify-between text-base md:text-lg font-bold">
-                    <span className="bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">Total</span>
-                    <span className="bg-gradient-to-r from-primary-600 via-cyan-600 to-primary-600 bg-clip-text text-transparent">
-                      {validatedProformas.reduce((sum, p) => sum + Number(p.total), 0).toFixed(2)} €
-                    </span>
+                  </div>
+                ) : (
+                  <div className="bg-slate-100 rounded-lg p-3 text-xs md:text-sm text-slate-600">
+                    Aucun proforma validé pour cette période
+                  </div>
+                )}
+              </div>
+
+              {pendingProformas.length > 0 && (
+                <div className="bg-gradient-to-br from-orange-50 to-amber-50 p-3 md:p-5 rounded-xl md:rounded-2xl border-2 border-orange-300/70 shadow-sm">
+                  <h3 className="text-sm md:text-base font-bold text-orange-900 mb-2 md:mb-3 flex items-center gap-2">
+                    <div className="w-1 h-4 md:w-1.5 md:h-6 bg-gradient-to-b from-orange-500 to-amber-500 rounded-full"></div>
+                    Proformas en attente de validation
+                  </h3>
+                  <p className="text-xs md:text-sm text-orange-800 font-semibold mb-3">
+                    {pendingProformas.length} proforma(s) en attente pour cette période
+                  </p>
+                  <div className="bg-white/80 rounded-lg md:rounded-xl p-3 md:p-4 border border-orange-200">
+                    <div className="space-y-2 mb-3">
+                      {pendingProformas.map((proforma) => (
+                        <div key={proforma.id} className="text-xs md:text-sm text-slate-700 flex justify-between py-1.5 bg-orange-50/50 px-2 rounded">
+                          <span className="font-semibold truncate mr-2">{proforma.proforma_number}</span>
+                          <span className="font-bold text-orange-700 flex-shrink-0">{Number(proforma.total).toFixed(2)} €</span>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-orange-100 border border-orange-300 rounded-lg p-3 text-xs md:text-sm text-orange-900">
+                      <p className="font-bold mb-2">⚠️ Action requise</p>
+                      <p className="mb-2">
+                        Pour générer une facture, vous devez d'abord <strong>valider ces proformas</strong>.
+                      </p>
+                      <p className="text-orange-800">
+                        Allez dans <strong>Proformas</strong> → Cliquez sur <strong>Modifier</strong> → Changez le statut à <strong>"Validé"</strong>
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
-            </div>
+            </>
           )}
 
         </div>
